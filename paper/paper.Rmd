@@ -1,0 +1,226 @@
+---
+title: Survival-guided matrix factorization identifies reproducible prognostic programs in pancreatic cancer
+  # Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
+author:
+  - name: Amber M. Young
+    affiliation: a,1
+  # - name: Alisa Yurovsky
+  #   affiliation: b
+  # - name: Xianlu Laura Peng
+  #   affiliation: c,d
+  # - name: Didong Li
+  #   affiliation: a
+  # - name: Jen Jen Yeh
+  #   affiliation: c,d,e
+  # - name: Naim U. Rashid
+  #   affiliation: a,d
+address:
+  - code: a
+    address: Department of Biostatistics, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
+  # - code: b
+  #   address: Department of Biomedical Informatics, Stony Brook University, Stony Brook, NY 11794, USA
+  # - code: c
+  #   address: Department of Pharmacology, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
+  # - code: d
+  #   address: Lineberger Comprehensive Cancer Center, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
+  # - code: e
+  #   address: Department of Surgery, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
+
+corresponding_author:
+  code: 1
+  text: "To whom correspondence should be addressed. E-mail: ayoung31@live.unc.edu"
+
+# For footer text
+lead_author_surname: Young
+
+
+author_contributions: |
+  A.M.Y. and N.U.R. conceived and designed the study; A.M.Y. developed the DeSurv method, implemented the software, performed all analyses, and generated figures; A.Y. and D.L. contributed to methodological development and analytic tools; X.L.P. and J.J.Y. contributed to biological interpretation and PDAC domain expertise; A.M.Y. and N.U.R. wrote the manuscript; all authors reviewed and approved the final manuscript.
+
+## Remove this if not required
+conflict_of_interest: |
+  The authors declare no competing interests.
+
+abstract: |
+  The transcriptional programs that explain the most variance in bulk tumor expression data are often not those that predict patient survival. Standard nonnegative matrix factorization (NMF) discovers latent structure by minimizing reconstruction error, which may be driven by high-variance but prognostically neutral signals such as tissue composition. Here we present DeSurv, a survival-supervised deconvolution framework that jointly integrates NMF with Cox proportional hazards modeling, shaping gene programs to capture outcome-relevant structure during discovery rather than only in post hoc evaluation. In simulations with known latent structure, DeSurv more reliably recovers the true factorization rank and the identity of prognostic gene programs than standard NMF, with the largest advantage when variance and prognosis diverge. In pancreatic ductal adenocarcinoma (PDAC), DeSurv recovers a compact, three-factor decomposition in which a single tumor--stroma coupling drives prognosis while exocrine-compositional signals are suppressed. These survival-aligned factors generalize across independent PDAC cohorts with consistent hazard ratios (pooled validation HR per SD = 1.45, 95% CI 1.29--1.63, P < 0.001) and clearer survival separation than their unsupervised counterparts, indicating that outcome supervision during factorization yields more transportable transcriptional signatures than the standard discover-then-evaluate paradigm.
+
+significance: |
+  Tumor transcriptomes mix malignant and microenvironmental signals, making it difficult to identify programs that drive clinical outcomes. Existing deconvolution and matrix factorization methods discover latent programs but do not ensure prognostic relevance, while supervised predictors often sacrifice biological interpretability. We present DeSurv, a survival-supervised deconvolution framework that integrates nonnegative matrix factorization with Cox modeling to learn gene programs and their survival associations jointly. By embedding outcome information into discovery and using automatic model selection, DeSurv yields clinically relevant, reproducible programs across cohorts. Although single-cell and spatial transcriptomics now resolve individual cell populations, bulk expression remains the primary source of large, clinically annotated cohorts with the sample sizes needed for stable survival modeling. This provides a general framework for identifying prognostically informative gene programs without requiring post hoc filtering or pre-specified signatures, with potential applications wherever high-dimensional nonnegative measurements contain both signal and noise variation.
+
+acknowledgements: |
+  This work was supported by the National Cancer Institute grants U01 CA274298, P50 CA257911, and T32 CA106209 (A.M.Y.). Training data were obtained from the Cancer Genome Atlas (TCGA) Research Network (https://www.cancer.gov/tcga) and the Clinical Proteomic Tumor Analysis Consortium (CPTAC). External validation data were obtained from the Gene Expression Omnibus (GSE71729, Moffitt et al.; accessed via NCBI GEO), ArrayExpress (E-MTAB-6134, Puleo et al.; E-MTAB-6830, Dijk et al.; accessed via EMBL-EBI), and the International Cancer Genome Consortium data portal (PACA-AU; EGA study EGAS00001000154). We thank the patients and research teams who contributed samples and clinical data to these resources.
+
+keywords:
+  - nonnegative matrix factorization
+  - survival analysis
+  - semi-supervised learning
+  - tumor deconvolution
+  - pancreatic cancer
+
+params:
+  tar_store: "store_PKG_VERSION=20260107bugfix_GIT_BRANCH=main"
+  bo_label: ~
+  run_label: ~
+  val_label: ~
+
+## must be one of: pnasresearcharticle (usual two-column layout), pnasmathematics (one column layout), or pnasinvited (invited submissions only)
+pnas_type: pnasresearcharticle
+
+bibliography: references_30102025.bib
+csl: pnas.csl
+
+## change to true to add optional line numbering
+lineno: false
+
+output: rticles::pnas_article
+
+header-includes:
+  - \providecommand{\pandocbounded}[1]{#1}
+  - \usepackage{booktabs}
+  - \usepackage{float}
+  - \usepackage{graphicx}
+  - \usepackage{amsmath}
+  - \usepackage{amsfonts}
+  - \usepackage{amssymb}
+  - \usepackage{algorithm}
+  - \usepackage{algpseudocode}
+  - \usepackage{setspace} 
+  - \DeclareMathOperator*{\argmin}{argmin}
+  - \DeclareMathOperator*{\argmax}{argmax}
+  - \DeclareMathOperator\diag{diag}
+  - \renewcommand{\algorithmicrequire}{\textbf{Input:}}
+  - \renewcommand{\algorithmicensure}{\textbf{Output:}}
+---
+```{r, echo=FALSE}
+knitr::opts_chunk$set(
+  echo    = FALSE,   # show code (set FALSE to hide)
+  message = FALSE,  # suppress package startup messages
+  warning = FALSE,  # suppress warnings
+  error   = FALSE,  # suppress errors in output
+  fig.align = "center", # center figures
+  fig.path = "figures/",
+  dev = "png",
+  dpi = 300
+)
+
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  ggplot2::theme_set(ggplot2::theme_gray(base_size = 10))
+}
+
+set_fig_font <- function(plot_obj, size = 10) {
+  if (inherits(plot_obj, "ggplot")) {
+    plot_obj + ggplot2::theme(text = ggplot2::element_text(size = size))
+  } else {
+    plot_obj
+  }
+}
+
+```
+
+```{r load-precomputed, include=FALSE}
+source("paper/load_precomputed.R")
+```
+
+
+
+```{r child="paper/02_introduction_REVISED.Rmd"}
+
+```
+
+# Results {.unnumbered}
+
+```{r child="paper/04_results_REVISED.Rmd"}
+
+```
+
+# Discussion {.unnumbered}
+
+```{r child="paper/05_discussion_REVISED.Rmd"}
+
+```
+
+# Materials and methods {.unnumbered}
+
+```{r child="paper/03_methods_REVISED.Rmd"}
+
+```
+
+
+
+
+<!-- Leave these lines as they are at the end of your .Rmd file to ensure placement of methods & acknowledgements sections before the references-->
+\showmatmethods
+\showacknow
+
+
+\pnasbreak
+
+# References
+
+```{r versioning, echo=FALSE, eval=FALSE}
+version_info <- tryCatch(
+  targets::tar_read("version_info"),
+  error = function(e) NULL
+)
+
+if (is.null(version_info)) {
+  desurv_version <- tryCatch(
+    as.character(utils::packageVersion("DeSurv")),
+    error = function(e) "unknown"
+  )
+  desurv_repo <- normalizePath("../DeSurv", mustWork = FALSE)
+  desurv_branch <- tryCatch(
+    if (dir.exists(desurv_repo)) {
+      trimws(system(
+        sprintf("git -C %s rev-parse --abbrev-ref HEAD", shQuote(desurv_repo)),
+        intern = TRUE,
+        ignore.stderr = TRUE
+      ))
+    } else {
+      "unknown"
+    },
+    error = function(e) "unknown"
+  )
+  desurv_commit <- tryCatch(
+    if (dir.exists(desurv_repo)) {
+      trimws(system(
+        sprintf("git -C %s rev-parse HEAD", shQuote(desurv_repo)),
+        intern = TRUE,
+        ignore.stderr = TRUE
+      ))
+    } else {
+      "unknown"
+    },
+    error = function(e) "unknown"
+  )
+  paper_branch <- tryCatch(
+    trimws(system("git rev-parse --abbrev-ref HEAD", intern = TRUE, ignore.stderr = TRUE)),
+    error = function(e) "unknown"
+  )
+  paper_commit <- tryCatch(
+    trimws(system("git rev-parse HEAD", intern = TRUE, ignore.stderr = TRUE)),
+    error = function(e) "unknown"
+  )
+} else {
+  desurv_version <- version_info$desurv_pkg_version
+  desurv_branch <- version_info$desurv_git_branch
+  desurv_commit <- version_info$desurv_git_commit
+  paper_branch <- version_info$paper_git_branch
+  paper_commit <- version_info$paper_git_commit
+}
+
+if (!length(desurv_version) || !nzchar(desurv_version)) desurv_version <- "unknown"
+if (!length(desurv_branch) || !nzchar(desurv_branch)) desurv_branch <- "unknown"
+if (!length(desurv_commit) || !nzchar(desurv_commit)) desurv_commit <- "unknown"
+if (!length(paper_branch) || !nzchar(paper_branch)) paper_branch <- "unknown"
+if (!length(paper_commit) || !nzchar(paper_commit)) paper_commit <- "unknown"
+
+cat(
+  "DeSurv package version: ", desurv_version, "\n",
+  "DeSurv git branch: ", desurv_branch, "\n",
+  "DeSurv git commit: ", desurv_commit, "\n",
+  "Paper git branch: ", paper_branch, "\n",
+  "Paper git commit: ", paper_commit, "\n",
+  sep = ""
+)
+```

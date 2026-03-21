@@ -31,4 +31,4 @@ The following datasets are needed in `data/original/`:
 
 ## Download
 
-Data files are available from [Zenodo DOI: TBD].
+Data files are included in this repository.

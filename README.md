@@ -11,14 +11,12 @@ By Amber M. Young, Alisa Yurovsky, Xianlu Laura Peng, Didong Li, Jen Jen Yeh, an
 ```bash
 git clone https://github.com/rashidlab/DeSurv-paper.git
 cd DeSurv-paper
-Rscript -e 'renv::restore()'    # Install exact R package versions
 make paper                       # Compile paper + supplement
 ```
 
 ### Smoke test the full pipeline (~10 min, any laptop)
 
 ```bash
-# Download data to data/original/ (see data/README.md)
 make quick
 ```
 
@@ -65,8 +63,7 @@ DeSurv-paper/
 ├── slurm/                         # HPC job scripts
 │
 ├── Makefile                       # make quick / make all / make paper
-├── run_pipeline.R                 # Alternative: Rscript run_pipeline.R --quick
-└── renv.lock                      # R package versions
+└── run_pipeline.R                 # Alternative: Rscript run_pipeline.R --quick
 ```
 
 ## Reproducing the Analysis
@@ -117,7 +114,7 @@ devtools::install_github("rashidlab/DeSurv")
 
 ## Data Availability
 
-Input data files are available from [Zenodo DOI: TBD]. See `data/README.md` for details on each dataset and its source (TCGA, CPTAC, GEO, ArrayExpress, ICGC).
+Input data files and pre-computed results are included in this repository. See `data/README.md` for details on each dataset and its source (TCGA, CPTAC, GEO, ArrayExpress, ICGC).
 
 ## Development History
 

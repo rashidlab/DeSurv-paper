@@ -1067,7 +1067,7 @@ n_combinations   <- length(k_labs) * length(alpha_labs)
 
 Across datasets and initialization schemes, the DeSurv algorithm consistently converged to numerically stable solutions within the designated iteration budget. Warm-start strategies, in which solutions at $\alpha=0$ initialized supervised runs, substantially reduced variability across restarts and improved reproducibility. Fig. \ref{fig:fig-converge} shows representative loss trajectories demonstrating monotone decreases until convergence across restarts. Compared with naive random initialization, warm-starts produced tighter distributions of cross-validated C-index and partial likelihood, confirming stability of the optimization procedure.
 
-```{r fig-converge, fig.width = 5, fig.height= 3, fig.cap="Convergence of model across initializations. \\label{fig:fig-converge}" , fig.env='figure*', fig.pos='htbp', out.height= "3in", out.width='5in'}
+```{r fig-converge, fig.width = 5, fig.height= 3, fig.cap="Convergence of model across initializations." , fig.env='figure*', fig.pos='htbp', out.height= "3in", out.width='5in'}
 load_result("desurv_seed_fits_tcgacptac")
 set.seed(147)
 seeds = sample(1:length(desurv_seed_fits_tcgacptac$fits),5,replace = FALSE)
@@ -1291,7 +1291,7 @@ colnames(tab_summary) <- c(
 kable(tab_summary, format = "latex", escape = FALSE, booktabs = TRUE,
       caption = "Three-way comparison of $k$-sensitivity analyses differing only in gene-projection setting ($n_{\\text{top}}$) and regularization ($\\lambda$, $\\xi$). All analyses span $k \\in$ \\{2, 3, 5, 7, 9\\} $\\times$ $\\alpha \\in$ \\{0, 0.25, 0.35, 0.55, 0.75, 0.85, 0.95\\} = 35 combinations. Count shows combinations achieving adjusted $P < 0.05$; bold highlights the $n_{\\text{top}}=270$ result that restores $k = 3$ adjusted significance.",
       label = "tab-ksens-summary") |>
-  kable_styling(latex_options = c("hold_position", "scale_down"), font_size = 9)
+  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size = 9)
 ```
 
 Tables \ref{tab:tab-ksens-adjp-ntop270} and \ref{tab:tab-ksens-adjp-allgenes} present the full $k$ $\times$ $\alpha$ adjusted P-value matrices for the $n_{\text{top}} = 270$ and $n_{\text{top}} = \text{NULL}$ analyses respectively. With $n_{\text{top}} = 270$, $k = 3$ achieves adjusted significance at `r n_k3_sig_270` of `r length(alpha_labs)` $\alpha$ values tested ($\alpha \in \{0.00, 0.25, 0.55, 0.75, 0.95\}$), and broad adjusted significance is also observed at $k = 2$ (`r n_k2_sig_270`/`r length(alpha_labs)`) and $k = 5$ (`r n_k5_sig_270`/`r length(alpha_labs)`). With $n_{\text{top}} = \text{NULL}$ (Table \ref{tab:tab-ksens-adjp-allgenes}), the landscape is sparse and structurally different: $k = 3$ at $\alpha=0.55$ narrowly misses significance ($P = `r formatC(k3_alpha55_p_all, format="f", digits=3)`$), and only isolated combinations scattered across $k = 3$, $k = 5$, $k = 7$, and $k = 9$ achieve adjusted $P < 0.05$.
@@ -1313,7 +1313,7 @@ df_270 <- as.data.frame(
 kable(df_270, format = "latex", escape = FALSE, booktabs = TRUE,
       caption = paste0("Adjusted validation P-values (Cox + PurIST + DeCAF + strata(dataset)) across $k$ $\\times$ $\\alpha$ with $n_{\\text{top}}=270$, $\\lambda=0.349$, $\\xi=0.056$. Each cell gives the P-value for the factor most correlated with the production $k = 3$ iCAF factor. Bold: $P < 0.05$; ", n_sig_270, " of ", n_combinations, " combinations are significant."),
       label = "tab-ksens-adjp-ntop270") |>
-  kable_styling(latex_options = c("hold_position"), font_size = 9)
+  kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
 ```{r tab-ksens-adjp-allgenes, echo=FALSE, results='asis'}
@@ -1324,7 +1324,7 @@ df_all <- as.data.frame(
 kable(df_all, format = "latex", escape = FALSE, booktabs = TRUE,
       caption = paste0("Adjusted validation P-values across $k$ $\\times$ $\\alpha$ with $n_{\\text{top}}$=NULL (all ", n_genes_total, " genes), $\\lambda=0.349$, $\\xi=0.056$. Layout identical to Table \\ref{tab:tab-ksens-adjp-ntop270}. Only ", n_sig_all, " of ", n_combinations, " combinations are significant (bold), and $k = 3$ at $\\alpha=0.55$ (the production neighborhood) reaches only $P = ", formatC(k3_alpha55_p_all, format = "f", digits = 3), "$."),
       label = "tab-ksens-adjp-allgenes") |>
-  kable_styling(latex_options = c("hold_position"), font_size = 9)
+  kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
 Four additional findings emerge from these analyses. First, $k = 7$'s apparent advantage observed in a parallel analysis using conventional hyperparameters ($\lambda=0.3$, $n_{\text{top}} = \text{NULL}$), where $k = 7$ at $\alpha=0.75$ achieved adjusted $P = `r formatC(lam300_best_p, format="f", digits=3)`$, completely disappears with $n_{\text{top}} = 270$ (adj $P = `r formatC(k7_alpha75_p_270, format="f", digits=3)`$, Table \ref{tab:tab-ksens-adjp-ntop270}). Focused 270-gene projection fragments the iCAF signal across $k = 7$'s factors, indicating that the earlier $k = 7$ advantage depended on the all-genes projection rather than reflecting an intrinsic property of the 7-factor solution. Second, $k = 3$ achieves adjusted significance across a broad $\alpha$ range with $n_{\text{top}} = 270$ (`r n_k3_sig_270`/7 values), demonstrating that the production result does not depend on the BO-selected $\alpha = `r round(read_result("tar_params_best_tcgacptac")$alpha, 3)`$ specifically. Third, $k = 5$ at $\alpha=0.55$ achieves the highest factor-program fidelity in the $n_{\text{top}} = 270$ analysis (H-cor = `r round(hcor_k5_a55_270, 3)` vs. $k = 3$'s `r round(hcor_k3_a55_270, 3)`) and also achieves adjusted significance ($P = `r formatC(k5_alpha55_p_270, format="f", digits=3)`$), providing convergent evidence for the iCAF biology from a higher-$k$ model; an independent $k = 5$ all-genes fit at $\alpha=0.25$ likewise achieves adjusted significance ($P = `r formatC(k5_alpha25_p_all, format="f", digits=4)`$, H-cor = `r round(hcor_k5_a25_all, 3)`). Fourth, without gene focusing, high supervision weights ($\alpha \geq 0.75$) produce factors with extreme training discrimination (HR $\approx `r hr_overfit_min`$--$`r hr_overfit_max`$, LRT $P \sim `r formatC(lrt_overfit_min, format="e", digits=0)`$) that fail external validation, indicating overfitting of the training survival signal; gene focusing ($n_{\text{top}} = 270$) suppresses this by constraining each factor to its 270 most biologically characteristic genes.
@@ -1552,8 +1552,8 @@ colnames(tab_df) <- c("Method", "Unadjusted HR per SD (95\\% CI), $P$",
                        "Adjusted HR per SD (95\\% CI), $P$")
 
 kable(tab_df, format = "latex", escape = FALSE, booktabs = TRUE,
-      caption = "Pooled external validation hazard ratios (per SD of linear predictor) for DeSurv at $k = 3$ and standard NMF at BO-selected $k = 7$ ($\\alpha = 0$). Adjusted models include PurIST and DeCAF molecular classifiers as covariates, with stratification by dataset. \\label{tab:tab-hr-adjusted}") |>
-  kable_styling(latex_options = c("hold_position"), font_size = 9)
+      caption = "Pooled external validation hazard ratios (per SD of linear predictor) for DeSurv at $k = 3$ and standard NMF at BO-selected $k = 7$ ($\\alpha = 0$). Adjusted models include PurIST and DeCAF molecular classifiers as covariates, with stratification by dataset.") |>
+  kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
 The variance--survival decomposition at $k = 5$ (Fig. \ref{fig:varsurvival-k5}) confirms that elbow selection does not recover additional prognostic structure. At $k = 5$, standard NMF continues to distribute survival contribution negligibly across all factors; the two factors new relative to $k = 3$ (N4 and N5) contribute minimally, confirming that the additional rank captures background transcriptional variance rather than independent prognostic programs.

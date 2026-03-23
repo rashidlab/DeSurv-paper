@@ -23,8 +23,8 @@ rmarkdown::render("paper/paper.Rmd", knit_root_dir = getwd(), quiet = TRUE)
 message("  Output: paper/paper.pdf")
 
 # Render supplement
-message("  Rendering paper/supplement.Rmd ...")
-rmarkdown::render("paper/supplement.Rmd", knit_root_dir = getwd(), quiet = TRUE)
-message("  Output: paper/supplement.pdf")
+message("  Rendering paper/si_appendix.Rmd ...")
+rmarkdown::render("paper/si_appendix.Rmd", knit_root_dir = getwd(), quiet = TRUE)
+message("  Output: paper/si_appendix.pdf")
 
 message("=== Step 9 complete ===")

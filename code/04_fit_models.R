@@ -57,25 +57,31 @@ ntop_value <- as.integer(extract_param(tar_params_best, "ntop", 100L))
 # ── Helper: multi-start fitting ──────────────────────────────────────────
 run_seed_fits <- function(data, params, lambdaW, lambdaH, ninit, label) {
   seeds <- seq_len(ninit)
-  fits <- vector("list", length(seeds))
-  scores <- rep(NA_real_, length(seeds))
-  for (i in seq_along(seeds)) {
+  fit_one_seed <- function(seed_i) {
     fit_i <- try(
       desurv_fit(
         X = data$ex, y = data$sampInfo$time, d = data$sampInfo$event,
         k = params$k, alpha = params$alpha, lambda = params$lambda,
         nu = params$nu, lambdaW = lambdaW, lambdaH = lambdaH,
-        seed = seeds[i], tol = RUN_TOL / 100, tol_init = RUN_TOL,
+        seed = seed_i, tol = RUN_TOL / 100, tol_init = RUN_TOL,
         maxit = RUN_MAXIT, imaxit = RUN_MAXIT, ninit = 1,
         parallel_init = FALSE, verbose = FALSE
       ),
       silent = TRUE
     )
     if (!inherits(fit_i, "try-error") && inherits(fit_i, "desurv_fit")) {
-      fits[[i]] <- fit_i
-      scores[i] <- if (!is.null(fit_i$cindex)) fit_i$cindex else NA_real_
+      list(fit = fit_i, cindex = if (!is.null(fit_i$cindex)) fit_i$cindex else NA_real_)
+    } else {
+      list(fit = NULL, cindex = NA_real_)
     }
   }
+  if (CONFIG$ncores > 1) {
+    results <- parallel::mclapply(seeds, fit_one_seed, mc.cores = CONFIG$ncores)
+  } else {
+    results <- lapply(seeds, fit_one_seed)
+  }
+  fits <- lapply(results, `[[`, "fit")
+  scores <- vapply(results, function(r) r$cindex, numeric(1))
   keep <- !vapply(fits, is.null, logical(1))
   if (!any(keep)) stop("No successful fits for ", label)
   message(sprintf("  %s: %d/%d successful seed fits", label, sum(keep), ninit))

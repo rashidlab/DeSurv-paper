@@ -884,6 +884,7 @@ by dataset to allow cohort-specific baseline hazards. All p-values reported for
 survival differences between groups correspond to two-sided log-rank tests.
 
 \section{Gene Program Correlation Analysis}
+\label{sec:gene-program-correlation}
 
 To assess the biological identity of learned factors, we evaluated the
 correspondence between factor-specific gene rankings and established PDAC gene
@@ -1622,4 +1623,54 @@ ggplot2::ggplot(df_nmf, ggplot2::aes(x = variance_explained, y = delta_loglik,
     y = expression(atop(Delta ~ "partial log-likelihood", "(full vs. k-1 factor model)"))
   ) +
   ggplot2::theme_classic(base_size = 10)
+```
+
+\section{Factor-Specific Gene Lists}
+
+Tables \ref{tab:gene-list-270-D1}--\ref{tab:gene-list-270-D3} list the top 270 genes for each of the three DeSurv factors, ranked by the factor specificity score $s_{ij}$ defined in SI Appendix, Section \ref{sec:gene-program-correlation}. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}} = 270$); these are the genes used to compute sample-level factor scores for survival prediction. Factor D1 is enriched for classical/epithelial identity genes, Factor D2 for stromal and immune-related genes, and Factor D3 for basal-like and proliferation-associated genes.
+
+```{r tab-gene-list-270, echo=FALSE, results='asis'}
+library(knitr)
+library(kableExtra)
+library(tidyr)
+library(dplyr)
+
+genes <- read.csv("paper/gene_lists_top270_k3.csv", stringsAsFactors = FALSE)
+
+# Keep only DeSurv factors
+desurv_genes <- genes %>%
+  dplyr::filter(factor %in% c("D1", "D2", "D3"))
+
+# For each factor, split 270 genes into 6 columns of 45
+build_factor_table <- function(df, fct) {
+  g <- df %>% dplyr::filter(factor == fct) %>% dplyr::arrange(rank) %>% dplyr::pull(gene)
+  data.frame(
+    a = g[1:45], b = g[46:90], c = g[91:135],
+    d = g[136:180], e = g[181:225], f = g[226:270],
+    stringsAsFactors = FALSE
+  )
+}
+
+factor_labels <- c("D1", "D2", "D3")
+factor_captions <- c(
+  "Factor D1 (classical/epithelial)",
+  "Factor D2 (stromal/immune)",
+  "Factor D3 (basal-like)"
+)
+
+for (i in seq_along(factor_labels)) {
+  tbl <- build_factor_table(desurv_genes, factor_labels[i])
+  cat("")
+  kable(tbl, format = "latex", booktabs = TRUE, linesep = "",
+        col.names = c("1--45", "46--90", "91--135", "136--180", "181--225", "226--270"),
+        caption = paste0("Top 270 genes for DeSurv factor ", factor_labels[i],
+          " (", factor_captions[i], "), ranked by factor specificity score $s_{ij}$.",
+          if (i == 1) paste0(" The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\\text{top}}$).") else "",
+          " \\label{tab:gene-list-270-", factor_labels[i], "}"),
+        escape = FALSE) %>%
+    kable_styling(font_size = 8, latex_options = c("HOLD_position")) %>%
+    add_header_above(setNames(6, factor_captions[i]), bold = TRUE) %>%
+    cat()
+  cat("")
+}
 ```

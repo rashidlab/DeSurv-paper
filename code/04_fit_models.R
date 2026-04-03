@@ -32,8 +32,8 @@ if (CONFIG$quick) {
   RUN_MAXIT  <- 500L
 } else {
   NINIT_FULL <- 100L
-  RUN_TOL    <- 1e-6
-  RUN_MAXIT  <- 10000L
+  RUN_TOL    <- 1e-5
+  RUN_MAXIT  <- 4000L
 }
 
 # ── Load prerequisites ────────────────────────────────────────────────────
@@ -52,7 +52,16 @@ extract_param <- function(params, name, default) {
 
 lambdaW_value <- extract_param(tar_params_best, "lambdaW", 0)
 lambdaH_value <- extract_param(tar_params_best, "lambdaH", 0)
-ntop_value <- as.integer(extract_param(tar_params_best, "ntop", 100L))
+# ntop for consensus seeding (requires a positive integer).
+# In default mode (no DESURV_NTOP), BO and validation use NULL (all genes),
+# but consensus seeding needs a value — default to 100L.
+ntop_value <- if (!is.null(tar_params_best$ntop) && !is.na(tar_params_best$ntop)) {
+  as.integer(round(tar_params_best$ntop))
+} else if (CONFIG$ntop_mode == "fixed") {
+  CONFIG$ntop_value
+} else {
+  100L
+}
 
 # ── Helper: multi-start fitting ──────────────────────────────────────────
 run_seed_fits <- function(data, params, lambdaW, lambdaH, ninit, label) {
@@ -122,7 +131,13 @@ tar_data_filtered_alpha0  <- load_precomputed("tar_data_filtered_alpha0_tcgacpta
 
 lambdaW_alpha0 <- extract_param(tar_params_best_alpha0, "lambdaW", 0)
 lambdaH_alpha0 <- extract_param(tar_params_best_alpha0, "lambdaH", 0)
-ntop_alpha0    <- as.integer(extract_param(tar_params_best_alpha0, "ntop", 100L))
+ntop_alpha0 <- if (!is.null(tar_params_best_alpha0$ntop) && !is.na(tar_params_best_alpha0$ntop)) {
+  as.integer(round(tar_params_best_alpha0$ntop))
+} else if (CONFIG$ntop_mode == "fixed") {
+  CONFIG$ntop_value
+} else {
+  100L
+}
 
 desurv_seed_fits_alpha0 <- cache_or_compute("desurv_seed_fits_alpha0_tcgacptac", {
   run_seed_fits(tar_data_filtered_alpha0, tar_params_best_alpha0,

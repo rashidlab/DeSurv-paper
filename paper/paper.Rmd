@@ -92,13 +92,30 @@ header-includes:
   - \renewcommand{\algorithmicensure}{\textbf{Output:}}
 ---
 ```{r, echo=FALSE}
+# Determine figure output path (respects DESURV_NTOP subfolder)
+.ntop_env <- Sys.getenv("DESURV_NTOP", "")
+.ntop_lo  <- Sys.getenv("DESURV_NTOP_LOWER", "")
+.ntop_hi  <- Sys.getenv("DESURV_NTOP_UPPER", "")
+.fig_sub  <- if (nzchar(.ntop_env)) {
+  paste0("ntop_", .ntop_env)
+} else if (nzchar(.ntop_lo) && nzchar(.ntop_hi)) {
+  paste0("ntop_bo_", .ntop_lo, "_", .ntop_hi)
+} else {
+  ""
+}
+.fig_path <- if (nzchar(.fig_sub)) {
+  file.path("figures", .fig_sub, "")  # trailing / via file.path + ""
+} else {
+  "figures/"
+}
+
 knitr::opts_chunk$set(
   echo    = FALSE,   # show code (set FALSE to hide)
   message = FALSE,  # suppress package startup messages
   warning = FALSE,  # suppress warnings
   error   = FALSE,  # suppress errors in output
   fig.align = "center", # center figures
-  fig.path = "figures/",
+  fig.path = .fig_path,
   dev = "png",
   dpi = 300
 )

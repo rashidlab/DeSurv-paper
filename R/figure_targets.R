@@ -445,10 +445,18 @@ extract_gp_curve <- function(bo_results,params, ci_level = 0.95) {
     stop("GP design matrix has no column names.")
   }
   selected = params
-  best_per_k = expand.grid(k_grid = 2:12,alpha_grid = seq(0,1,.1),
-                          lambda_grid = selected$lambda,nu_grid = selected$nu,
-                          ntop = selected$ntop)
-  
+  grid_list <- list(
+    k_grid = 2:12,
+    alpha_grid = seq(0, 1, .1),
+    lambda_grid = selected$lambda,
+    nu_grid = selected$nu
+  )
+  # Only include ntop if the GP was fit with it as a parameter
+  if ("ntop" %in% param_names) {
+    grid_list$ntop <- if (!is.null(selected$ntop)) selected$ntop else 150L
+  }
+  best_per_k <- expand.grid(grid_list)
+
   newdata_actual <- best_per_k[, param_names, drop = FALSE]
   newdata_scaled <- normalize_gp_params(newdata_actual, bounds)
   

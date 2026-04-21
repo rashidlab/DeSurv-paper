@@ -478,6 +478,71 @@ extract_gp_curve <- function(bo_results,params, ci_level = 0.95) {
   )
 }
 
+extract_gp_curve_maxed <- function(bo_results, ci_level = 0.95,
+                                   n_lambda = 20, n_nu = 20) {
+  if (!is.numeric(ci_level) || length(ci_level) != 1 || ci_level <= 0 || ci_level >= 1) {
+    stop("ci_level must be a single numeric value between 0 and 1.")
+  }
+  runs <- bo_results[["runs"]]
+  last_run <- runs[[length(runs)]]
+  km_fit <- last_run[["km_fit"]]
+  bounds <- last_run[["bounds"]]
+  param_names <- colnames(km_fit@X)
+  if (is.null(param_names)) {
+    stop("GP design matrix has no column names.")
+  }
+
+  # Build full grid: k x alpha x lambda x nu
+  lambda_bounds <- bounds[bounds$parameter == "lambda_grid", ]
+  nu_bounds     <- bounds[bounds$parameter == "nu_grid", ]
+  lambda_seq <- 10^seq(log10(as.numeric(lambda_bounds$lower)),
+                       log10(as.numeric(lambda_bounds$upper)),
+                       length.out = n_lambda)
+  nu_seq <- seq(as.numeric(nu_bounds$lower), as.numeric(nu_bounds$upper),
+                length.out = n_nu)
+
+  grid_list <- list(
+    k_grid      = 2:12,
+    alpha_grid  = seq(0, 1, 0.1),
+    lambda_grid = lambda_seq,
+    nu_grid     = nu_seq
+  )
+  if ("ntop" %in% param_names) {
+    grid_list$ntop <- 150L
+  }
+  full_grid <- expand.grid(grid_list)
+
+  newdata_actual <- full_grid[, param_names, drop = FALSE]
+  newdata_scaled <- normalize_gp_params(newdata_actual, bounds)
+
+  preds <- DiceKriging::predict(
+    km_fit,
+    newdata = newdata_scaled,
+    type = "UK",
+    se.compute = TRUE,
+    cov.compute = FALSE
+  )
+
+  full_grid$gp_mean <- preds$mean
+  full_grid$gp_sd   <- preds$sd
+
+  # For each (k, alpha), select the lambda/nu that maximizes GP mean
+  z_value <- stats::qnorm((1 + ci_level) / 2)
+  ka_groups <- split(seq_len(nrow(full_grid)),
+                     interaction(full_grid$k_grid, full_grid$alpha_grid, drop = TRUE))
+  best_rows <- vapply(ka_groups, function(idx) idx[which.max(full_grid$gp_mean[idx])],
+                      integer(1))
+  result <- full_grid[best_rows, , drop = FALSE]
+
+  tibble::tibble(
+    k     = result$k_grid,
+    alpha = result$alpha_grid,
+    mean  = result$gp_mean,
+    lower = result$gp_mean - z_value * result$gp_sd,
+    upper = result$gp_mean + z_value * result$gp_sd
+  )
+}
+
 make_gp_curve_plot_k <- function(curve_df, label) {
   ggplot2::ggplot(curve_df, ggplot2::aes(x = k, y = mean, group = 1)) +
     ggplot2::geom_ribbon(

@@ -35,11 +35,14 @@ fit_std_desurvk          <- load_precomputed("fit_std_desurvk_tcgacptac")
 fit_std_elbowk           <- load_precomputed("fit_std_elbowk_tcgacptac")
 tar_params_best          <- load_precomputed("tar_params_best_tcgacptac")
 
-ntop_value <- as.integer(if (!is.null(tar_params_best$ntop) && !is.na(tar_params_best$ntop)) {
-  round(tar_params_best$ntop)
+# ntop for validation C-index: NULL means all genes (no top-gene filtering)
+ntop_value <- if (!is.null(tar_params_best$ntop) && !is.na(tar_params_best$ntop)) {
+  as.integer(round(tar_params_best$ntop))
+} else if (CONFIG$ntop_mode == "fixed") {
+  CONFIG$ntop_value
 } else {
-  100L
-})
+  NULL  # default: all genes
+}
 
 # ── Helper: preprocess and filter validation data ────────────────────────
 load_val_datasets <- function(val_names, training_data, method_trans_train = "rank") {
@@ -71,7 +74,8 @@ compute_val_cindex <- function(fit, data_val_list, ntop = NULL) {
     keep <- dv$sampInfo$keep == 1
     ci <- tryCatch(
       survival::concordance(
-        survival::Surv(dv$sampInfo$time[keep], dv$sampInfo$event[keep]) ~ lp[keep]
+        survival::Surv(dv$sampInfo$time[keep], dv$sampInfo$event[keep]) ~ lp[keep],
+        reverse = TRUE
       )$concordance,
       error = function(e) NA_real_
     )
@@ -115,7 +119,7 @@ val_latent_desurv <- cache_or_compute("val_latent_desurv_tcgacptac", {
 
 # ── Standard NMF at DeSurv k validation ──────────────────────────────────
 val_cindex_std_desurvk <- cache_or_compute("val_cindex_std_desurvk_tcgacptac", {
-  compute_val_cindex(fit_std_desurvk, data_val_filtered)
+  compute_val_cindex(fit_std_desurvk, data_val_filtered, ntop = ntop_value)
 })
 
 val_latent_std_desurvk <- cache_or_compute("val_latent_std_desurvk_tcgacptac", {
@@ -124,7 +128,7 @@ val_latent_std_desurvk <- cache_or_compute("val_latent_std_desurvk_tcgacptac", {
 
 # ── Standard NMF at elbow k validation ───────────────────────────────────
 val_cindex_std_elbowk <- cache_or_compute("val_cindex_std_elbowk_tcgacptac", {
-  compute_val_cindex(fit_std_elbowk, data_val_filtered_elbowk)
+  compute_val_cindex(fit_std_elbowk, data_val_filtered_elbowk, ntop = ntop_value)
 })
 
 # ── Alpha=0 (BO-selected k with no supervision) validation ───────────────
@@ -134,7 +138,7 @@ tar_data_filtered_alpha0 <- load_precomputed("tar_data_filtered_alpha0_tcgacptac
 data_val_filtered_alpha0 <- data_val_filtered
 
 val_cindex_desurv_alpha0 <- cache_or_compute("val_cindex_desurv_alpha0_tcgacptac", {
-  compute_val_cindex(tar_fit_desurv_alpha0, data_val_filtered_alpha0)
+  compute_val_cindex(tar_fit_desurv_alpha0, data_val_filtered_alpha0, ntop = ntop_value)
 })
 
 val_latent_desurv_alpha0 <- cache_or_compute("val_latent_desurv_alpha0_tcgacptac", {

@@ -57,6 +57,18 @@ BO_FIXED <- list(
   lambdaH_grid = 0
 )
 
+# ── ntop handling ──────────────────────────────────────────────────────────
+if (CONFIG$ntop_mode == "fixed") {
+  BO_FIXED$ntop <- CONFIG$ntop_value
+  message("  ntop fixed at ", CONFIG$ntop_value, " (not tuned by BO)")
+} else if (CONFIG$ntop_mode == "bo") {
+  BO_BOUNDS$ntop <- list(lower = CONFIG$ntop_lower, upper = CONFIG$ntop_upper,
+                         type = "integer")
+  message("  ntop added to BO bounds: [", CONFIG$ntop_lower, ", ",
+          CONFIG$ntop_upper, "]")
+}
+# default mode: ntop not in BO_FIXED or BO_BOUNDS → ntop=NULL (all genes)
+
 BO_COMMON <- list(
   preprocess        = TRUE,
   method_trans_train = "rank",
@@ -70,7 +82,8 @@ BO_COMMON <- list(
   top_k             = 10L,
   shrink_base       = 0.3,
   importance_gain   = 0.1,
-  coarse_control    = list(n_init = BO_N_INIT, n_iter = BO_N_ITER, candidate_pool = 4000L),
+  coarse_control    = list(n_init = BO_N_INIT, n_iter = BO_N_ITER, candidate_pool = 4000L,
+                           exploration_weight = 0.01, seed = 123),
   refine_control    = NULL,
   verbose           = TRUE,
   parallel_grid     = PARALLEL,

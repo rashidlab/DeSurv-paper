@@ -969,10 +969,27 @@ heatmap with NMF factors as rows and DeSurv factors as columns (main text, Fig.\
      Internal scenario code names (R0_easy, R00_null, R_mixed) should be replaced with
      descriptive labels (primary, null, mixed) consistent with main text terminology. -->
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Determine figure output path (respects DESURV_NTOP subfolder)
+.ntop_env <- Sys.getenv("DESURV_NTOP", "")
+.ntop_lo  <- Sys.getenv("DESURV_NTOP_LOWER", "")
+.ntop_hi  <- Sys.getenv("DESURV_NTOP_UPPER", "")
+.fig_sub  <- if (nzchar(.ntop_env)) {
+  paste0("ntop_", .ntop_env)
+} else if (nzchar(.ntop_lo) && nzchar(.ntop_hi)) {
+  paste0("ntop_bo_", .ntop_lo, "_", .ntop_hi)
+} else {
+  ""
+}
+.fig_path <- if (nzchar(.fig_sub)) {
+  file.path("figures", .fig_sub, "")
+} else {
+  "figures/"
+}
+
 knitr::opts_chunk$set(message = FALSE,
                       warning = FALSE,
                       echo = FALSE,
-                      fig.path = "figures/",
+                      fig.path = .fig_path,
                       dev = "png",
                       dpi = 300)
 source("paper/load_precomputed.R")

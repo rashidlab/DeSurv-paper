@@ -17,6 +17,8 @@ library(cowplot)
 library(survival)
 library(survminer)
 library(NMF)
+library(glmnet)
+library(dplyr)
 
 # Source figure-building functions
 source("R/figure_targets.R")
@@ -25,6 +27,7 @@ source("R/compare_models.R")
 source("R/cv_grid_helpers.R")
 source("R/get_top_genes.R")
 source("R/plot_survival.R")
+source("R/fit_cox_model.R")
 
 # ── Load prerequisites ────────────────────────────────────────────────────
 tar_fit_desurv      <- load_precomputed("tar_fit_desurv_tcgacptac")
@@ -147,8 +150,9 @@ heatmap_factor_labels_std <- if (std_k == 3) {
   paste0("N", seq_len(std_k))
 }
 
-# ntop for top gene extraction
-ntop_value <- CONFIG$ntop_value  # 150 when DESURV_NTOP=150
+# ntop for top gene extraction: fixed mode uses CONFIG$ntop_value; BO mode uses
+# the BO-selected ntop from tar_params_best
+ntop_value <- if (!is.null(CONFIG$ntop_value)) CONFIG$ntop_value else tar_params_best$ntop
 
 # Compute top genes per model
 tar_tops_desurv      <- get_top_genes(W = tar_fit_desurv$W, ntop = ntop_value)
@@ -260,6 +264,63 @@ fig_desurv_std_correlation <- cache_or_compute("fig_desurv_std_correlation_tcgac
   legend_grob <- if (length(leg_idx) > 0) ph_leg$gtable$grobs[[leg_idx[1]]] else grid::nullGrob()
 
   list(plot = pheat, legend = legend_grob)
+})
+
+# ── Median survival KM curves (pooled validation, log-rank optimal cutpoint) ──
+# Compute training LP stats (mean/sd) for z-score standardisation
+ntop_for_lp <- if (!is.null(CONFIG$ntop_value)) CONFIG$ntop_value else tar_params_best$ntop
+
+compute_lp_stats <- function(fit, data_filtered, ntop = NULL) {
+  lp <- compute_lp(fit$W, fit$beta, data_filtered$ex, ntop)
+  list(lp_mean = mean(lp, na.rm = TRUE), lp_sd = sd(lp, na.rm = TRUE))
+}
+
+# Find optimal z-cutpoint via 5-fold CV on training data (log-rank criterion)
+find_optimal_z_cutpoint <- function(cv_result, z_grid = seq(-2.0, 2.0, by = 0.2)) {
+  eval_df <- evaluate_cutpoint_zscores(cv_result, z_grid)
+  eval_df |>
+    dplyr::group_by(z_cutpoint) |>
+    dplyr::summarise(mean_abs_logrank_z = mean(abs(logrank_z), na.rm = TRUE),
+                     .groups = "drop") |>
+    dplyr::slice_max(mean_abs_logrank_z, n = 1, with_ties = FALSE) |>
+    dplyr::pull(z_cutpoint)
+}
+
+# DeSurv KM figure
+fig_median_survival_desurv <- cache_or_compute("fig_median_survival_desurv_tcgacptac", {
+  cv_res <- run_cv_grid_point(
+    data        = tar_data_filtered,
+    k           = tar_params_best$k,
+    alpha       = tar_params_best$alpha,
+    fixed_params = list(
+      lambda  = tar_params_best$lambda,
+      nu      = tar_params_best$nu,
+      lambdaW = 0,
+      lambdaH = 0,
+      ntop    = ntop_for_lp
+    ),
+    nfolds   = 5,
+    n_starts = 30,
+    seed     = 123,
+    verbose  = FALSE
+  )
+  base_stats <- compute_lp_stats(tar_fit_desurv, tar_data_filtered, ntop_for_lp)
+  lp_stats <- c(base_stats, list(optimal_z_cutpoint = find_optimal_z_cutpoint(cv_res)))
+  splot_cutpoint(data_val_filtered, tar_fit_desurv, lp_stats, ntop = ntop_for_lp)
+})
+
+# Standard NMF at DeSurv k KM figure
+fig_median_survival_std_desurvk <- cache_or_compute("fig_median_survival_std_desurvk_tcgacptac", {
+  cv_res_std <- run_cv_grid_point_std_nmf(
+    data   = tar_data_filtered,
+    k      = tar_params_best$k,
+    nrun   = 30,
+    nfolds = 5,
+    seed   = 123
+  )
+  base_stats_std <- compute_lp_stats(fit_std_desurvk, tar_data_filtered, ntop = NULL)
+  lp_stats_std <- c(base_stats_std, list(optimal_z_cutpoint = find_optimal_z_cutpoint(cv_res_std)))
+  splot_cutpoint(data_val_filtered, fit_std_desurvk, lp_stats_std, ntop = NULL)
 })
 
 message("=== Step 8 complete ===")

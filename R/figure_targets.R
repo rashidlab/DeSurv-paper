@@ -748,8 +748,8 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
     "SCISSORS_CAF_vs_peri_top25_Perivascular" = "SCISSORS_Perivascular",
     "SCISSORS_panCAF_vs_peri_top25_panCAF"    = "SCISSORS_panCAF",
     "MSI_Immune"                              = "Moffitt_Immune",
-    "SCISSORS_iCAF"                           = "SCISSORS_restCAF",
-    "SCISSORS_myCAF"                          = "SCISSORS_proCAF"
+    "SCISSORS_iCAF"                           = "SCISSORS_iCAF-like",
+    "SCISSORS_myCAF"                          = "SCISSORS_myCAF-like"
   )
   to_rename <- names(temp) %in% names(rename_map)
   names(temp)[to_rename] <- rename_map[names(temp)[to_rename]]
@@ -823,6 +823,17 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
     sub   <- gsub("([a-z])([A-Z][a-z])", "\\1 \\2", sub)
     paste0(group, ": ", sub)
   }, character(1))
+
+  # Explicit label overrides where auto-formatting doesn't produce the desired name
+  label_overrides <- c(
+    "DECODER: Classical Tumor"  = "DECODER: Classical tumor",
+    "DECODER: Basal Tumor"      = "DECODER: Basal-like tumor",
+    "Puleo: Pure Basal-like"    = "Puleo Basal-like",
+    "Puleo: tumor Basal-like"   = "Puleo: Basal-like",
+    "Puleo: tumor Classical"    = "Puleo: Immune Classical"
+  )
+  hits <- match(rownames(mat), names(label_overrides))
+  rownames(mat)[!is.na(hits)] <- label_overrides[hits[!is.na(hits)]]
 
   colnames(mat) = paste0("F",1:ncol(mat))
   if (!is.null(factor_labels) && length(factor_labels) == ncol(mat)) {

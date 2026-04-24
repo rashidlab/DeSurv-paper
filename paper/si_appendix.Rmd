@@ -909,13 +909,13 @@ column independently. Gene programs were included in the visualization only if
 at least one factor yielded a Spearman correlation exceeding 0.2. Asterisks
 ($*$) indicate adjusted p-value $< 0.1$.
 
-Reference gene programs included classical and basal-like tumor cell signatures
+Reference gene programs included Classical and Basal-like tumor cell signatures
 from Moffitt et al.\ [@moffitt2015virtual]; iCAF and myCAF
 cancer-associated fibroblast signatures from Elyada et al.\
 [@elyada2019cross]; activated (proCAF) and resting (restCAF) fibroblast
-programs from the deCAF study [@peng2024determination]; SCISSORS PDAC subtypes [@leary2023s]; tumor,
+programs from the deCAF study [@peng2024determination]; iCAF-like and myCAF-like CAF subtypes from SCISSORS [@leary2023s]; tumor,
 stromal, and immune compartment signatures from DECODER [@peng2019novo];
-and classical and basal-like subtype classifiers from PurIST
+and Classical and Basal-like subtype classifiers from PurIST
 [@rashid2020purity]. Programs from Bailey et al.\ [@Bailey2016],
 periductal subtypes, and MSI subtypes were excluded from visualization due to
 redundancy with other included programs or low overall correlation across all
@@ -1644,7 +1644,7 @@ ggplot2::ggplot(df_nmf, ggplot2::aes(x = variance_explained, y = delta_loglik,
 
 \section{Factor-Specific Gene Lists}
 
-Tables \ref{tab:gene-list-270-D1}--\ref{tab:gene-list-270-D3} list the top 270 genes for each of the three DeSurv factors, ranked by the factor specificity score $s_{ij}$ defined in SI Appendix, Section \ref{sec:gene-program-correlation}. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}} = 270$); these are the genes used to compute sample-level factor scores for survival prediction. Factor D1 is enriched for classical/epithelial identity genes, Factor D2 for stromal and immune-related genes, and Factor D3 for basal-like and proliferation-associated genes.
+Tables \ref{tab:gene-list-270-D1}--\ref{tab:gene-list-270-D3} list the top 270 genes for each of the three DeSurv factors, ranked by the factor specificity score $s_{ij}$ defined in SI Appendix, Section \ref{sec:gene-program-correlation}. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}} = 270$); these are the genes used to compute sample-level factor scores for survival prediction. Factor D1 is enriched for Classical tumor identity genes, Factor D2 for stromal and immune-related genes, and Factor D3 for Basal-like tumor and proliferation-associated genes.
 
 ```{r tab-gene-list-270, echo=FALSE, results='asis'}
 library(knitr)
@@ -1670,9 +1670,9 @@ build_factor_table <- function(df, fct) {
 
 factor_labels <- c("D1", "D2", "D3")
 factor_captions <- c(
-  "Factor D1 (classical/epithelial)",
+  "Factor D1 (Classical tumor)",
   "Factor D2 (stromal/immune)",
-  "Factor D3 (basal-like)"
+  "Factor D3 (Basal-like tumor)"
 )
 
 for (i in seq_along(factor_labels)) {

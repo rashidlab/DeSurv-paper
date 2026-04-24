@@ -52,7 +52,7 @@ if (nzchar(CONFIG$ntop_subfolder)) {
 }
 
 # ── Paths ──────────────────────────────────────────────────────────────────
-RESULTS_BASE <- "results/precomputed"
+RESULTS_BASE <- "results/precomputed/ntop_bo_50_300"
 RESULTS_DIR  <- if (nzchar(CONFIG$ntop_subfolder)) {
   file.path(RESULTS_BASE, CONFIG$ntop_subfolder)
 } else {

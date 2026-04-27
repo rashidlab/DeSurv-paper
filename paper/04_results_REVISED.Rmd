@@ -193,7 +193,7 @@ km_reclass_diff <- km_n_high_desurv - km_n_high_nmf
 We developed DeSurv, a survival-supervised deconvolution framework (Fig. \ref{fig:schema}; Methods), and evaluated it in controlled simulations and PDAC cohort analysis with external validation.
 ```{r fig-schema, fig.cap = "Overview of the DeSurv framework. (A) DeSurv jointly optimizes NMF reconstruction ($X \\approx WH$) and Cox proportional hazards likelihood. The gene program matrix $W$ is shared between objectives: factor scores $Z = W^\\top X$ serve as covariates in the Cox model with coefficients $\\beta$. A supervision parameter $\\alpha \\in [0,1)$ controls the balance between reconstruction fidelity ($\\alpha = 0$, standard NMF) and survival prediction ($\\alpha$ close to 1). (B) The factorization rank ($k$), supervision strength ($\\alpha$), and regularization ($\\lambda$) are selected via Bayesian optimization over cross-validated concordance index. \\label{fig:schema}", fig.env='figure*', fig.pos='t', out.height= "6in", out.width='\\textwidth'}
 
-knitr::include_graphics(file.path("figures", "model_schematic_final.pdf"))
+knitr::include_graphics(file.path("..","figures", "model_schematic_final.pdf"))
 ```
 
 
@@ -208,7 +208,7 @@ Because the goal is prognostic factorization, DeSurv selects $k$ using the crite
 ```{r fig-sim, fig.width = 6.5, fig.height = 6, fig.cap = "Simulation studies and model selection. (A) Test-set concordance index across 100 simulation replicates ($p = 3{,}000$ genes, $n = 200$ samples, true $k = 3$) comparing DeSurv to standard NMF ($\\alpha = 0$). (B) Precision (fraction of top-weighted genes in a learned factor overlapping a true prognostic program) across replicates. (C) Distribution of selected $k$ values for DeSurv versus standard NMF. (D) Gaussian process predicted mean cross-validated C-index from Bayesian optimization over factorization rank ($k$) and supervision strength ($\\alpha$) in PDAC training data (TCGA + CPTAC). \\label{fig:sim}", fig.env='figure*', fig.pos='t', out.height= "6in", out.width="6.5in"}
 
 load_result("fig_bo_heat_tcgacptac")
-fig_bo_heat_tcgacptac = set_fig_font(fig_bo_heat_tcgacptac, size = 10) +
+fig_bo_heat_tcgacptac = fig_bo_heat_tcgacptac +
   guides(fill = guide_colorbar(barheight = unit(2, "cm"), barwidth = unit(0.3, "cm"))) +
   theme(legend.title = element_text(size = 7), legend.text = element_text(size = 7))
 leg_grob = ggplotGrob(fig_bo_heat_tcgacptac)
@@ -292,7 +292,7 @@ top_row <- plot_grid(
 )
 
 # ── Panel C: variance vs survival scatterplot ──
-plot_3c <- set_fig_font(fig_variation_explained_tcgacptac, size = 10) +
+plot_3c <- fig_variation_explained_tcgacptac +
   theme(
     legend.position    = c(1, 0.5),
     legend.justification = c(1, 0),

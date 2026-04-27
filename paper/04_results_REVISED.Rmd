@@ -48,12 +48,8 @@ null = which(scenario_ids=="R00_null" & analysis_ids == "bo_tune_ntop")
 alt_plots = sim_figs_by_scenario[[alt]]
 null_plots = sim_figs_by_scenario[[null]]
 
-alt_plots = lapply(alt_plots, set_fig_font, size = 10)
-null_plots = lapply(null_plots, set_fig_font, size = 10)
-
 mixed = which(scenario_ids=="R_mixed" & analysis_ids == "bo_tune_ntop")
 mixed_plots = sim_figs_by_scenario[[mixed]]
-mixed_plots = lapply(mixed_plots, set_fig_font, size = 10)
 ```
 
 ```{r computed-stats, echo=FALSE, message=FALSE, warning=FALSE}
@@ -197,7 +193,7 @@ km_reclass_diff <- km_n_high_desurv - km_n_high_nmf
 We developed DeSurv, a survival-supervised deconvolution framework (Fig. \ref{fig:schema}; Methods), and evaluated it in controlled simulations and PDAC cohort analysis with external validation.
 ```{r fig-schema, fig.cap = "Overview of the DeSurv framework. (A) DeSurv jointly optimizes NMF reconstruction ($X \\approx WH$) and Cox proportional hazards likelihood. The gene program matrix $W$ is shared between objectives: factor scores $Z = W^\\top X$ serve as covariates in the Cox model with coefficients $\\beta$. A supervision parameter $\\alpha \\in [0,1)$ controls the balance between reconstruction fidelity ($\\alpha = 0$, standard NMF) and survival prediction ($\\alpha$ close to 1). (B) The factorization rank ($k$), supervision strength ($\\alpha$), and regularization ($\\lambda$) are selected via Bayesian optimization over cross-validated concordance index. \\label{fig:schema}", fig.env='figure*', fig.pos='t', out.height= "6in", out.width='\\textwidth'}
 
-knitr::include_graphics(file.path("..","figures", "model_schematic_final.pdf"))
+knitr::include_graphics(file.path("figures", "model_schematic_final.pdf"))
 ```
 
 

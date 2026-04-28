@@ -186,7 +186,7 @@ fig_gene_overlap_heatmap_desurv <- make_gene_overlap_heatmap(
       tar_fit_desurv, tar_tops_desurv$top_genes, top_genes,
       factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7
     )
-saveRDS(file.path(RESULTS_DIR,"fig_gene_overlap_heatmap_desurv_tcgacptac.rds"))
+saveRDS(fig_gene_overlap_heatmap_desurv,file.path(RESULTS_DIR,"fig_gene_overlap_heatmap_desurv_tcgacptac.rds"))
 
 # Standard NMF at DeSurv k heatmap
 fig_gene_overlap_heatmap_std_desurvk <- make_gene_overlap_heatmap(

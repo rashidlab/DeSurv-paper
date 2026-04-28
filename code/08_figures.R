@@ -74,6 +74,30 @@ fig_bo_heat <- ggplot(curve, aes(x = k, y = alpha, fill = mean)) +
     )
 saveRDS(fig_bo_heat, file.path(RESULTS_DIR,"fig_bo_heat_tcgacptac.rds"))
 
+# maxed bo heat
+curve = extract_gp_curve_maxed(desurv_bo_results)
+fig_bo_heat_maxed <- ggplot(curve, aes(x = k, y = alpha, fill = mean)) +
+  geom_tile(color = NA) +
+  scale_x_continuous(breaks = seq(2, 12, by = 1)) +
+  scale_fill_viridis_c(
+    name = "CV C-index",
+    option = "D",
+    guide = guide_colorbar(barheight = unit(3, "cm"), barwidth = unit(0.4, "cm"))
+  ) +
+  scale_y_continuous(
+    breaks = seq(0, 1, by = 0.2),
+    labels = function(x) ifelse(x == 0, "0 (NMF)", as.character(x))
+  ) +
+  labs(x = "Factorization rank (k)", y = "Supervision strength") +
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid = element_blank(),
+    axis.title = element_text(face = "bold"),
+    axis.text  = element_text(color = "black"),
+    legend.title = element_text(face = "bold"),
+    legend.text  = element_text(color = "black")
+  )
+
 # ── Variance explained vs survival contribution scatter ───────────────────
 df_nmf <- build_variance_survival_df(
   X = tar_data_filtered$ex,

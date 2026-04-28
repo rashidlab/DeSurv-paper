@@ -17,7 +17,7 @@ K-sensitivity p-values from `results/cv_grid/`.
 | PACA-AU seq | 0.634 | 0.430 | 0.679 | 0.702 |
 | Puleo | 0.636 | 0.534 | 0.642 | 0.651 |
 
-**Key observation:** NMF k=5 and k=7 match or exceed DeSurv k=3 in most cohorts.
+**Key observation:** The BO α=0 model (k=7, ntop=187) matches or exceeds DeSurv k=3 in most cohorts. However, this is not standard NMF: BO used survival signal to select k=7 and ntop=187 (optimizing held-out C-index), even though α=0 means survival does not influence the factorization itself. This distinction matters for interpretation.
 
 ---
 
@@ -35,7 +35,7 @@ Each cell = p-value for the factor most correlated with the production k=3 D1 fa
 
 - **K=3 significant in 5/7 α settings**
 - **K=7 significant in only 2/7 α settings**
-- K=7 at α=0 (pure NMF, BO-selected rank): adj p = 0.514 — **not significant**
+- K=7 at α=0, ntop=270 (uniform gene-focusing, no factorization supervision): adj p = 0.514 — **not significant**
 
 ---
 
@@ -53,15 +53,18 @@ Each cell = p-value for the factor most correlated with the production k=3 D1 fa
 
 ## Table S6 — Pooled validation HRs, unadjusted vs. adjusted for PurIST + DeCAF
 
-Per the SI text (tab-hr-adjusted, computed dynamically from val_latent RDS):
+Values verified by live computation from val_latent RDS (ntop_bo_50_300 production run):
 
 | Method | Unadjusted HR per SD (95% CI), P | Adjusted HR per SD (95% CI), P |
 |---|---|---|
-| DeSurv k=3 | significant | **remains significant** |
-| NMF k=7 (BO α=0) | significant | **attenuates, loses significance** |
+| DeSurv k=3 | 1.50 (1.31–1.72), P<0.001 | **1.33 (1.13–1.56), P=0.0005** |
+| NMF k=7 (BO α=0) | 1.48 (1.34–1.64), P<0.001 | **1.47 (1.27–1.70), P<0.001** |
 
-(Exact numbers render dynamically; abstract hardcodes DeSurv unadj as 1.45, 95% CI 1.29–1.63, P < 0.001.)
-Production model adjusted p = 0.004.
+**Key observation:** Both methods remain independently significant after adjustment for PurIST and DeCAF. DeSurv k=3 shows moderate attenuation (HR 1.50→1.33); the BO α=0 model shows almost none (1.48→1.47). Neither method's signal is classifier-redundant.
+
+The robustness of the BO α=0 model makes sense: survival information was used to select k=7 and ntop=187 via BO, so it is not unsupervised in the full sense. The key difference from DeSurv is *where* the survival signal enters: in the BO α=0 model, survival guides only hyperparameter selection; in DeSurv, it also guides the factorization directly (α>0), which is what allows the iCAF signal to concentrate into 3 factors rather than 7.
+
+Note: production_summary.rds stores adj_p=0.004 for K=3/α=0.55 — this is from the k-sensitivity grid (Table S3), not from the tab-hr-adjusted pooled Cox (P=0.0005). Do not conflate.
 
 ---
 
@@ -69,18 +72,18 @@ Production model adjusted p = 0.004.
 
 ### The core argument
 
-NMF can approach DeSurv's concordance, but only by using more than twice as many factors — and even then, the concordance gain reflects signals already captured by existing classifiers.
-The right comparison is not against published HRs (item 9) but against those classifiers directly as covariates.
+A BO-optimized unsupervised NMF (α=0, k=7, ntop=187) can match DeSurv's concordance and retain independent prognostic value after classifier adjustment — but it requires more than twice as many factors. The reason is where the survival signal enters: when survival guides only hyperparameter selection (k, ntop), the factorization is unconstrained and needs 7 factors to capture the iCAF program. When survival also guides the factorization (α>0, DeSurv), the decomposition is steered toward survival-relevant structure from the start, keeping the iCAF signal in one factor and making k=3 sufficient. The argument for DeSurv is therefore parsimony: the same independent prognostic value, with fewer factors, by using the available survival information more completely.
+The right comparison for item 9 is not against published HRs but against those classifiers directly as covariates — showing DeSurv's signal is independent.
 
 ### Arc
 
-1. **NMF k=5 and k=7 do improve over NMF k=3** (Table S5): at k=7, NMF matches or exceeds DeSurv k=3 per-cohort C-index in most cohorts. This is the honest starting point — do not downplay it.
+1. **BO-optimized NMF at α=0 matches DeSurv's concordance but requires 7 factors** (Table S5): at k=7, this model matches or exceeds DeSurv k=3 per-cohort C-index in most cohorts, and it retains independent prognostic value after classifier adjustment (Table S6). This is the honest starting point — do not downplay it. Critically, this model is not standard NMF: BO used survival to select k=7 and ntop=187, so the survival signal enters through hyperparameter selection even though it does not influence the factorization (α=0).
 
-2. **But NMF k=7's signal is classifier-redundant** (Tables S3, S6): in the pooled external validation, the NMF k=7 linear predictor loses significance after adjustment for PurIST and DeCAF (Table S6), while DeSurv k=3 retains a significant adjusted HR (p=0.004). The k-sensitivity analysis sharpens this: at k=7 with α=0 (pure NMF), the D1-equivalent factor has no adjusted significance (adj p=0.51, Table S3), and k=7 achieves adjusted significance in only 2/7 supervision settings vs. 5/7 for k=3.
+2. **DeSurv achieves the same with k=3 by letting survival guide the factorization** (Tables S3, S6): when survival also steers the decomposition (α>0), the iCAF signal concentrates into a single factor rather than dispersing, so k=3 suffices. Under the k-sensitivity analysis with uniform ntop=270 (Table S3), k=3 achieves adjusted significance at 5/7 α settings versus only 2/7 for k=7 — at k=7, 270-gene projection fragments the iCAF signal across factors (confirmed by factor-nesting analysis) because without factorization supervision, the decomposition doesn't preferentially keep the prognostic program intact.
 
-3. **K=3 achieves the broadest adjusted significance with the fewest factors** (Table S3): under the production ntop=270 gene-focusing, k=3 reaches adjusted P<0.05 at 5 of 7 α values tested, versus 4/7 for k=5 and only 2/7 for k=7. The k=7 underperformance is mechanistic: 270-gene projection concentrates each factor onto its most characteristic genes, and at k=7 the iCAF signal disperses across multiple factors rather than concentrating in one — the k=7 C-index gains in Table S5 therefore reflect biological variation that PurIST and DeCAF already capture, explaining why adjusted significance collapses. K=5 does achieve significance across 4 of 7 α values with ntop=270, providing convergent support for the iCAF biology from a higher-k model, but with two additional factors and a narrower α range than k=3.
+3. **K=3 achieves the broadest adjusted significance with the fewest factors** (Table S3): under the production ntop=270 gene-focusing, k=3 reaches adjusted P<0.05 at 5 of 7 α values tested, versus 4/7 for k=5 and only 2/7 for k=7. The k=7 underperformance under uniform gene-focusing is mechanistic: 270-gene projection concentrates each factor onto its most characteristic genes, and at k=7 the iCAF signal disperses across multiple factors rather than concentrating in one (confirmed by factor-nesting analysis). K=5 does achieve significance across 4 of 7 α values with ntop=270, providing convergent support for the iCAF biology from a higher-k model, but with two additional factors and a narrower α range than k=3.
 
-4. **Therefore the meaningful test is classifier independence, not published HRs** (item 9): rather than comparing to Moffitt/PurIST/DeCAF literature HRs, Table S6 shows DeSurv's prognostic value is independent of what those classifiers already explain. This is a stronger statement.
+4. **The meaningful test for item 9 is classifier independence, not published HRs**: rather than comparing to Moffitt/PurIST/DeCAF literature HRs, Table S6 shows DeSurv k=3 retains a significant independent HR after adjustment (HR=1.33, P=0.0005). This is a stronger statement than citing literature HRs. NMF k=7 is also independently significant in Table S6 (HR=1.47, P<0.001), so Table S6 alone does not distinguish the two methods — the distinction comes from parsimony and the Table S3 robustness analysis.
 
 ---
 
@@ -90,12 +93,13 @@ Current text ends with: "...producing a fragmented structure whose prognostic co
 
 **Proposed sentence to append:**
 
-> "Standard NMF approaches DeSurv's concordance only at k=7 (SI Appendix, Table S5), but its prognostic signal is largely redundant with existing molecular classifiers: after adjustment for PurIST and DeCAF, the NMF k=7 linear predictor loses significance while DeSurv k=3 retains a significant independent hazard ratio (SI Appendix, Table S6), and the D1-equivalent factor at k=7 achieves adjusted significance in only 2 of 7 supervision settings versus 5 of 7 for k=3 (SI Appendix, Table S3)."
+> "An unsupervised factorization with survival-guided hyperparameter selection (BO, α=0) approaches DeSurv's concordance only at k=7 (SI Appendix, Table S5); incorporating survival information directly into the factorization (α>0) concentrates the iCAF signal into a single factor, making k=3 sufficient — under controlled conditions, k=3 achieves adjusted significance across 5 of 7 supervision settings versus 2 of 7 for k=7 (SI Appendix, Table S3)."
 
 ---
 
 ## Notes / open questions
 
-- The exact adjusted HR values for Table S6 render dynamically — verify once the supplement compiles with ntop_bo_50_300 data.
+- Table S6 values verified by live computation from val_latent RDS (ntop_bo_50_300). Both DeSurv k=3 and NMF k=7 are independently significant after adjustment; the "NMF k=7 loses significance" claim was wrong.
+- NMF k=7 was fit with BO-selected ntop=187; DeSurv k=3 with ntop=270. Table S3 applies ntop=270 uniformly to all models — these are different comparisons and should not be conflated.
 - The table reference numbers (S3, S4, S5, S6) should be confirmed against the actual compiled SI once rendered.
-- Item 9 does not require a manuscript edit; the response to Jen Jen's HR question is that Table S6 already provides the direct comparison to existing classifiers, which is stronger than citing published HRs.
+- Item 9: Table S6 shows DeSurv k=3 is independently prognostic (HR=1.33, P=0.0005), which answers Jen Jen's question more directly than citing published literature HRs. However, Table S6 alone does not differentiate DeSurv from NMF k=7 — pair it with the Table S3 robustness argument.

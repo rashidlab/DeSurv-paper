@@ -1,0 +1,71 @@
+#!/usr/bin/env Rscript
+# run_pipeline.R — Run the DeSurv analysis pipeline
+#
+# Usage:
+#   Rscript run_pipeline.R                       # From precomputed (paper only)
+#   Rscript run_pipeline.R --quick               # Quick smoke test (~10 min)
+#   Rscript run_pipeline.R --full --ncores 8     # Full re-computation
+#   Rscript run_pipeline.R --step 8              # Run from step 8 onward
+#   Rscript run_pipeline.R --step 8 --only       # Run only step 8
+
+if (!requireNamespace("optparse", quietly = TRUE)) {
+  install.packages("optparse")
+}
+library(optparse)
+
+option_list <- list(
+  make_option("--quick", action = "store_true", default = FALSE,
+              help = "Quick mode: reduced data/iterations for smoke testing"),
+  make_option("--full", action = "store_true", default = FALSE,
+              help = "Full re-computation from raw data"),
+  make_option("--step", type = "integer", default = 1L,
+              help = "Start from this step number [default: %default]"),
+  make_option("--only", action = "store_true", default = FALSE,
+              help = "Run only the specified step"),
+  make_option("--ncores", type = "integer", default = 1L,
+              help = "Number of cores for parallel steps [default: %default]")
+)
+
+opts <- parse_args(OptionParser(option_list = option_list))
+
+# Set environment variables consumed by individual scripts
+if (opts$quick) {
+  Sys.setenv(DESURV_QUICK = "TRUE", DESURV_RECOMPUTE = "TRUE", DESURV_NCORES = "1")
+} else if (opts$full) {
+  Sys.setenv(DESURV_RECOMPUTE = "TRUE", DESURV_NCORES = as.character(opts$ncores))
+}
+
+steps <- c(
+  "code/01_install.R",
+  "code/02_load_data.R",
+  "code/03_bayesian_optimization.R",
+  "code/04_fit_models.R",
+  "code/05_external_validation.R",
+  "code/06_sensitivity_analysis.R",
+  "code/07_simulations.R",
+  "code/08_figures.R",
+  "code/09_render_paper.R"
+)
+
+# Default: just render paper from precomputed results
+if (!opts$quick && !opts$full && opts$step == 1L) {
+  opts$step <- 9L
+  message("No --quick or --full specified. Running step 9 only (render paper).")
+  message("Use --quick for smoke test or --full for re-computation.\n")
+}
+
+for (i in seq_along(steps)) {
+  if (i < opts$step) next
+  if (opts$only && i != opts$step) next
+  if (!file.exists(steps[i])) {
+    message(sprintf("  Skipping step %d (file not found: %s)", i, steps[i]))
+    next
+  }
+  cat(sprintf("\n=== Step %d/%d: %s ===\n", i, length(steps), steps[i]))
+  t0 <- Sys.time()
+  source(steps[i], local = new.env(parent = globalenv()))
+  elapsed <- difftime(Sys.time(), t0, units = "mins")
+  cat(sprintf("    Completed in %.1f minutes\n", as.numeric(elapsed)))
+}
+
+cat("\n=== Pipeline complete ===\n")

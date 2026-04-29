@@ -1,0 +1,16 @@
+# R artifacts
+.Rhistory
+.RData
+.Rproj.user/
+Rplots.pdf
+
+# Build artifacts
+paper/*.log
+paper/*.tex
+paper/*.pdf
+paper/*_files/
+logs/
+
+# OS
+.DS_Store
+*~

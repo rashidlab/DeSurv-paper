@@ -43,7 +43,7 @@ all:
 
 # ── Paper only ────────────────────────────────────────────────────────────
 paper:
-	Rscript code/09_render_paper.R
+	DESURV_NTOP_LOWER=50 DESURV_NTOP_UPPER=300 Rscript code/09_render_paper.R
 
 # ── Install DeSurv ────────────────────────────────────────────────────────
 install:

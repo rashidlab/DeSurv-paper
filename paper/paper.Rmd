@@ -3,32 +3,32 @@ title: Survival-guided matrix factorization identifies reproducible prognostic p
   # Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
 author:
   - name: Amber M. Young
-    affiliation: a,1
-  # - name: Alisa Yurovsky
-  #   affiliation: b
-  # - name: Xianlu Laura Peng
-  #   affiliation: c,d
-  # - name: Didong Li
-  #   affiliation: a
-  # - name: Jen Jen Yeh
-  #   affiliation: c,d,e
-  # - name: Naim U. Rashid
-  #   affiliation: a,d
+    affiliation: a
+  - name: Alisa Yurovsky
+    affiliation: b
+  - name: Xianlu Laura Peng
+    affiliation: c,d
+  - name: Didong Li
+    affiliation: a
+  - name: Jen Jen Yeh
+    affiliation: c,d,e
+  - name: Naim U. Rashid
+    affiliation: a,d,1
 address:
   - code: a
     address: Department of Biostatistics, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
-  # - code: b
-  #   address: Department of Biomedical Informatics, Stony Brook University, Stony Brook, NY 11794, USA
-  # - code: c
-  #   address: Department of Pharmacology, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
-  # - code: d
-  #   address: Lineberger Comprehensive Cancer Center, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
-  # - code: e
-  #   address: Department of Surgery, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
+  - code: b
+    address: Department of Biomedical Informatics, Stony Brook University, Stony Brook, NY 11794, USA
+  - code: c
+    address: Department of Pharmacology, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
+  - code: d
+    address: Lineberger Comprehensive Cancer Center, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
+  - code: e
+    address: Department of Surgery, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
 
 corresponding_author:
   code: 1
-  text: "To whom correspondence should be addressed. E-mail: ayoung31@live.unc.edu"
+  text: "To whom correspondence should be addressed. E-mail: nur2@email.unc.edu"
 
 # For footer text
 lead_author_surname: Young

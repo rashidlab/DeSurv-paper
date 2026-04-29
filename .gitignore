@@ -7,7 +7,6 @@ Rplots.pdf
 # Build artifacts
 paper/*.log
 paper/*.tex
-paper/*.pdf
 paper/*_files/
 logs/
 

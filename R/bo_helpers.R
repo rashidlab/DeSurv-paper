@@ -149,6 +149,64 @@ select_bo_k_by_cv_se <- function(bo_results) {
   )
 }
 
+select_bo_params_1se <- function(bo_results) {
+  k_sel <- select_bo_k_by_cv_se(bo_results)
+  if (is.null(k_sel$k_selected)) {
+    stop("select_bo_params_1se: 1-SE k-selection failed (reason='", k_sel$reason, "')")
+  }
+  history_df <- bo_results$history
+  if (!is.data.frame(history_df) || !nrow(history_df)) {
+    stop("select_bo_params_1se: BO history is empty.")
+  }
+  k_col <- intersect(c("k", "k_grid"), names(history_df))[1]
+  if (is.na(k_col) || !nzchar(k_col)) {
+    stop("select_bo_params_1se: BO history has no k column.")
+  }
+  ok <- !is.na(history_df$mean_cindex)
+  if ("status" %in% names(history_df)) {
+    ok <- ok & history_df$status == "ok"
+  }
+  candidates <- history_df[ok, , drop = FALSE]
+  k_vals <- suppressWarnings(as.numeric(as.character(candidates[[k_col]])))
+  candidates <- candidates[!is.na(k_vals) &
+                             as.integer(round(k_vals)) == as.integer(k_sel$k_selected),
+                           , drop = FALSE]
+  if (!nrow(candidates)) {
+    stop("select_bo_params_1se: no BO history rows at k_selected=",
+         k_sel$k_selected)
+  }
+  best_row <- candidates[order(-candidates$mean_cindex)[1], , drop = FALSE]
+
+  # Build the set of BO hyperparameter base names from the overall_best
+  # template plus any `_grid`-suffixed columns in history. For each base name
+  # we look up the bare column first, then `<name>_grid`. Avoids accidentally
+  # producing duplicate list entries for the same parameter.
+  template_names <- tryCatch(
+    names(as.list(bo_results$overall_best$params)),
+    error = function(e) character(0)
+  )
+  history_grid <- grep("_grid$", names(history_df), value = TRUE)
+  base_names <- unique(c(sub("_grid$", "", template_names), sub("_grid$", "", history_grid)))
+  # Drop names that don't correspond to any column in best_row (avoid noise)
+  out <- list()
+  for (nm in base_names) {
+    val <- if (nm %in% names(best_row)) {
+      best_row[[nm]]
+    } else if (paste0(nm, "_grid") %in% names(best_row)) {
+      best_row[[paste0(nm, "_grid")]]
+    } else {
+      NULL
+    }
+    if (is.null(val)) next
+    if (is.factor(val)) val <- as.character(val)
+    out[[nm]] <- val[[1]]
+  }
+  # Force k to the 1-SE-rule selected k (defensive — should already match).
+  out$k <- as.integer(k_sel$k_selected)
+  attr(out, "k_selection") <- k_sel
+  out
+}
+
 collect_bo_diagnostics <- function(bo_results, history_df = NULL) {
   if (is.null(bo_results)) {
     return(NULL)

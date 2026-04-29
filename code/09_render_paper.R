@@ -27,14 +27,23 @@ fig_dir <- if (nzchar(CONFIG$ntop_subfolder)) {
 }
 dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 
+# When using the 1-SE param rule, suffix the output PDFs so they don't
+# overwrite the primary "best" run's outputs.
+out_suffix <- if (identical(CONFIG$param_rule, "1se")) "_1se" else ""
+
+paper_out <- paste0("paper", out_suffix, ".pdf")
+si_out    <- paste0("si_appendix", out_suffix, ".pdf")
+
 # Render main paper
 message("  Rendering paper/paper.Rmd ...")
-rmarkdown::render("paper/paper.Rmd", knit_root_dir = getwd(), quiet = TRUE)
-message("  Output: paper/paper.pdf")
+rmarkdown::render("paper/paper.Rmd", knit_root_dir = getwd(), quiet = TRUE,
+                  output_file = paper_out)
+message("  Output: paper/", paper_out)
 
 # Render supplement
 message("  Rendering paper/si_appendix.Rmd ...")
-rmarkdown::render("paper/si_appendix.Rmd", knit_root_dir = getwd(), quiet = TRUE)
-message("  Output: paper/si_appendix.pdf")
+rmarkdown::render("paper/si_appendix.Rmd", knit_root_dir = getwd(), quiet = TRUE,
+                  output_file = si_out)
+message("  Output: paper/", si_out)
 
 message("=== Step 9 complete ===")

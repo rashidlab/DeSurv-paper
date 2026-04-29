@@ -46,9 +46,29 @@ if (nzchar(ntop_fixed_env)) {
   CONFIG$ntop_subfolder <- ""
 }
 
+# DESURV_PARAM_RULE: "best" (default) or "1se".
+# When "1se", the final-model parameter selection in step 03b takes the full
+# 1-SE row from BO history (not just k), and the subfolder gets a _1se suffix
+# so outputs do not overwrite the "best" run.
+param_rule_env <- Sys.getenv("DESURV_PARAM_RULE", "best")
+if (!nzchar(param_rule_env)) param_rule_env <- "best"
+if (!param_rule_env %in% c("best", "1se")) {
+  stop("DESURV_PARAM_RULE must be 'best' or '1se' (got: ", param_rule_env, ")")
+}
+CONFIG$param_rule <- param_rule_env
+
+if (CONFIG$param_rule == "1se") {
+  if (!nzchar(CONFIG$ntop_subfolder)) {
+    stop("DESURV_PARAM_RULE=1se requires DESURV_NTOP or DESURV_NTOP_LOWER/UPPER ",
+         "to be set so outputs land in a dedicated subfolder.")
+  }
+  CONFIG$ntop_subfolder <- paste0(CONFIG$ntop_subfolder, "_1se")
+}
+
 if (nzchar(CONFIG$ntop_subfolder)) {
-  message("=== ntop config: ", CONFIG$ntop_mode, " -> subfolder: ",
-          CONFIG$ntop_subfolder, " ===")
+  message("=== ntop config: ", CONFIG$ntop_mode,
+          ", rule: ", CONFIG$param_rule,
+          " -> subfolder: ", CONFIG$ntop_subfolder, " ===")
 }
 
 # ── Paths ──────────────────────────────────────────────────────────────────

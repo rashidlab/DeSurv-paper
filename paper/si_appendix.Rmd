@@ -980,6 +980,10 @@ heatmap with NMF factors as rows and DeSurv factors as columns (main text, Fig.\
 } else {
   ""
 }
+.param_rule_env <- Sys.getenv("DESURV_PARAM_RULE", "best")
+if (identical(.param_rule_env, "1se") && nzchar(.fig_sub)) {
+  .fig_sub <- paste0(.fig_sub, "_1se")
+}
 .fig_path <- if (nzchar(.fig_sub)) {
   file.path("figures", .fig_sub, "")
 } else {

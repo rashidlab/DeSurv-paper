@@ -31,9 +31,14 @@ message("  1-SE rule: k_selected=", tar_k_selection$k_selected,
         ", reason=", tar_k_selection$reason)
 
 tar_params_best <- cache_or_compute("tar_params_best_tcgacptac", {
-  params <- standardize_bo_params(desurv_bo_results$overall_best$params)
-  if (!is.null(tar_k_selection$k_selected)) {
-    params$k <- tar_k_selection$k_selected
+  if (CONFIG$param_rule == "1se") {
+    params <- select_bo_params_1se(desurv_bo_results)
+    message("  Param rule '1se': took full 1-SE row from BO history.")
+  } else {
+    params <- standardize_bo_params(desurv_bo_results$overall_best$params)
+    if (!is.null(tar_k_selection$k_selected)) {
+      params$k <- tar_k_selection$k_selected
+    }
   }
   params
 })
@@ -56,9 +61,14 @@ desurv_bo_results_alpha0 <- load_precomputed("desurv_bo_results_alpha0_tcgacptac
 tar_k_selection_alpha0 <- select_bo_k_by_cv_se(desurv_bo_results_alpha0)
 
 tar_params_best_alpha0 <- cache_or_compute("tar_params_best_alpha0_tcgacptac", {
-  params <- standardize_bo_params(desurv_bo_results_alpha0$overall_best$params)
-  if (!is.null(tar_k_selection_alpha0$k_selected)) {
-    params$k <- tar_k_selection_alpha0$k_selected
+  if (CONFIG$param_rule == "1se") {
+    params <- select_bo_params_1se(desurv_bo_results_alpha0)
+    message("  Alpha=0 param rule '1se': took full 1-SE row from BO history.")
+  } else {
+    params <- standardize_bo_params(desurv_bo_results_alpha0$overall_best$params)
+    if (!is.null(tar_k_selection_alpha0$k_selected)) {
+      params$k <- tar_k_selection_alpha0$k_selected
+    }
   }
   params$alpha <- 0
   params

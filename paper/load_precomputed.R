@@ -31,6 +31,12 @@ PRECOMPUTED_BASE <- if (file.exists("results/precomputed")) {
   ""
 }
 
+# Mirror the _1se suffix used by code/00_helpers.R when DESURV_PARAM_RULE=1se
+.param_rule_env <- Sys.getenv("DESURV_PARAM_RULE", "best")
+if (identical(.param_rule_env, "1se") && nzchar(.ntop_subfolder)) {
+  .ntop_subfolder <- paste0(.ntop_subfolder, "_1se")
+}
+
 PRECOMPUTED_DIR <- if (nzchar(.ntop_subfolder)) {
   subdir <- file.path(PRECOMPUTED_BASE, .ntop_subfolder)
   if (!dir.exists(subdir)) {

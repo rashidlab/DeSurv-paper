@@ -8,10 +8,10 @@ author:
     affiliation: b
   - name: Xianlu Laura Peng
     affiliation: c,d
-  - name: Didong Li
-    affiliation: a
   - name: Jen Jen Yeh
     affiliation: c,d,e
+  - name: Didong Li
+    affiliation: a
   - name: Naim U. Rashid
     affiliation: a,d,1
 address:

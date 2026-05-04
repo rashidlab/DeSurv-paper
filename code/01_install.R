@@ -22,6 +22,9 @@ if (dir.exists(local_path)) {
 library(DeSurv)
 message("DeSurv version: ", packageVersion("DeSurv"))
 
+# Pin ggplot2 to 3.5.2
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+
 # Check other key dependencies
 pkgs <- c("survival", "NMF", "ggplot2", "cowplot", "dplyr", "survminer",
            "pheatmap", "ComplexHeatmap")

@@ -14,7 +14,8 @@ NCORES ?= 1
 NTOP ?=
 NTOP_LOWER ?=
 NTOP_UPPER ?=
-RSCRIPT = "C:\Program Files\R\R-4.4.1\bin\Rscript.exe"
+# Use a portable Rscript invocation by default; override with `make RSCRIPT=...` on Windows.
+RSCRIPT ?= Rscript
 
 .PHONY: all quick from-precomputed paper clean install ntop ntop-bo
 

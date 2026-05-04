@@ -22,7 +22,10 @@ if (dir.exists(local_path)) {
 library(DeSurv)
 message("DeSurv version: ", packageVersion("DeSurv"))
 
-# Pin ggplot2 to 3.5.2
+# NOTE: Cached figure .rds files in results/precomputed/ are saved using the
+# current ggplot2 version's class system (ggplot2 >= 4.0 uses S7 with @-slot
+# accessors). If you upgrade or downgrade ggplot2 across a major version, you
+# may need to regenerate the cached figures by re-running step 8.
 if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
 
 # Check other key dependencies

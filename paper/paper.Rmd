@@ -4,16 +4,22 @@ title: Survival-guided matrix factorization identifies reproducible prognostic p
 author:
   - name: Amber M. Young
     affiliation: a
+    orcid: 0000-0000-0000-0000  # TODO before submission: collect from Amber (no public ORCID record found via ORCID search)
   - name: Alisa Yurovsky
     affiliation: b
+    orcid: 0000-0002-7500-7907  # verified via ORCID public search (exact-name match)
   - name: Xianlu Laura Peng
     affiliation: c,d
+    orcid: 0000-0002-8684-5762  # verified via ORCID: "Xianlu Laura Peng | Pharmacology | UNC Chapel Hill"
   - name: Jen Jen Yeh
     affiliation: c,d,e
+    orcid: 0000-0003-2542-6211  # verified via ORCID public search (exact-name match)
   - name: Didong Li
     affiliation: a
+    orcid: 0000-0001-9146-705X  # verified via ORCID: "Didong Li | Asst Prof Biostatistics | UNC Chapel Hill"
   - name: Naim U. Rashid
     affiliation: a,d,1
+    orcid: 0000-0002-7274-8259  # provided directly by author
 address:
   - code: a
     address: Department of Biostatistics, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
@@ -34,21 +40,33 @@ corresponding_author:
 lead_author_surname: Young
 
 
+# CRediT taxonomy used below for internal record. PNAS submission portal uses
+# its own simpler 5-category set (designed research / performed research /
+# contributed new reagents or analytic tools / analyzed data / wrote the paper);
+# the portal entries are what get published, not this YAML field. Mapping for
+# portal entry at submission:
+#   designed research:                      A.M.Y., N.U.R.
+#   performed research:                     A.M.Y.
+#   contributed new reagents/analytic tools: A.M.Y., A.Y., D.L.
+#   analyzed data:                          A.M.Y.
+#   wrote the paper:                        A.M.Y., N.U.R., A.Y., X.L.P., J.J.Y., D.L.
 author_contributions: |
-  A.M.Y. and N.U.R. conceived and designed the study; A.M.Y. developed the DeSurv method, implemented the software, performed all analyses, and generated figures; A.Y. and D.L. contributed to methodological development and analytic tools; X.L.P. and J.J.Y. contributed to biological interpretation and PDAC domain expertise; A.M.Y. and N.U.R. wrote the manuscript; all authors reviewed and approved the final manuscript.
+  Conceptualization: A.M.Y., N.U.R. Methodology: A.M.Y., A.Y., D.L., N.U.R. Software: A.M.Y. Formal analysis: A.M.Y. Investigation: A.M.Y. Data curation: A.M.Y., X.L.P. Visualization: A.M.Y. Writing -- original draft: A.M.Y., N.U.R. Writing -- review and editing: A.M.Y., A.Y., X.L.P., J.J.Y., D.L., N.U.R. Resources (PDAC domain expertise and biological interpretation): X.L.P., J.J.Y. Supervision: N.U.R. Funding acquisition: A.M.Y., N.U.R. All authors reviewed and approved the final manuscript.
 
 ## Remove this if not required
 conflict_of_interest: |
   The authors declare no competing interests.
 
 abstract: |
-  The transcriptional programs that explain the most variance in bulk tumor expression data are often not those that predict patient survival. Standard nonnegative matrix factorization (NMF) discovers latent structure by minimizing reconstruction error, which may be driven by high-variance but prognostically neutral signals such as tissue composition. Here we present DeSurv, a survival-supervised deconvolution framework that jointly integrates NMF with Cox proportional hazards modeling, shaping gene programs to capture outcome-relevant structure during discovery rather than only in post hoc evaluation. In simulations with known latent structure, DeSurv recovers the true prognostic gene programs with substantially higher precision than standard NMF against ground-truth marker genes (0.50 vs. 0.07), with the largest advantage when variance and prognosis diverge. In pancreatic ductal adenocarcinoma (PDAC), DeSurv recovers a compact, three-factor decomposition in which a single tumor--stroma coupling drives prognosis while exocrine-compositional signals are suppressed. These survival-aligned factors generalize to five independent PDAC cohorts without retraining, with stronger out-of-sample survival stratification than their unsupervised counterparts (pooled validation HR per SD = 1.50, 95% CI 1.31--1.72, P < 0.001), demonstrating that outcome supervision during factorization yields more transportable transcriptional signatures than the standard discover-then-evaluate paradigm.
+  The transcriptional programs that explain the most variance in bulk tumor expression data are often not those that predict patient survival. Standard nonnegative matrix factorization (NMF) discovers latent structure by minimizing reconstruction error, which may be driven by high-variance but prognostically neutral signals such as tissue composition. Here we present DeSurv, a survival-supervised deconvolution framework that jointly integrates NMF with Cox proportional hazards modeling, shaping gene programs to capture outcome-relevant structure during discovery rather than only in post hoc evaluation. In simulations with known latent structure, DeSurv places more true prognostic genes among the top-ranked genes of each factor than standard NMF (precision, defined as the fraction of top-ranked factor genes that are true prognostic markers, 0.50 vs. 0.07), with the largest advantage when variance and prognosis diverge. In pancreatic ductal adenocarcinoma (PDAC), DeSurv recovers a compact, three-factor decomposition in which a single tumor--stroma coupling drives prognosis while exocrine-compositional signals are suppressed. These survival-aligned factors generalize to five independent PDAC cohorts without retraining, with stronger out-of-sample survival stratification than their unsupervised counterparts (pooled validation hazard ratio (HR) per standard deviation (SD) = 1.50, 95% confidence interval (CI) 1.31--1.72, P < 0.001), demonstrating that outcome supervision during factorization yields more transportable transcriptional signatures than the standard discover-then-evaluate paradigm.
 
 significance: |
-  Tumor transcriptomes mix malignant and microenvironmental signals, making it difficult to identify programs that drive clinical outcomes. Existing deconvolution and matrix factorization methods discover latent programs but do not ensure prognostic relevance, while supervised predictors often sacrifice biological interpretability. We present DeSurv, a survival-supervised deconvolution framework that integrates nonnegative matrix factorization with Cox modeling to learn gene programs and their survival associations jointly. By embedding outcome information into discovery and using automatic model selection, DeSurv yields clinically relevant, reproducible programs across cohorts. Although single-cell and spatial transcriptomics now resolve individual cell populations, bulk expression remains the primary source of large, clinically annotated cohorts with the sample sizes needed for stable survival modeling. This provides a general framework for identifying prognostically informative gene programs without requiring post hoc filtering or pre-specified signatures, with potential applications wherever high-dimensional nonnegative measurements contain both signal and noise variation.
+  Tumor tissue samples contain a mix of cancer cells and surrounding normal cells, making it hard to identify the genes that actually predict patient outcomes. Existing deconvolution methods discover latent gene programs but do not ensure prognostic relevance, while supervised predictors often sacrifice biological interpretability. We present DeSurv, a survival-supervised deconvolution framework that integrates nonnegative matrix factorization with Cox modeling to learn gene programs and their survival associations jointly. By embedding outcome information into discovery and using automatic model selection, DeSurv yields clinically relevant, reproducible programs across cohorts. This provides a general framework for identifying prognostically informative gene programs without requiring post hoc filtering or pre-specified signatures, applicable across cancer types where bulk expression dominates clinical cohort data.
 
 acknowledgements: |
   This work was supported by the National Cancer Institute grants U01 CA274298, P50 CA257911, and T32 CA106209 (A.M.Y.). Training data were obtained from the Cancer Genome Atlas (TCGA) Research Network (https://www.cancer.gov/tcga) and the Clinical Proteomic Tumor Analysis Consortium (CPTAC). External validation data were obtained from the Gene Expression Omnibus (GSE71729, Moffitt et al.; accessed via NCBI GEO), ArrayExpress (E-MTAB-6134, Puleo et al.; E-MTAB-6830, Dijk et al.; accessed via EMBL-EBI), and the International Cancer Genome Consortium data portal (PACA-AU; EGA study EGAS00001000154). We thank the patients and research teams who contributed samples and clinical data to these resources.
+
+  \textbf{Inclusion and Diversity.} The patient cohorts analyzed in this study were curated by the original investigators or consortia (TCGA, CPTAC, ICGC, and the original Moffitt, Dijk, and Puleo studies, deposited to GEO and ArrayExpress) and our access was limited to the de-identified expression and survival data they provide; we did not stratify analyses by sex, race, or ethnicity because consistent demographic annotations were not available across all cohorts. Sex and other demographic variables that could modify the prognostic relevance of the gene programs identified here remain important directions for follow-up work as more comprehensively annotated cohorts become available. The author team includes investigators at multiple career stages, with leadership and analytic contributions from both early-career and senior researchers across statistical, computational, and clinical disciplines.
 
 keywords:
   - nonnegative matrix factorization
@@ -120,7 +138,7 @@ knitr::opts_chunk$set(
   error   = FALSE,  # suppress errors in output
   fig.align = "center", # center figures
   fig.path = .fig_path,
-  dev = "png",
+  dev = "cairo_pdf", # vector output for PNAS production; dpi applies to embedded raster
   dpi = 300
 )
 
@@ -160,7 +178,7 @@ source("paper/load_precomputed.R")
 
 ```
 
-# Materials and methods {.unnumbered}
+# Materials and Methods {.unnumbered}
 
 ```{r child="paper/03_methods_REVISED.Rmd"}
 

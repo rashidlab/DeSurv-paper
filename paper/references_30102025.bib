@@ -1,56 +1,123 @@
-@article{seung2001algorithms,
+% ─── Dataset citations (PNAS requirement) ─────────────────────────────────
+% Per PNAS policy: "Research datasets, whether original or previously published,
+% must be cited in the references as a condition for publication." Each entry
+% below points to the original public deposit; access date is today (2026-05-03)
+% and should be re-set to actual access at submission if any newer revision
+% has been published.
+
+@misc{data_tcga_paad,
+  author = {{The Cancer Genome Atlas Research Network}},
+  title = {Data from ``Integrated genomic characterization of pancreatic ductal adenocarcinoma'' (TCGA-PAAD)},
+  howpublished = {NCI Genomic Data Commons},
+  year = {2017},
+  url = {https://portal.gdc.cancer.gov/projects/TCGA-PAAD},
+  note = {Accessed 3 May 2026}
+}
+
+@misc{data_cptac3,
+  author = {{National Cancer Institute Clinical Proteomic Tumor Analysis Consortium}},
+  title = {Data from CPTAC-3 pancreatic ductal adenocarcinoma cohort},
+  howpublished = {NCI Genomic Data Commons},
+  year = {2019},
+  url = {https://portal.gdc.cancer.gov/projects/CPTAC-3},
+  note = {Accessed 3 May 2026}
+}
+
+@misc{data_moffitt_gse71729,
+  author = {Moffitt, Richard A. and others},
+  title = {Data from ``Virtual microdissection identifies distinct tumor- and stroma-specific subtypes of pancreatic ductal adenocarcinoma''},
+  howpublished = {NCBI Gene Expression Omnibus, GSE71729},
+  year = {2015},
+  url = {https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE71729},
+  note = {Accessed 3 May 2026}
+}
+
+@misc{data_dijk_emtab6830,
+  author = {Dijk, Frederike and others},
+  title = {Data from ``Unsupervised class discovery in pancreatic ductal adenocarcinoma''},
+  howpublished = {ArrayExpress, E-MTAB-6830},
+  year = {2020},
+  url = {https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-6830},
+  note = {Accessed 3 May 2026}
+}
+
+@misc{data_puleo_emtab6134,
+  author = {Puleo, Francesco and others},
+  title = {Data from ``Stratification of pancreatic ductal adenocarcinomas based on tumor and microenvironment features''},
+  howpublished = {ArrayExpress, E-MTAB-6134},
+  year = {2018},
+  url = {https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-6134},
+  note = {Accessed 3 May 2026}
+}
+
+@misc{data_paca_au_egas,
+  author = {{Australian Pancreatic Cancer Genome Initiative} and {International Cancer Genome Consortium}},
+  title = {Pancreatic cancer (PACA-AU) cohort: array and RNA-sequencing data},
+  howpublished = {European Genome--phenome Archive, EGAS00001000154},
+  year = {2016},
+  url = {https://ega-archive.org/studies/EGAS00001000154},
+  note = {Accessed 3 May 2026}
+}
+
+% ─── End dataset citations ────────────────────────────────────────────────
+
+@inproceedings{seung2001algorithms,
   title={Algorithms for non-negative matrix factorization},
   author={Lee, Daniel D. and Seung, H. Sebastian},
-  journal={Advances in neural information processing systems},
-  volume={13},
-  number={556-562},
-  pages={35},
+  booktitle={Advances in Neural Information Processing Systems 13 (NIPS 2000)},
+  editor={Leen, Todd K. and Dietterich, Thomas G. and Tresp, Volker},
+  publisher={MIT Press},
+  pages={556--562},
   year={2001}
 }
 
 @article{raphael2017integrated,
   title={Integrated genomic characterization of pancreatic ductal adenocarcinoma},
   author={Raphael, Benjamin J and Hruban, Ralph H and Aguirre, Andrew J and Moffitt, Richard A and Yeh, Jen Jen and Stewart, Chip and Robertson, A Gordon and Cherniack, Andrew D and Gupta, Manaswi and Getz, Gad and others},
-  journal={Cancer cell},
+  journal={Cancer Cell},
   volume={32},
   number={2},
   pages={185--203},
   year={2017},
-  publisher={Elsevier}
+  doi={10.1016/j.ccell.2017.07.007}
 }
 
 @article{ellis2013clinical,
-  title={Clinical Proteomic Tumor Analysis Consortium (CPTAC): Connecting genomic alterations to cancer biology with proteomics: the NCI Clinical Proteomic Tumor Analysis Consortium},
+  title={Connecting genomic alterations to cancer biology with proteomics: the NCI Clinical Proteomic Tumor Analysis Consortium},
   author={Ellis, MJ and Gillette, M and Carr, SA and Paulovich, AG and Smith, RD and Rodland, KK and Townsend, RR and Kinsinger, C and Mesri, M and Rodriguez, H and others},
-  journal={Cancer Discov},
+  journal={Cancer Discovery},
   volume={3},
+  number={10},
   pages={1108--1112},
-  year={2013}
+  year={2013},
+  doi={10.1158/2159-8290.CD-13-0219}
 }
 
 @article{dijk2020unsupervised,
   title={Unsupervised class discovery in pancreatic ductal adenocarcinoma reveals cell-intrinsic mesenchymal features and high concordance between existing classification systems},
   author={Dijk, Frederike and Veenstra, Veronique L and Soer, Eline C and Dings, Mark PG and Zhao, Lan and Halfwerk, Johannes B and Hooijer, Gerrit K and Damhofer, Helene and Marzano, Marco and Steins, Anne and others},
-  journal={Scientific reports},
+  journal={Scientific Reports},
   volume={10},
   number={1},
   pages={337},
   year={2020},
-  publisher={Nature Publishing Group UK London}
+  doi={10.1038/s41598-019-56826-9}
 }
 
 @article{simon2011regularization,
   title={Regularization paths for Cox's proportional hazards model via coordinate descent},
   author={Simon, Noah and Friedman, Jerome H and Hastie, Trevor and Tibshirani, Rob},
-  journal={Journal of statistical software},
+  journal={Journal of Statistical Software},
   volume={39},
+  number={5},
   pages={1--13},
-  year={2011}
+  year={2011},
+  doi={10.18637/jss.v039.i05}
 }
 
 @article{Bailey2016,
   title={Genomic analyses identify molecular subtypes of pancreatic cancer},
-  author={Bailey, Peter and Chang, David K and others},
+  author={Bailey, Peter and Chang, David K and Nones, Katia and Johns, Amber L and Patch, Ann-Marie and Gingras, Marie-Claude and Miller, David K and Christ, Angelika N and Bruxner, Tim J C and Quinn, Michael C and others},
   journal={Nature},
   volume={531},
   number={7592},
@@ -62,34 +129,34 @@
 @article{collisson2011subtypes,
   title={Subtypes of pancreatic ductal adenocarcinoma and their differing responses to therapy},
   author={Collisson, Eric A and Sadanandam, Anguraj and Olson, Peter and Gibb, William J and Truitt, Morgan and Gu, Shenda and Cooc, Janine and Weinkle, Jennifer and Kim, Grace E and Jakkula, Lakshmi and others},
-  journal={Nature medicine},
+  journal={Nature Medicine},
   volume={17},
   number={4},
   pages={500--503},
   year={2011},
-  publisher={Nature Publishing Group US New York}
+  doi={10.1038/nm.2344}
 }
 
 @article{moffitt2015virtual,
-  title={Virtual microdissection identifies distinct tumor-and stroma-specific subtypes of pancreatic ductal adenocarcinoma},
+  title={Virtual microdissection identifies distinct tumor- and stroma-specific subtypes of pancreatic ductal adenocarcinoma},
   author={Moffitt, Richard A and Marayati, Raoud and Flate, Elizabeth L and Volmar, Keith E and Loeza, S Gabriela Herrera and Hoadley, Katherine A and Rashid, Naim U and Williams, Lindsay A and Eaton, Samuel C and Chung, Alexander H and others},
-  journal={Nature genetics},
+  journal={Nature Genetics},
   volume={47},
   number={10},
   pages={1168--1178},
   year={2015},
-  publisher={Nature Publishing Group US New York}
+  doi={10.1038/ng.3398}
 }
 
 @article{zhao2018gene,
   title={Gene expression profiling of 1200 pancreatic ductal adenocarcinoma reveals novel subtypes},
   author={Zhao, Lan and Zhao, Hongya and Yan, Hong},
-  journal={BMC cancer},
+  journal={BMC Cancer},
   volume={18},
   number={1},
   pages={603},
   year={2018},
-  publisher={Springer}
+  doi={10.1186/s12885-018-4546-8}
 }
 
 @article{puleo2018stratification,
@@ -100,54 +167,31 @@
   number={6},
   pages={1999--2013},
   year={2018},
-  publisher={Elsevier}
-}
-
-@article{collisson2019molecular,
-  title={Molecular subtypes of pancreatic cancer},
-  author={Collisson, Eric A and Bailey, Peter and Chang, David K and Biankin, Andrew V},
-  journal={Nature reviews Gastroenterology \& hepatology},
-  volume={16},
-  number={4},
-  pages={207--220},
-  year={2019},
-  publisher={Nature Publishing Group UK London}
+  doi={10.1053/j.gastro.2018.08.033}
 }
 
 @article{grippo2000convergence,
   title={On the convergence of the block nonlinear Gauss--Seidel method under convex constraints},
   author={Grippo, Luigi and Sciandrone, Marco},
-  journal={Operations research letters},
+  journal={Operations Research Letters},
   volume={26},
   number={3},
   pages={127--136},
   year={2000},
-  publisher={Elsevier}
+  doi={10.1016/S0167-6377(99)00074-7}
 }
 
 @article{rashid2020purity,
-  title={Purity independent subtyping of tumors (PurIST), a clinically robust, single-sample classifier for tumor subtyping in pancreatic cancer},
+  title={Purity Independent Subtyping of Tumors (PurIST), a clinically robust, single-sample classifier for tumor subtyping in pancreatic cancer},
   author={Rashid, Naim U and Peng, Xianlu L and Jin, Chong and Moffitt, Richard A and Volmar, Keith E and Belt, Brian A and Panni, Roheena Z and Nywening, Timothy M and Herrera, Silvia G and Moore, Kristin J and others},
   journal={Clinical Cancer Research},
   volume={26},
   number={1},
   pages={82--92},
   year={2020},
-  publisher={American Association for Cancer Research}
+  doi={10.1158/1078-0432.CCR-19-1467}
 }
 
-
-
-@article{tomczak2015review,
-  title={Review The Cancer Genome Atlas (TCGA): an immeasurable source of knowledge},
-  author={Tomczak, Katarzyna and Czerwi{\'n}ska, Patrycja and Wiznerowicz, Maciej},
-  journal={Contemporary Oncology/Wsp{\'o}{\l}czesna Onkologia},
-  volume={2015},
-  number={1},
-  pages={68--77},
-  year={2015},
-  publisher={Termedia}
-}
 @article{nguyen2024fourteen,
   title={Fourteen years of cellular deconvolution: methodology, applications, technical evaluation and outstanding challenges},
   author={Nguyen, Hung and Nguyen, Ha and Tran, Duc and Draghici, Sorin and Nguyen, Tin},
@@ -156,7 +200,7 @@
   number={9},
   pages={4761--4783},
   year={2024},
-  publisher={Oxford University Press}
+  doi={10.1093/nar/gkae267}
 }
 
 % NOTE: Verify if Peng et al. 2024 has been published beyond bioRxiv by submission time
@@ -173,24 +217,25 @@
 
 @article{elyada2019cross,
   title={Cross-species single-cell analysis of pancreatic ductal adenocarcinoma reveals antigen-presenting cancer-associated fibroblasts},
-  author={Elyada, Ela and Bolisetty, Mahdu and Laise, Patrick and Flynn, William F and Courtois, Edouard T and Burkhart, Richard A and Teinor, J Jack and Belleau, Philippe and Biffi, Giulia and Lucito, Michael S and others},
+  author={Elyada, Ela and Bolisetty, Mohan and Laise, Pasquale and Flynn, William F and Courtois, Elise T and Burkhart, Richard A and Teinor, Jonathan A and Belleau, Pascal and Biffi, Giulia and Lucito, Michael S and others},
   journal={Cancer Discovery},
   volume={9},
   number={8},
   pages={1102--1123},
-  year={2019}
+  year={2019},
+  doi={10.1158/2159-8290.CD-19-0094}
 }
 
 
 @article{gaujoux2010flexible,
   title={A flexible R package for nonnegative matrix factorization},
   author={Gaujoux, Renaud and Seoighe, Cathal},
-  journal={BMC bioinformatics},
+  journal={BMC Bioinformatics},
   volume={11},
   number={1},
   pages={367},
   year={2010},
-  publisher={BioMed Central}
+  doi={10.1186/1471-2105-11-367}
 }
 
 @article{lee1999learning,
@@ -201,7 +246,7 @@
   number={6755},
   pages={788--791},
   year={1999},
-  publisher={Nature Publishing Group UK London}
+  doi={10.1038/44565}
 }
 
 
@@ -209,35 +254,35 @@
 @article{brunet2004metagenes,
   title={Metagenes and molecular pattern discovery using matrix factorization},
   author={Brunet, Jean-Philippe and Tamayo, Pablo and Golub, Todd R and Mesirov, Jill P},
-  journal={Proceedings of the National Academy of Sciences},
+  journal={Proceedings of the National Academy of Sciences USA},
   volume={101},
   number={12},
   pages={4164--4169},
   year={2004},
-  publisher={National Academy of Sciences}
+  doi={10.1073/pnas.0308531101}
 }
 
 @article{bair2004semi,
   title={Semi-supervised methods to predict patient survival from gene expression data},
   author={Bair, Eric and Tibshirani, Robert},
-  journal={PLoS biology},
+  journal={PLoS Biology},
   volume={2},
   number={4},
   pages={e108},
   year={2004},
-  publisher={Public Library of Science San Francisco, USA}
+  doi={10.1371/journal.pbio.0020108}
 }
 
 
 @article{peng2019novo,
   title={De novo compartment deconvolution and weight estimation of tumor samples using DECODER},
   author={Peng, Xianlu Laura and Moffitt, Richard A and Torphy, Robert J and Volmar, Keith E and Yeh, Jen Jen},
-  journal={Nature communications},
+  journal={Nature Communications},
   volume={10},
   number={1},
   pages={4729},
   year={2019},
-  publisher={Nature Publishing Group UK London}
+  doi={10.1038/s41467-019-12517-7}
 }
 
 @article{leary2023s,
@@ -248,7 +293,7 @@
   number={8},
   pages={btad449},
   year={2023},
-  publisher={Oxford University Press}
+  doi={10.1093/bioinformatics/btad449}
 }
 
 @article{Maurer2019,
@@ -264,55 +309,84 @@
 
 
 % NOTE: Verify if Le Goff et al. has been published in a peer-reviewed journal by submission time
-@phdthesis{le2025survnmf,
+@misc{le2025survnmf,
   title={SurvNMF: Non-Negative Matrix Factorization supervised for survival data analysis},
   author={Le Goff, Vincent and Guillemot, Vincent and Philippe, Cathy and Deleuze, Jean-Fran{\c{c}}ois and Le Floch, Edith and Gloaguen, Arnaud},
   year={2025},
-  school={Institut Pasteur Paris; CEA}
+  howpublished={HAL [Preprint], hal-04975434v1},
+  institution={Institut Pasteur and CEA, Centre National de Recherche en G\'enomique Humaine},
+  url={https://hal.science/hal-04975434v1},
+  note={Preprint, accessed 3 May 2026}
 }
 
 @article{huang2020low,
   title={Low-rank reorganization via proportional hazards non-negative matrix factorization unveils survival associated gene clusters},
   author={Huang, Zhi and Salama, Paul and Shao, Wei and Zhang, Jie and Huang, Kun},
-  journal={arXiv preprint arXiv:2008.03776},
-  year={2020}
+  archivePrefix={arXiv},
+  eprint={2008.03776},
+  primaryClass={cs.LG},
+  year={2020},
+  url={https://arxiv.org/abs/2008.03776},
+  note={Preprint, accessed 3 May 2026}
 }
 
 @inproceedings{donoho2004nmf,
   title={When does non-negative matrix factorization give a correct decomposition into parts?},
   author={Donoho, David and Stodden, Victoria},
-  booktitle={Advances in Neural Information Processing Systems},
-  volume={16},
-  year={2004}
+  booktitle={Advances in Neural Information Processing Systems 16 (NIPS 2003)},
+  editor={Thrun, Sebastian and Saul, Lawrence K. and Sch{\"o}lkopf, Bernhard},
+  publisher={MIT Press},
+  year={2004},
+  pages={1141--1148}
 }
 
+% NOTE: Original bib entry listed this as Neurocomputing 71(1-3):606-616, but
+% that record could not be confirmed in CrossRef, PubMed, or Semantic Scholar.
+% PubMed PMID 18497868 finds the only paper by these authors with this title,
+% in Computational Intelligence and Neuroscience 2008 (open access, peer-
+% reviewed; PMC2386872; doi:10.1155/2008/764206). Switched to that record.
 @article{laurberg2008uniqueness,
-  title={Theorems on the uniqueness of nonnegative matrix factorization},
-  author={Laurberg, Hans and Christensen, Mads Gr{\ae}sb{\o}ll and Plumbley, Mark D and Hansen, Lars Kai and Jensen, Søren Holdt},
-  journal={Neurocomputing},
-  volume={71},
-  number={1-3},
-  pages={606--616},
+  title={Theorems on positive data: on the uniqueness of NMF},
+  author={Laurberg, Hans and Christensen, Mads Gr{\ae}sb{\o}ll and Plumbley, Mark D and Hansen, Lars Kai and Jensen, S{\o}ren Holdt},
+  journal={Computational Intelligence and Neuroscience},
+  volume={2008},
+  pages={764206},
   year={2008},
-  publisher={Elsevier}
+  doi={10.1155/2008/764206}
 }
 
 @incollection{gillis2014nmf,
   title={The why and how of nonnegative matrix factorization},
   author={Gillis, Nicolas},
   booktitle={Regularization, Optimization, Kernels, and Support Vector Machines},
+  editor={Suykens, Johan A. K. and Signoretto, Marco and Argyriou, Andreas},
   pages={257--291},
   year={2014},
   publisher={Chapman and Hall/CRC}
 }
 
-@article{kim2007sparse,
-  title={Sparse non-negative matrix factorization for clustering},
-  author={Kim, Hoyer and Park, Haesun},
-  journal={Journal of Scientific Computing},
-  volume={36},
-  pages={205--222},
-  year={2007}
+% NOTE: Original bib entry was malformed — listed as "Journal of Scientific
+% Computing 36:205-222, 2007, Kim, Hoyer and Park, Haesun" but no such paper
+% exists in CrossRef, PubMed, Semantic Scholar, or Google Scholar. The exact
+% title "Sparse Nonnegative Matrix Factorization for Clustering" matches a
+% 2008 Georgia Tech technical report by Jingu Kim and Haesun Park (used here).
+% PNAS DOES accept tech reports (citation format: institutional report, URL,
+% accessed date), but a peer-reviewed alternative is preferable. Consider
+% replacing with one of (PNAS-acceptable peer-reviewed alternatives):
+%   - Kim H, Park H. Sparse non-negative matrix factorizations via alternating
+%     non-negativity-constrained least squares for microarray data analysis.
+%     Bioinformatics 2007;23(12):1495-1502. doi:10.1093/bioinformatics/btm134
+%   - Kim H, Park H. Nonnegative Matrix Factorization Based on Alternating
+%     Nonnegativity Constrained Least Squares and Active Set Method.
+%     SIAM J Matrix Anal Appl 2008;30(2):713-730. doi:10.1137/07069239X
+@techreport{kim2007sparse,
+  title={Sparse Nonnegative Matrix Factorization for Clustering},
+  author={Kim, Jingu and Park, Haesun},
+  institution={College of Computing, Georgia Institute of Technology},
+  number={GT-CSE-08-01},
+  year={2008},
+  url={https://faculty.cc.gatech.edu/~hpark/papers/GT-CSE-08-01.pdf},
+  note={Technical report, accessed 3 May 2026}
 }
 
 @article{gillis2012accelerated,
@@ -323,15 +397,17 @@
   number={4},
   pages={1085--1105},
   year={2012},
-  publisher={MIT Press}
+  doi={10.1162/NECO_a_00256}
 }
 
 @inproceedings{blei2007slda,
   title={Supervised topic models},
   author={Blei, David M and McAuliffe, Jon D},
-  booktitle={Advances in Neural Information Processing Systems},
-  volume={20},
-  year={2007}
+  booktitle={Advances in Neural Information Processing Systems 20 (NIPS 2007)},
+  editor={Platt, J. C. and Koller, D. and Singer, Y. and Roweis, S. T.},
+  publisher={Curran Associates, Inc.},
+  year={2007},
+  pages={121--128}
 }
 
 @article{lin2007convergence,
@@ -342,42 +418,33 @@
   number={6},
   pages={1589--1596},
   year={2007},
-  publisher={IEEE}
+  doi={10.1109/TNN.2007.895831}
 }
 
-@inproceedings{cai2011graph,
+@article{cai2011graph,
   title={Graph regularized nonnegative matrix factorization for data representation},
-  author={Cai, Deng and He, Xiaofei and Han, Jiawei},
-  booktitle={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  author={Cai, Deng and He, Xiaofei and Han, Jiawei and Huang, Thomas S.},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
   volume={33},
   number={8},
   pages={1548--1560},
-  year={2011}
-}
-
-@article{wang2014supervised,
-  title={A novel supervised nonnegative matrix factorization algorithm for gene expression classification},
-  author={Wang, Kai and Yang, Peng and Yang, Ying and Sun, Li},
-  journal={Computational Biology and Chemistry},
-  volume={53},
-  pages={189--197},
-  year={2014},
-  publisher={Elsevier}
+  year={2011},
+  doi={10.1109/TPAMI.2010.231}
 }
 
 @article{tseng2001convergence,
   title={Convergence of a block coordinate descent method for nondifferentiable minimization},
   author={Tseng, Paul},
-  journal={Journal of optimization theory and applications},
+  journal={Journal of Optimization Theory and Applications},
   volume={109},
   number={3},
   pages={475--494},
   year={2001},
-  publisher={Springer}
+  doi={10.1023/A:1017501703105}
 }
 
 @article{pascualmontano2006nonsmooth,
-  title={Nonsmooth nonnegative matrix factorization},
+  title={Nonsmooth nonnegative matrix factorization (nsNMF)},
   author={Pascual-Montano, Alberto and Carazo, Jose M. and Kochi, Kenfei and Lehmann, Daniel and Pascual-Marqui, Roberto D.},
   journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
   volume={28},
@@ -395,7 +462,7 @@
   number    = {1},
   pages     = {1--26},
   year      = {2007},
-  publisher = {Institute of Mathematical Statistics}
+  doi       = {10.1214/088342306000000682}
 }
 
 @article{bair2006supervised,
@@ -406,7 +473,7 @@
   number    = {473},
   pages     = {119--137},
   year      = {2006},
-  publisher = {Taylor \& Francis}
+  doi       = {10.1198/016214505000000628}
 }
 
 @article{tishby1999information,
@@ -424,7 +491,7 @@
   volume    = {6},
   pages     = {8971},
   year      = {2015},
-  publisher = {Nature Publishing Group}
+  doi       = {10.1038/ncomms8971}
 }
 
 @article{frigyesi2008nmf,
@@ -433,7 +500,8 @@
   journal   = {Cancer Informatics},
   volume    = {6},
   pages     = {275--292},
-  year      = {2008}
+  year      = {2008},
+  doi       = {10.4137/CIN.S606}
 }
 
 @article{arora2020survclust,
@@ -444,18 +512,7 @@
   number={1},
   pages={110},
   year={2020},
-  publisher={Springer}
-}
-
-@article{mariathasan2018tgfbeta,
-  title={TGF$\beta$ attenuates tumour response to PD-L1 blockade by contributing to exclusion of T cells},
-  author={Mariathasan, Sanjeev and Turley, Shannon J and Nickles, Dorothee and Castiglioni, Alessandra and Yuen, Kobe and Wang, Yulei and Kadel Iii, Edward E and Koeppen, Hartmut and Astarita, Jillian L and Cubas, Rafael and others},
-  journal={Nature},
-  volume={554},
-  number={7693},
-  pages={544--548},
-  year={2018},
-  publisher={Nature Publishing Group UK London}
+  doi={10.1186/s13073-020-00804-8}
 }
 
 @article{chansengyue2020transcription,
@@ -466,7 +523,7 @@
   number={2},
   pages={231--240},
   year={2020},
-  publisher={Nature Publishing Group}
+  doi={10.1038/s41588-019-0566-9}
 }
 
 @article{werba2023single,
@@ -477,7 +534,7 @@
   number={1},
   pages={797},
   year={2023},
-  publisher={Nature Publishing Group UK London}
+  doi={10.1038/s41467-023-36296-4}
 }
 
 @article{aung2018compass,
@@ -488,5 +545,5 @@
   number={6},
   pages={1344--1354},
   year={2018},
-  publisher={American Association for Cancer Research}
+  doi={10.1158/1078-0432.CCR-17-2994}
 }

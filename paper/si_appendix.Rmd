@@ -24,6 +24,7 @@ header-includes:
 - \renewcommand{\thetable}{S\arabic{table}}
 - \renewcommand{\thealgorithm}{S\arabic{algorithm}}
 bibliography: references_30102025.bib
+reference-section-title: "SI References"
 output:
   pdf_document:
     toc: true
@@ -677,7 +678,7 @@ could reduce the Cox loss by redistributing patient-specific coefficients while
 leaving the gene-level programs \(W\) nearly unchanged, a behavior documented in
 multiple supervised variants of NMF and supervised topic models, where
 supervision applied only to the coefficient matrix modifies \(H\) but not the
-basis \(W\) [@cai2011graph; @wang2014supervised; @blei2007slda].
+basis \(W\) [@cai2011graph; @blei2007slda].
 
 Supervising \(W\) also provides a practical advantage for **portability**:
 because \(W\) defines gene-level programs, new samples can be embedded by the
@@ -912,8 +913,8 @@ at least one factor yielded a Spearman correlation exceeding 0.2. Asterisks
 Reference gene programs included Classical and Basal-like tumor cell signatures
 from Moffitt et al.\ [@moffitt2015virtual]; iCAF and myCAF
 cancer-associated fibroblast signatures from Elyada et al.\
-[@elyada2019cross]; activated (proCAF) and resting (restCAF) fibroblast
-programs from the deCAF study [@peng2024determination]; iCAF-like and myCAF-like CAF subtypes from SCISSORS [@leary2023s]; tumor,
+[@elyada2019cross]; promoting (proCAF) and restraining (restCAF) cancer-associated fibroblast subtypes
+from the DeCAF study [@peng2024determination]; iCAF-like and myCAF-like CAF subtypes from SCISSORS [@leary2023s]; tumor,
 stromal, and immune compartment signatures from DECODER [@peng2019novo];
 and Classical and Basal-like subtype classifiers from PurIST
 [@rashid2020purity]. Programs from Bailey et al.\ [@Bailey2016],
@@ -1089,7 +1090,7 @@ n_combinations   <- length(k_labs) * length(alpha_labs)
 
 Across datasets and initialization schemes, the DeSurv algorithm consistently converged to numerically stable solutions within the designated iteration budget. Warm-start strategies, in which solutions at $\alpha=0$ initialized supervised runs, substantially reduced variability across restarts and improved reproducibility. Fig. \ref{fig:fig-converge} shows representative loss trajectories demonstrating monotone decreases until convergence across restarts. Compared with naive random initialization, warm-starts produced tighter distributions of cross-validated C-index and partial likelihood, confirming stability of the optimization procedure.
 
-```{r fig-converge, fig.width = 5, fig.height= 3, fig.cap="Convergence of model across initializations." , fig.env='figure*', fig.pos='htbp', out.height= "3in", out.width='5in'}
+```{r fig-converge, fig.width = 5, fig.height= 3, fig.cap="Convergence trajectories of the DeSurv objective across five randomly selected multi-start initializations on the PDAC training cohort (TCGA + CPTAC). Each line shows the relative loss (loss at iteration $t$ divided by the initial loss for that restart) as a function of iteration number, restricted to the first 5{,}000 iterations for readability. The total objective decreases monotonically and stabilizes well within the iteration budget across all initializations, confirming convergence of the alternating block-update scheme.", fig.env='figure*', fig.pos='htbp', out.height= "3in", out.width='5in'}
 load_result("desurv_seed_fits_tcgacptac")
 set.seed(147)
 seeds = sample(1:length(desurv_seed_fits_tcgacptac$fits),5,replace = FALSE)

@@ -1,0 +1,51 @@
+{
+  "title": "rashidlab/DeSurv-paper: Reproducibility code for 'Survival-guided matrix factorization identifies reproducible prognostic programs in pancreatic cancer'",
+  "description": "<p>Reproducibility code, processed data, and pre-computed analysis results for the manuscript <em>Survival-guided matrix factorization identifies reproducible prognostic programs in pancreatic cancer</em> (Young, Yurovsky, Peng, Yeh, Li, Rashid). The pipeline is a numbered series of R scripts (<code>code/01_install.R</code> &hellip; <code>code/09_render_paper.R</code>) that re-render the manuscript and supplement from cached results. Depends on the DeSurv R package (separate Zenodo deposit).</p>",
+  "creators": [
+    {
+      "name": "Young, Amber M.",
+      "affiliation": "Department of Biostatistics, University of North Carolina at Chapel Hill"
+    },
+    {
+      "name": "Yurovsky, Alisa",
+      "affiliation": "Department of Biomedical Informatics, Stony Brook University"
+    },
+    {
+      "name": "Peng, Xianlu Laura",
+      "affiliation": "Department of Pharmacology and Lineberger Comprehensive Cancer Center, University of North Carolina at Chapel Hill"
+    },
+    {
+      "name": "Yeh, Jen Jen",
+      "affiliation": "Departments of Pharmacology and Surgery, and Lineberger Comprehensive Cancer Center, University of North Carolina at Chapel Hill"
+    },
+    {
+      "name": "Li, Didong",
+      "affiliation": "Department of Biostatistics, University of North Carolina at Chapel Hill"
+    },
+    {
+      "name": "Rashid, Naim U.",
+      "affiliation": "Department of Biostatistics and Lineberger Comprehensive Cancer Center, University of North Carolina at Chapel Hill"
+    }
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "access_right": "open",
+  "keywords": [
+    "nonnegative matrix factorization",
+    "survival analysis",
+    "semi-supervised learning",
+    "tumor deconvolution",
+    "pancreatic cancer",
+    "Cox proportional hazards",
+    "Bayesian optimization",
+    "reproducible research"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/rashidlab/DeSurv",
+      "relation": "requires",
+      "scheme": "url",
+      "resource_type": "software"
+    }
+  ]
+}

@@ -41,13 +41,13 @@ tar_params_best     <- load_precomputed("tar_params_best_tcgacptac")
 
 # ── NMF diagnostic plots (residuals, cophenetic, silhouette) ─────────────
 fig_residuals <- make_nmf_metric_plot(fit_std, "residuals")
-saveRDS(fig_residuals, file.path(RESULTS_DIR,"fig_residuals_tcgacptac.rds"))
+##saveRDS(fig_residuals, file.path(RESULTS_DIR,"fig_residuals_tcgacptac.rds"))
 
 fig_cophenetic <- make_nmf_metric_plot(fit_std, "cophenetic")
-saveRDS(fig_cophenetic, file.path(RESULTS_DIR,"fig_cophenetic_tcgacptac.rds"))
+##saveRDS(fig_cophenetic, file.path(RESULTS_DIR,"fig_cophenetic_tcgacptac.rds"))
 
 fig_silhouette <- make_nmf_metric_plot(fit_std, "silhouette")
-saveRDS(fig_silhouette, file.path(RESULTS_DIR,"fig_silhouette_tcgacptac.rds"))
+##saveRDS(fig_silhouette, file.path(RESULTS_DIR,"fig_silhouette_tcgacptac.rds"))
 
 # ── BO heatmap (GP-predicted C-index over k x alpha grid) ────────────────
 curve <- extract_gp_curve(desurv_bo_results, tar_params_best)
@@ -72,7 +72,7 @@ fig_bo_heat <- ggplot(curve, aes(x = k, y = alpha, fill = mean)) +
       legend.title = element_text(face = "bold"),
       legend.text  = element_text(color = "black")
     )
-saveRDS(fig_bo_heat, file.path(RESULTS_DIR,"fig_bo_heat_tcgacptac.rds"))
+##saveRDS(fig_bo_heat, file.path(RESULTS_DIR,"fig_bo_heat_tcgacptac.rds"))
 
 # maxed bo heat
 curve = extract_gp_curve_maxed(desurv_bo_results)
@@ -140,7 +140,7 @@ fig_variation_explained <- ggplot(df_plot,
       color = "Method"
     ) +
     theme_classic(base_size = 10)
-saveRDS(fig_variation_explained, file.path(RESULTS_DIR,"fig_variation_explained_tcgacptac.rds"))
+##saveRDS(fig_variation_explained, file.path(RESULTS_DIR,"fig_variation_explained_tcgacptac.rds"))
 
 # ── Gene overlap heatmaps ─────────────────────────────────────────────────
 # Reference gene lists from combined subtype data
@@ -186,26 +186,26 @@ fig_gene_overlap_heatmap_desurv <- make_gene_overlap_heatmap(
       tar_fit_desurv, tar_tops_desurv$top_genes, top_genes,
       factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7
     )
-saveRDS(fig_gene_overlap_heatmap_desurv,file.path(RESULTS_DIR,"fig_gene_overlap_heatmap_desurv_tcgacptac.rds"))
+##saveRDS(fig_gene_overlap_heatmap_desurv,file.path(RESULTS_DIR,"fig_gene_overlap_heatmap_desurv_tcgacptac.rds"))
 
 # Standard NMF at DeSurv k heatmap
 fig_gene_overlap_heatmap_std_desurvk <- make_gene_overlap_heatmap(
       fit_std_desurvk, tar_tops_std_desurvk$top_genes, top_genes,
       factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7
     )
-saveRDS(fig_gene_overlap_heatmap_std_desurvk, file.path(RESULTS_DIR,"fig_gene_overlap_heatmap_std_desurvk_tcgacptac.rds"))
+##saveRDS(fig_gene_overlap_heatmap_std_desurvk, file.path(RESULTS_DIR,"fig_gene_overlap_heatmap_std_desurvk_tcgacptac.rds"))
 
 # Standard NMF at elbow k heatmap
 fig_gene_overlap_heatmap_std_elbowk <- make_gene_overlap_heatmap(
       fit_std_elbowk, tar_tops_std_elbowk$top_genes, top_genes
     )
-saveRDS(fig_gene_overlap_heatmap_std_elbowk, file.path(RESULTS_DIR,"fig_gene_overlap_heatmap_std_elbowk_tcgacptac.rds"))
+##saveRDS(fig_gene_overlap_heatmap_std_elbowk, file.path(RESULTS_DIR,"fig_gene_overlap_heatmap_std_elbowk_tcgacptac.rds"))
 
 # DeSurv alpha=0 heatmap
 fig_gene_overlap_heatmap_desurv_alpha0 <- make_gene_overlap_heatmap(
       tar_fit_desurv_alpha0, tar_tops_desurv_alpha0$top_genes, top_genes
     )
-saveRDS(fig_gene_overlap_heatmap_desurv_alpha0 ,file.path(RESULTS_DIR,"fig_gene_overlap_heatmap_desurv_alpha0_tcgacptac.rds"))
+##saveRDS(fig_gene_overlap_heatmap_desurv_alpha0 ,file.path(RESULTS_DIR,"fig_gene_overlap_heatmap_desurv_alpha0_tcgacptac.rds"))
 
 # ── HR forest plot ────────────────────────────────────────────────────────
 desurv_df <- compute_hrs(data_val_filtered, tar_fit_desurv, "DeSurv")
@@ -240,7 +240,7 @@ fig_hr_forest <- ggplot(df, aes(x = HR, y = factor_name, color = dataset, group 
     coord_cartesian(xlim = c(min(df$lower), max(df$upper) * 1.4)) +
     labs(x = "Hazard ratio (95% CI)", y = NULL) +
     facet_wrap(~method)
-saveRDS(fig_hr_forest,file.path(RESULTS_DIR,"fig_hr_forest_tcgacptac.rds"))
+##saveRDS(fig_hr_forest,file.path(RESULTS_DIR,"fig_hr_forest_tcgacptac.rds"))
 
 # ── NMF vs DeSurv Spearman correlation heatmap ────────────────────────────
 c_mat <- cor(fit_std_desurvk$W, tar_fit_desurv$W, method = "spearman")
@@ -272,7 +272,7 @@ leg_idx <- which(ph_leg$gtable$layout$name == "legend")
 legend_grob <- if (length(leg_idx) > 0) ph_leg$gtable$grobs[[leg_idx[1]]] else grid::nullGrob()
 
 fig_desurv_std_correlation <- list(plot = pheat, legend = legend_grob)
-saveRDS(fig_desurv_std_correlation,file.path(RESULTS_DIR,"fig_desurv_std_correlation_tcgacptac.rds"))
+##saveRDS(fig_desurv_std_correlation,file.path(RESULTS_DIR,"fig_desurv_std_correlation_tcgacptac.rds"))
 
 # ── Median survival KM curves (pooled validation, log-rank optimal cutpoint) ──
 # Compute training LP stats (mean/sd) for z-score standardisation
@@ -308,12 +308,12 @@ cv_res <- run_cv_grid_point(
   ),
   nfolds   = 5,
   n_starts = 30,
-  seed     = 123,
+  seed     = 125,
   verbose  = FALSE
 )
 base_stats <- compute_lp_stats(tar_fit_desurv, tar_data_filtered, ntop_for_lp)
 lp_stats <- c(base_stats, list(optimal_z_cutpoint = find_optimal_z_cutpoint(cv_res)))
-lp_stats     <- load_precomputed("desurv_lp_stats_tcgacptac")
+# lp_stats     <- load_precomputed("desurv_lp_stats_tcgacptac")
 fig_median_survival_desurv <- splot_cutpoint(data_val_filtered, tar_fit_desurv, lp_stats, ntop = ntop_for_lp)
 saveRDS(fig_median_survival_desurv,file.path(RESULTS_DIR,"fig_median_survival_desurv_tcgacptac.rds"))
 
@@ -329,5 +329,5 @@ base_stats_std <- compute_lp_stats(fit_std_desurvk, tar_data_filtered, ntop = NU
 lp_stats_std <- c(base_stats_std, list(optimal_z_cutpoint = find_optimal_z_cutpoint(cv_res_std)))
 
 fig_median_survival_std_desurvk <- splot_cutpoint(data_val_filtered, fit_std_desurvk, lp_stats_std, ntop = NULL)
-saveRDS(fig_median_survival_std_desurvk,file.path(RESULTS_DIR,"fig_median_survival_std_desurvk_tcgacptac.rds"))
+##saveRDS(fig_median_survival_std_desurvk,file.path(RESULTS_DIR,"fig_median_survival_std_desurvk_tcgacptac.rds"))
 message("=== Step 8 complete ===")

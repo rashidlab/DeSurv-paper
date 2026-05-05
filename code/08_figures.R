@@ -159,7 +159,7 @@ load(top_genes_path)  # loads: top_genes, colors, subtypeList, etc.
 desurv_k <- ncol(tar_fit_desurv$W)
 std_k    <- ncol(fit_std_desurvk$W)
 heatmap_factor_labels <- if (desurv_k == 3) {
-  c("D1 Classical/iCAF", "D2 myCAF/activated stroma", "D3 Basal-like")
+  c("D1 Classical/iCAF", "D2 myCAF/immune", "D3 Basal-like")
 } else {
   paste0("D", seq_len(desurv_k))
 }
@@ -313,7 +313,7 @@ cv_res <- run_cv_grid_point(
 )
 base_stats <- compute_lp_stats(tar_fit_desurv, tar_data_filtered, ntop_for_lp)
 lp_stats <- c(base_stats, list(optimal_z_cutpoint = find_optimal_z_cutpoint(cv_res)))
-
+lp_stats     <- load_precomputed("desurv_lp_stats_tcgacptac")
 fig_median_survival_desurv <- splot_cutpoint(data_val_filtered, tar_fit_desurv, lp_stats, ntop = ntop_for_lp)
 saveRDS(fig_median_survival_desurv,file.path(RESULTS_DIR,"fig_median_survival_desurv_tcgacptac.rds"))
 

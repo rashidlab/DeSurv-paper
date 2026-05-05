@@ -120,7 +120,9 @@ load_precomputed <- function(name) {
     if (file.exists(base_path)) {
       # Only allow fallback for shared step-2 outputs (training data).
       # Everything else should exist in the subfolder after step 3 runs.
-      shared_base_files <- c("tar_data_tcgacptac", "sim_figs_by_scenario")
+      shared_base_files <- c("tar_data_tcgacptac", "sim_figs_by_scenario", 
+                             "fig_median_survival_desurv_tcgacptac", 
+                             "desurv_lp_stats_tcgacptac")
       if (!name %in% shared_base_files) {
         stop("Required result not found in subfolder: ", path,
              "\n  Found in base directory but refusing silent fallback.",

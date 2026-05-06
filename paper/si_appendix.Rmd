@@ -818,8 +818,8 @@ collapsed duplicated gene symbols by median; the RNA-seq cohort received a
 required no additional dataset-specific filtering beyond survival QC.
 
 Across cohorts, samples without valid survival outcomes (nonpositive time,
-missing time, or missing event indicator) were removed. All expression matrices
-were log$_2$-transformed (log$_2$(TPM + 1)) prior to gene selection. For each training cohort (TCGA-PAAD and CPTAC) separately, genes were ranked
+missing time, or missing event indicator) were removed. Expression matrices
+were analyzed on a log scale: RNA-seq cohorts as log$_2$(TPM + 1); microarray cohorts in platform-normalized log-scale intensities. For each training cohort (TCGA-PAAD and CPTAC) separately, genes were ranked
 by mean expression and by variance independently; the 3,000 genes with the
 lowest sum of these two ranks were retained, selecting genes that are both
 highly expressed and highly variable.
@@ -1426,7 +1426,7 @@ cowplot::ggdraw() + cowplot::draw_image(img)
 
 Throughout the main text, both DeSurv and standard NMF were fit at the same rank ($k = 3$), enabling a controlled comparison of the effect of survival supervision on factor structure. When each method selects its own rank independently, standard NMF chooses $k = 5$ via residual elbow detection or $k = 7$ via Bayesian optimization with $\alpha = 0$, while supervised DeSurv BO selects $k = 3$. We examine here the gene program structure at elbow-selected $k = 5$ for standard NMF (Fig. \ref{fig:fig-nmf-k5-heatmap}), and the NMF $k = 7$ structure to illustrate additional fragmentation when supervision is absent (Fig. \ref{fig:fig-nmf-k7-heatmap}).
 
-At elbow-selected $k = 5$, the three core programs from $k = 3$ are recovered by standard NMF (Fig. \ref{fig:fig-nmf-k5-heatmap}). Two additional factors emerge with strong overlap with Exocrine-like and iCAF signatures, capturing transcriptional variance not aligned with survival outcomes. These biologically redundant factors explain why supervised BO selects $k = 3$ rather than $k = 5$: the additional rank adds no prognostically relevant structure.
+At elbow-selected $k = 5$, the three core programs from $k = 3$ are recovered by standard NMF (Fig. \ref{fig:fig-nmf-k5-heatmap}). Two additional factors emerge with strong overlap with Exocrine-like and iCAF signatures, capturing transcriptional variance not aligned with survival outcomes. These biologically redundant factors explain why supervised BO selects $k = 3$: the additional factors at $k = 5$ contribute no independent prognostic content beyond the three core programs (Fig. \ref{fig:varsurvival-k5}), even though the overall higher-rank model still validates externally on per-cohort C-index (Table \ref{tab:tab-cindex-comparison}).
 
 ```{r fig-nmf-k5-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene program overlap heatmap for standard NMF at elbow-selected rank $k = 5$. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). The three core programs from $k = 3$ are recovered; two additional factors overlap Exocrine-like and iCAF signatures, capturing transcriptional variance not aligned with survival outcomes. \\label{fig:fig-nmf-k5-heatmap}", fig.env='figure', fig.pos='t'}
 library(cowplot)
@@ -1482,9 +1482,9 @@ knitr::kable(
 )
 ```
 
-Standard NMF at elbow-selected $k = 5$ and BO-selected $k = 7$ both substantially improve over NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}), confirming that additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, NMF matches or exceeds DeSurv's per-cohort C-index in most cohorts, demonstrating that unsupervised factorization can approach supervised concordance given enough factors. However, this comes at the cost of a less parsimonious and less interpretable factorization: the $k = 7$ NMF solution shows increased fragmentation (Fig. \ref{fig:fig-nmf-k7-heatmap}), and the K-sensitivity analysis shows that $k = 3$ retains adjusted significance across more supervision strengths than $k = 7$ ($5$ of $7$ versus $2$ of $7$; Tables S2--S4). DeSurv's advantage thus lies not in maximal concordance but in recovering a compact, interpretable factorization whose prognostic content is independent of known classifiers.
+Standard NMF at elbow-selected $k = 5$ and BO-selected $k = 7$ both substantially improve over NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}), confirming that additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, NMF matches or exceeds DeSurv's per-cohort C-index in most cohorts, demonstrating that unsupervised factorization can approach supervised concordance given enough factors. However, this comes at the cost of a less parsimonious and less interpretable factorization: the $k = 7$ NMF solution shows increased fragmentation (Fig. \ref{fig:fig-nmf-k7-heatmap}), and the K-sensitivity analysis shows that $k = 3$ retains adjusted significance across more supervision strengths than $k = 7$ ($5$ of $7$ versus $2$ of $7$; Tables S2--S4). DeSurv's advantage thus combines biological concordance and methodological complementarity: its risk groups identify the same poor-prognosis subtypes as established classifiers (Basal-like, proCAF; Fig. \ref{fig:fig-subtype-overlap}), while its linear predictor retains significant prognostic value after adjustment for those classifiers (Table \ref{tab:tab-hr-adjusted}).
 
-To quantify this directly, Table \ref{tab:tab-hr-adjusted} reports pooled validation hazard ratios (per SD of the linear predictor) for DeSurv at $k = 3$ and the BO-selected NMF model at $k = 7$ ($\alpha = 0$), both unadjusted and after adjustment for PurIST and DeCAF molecular classifiers. Both methods retain significant independent prognostic value after adjustment. The NMF $k = 7$ model uses survival information to select hyperparameters via BO but not to guide the factorization itself ($\alpha = 0$); DeSurv uses survival at both levels, concentrating the prognostic signal into three factors rather than seven.
+Table \ref{tab:tab-hr-adjusted} reports pooled validation hazard ratios (per SD of the linear predictor) for DeSurv at $k = 3$ and the BO-selected NMF model at $k = 7$ ($\alpha = 0$), both unadjusted and after adjustment for PurIST and DeCAF molecular classifiers. Both methods retain significant prognostic value after adjustment, with DeSurv's larger HR drop reflecting biological concordance with the established subtypes (per Fig. \ref{fig:fig-subtype-overlap}) and NMF $k = 7$'s smaller drop reflecting residual content from its additional, less interpretable factors. The NMF $k = 7$ model selects its rank via DeSurv's BO infrastructure (with $\alpha = 0$, no factorization-level supervision); DeSurv uses survival at both levels, concentrating the prognostic signal into three factors rather than seven.
 
 ```{r tab-hr-adjusted, echo=FALSE, results='asis'}
 library(survival)
@@ -1553,7 +1553,9 @@ fmt_p <- function(p) {
   paste0("$", formatC(p, format = "f", digits = 3), "$")
 }
 fmt_hr <- function(s) {
-  paste0(s$hr, " (", s$ci_lo, "--", s$ci_hi, "), ", fmt_p(s$p))
+  paste0(sprintf("%.2f", s$hr), " (",
+         sprintf("%.2f", s$ci_lo), "--",
+         sprintf("%.2f", s$ci_hi), "), ", fmt_p(s$p))
 }
 
 # -- Compute -------------------------------------------------------------------

@@ -43,14 +43,16 @@ steps <- c(
   "code/05_external_validation.R",
   "code/06_sensitivity_analysis.R",
   "code/07_simulations.R",
+  "code/08a_cutpoint_analysis.R",
   "code/08_figures.R",
+  "code/08b_si_figures.R",
   "code/09_render_paper.R"
 )
 
 # Default: just render paper from precomputed results
 if (!opts$quick && !opts$full && opts$step == 1L) {
-  opts$step <- 9L
-  message("No --quick or --full specified. Running step 9 only (render paper).")
+  opts$step <- length(steps)
+  message("No --quick or --full specified. Running render-paper step only.")
   message("Use --quick for smoke test or --full for re-computation.\n")
 }
 

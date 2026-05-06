@@ -833,8 +833,8 @@ quality control, and patient-level metadata used in this study. Overall survival
 time and event indicators were available for all cohorts. PurIST
 [@rashid2020purity] and DeCAF [@peng2024determination] molecular
 classifications, applied to bulk expression data as described in those
-references, were used as covariates in the covariate-adjusted sensitivity
-analysis (SI Appendix, Table S3). Gene expression data and molecular
+references, were used as covariates in the covariate-adjusted external
+validation analysis. Gene expression data and molecular
 classifications for the validation cohorts were originally compiled for the
 DeCAF study [@peng2024determination]; training data were obtained directly
 from GDC.
@@ -1271,99 +1271,6 @@ panels <- plot_grid(
 plot_grid(panels, legend, nrow = 2, rel_heights = c(1, 0.15))
 ```
 
-# K-sensitivity analysis: effect of gene focusing on iCAF factor validation
-
-To evaluate the robustness of the $k = 3$ iCAF factorization, we conducted an exhaustive sensitivity analysis across $k \in \{2, 3, 5, 7, 9\}$ and $\alpha \in \{0, 0.25, 0.35, 0.55, 0.75, 0.85, 0.95\}$ (`r n_combinations` combinations), holding all remaining hyperparameters fixed at the production-optimal values ($\lambda = 0.349$, $\xi = 0.056$, 100 initializations). For each fit, we identified the factor most correlated with the production $k = 3$ D1 (the iCAF factor) and evaluated its prognostic value in `r n_val_total` independent validation patients across `r n_val_cohorts` cohorts (Dijk, Moffitt GEO, Puleo, PACA-AU), using stratified Cox regression (\texttt{strata(dataset)}) with and without adjustment for PurIST and DeCAF classifiers. Factor-program fidelity was quantified by Spearman rank correlation of $n_{\text{top}} = 270$-focused H-scores (H-cor) with the production factor. We repeated this analysis under two gene-projection settings, $n_{\text{top}} = 270$ (production-optimal top genes per factor) and $n_{\text{top}} = \text{NULL}$ (all 1,970 genes), to isolate the effect of gene focusing on validation performance.
-
-The central finding is shown in Table \ref{tab:tab-ksens-summary}: **$n_{\text{top}} = 270$ is the critical hyperparameter enabling the production fit's adjusted validation.** Moving from $n_{\text{top}} = \text{NULL}$ to $n_{\text{top}} = 270$, while holding $\lambda$ and $\xi$ at their optimal values, increases the number of $k$ $\times$ $\alpha$ combinations achieving adjusted $P < 0.05$ from `r n_sig_all`/`r n_combinations` to `r n_sig_270`/`r n_combinations` and restores $k = 3$ at $\alpha=0.55$ to adjusted $P = `r formatC(k3_alpha55_p_270, format="f", digits=3)`$, nearly identical to the production fit ($P = `r formatC(production_adj_p, format="f", digits=3)`$). By contrast, changing only $\lambda$ from 0.3 to 0.349 while keeping $n_{\text{top}} = \text{NULL}$ leaves the overall count unchanged (`r n_sig_all_prior`/35), confirming that $\lambda/\xi$ tuning alone cannot reproduce the adjusted signal.
-
-```{r tab-ksens-summary, echo=FALSE, results='asis'}
-library(knitr)
-library(kableExtra)
-
-tab_summary <- data.frame(
-  Condition = c(
-    "$n_{\\text{top}}$ = NULL, $\\lambda$ = 0.300, $\\xi$ = 0.050",
-    "$n_{\\text{top}}$ = NULL, $\\lambda$ = 0.349, $\\xi$ = 0.056",
-    "$n_{\\text{top}}$ = 270,\\hspace{2pt} $\\lambda$ = 0.349, $\\xi$ = 0.056"
-  ),
-  Count = c(
-    paste0(n_sig_all_prior, " / ", n_combinations),
-    paste0(n_sig_all, " / ", n_combinations),
-    paste0("\\textbf{", n_sig_270, " / ", n_combinations, "}")
-  ),
-  K3_p  = c(
-    formatC(k3_p_all_prior,   format = "f", digits = 3),
-    formatC(k3_alpha55_p_all, format = "f", digits = 3),
-    paste0("\\textbf{", formatC(k3_alpha55_p_270, format = "f", digits = 3), "}")
-  ),
-  Best  = c(
-    paste0("K=", lam300_best_k, ", $\\alpha$=", lam300_best_a, " (adj $P$ = ", formatC(lam300_best_p, format = "f", digits = 3), ")"),
-    paste0("K=5, $\\alpha$=0.25 (adj $P$ = ", formatC(k5_alpha25_p_all, format = "f", digits = 4), ")"),
-    paste0("K=3, $\\alpha$=0.55 (adj $P$ = ", formatC(k3_alpha55_p_270, format = "f", digits = 3), ")")
-  ),
-  stringsAsFactors = FALSE
-)
-colnames(tab_summary) <- c(
-  "Analysis condition",
-  paste0("Adj $P < 0.05$ (of ", n_combinations, ")"),
-  "K=3, $\\alpha$=0.55 adj $P$",
-  "Best single combination"
-)
-
-kable(tab_summary, format = "latex", escape = FALSE, booktabs = TRUE,
-      caption = "Three-way comparison of $k$-sensitivity analyses differing only in gene-projection setting ($n_{\\text{top}}$) and regularization ($\\lambda$, $\\xi$). All analyses span $k \\in$ \\{2, 3, 5, 7, 9\\} $\\times$ $\\alpha \\in$ \\{0, 0.25, 0.35, 0.55, 0.75, 0.85, 0.95\\} = 35 combinations. Count shows combinations achieving adjusted $P < 0.05$; bold highlights the $n_{\\text{top}}=270$ result that restores $k = 3$ adjusted significance.",
-      label = "tab-ksens-summary") |>
-  kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size = 9)
-```
-
-Tables \ref{tab:tab-ksens-adjp-ntop270} and \ref{tab:tab-ksens-adjp-allgenes} present the full $k$ $\times$ $\alpha$ adjusted P-value matrices for the $n_{\text{top}} = 270$ and $n_{\text{top}} = \text{NULL}$ analyses respectively. With $n_{\text{top}} = 270$, $k = 3$ achieves adjusted significance at `r n_k3_sig_270` of `r length(alpha_labs)` $\alpha$ values tested ($\alpha \in \{0.00, 0.25, 0.55, 0.75, 0.95\}$), and broad adjusted significance is also observed at $k = 2$ (`r n_k2_sig_270`/`r length(alpha_labs)`) and $k = 5$ (`r n_k5_sig_270`/`r length(alpha_labs)`). With $n_{\text{top}} = \text{NULL}$ (Table \ref{tab:tab-ksens-adjp-allgenes}), the landscape is sparse and structurally different: $k = 3$ at $\alpha=0.55$ narrowly misses significance ($P = `r formatC(k3_alpha55_p_all, format="f", digits=3)`$), and only isolated combinations scattered across $k = 3$, $k = 5$, $k = 7$, and $k = 9$ achieve adjusted $P < 0.05$.
-
-```{r tab-ksens-adjp-ntop270, echo=FALSE, results='asis'}
-fmt_p <- function(x) {
-  s <- ifelse(x < 0.001,
-    formatC(x, format = "e", digits = 0),
-    formatC(x, format = "f", digits = 3)
-  )
-  s <- sub("e-0(\\d)$", "e-\\1", s)
-  ifelse(x < 0.05, paste0("\\textbf{", s, "}"), s)
-}
-
-df_270 <- as.data.frame(
-  matrix(fmt_p(adj_p_270), nrow = 5, dimnames = list(k_labs, alpha_labs))
-)
-
-kable(df_270, format = "latex", escape = FALSE, booktabs = TRUE,
-      caption = paste0("Adjusted validation P-values (Cox + PurIST + DeCAF + strata(dataset)) across $k$ $\\times$ $\\alpha$ with $n_{\\text{top}}=270$, $\\lambda=0.349$, $\\xi=0.056$. Each cell gives the P-value for the factor most correlated with the production $k = 3$ iCAF factor. Bold: $P < 0.05$; ", n_sig_270, " of ", n_combinations, " combinations are significant."),
-      label = "tab-ksens-adjp-ntop270") |>
-  kable_styling(latex_options = c("HOLD_position"), font_size = 9)
-```
-
-```{r tab-ksens-adjp-allgenes, echo=FALSE, results='asis'}
-df_all <- as.data.frame(
-  matrix(fmt_p(adj_p_all), nrow = 5, dimnames = list(k_labs, alpha_labs))
-)
-
-kable(df_all, format = "latex", escape = FALSE, booktabs = TRUE,
-      caption = paste0("Adjusted validation P-values across $k$ $\\times$ $\\alpha$ with $n_{\\text{top}}$=NULL (all ", n_genes_total, " genes), $\\lambda=0.349$, $\\xi=0.056$. Layout identical to Table \\ref{tab:tab-ksens-adjp-ntop270}. Only ", n_sig_all, " of ", n_combinations, " combinations are significant (bold), and $k = 3$ at $\\alpha=0.55$ (the production neighborhood) reaches only $P = ", formatC(k3_alpha55_p_all, format = "f", digits = 3), "$."),
-      label = "tab-ksens-adjp-allgenes") |>
-  kable_styling(latex_options = c("HOLD_position"), font_size = 9)
-```
-
-Four additional findings emerge from these analyses. First, $k = 7$'s apparent advantage observed in a parallel analysis using conventional hyperparameters ($\lambda=0.3$, $n_{\text{top}} = \text{NULL}$), where $k = 7$ at $\alpha=0.75$ achieved adjusted $P = `r formatC(lam300_best_p, format="f", digits=3)`$, completely disappears with $n_{\text{top}} = 270$ (adj $P = `r formatC(k7_alpha75_p_270, format="f", digits=3)`$, Table \ref{tab:tab-ksens-adjp-ntop270}). Focused 270-gene projection fragments the iCAF signal across $k = 7$'s factors, indicating that the earlier $k = 7$ advantage depended on the all-genes projection rather than reflecting an intrinsic property of the 7-factor solution. Second, $k = 3$ achieves adjusted significance across a broad $\alpha$ range with $n_{\text{top}} = 270$ (`r n_k3_sig_270`/7 values), demonstrating that the production result does not depend on the BO-selected $\alpha = `r round(read_result("tar_params_best_tcgacptac")$alpha, 3)`$ specifically. Third, $k = 5$ at $\alpha=0.55$ achieves the highest factor-program fidelity in the $n_{\text{top}} = 270$ analysis (H-cor = `r round(hcor_k5_a55_270, 3)` vs. $k = 3$'s `r round(hcor_k3_a55_270, 3)`) and also achieves adjusted significance ($P = `r formatC(k5_alpha55_p_270, format="f", digits=3)`$), providing convergent evidence for the iCAF biology from a higher-$k$ model; an independent $k = 5$ all-genes fit at $\alpha=0.25$ likewise achieves adjusted significance ($P = `r formatC(k5_alpha25_p_all, format="f", digits=4)`$, H-cor = `r round(hcor_k5_a25_all, 3)`). Fourth, without gene focusing, high supervision weights ($\alpha \geq 0.75$) produce factors with extreme training discrimination (HR $\approx `r hr_overfit_min`$--$`r hr_overfit_max`$, LRT $P \sim `r formatC(lrt_overfit_min, format="e", digits=0)`$) that fail external validation, indicating overfitting of the training survival signal; gene focusing ($n_{\text{top}} = 270$) suppresses this by constraining each factor to its 270 most biologically characteristic genes.
-
-# K=3 factors are partially but asymmetrically nested within K=7
-
-To assess whether the $k = 3$ solution is simply a pruned version of the $k = 7$ solution, we computed pairwise Spearman correlations between the W-matrix gene loadings of the production $k = 3$ model and a $k = 7$ DeSurv fit at $\alpha = 0.35$ (the nearest grid value to the BO-selected optimum at $\alpha = `r round(read_result("tar_params_best_tcgacptac")$alpha, 3)`$), both using $n_{\text{top}} = 270$, $\lambda = 0.349$, $\xi = 0.056$.
-
-The correspondence was partial but asymmetric (Fig. \ref{fig:k3-k7-nesting}). Two of three $k = 3$ factors had clear one-to-one $k = 7$ counterparts: K3\_F1 mapped strongly to `r k3f1_best_k7` ($r = `r round(k3f1_best_r, 2)`$) and K3\_F2 mapped very strongly to `r k3f2_best_k7` ($r = `r round(k3f2_best_r, 2)`$). In contrast, K3\_F3 showed no single dominant $k = 7$ match; instead, it correlated moderately with four $k = 7$ factors simultaneously (K7\_F2 through K7\_F6; $r = `r round(k3f3_range_min, 2)`$--$`r round(k3f3_range_max, 2)`$). K7\_F4 showed weak-to-moderate correlations with all three $k = 3$ factors ($r = `r round(k7f4_range_min, 2)`$--$`r round(k7f4_range_max, 2)`$), suggesting it is a mixed composite with no clear biological counterpart in the $k = 3$ solution.
-
-This fragmentation pattern indicates that $k = 7$ does not simply subdivide $k = 3$ structure. Rather, it disperses one coherent $k = 3$ prognostic program across multiple lower-signal components, consistent with the observed failure of $k = 7$ to achieve adjusted significance in external cohorts (adjusted $P = `r formatC(k7_alpha75_p_270, format="f", digits=3)`$; see main text).
-```{r k3-k7-nesting, fig.width = 7, fig.height = 3.5, fig.cap = paste0("Factor correspondence between the production $k = 3$ model and a $k = 7$ DeSurv fit ($\\alpha = 0.35$, $n_{\\text{top}} = 270$), measured by Spearman rank correlation of W-matrix gene loadings across all genes. Two $k = 3$ factors have clear $k = 7$ counterparts (K3\\_F1 $\\to$ ", gsub("_", "\\\\_", k3f1_best_k7), ", $r = ", round(k3f1_best_r, 2), "$; K3\\_F2 $\\to$ ", gsub("_", "\\\\_", k3f2_best_k7), ", $r = ", round(k3f2_best_r, 2), "$), while K3\\_F3 is distributed broadly across four $k = 7$ factors ($r = ", round(k3f3_range_min, 2), "$--$", round(k3f3_range_max, 2), "$), indicating fragmentation rather than nesting."), fig.env='figure*', fig.pos='t', out.width='\\textwidth', echo=FALSE}
-img <- magick::image_read("figures/cv_grid/k3_k7_factor_correlation_heatmap.pdf", density = 300)
-cowplot::ggdraw() + cowplot::draw_image(img)
-```
-
 # Cutpoint selection and validation of dichotomized risk groups
 
 To convert the continuous DeSurv linear predictor into a clinically interpretable binary risk stratification, we selected an optimal z-score cutpoint via cross-validation on the TCGA+CPTAC training cohort. For each candidate cutpoint in $\{-2.0, -1.8, \ldots, 2.0\}$, we computed the mean absolute log-rank z-statistic across held-out folds and selected the cutpoint maximizing this metric (Fig. \ref{fig:fig-cutpoint-km}A). We then applied this cutpoint to external validation cohorts by standardizing each patient's linear predictor using the training mean and standard deviation. Fig. \ref{fig:fig-cutpoint-km}B shows the resulting Kaplan--Meier curves for the pooled external validation analysis, with a stratified log-rank test accounting for dataset of origin. Panels C--F display per-cohort validation KM curves for Dijk, Moffitt, PACA-AU, and Puleo, respectively. Across all cohorts, the DeSurv-derived high-risk group showed consistently shorter survival, confirming that the training-derived cutpoint generalizes to independent datasets.
@@ -1439,9 +1346,9 @@ cowplot::plot_grid(
 )
 ```
 
-At BO-selected $k = 7$ under $\alpha = 0$ (Fig. \ref{fig:fig-nmf-k7-heatmap}), standard NMF shows increased fragmentation relative to $k = 5$: multiple factors partially overlap the same PDAC gene signatures, and no new biologically coherent program emerges beyond those present at $k = 3$. A supervised DeSurv equivalent at $k = 7$ is not shown because supervised BO selects $k = 3$, not $k = 7$; the relationship between the production $k = 3$ DeSurv model and a $k = 7$ supervised DeSurv fit ($\alpha = 0.35$) is characterized by the factor-nesting analysis (Fig. \ref{fig:k3-k7-nesting}), which demonstrates that the $k = 7$ solution fragments rather than extends the $k = 3$ structure.
+At BO-selected $k = 7$ under $\alpha = 0$ (Fig. \ref{fig:fig-nmf-k7-heatmap}), standard NMF shows increased fragmentation relative to $k = 5$: multiple factors partially overlap the same PDAC gene signatures, and no new biologically coherent program emerges beyond those present at $k = 3$.
 
-```{r fig-nmf-k7-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene program overlap heatmap for standard NMF at $k = 7$ (BO-selected rank with $\\alpha = 0$). Compared with $k = 3$ and $k = 5$, the 7-factor solution shows increased fragmentation: multiple factors partially capture the same PDAC gene signatures and no new coherent biological program emerges. No supervised DeSurv equivalent at $k = 7$ is shown; the $k$-sensitivity and factor-nesting analyses (Fig. \\ref{fig:k3-k7-nesting}) characterize the corresponding supervised fit. \\label{fig:fig-nmf-k7-heatmap}", fig.env='figure', fig.pos='t'}
+```{r fig-nmf-k7-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene program overlap heatmap for standard NMF at $k = 7$ (BO-selected rank with $\\alpha = 0$). Compared with $k = 3$ and $k = 5$, the 7-factor solution shows increased fragmentation: multiple factors partially capture the same PDAC gene signatures and no new coherent biological program emerges. \\label{fig:fig-nmf-k7-heatmap}", fig.env='figure', fig.pos='t'}
 library(cowplot)
 load_result("fig_gene_overlap_heatmap_desurv_alpha0_tcgacptac")
 cowplot::plot_grid(
@@ -1482,7 +1389,7 @@ knitr::kable(
 )
 ```
 
-Standard NMF at elbow-selected $k = 5$ and BO-selected $k = 7$ both substantially improve over NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}), confirming that additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, NMF matches or exceeds DeSurv's per-cohort C-index in most cohorts, demonstrating that unsupervised factorization can approach supervised concordance given enough factors. However, this comes at the cost of a less parsimonious and less interpretable factorization: the $k = 7$ NMF solution shows increased fragmentation (Fig. \ref{fig:fig-nmf-k7-heatmap}), and the K-sensitivity analysis shows that $k = 3$ retains adjusted significance across more supervision strengths than $k = 7$ ($5$ of $7$ versus $2$ of $7$; Tables S2--S4). DeSurv's advantage thus combines biological concordance and methodological complementarity: its risk groups identify the same poor-prognosis subtypes as established classifiers (Basal-like, proCAF; Fig. \ref{fig:fig-subtype-overlap}), while its linear predictor retains significant prognostic value after adjustment for those classifiers (Table \ref{tab:tab-hr-adjusted}).
+Standard NMF at elbow-selected $k = 5$ and BO-selected $k = 7$ both substantially improve over NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}), confirming that additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, NMF matches or exceeds DeSurv's per-cohort C-index in most cohorts, demonstrating that unsupervised factorization can approach supervised concordance given enough factors. However, this comes at the cost of a less parsimonious and less interpretable factorization: the $k = 7$ NMF solution shows increased fragmentation (Fig. \ref{fig:fig-nmf-k7-heatmap}). DeSurv's advantage thus combines biological concordance and methodological complementarity: its risk groups identify the same poor-prognosis subtypes as established classifiers (Basal-like, proCAF; Fig. \ref{fig:fig-subtype-overlap}), while its linear predictor retains significant prognostic value after adjustment for those classifiers (Table \ref{tab:tab-hr-adjusted}).
 
 Table \ref{tab:tab-hr-adjusted} reports pooled validation hazard ratios (per SD of the linear predictor) for DeSurv at $k = 3$ and the BO-selected NMF model at $k = 7$ ($\alpha = 0$), both unadjusted and after adjustment for PurIST and DeCAF molecular classifiers. Both methods retain significant prognostic value after adjustment, with DeSurv's larger HR drop reflecting biological concordance with the established subtypes (per Fig. \ref{fig:fig-subtype-overlap}) and NMF $k = 7$'s smaller drop reflecting residual content from its additional, less interpretable factors. The NMF $k = 7$ model selects its rank via DeSurv's BO infrastructure (with $\alpha = 0$, no factorization-level supervision); DeSurv uses survival at both levels, concentrating the prognostic signal into three factors rather than seven.
 

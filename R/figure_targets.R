@@ -748,8 +748,8 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
     "SCISSORS_CAF_vs_peri_top25_Perivascular" = "SCISSORS_Perivascular",
     "SCISSORS_panCAF_vs_peri_top25_panCAF"    = "SCISSORS_panCAF",
     "MSI_Immune"                              = "Moffitt_Immune",
-    "SCISSORS_iCAF"                           = "SCISSORS_iCAF-like",
-    "SCISSORS_myCAF"                          = "SCISSORS_myCAF-like"
+    "SCISSORS_iCAF"                           = "SCISSORS_restCAF",
+    "SCISSORS_myCAF"                          = "SCISSORS_proCAF"
   )
   to_rename <- names(temp) %in% names(rename_map)
   names(temp)[to_rename] <- rename_map[names(temp)[to_rename]]

@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(Rscript *)",
-      "Bash(xargs ls *)"
+      "Bash(xargs ls *)",
+      "Bash(git remote *)",
+      "Bash(gh issue *)"
     ]
   }
 }

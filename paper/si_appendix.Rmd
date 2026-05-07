@@ -797,6 +797,8 @@ is refit at the selected parameters using the consensus-based initialization
 described above, and the BO-chosen $n_{\text{top}}$ (when tuned) is used to
 truncate each program for downstream analysis.
 
+The parameter $n_{\text{top}}$ controls which genes enter the survival linear predictor. After factorization, each sample's score for factor $j$ is computed as $\widetilde{W}_j^\top x$, where $\widetilde{W}_j$ retains only the $n_{\text{top}}$ genes with the largest factor-specificity scores $s_{ij}$ (SI Appendix, Section~\ref{sec:gene-program-correlation}); genes outside this set still shape the factorization but do not enter the linear predictor. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. When $\alpha = 0$ (no survival supervision), gene selection and survival outcomes are decoupled, so varying $n_{\text{top}}$ has negligible effect on precision in the null simulation.
+
 \section{PDAC Datasets}
 
 We analyzed PDAC cohorts from TCGA-PAAD and CPTAC-PDAC as training data
@@ -914,7 +916,7 @@ Reference gene programs included Classical and Basal-like tumor cell signatures
 from Moffitt et al.\ [@moffitt2015virtual]; iCAF and myCAF
 cancer-associated fibroblast signatures from Elyada et al.\
 [@elyada2019cross]; promoting (proCAF) and restraining (restCAF) cancer-associated fibroblast subtypes
-from the DeCAF study [@peng2024determination]; iCAF-like and myCAF-like CAF subtypes from SCISSORS [@leary2023s]; tumor,
+from the DeCAF study [@peng2024determination]; proCAF and restCAF subtypes from SCISSORS [@leary2023s]; tumor,
 stromal, and immune compartment signatures from DECODER [@peng2019novo];
 and Classical and Basal-like subtype classifiers from PurIST
 [@rashid2020purity]. Programs from Bailey et al.\ [@Bailey2016],
@@ -954,10 +956,12 @@ NMF and DeSurv factor loadings. For each pair of factors
 $(j_{\text{NMF}},\, j_{\text{DeSurv}})$, we computed the Spearman rank
 correlation between the corresponding columns of the NMF gene program matrix
 $W_{\text{NMF}}$ and the DeSurv gene program matrix $W_{\text{DeSurv}}$,
-restricted to genes present in both models. Spearman correlation was used to
-capture monotone correspondence in gene loading ranks while remaining robust
-to scale differences between the two methods. Results are displayed as a
-heatmap with NMF factors as rows and DeSurv factors as columns (main text, Fig.\ 3D).
+restricted to the top 50 genes per factor (by factor-specificity score $s_{ij}$;
+SI Appendix, Section~\ref{sec:gene-program-correlation}) present in both models.
+Spearman correlation was used to capture monotone correspondence in gene loading
+ranks while remaining robust to scale differences between the two methods.
+Results are displayed as a heatmap with NMF factors as rows and DeSurv factors
+as columns (main text, Fig.\ 3D).
 
 \clearpage
 
@@ -1312,12 +1316,16 @@ plot_grid(row1, row2, row3, nrow = 3, rel_heights = c(1, 1, 1))
 
 # Overlap of DeSurv risk groups with known molecular subtypes
 
-To assess whether the DeSurv-derived risk stratification captures biologically meaningful transcriptional programs, we examined the overlap between dichotomized risk groups (High vs Low) and two established PDAC molecular classifiers: PurIST (Basal-like vs Classical) and DeCAF (proCAF vs restCAF). Fig. \ref{fig:fig-subtype-overlap} shows the composition of each risk group across all pooled external validation cohorts, with Fisher's exact test P-values quantifying the association. The high-risk group was significantly enriched for Basal-like (PurIST) and proCAF (DeCAF) subtypes, consistent with the known poor prognosis of these molecular classes. This concordance confirms that DeSurv's survival-driven factorization recovers clinically relevant biology without requiring subtype labels during training.
+To assess whether the DeSurv-derived risk stratification captures biologically meaningful transcriptional programs, we examined the overlap between dichotomized risk groups (High vs Low) and two established PDAC molecular classifiers: PurIST (Basal-like vs Classical) and DeCAF (proCAF vs restCAF). Fig. \ref{fig:fig-subtype-overlap} shows the composition of each risk group across all pooled external validation cohorts, with Fisher's exact test P-values quantifying the association. The DeSurv high-risk group was significantly enriched for both Basal-like (PurIST) and proCAF (DeCAF) subtypes, consistent with the known poor prognosis of these molecular classes. By contrast, standard NMF risk groups at the matched rank ($k = 3$) separated Basal-like from Classical tumors (PurIST) but showed no significant enrichment for proCAF versus restCAF (DeCAF), indicating that survival-unsupervised factorization does not recover the tumor--stroma coupling captured by DeSurv's D1. This concordance confirms that DeSurv's survival-driven factorization recovers clinically relevant biology without requiring subtype labels during training.
 
-```{r fig-subtype-overlap, fig.width = 8, fig.height = 5, fig.cap = "Subtype composition of DeSurv risk groups in pooled external validation cohorts. Stacked bar charts show the proportion of PurIST (left) and DeCAF (right) subtypes within Low and High risk groups defined by the log-rank-optimized cutpoint. Numbers indicate sample counts; Fisher's exact test P-values are shown above each panel.", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
-# Direct path to pooled subtype overlap figure
-img <- magick::image_read("figures/km_dichot/subtype_overlap_pooled_logrank_tcgacptac.pdf", density = 300)
-cowplot::ggdraw() + cowplot::draw_image(img)
+```{r fig-subtype-overlap, fig.width = 8, fig.height = 10, fig.cap = "Subtype composition of DeSurv (top) and standard NMF $k=3$ (bottom) risk groups in pooled external validation cohorts. Stacked bar charts show the proportion of PurIST (left) and DeCAF (right) subtypes within Low and High risk groups defined by the log-rank-optimized cutpoint. Numbers indicate sample counts; Fisher's exact test P-values are shown above each panel. DeSurv risk groups are enriched for both Basal-like (PurIST) and proCAF (DeCAF) poor-prognosis subtypes; NMF risk groups separate Basal-like from Classical tumors but show no significant CAF subtype enrichment.", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
+# Composite DeSurv (top) and NMF k=3 (bottom) subtype overlap figures
+img_desurv <- magick::image_read(
+  "figures/km_dichot/subtype_overlap_pooled_logrank_tcgacptac.pdf", density = 300)
+img_nmf <- magick::image_read(
+  "figures/km_dichot/subtype_overlap_pooled_logrank_std_tcgacptac.pdf", density = 300)
+img_combined <- magick::image_append(c(img_desurv, img_nmf), stack = TRUE)
+cowplot::ggdraw() + cowplot::draw_image(magick::image_trim(img_combined))
 ```
 
 <!-- ## Analysis of scRNA-seq {.unnumbered} -->

@@ -165,7 +165,7 @@ load(top_genes_path)  # loads: top_genes, colors, subtypeList, etc.
 desurv_k <- ncol(tar_fit_desurv$W)
 std_k    <- ncol(fit_std_desurvk$W)
 heatmap_factor_labels <- if (desurv_k == 3) {
-  c("D1 Classical/iCAF", "D2 myCAF/immune", "D3 Basal-like")
+  c("D1 Classical/restCAF", "D2 proCAF", "D3 Basal-like")
 } else {
   paste0("D", seq_len(desurv_k))
 }
@@ -284,6 +284,82 @@ legend_grob <- if (length(leg_idx) > 0) ph_leg$gtable$grobs[[leg_idx[1]]] else g
 fig_desurv_std_correlation <- list(plot = pheat, legend = legend_grob)
 saveRDS(fig_desurv_std_correlation,
         file.path(RESULTS_DIR, "fig_desurv_std_correlation_tcgacptac.rds"))
+
+
+# ── ntop NMF vs DeSurv Spearman correlation heatmap ────────────────────────────
+tops_de = tar_tops_desurv$top_genes
+tops_std = tar_tops_std_desurvk$top_genes
+
+c_mat <- cor(fit_std_desurvk$W[unlist(tops_std),], tar_fit_desurv$W[unlist(tops_de),], method = "spearman")
+rownames(c_mat) <- heatmap_factor_labels_std
+colnames(c_mat) <- heatmap_factor_labels
+
+ph_args <- list(
+  mat = c_mat,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  show_colnames = TRUE,
+  show_rownames = TRUE,
+  fontsize = 8,
+  fontsize_number = 8,
+  number_color = "black",
+  breaks = seq(-0.5, 1, length.out = 101),
+  display_numbers = TRUE,
+  number_format = "%.2f",
+  main = "NMF (rows) vs. DeSurv (cols)",
+  silent = TRUE
+)
+
+ph <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = FALSE)))
+ph_grob <- ph$gtable
+pheat <- cowplot::plot_grid(NULL, cowplot::ggdraw(ph_grob), nrow = 2, rel_heights = c(0.25, 4))
+
+ph_leg <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = TRUE)))
+leg_idx <- which(ph_leg$gtable$layout$name == "legend")
+legend_grob <- if (length(leg_idx) > 0) ph_leg$gtable$grobs[[leg_idx[1]]] else grid::nullGrob()
+
+fig_desurv_std_correlation_ntop <- list(plot = pheat, legend = legend_grob)
+saveRDS(fig_desurv_std_correlation_ntop,
+        file.path(RESULTS_DIR, "fig_desurv_std_correlation_tcgacptac_ntop.rds"))
+
+
+# ── top 50 NMF vs DeSurv Spearman correlation heatmap ────────────────────────────
+tops_de = tar_tops_desurv$top_genes[1:50,]
+tops_std = tar_tops_std_desurvk$top_genes[1:50,]
+
+c_mat <- cor(fit_std_desurvk$W[unlist(tops_std),], tar_fit_desurv$W[unlist(tops_de),], method = "spearman")
+rownames(c_mat) <- heatmap_factor_labels_std
+colnames(c_mat) <- heatmap_factor_labels
+
+ph_args <- list(
+  mat = c_mat,
+  cluster_rows = FALSE,
+  cluster_cols = FALSE,
+  show_colnames = TRUE,
+  show_rownames = TRUE,
+  fontsize = 8,
+  fontsize_number = 8,
+  number_color = "black",
+  breaks = seq(-0.5, 1, length.out = 101),
+  display_numbers = TRUE,
+  number_format = "%.2f",
+  main = "NMF (rows) vs. DeSurv (cols)",
+  silent = TRUE
+)
+
+ph <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = FALSE)))
+ph_grob <- ph$gtable
+pheat <- cowplot::plot_grid(NULL, cowplot::ggdraw(ph_grob), nrow = 2, rel_heights = c(0.25, 4))
+
+ph_leg <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = TRUE)))
+leg_idx <- which(ph_leg$gtable$layout$name == "legend")
+legend_grob <- if (length(leg_idx) > 0) ph_leg$gtable$grobs[[leg_idx[1]]] else grid::nullGrob()
+
+fig_desurv_std_correlation_top50 <- list(plot = pheat, legend = legend_grob)
+saveRDS(fig_desurv_std_correlation_top50,
+        file.path(RESULTS_DIR, "fig_desurv_std_correlation_tcgacptac_top50.rds"))
+
+
 
 # ── Median survival KM curves (pooled validation, log-rank optimal cutpoint) ──
 # Cutpoint selection (cv_res, z-cutpoint) and LP standardisation stats

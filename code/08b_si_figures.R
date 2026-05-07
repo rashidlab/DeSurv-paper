@@ -46,12 +46,15 @@ dir.create(km_dir,  recursive = TRUE, showWarnings = FALSE)
 
 # ── Load prerequisites ───────────────────────────────────────────────────
 tar_fit_desurv      <- load_precomputed("tar_fit_desurv_tcgacptac")
+fit_std_desurvk      <- load_precomputed("fit_std_desurvk_tcgacptac")
 tar_data_filtered   <- load_precomputed("tar_data_filtered_tcgacptac")
 data_val_filtered   <- load_precomputed("data_val_filtered_tcgacptac")
 tar_params_best     <- load_precomputed("tar_params_best_tcgacptac")
 
 desurv_cutpoint_summary <- load_precomputed("desurv_cutpoint_summary_tcgacptac")
 desurv_lp_stats         <- load_precomputed("desurv_lp_stats_tcgacptac")
+std_desurvk_cutpoint_summary <- load_precomputed("std_desurvk_cutpoint_summary_tcgacptac")
+std_desurvk_lp_stats         <- load_precomputed("std_desurvk_lp_stats_tcgacptac")
 
 ntop_for_lp <- if (!is.null(CONFIG$ntop_value)) CONFIG$ntop_value else tar_params_best$ntop
 ntop_label  <- if (is.null(ntop_for_lp) || is.na(ntop_for_lp)) NA_real_ else as.numeric(ntop_for_lp)
@@ -171,4 +174,55 @@ if (length(pooled_rows) > 0) {
   }
 }
 
+
+# ── Subtype-overlap stacked bar std nmf k=3 ───
+W    <- fit_std_desurvk$W
+beta <- fit_std_desurvk$beta
+z_cut   <- std_desurvk_lp_stats$optimal_z_cutpoint
+lp_mean <- std_desurvk_lp_stats$lp_mean
+lp_sd   <- std_desurvk_lp_stats$lp_sd
+
+pooled_rows <- list()
+for (ds_name in names(data_val_filtered_surv)) {
+  val_ds <- data_val_filtered_surv[[ds_name]]
+  common_genes <- intersect(rownames(W), rownames(val_ds$ex))
+  if (length(common_genes) < 2) next
+  
+  W_common <- W[common_genes, , drop = FALSE]
+  X_val <- val_ds$ex[common_genes, , drop = FALSE]
+  
+  time_val  <- val_ds$sampInfo$time
+  event_val <- val_ds$sampInfo$event
+  valid_idx <- which(is.finite(time_val) & !is.na(event_val) & time_val > 0)
+  if (length(valid_idx) < 2) next
+  
+  val_group <- compute_risk_group(
+    W_common, beta, X_val[, valid_idx, drop = FALSE],
+    NULL, lp_mean, lp_sd, z_cut
+  )
+  val_si <- val_ds$sampInfo[valid_idx, ]
+
+  if (!all(c("PurIST", "DeCAF") %in% names(val_si))) next
+  ds_df <- data.frame(
+    group  = val_group,
+    PurIST = val_si$PurIST,
+    DeCAF  = val_si$DeCAF,
+    stringsAsFactors = FALSE
+  )
+  ds_df <- ds_df[complete.cases(ds_df), ]
+  if (nrow(ds_df) > 0) pooled_rows[[ds_name]] <- ds_df
+}
+
+if (length(pooled_rows) > 0) {
+  pooled_df <- do.call(rbind, pooled_rows)
+  if (nrow(pooled_df) > 0) {
+    p <- plot_subtype_overlap(
+      pooled_df,
+      dataset_label = "Standard NMF k=3, pooled validation (logrank cutpoint)"
+    )
+    fpath <- file.path(km_dir,
+                       sprintf("subtype_overlap_pooled_logrank_std_%s.pdf", bo_label))
+    ggplot2::ggsave(fpath, p, width = 8, height = 5)
+  }
+}
 message("=== Step 8b complete ===")

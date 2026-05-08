@@ -152,6 +152,7 @@ tar_fit_desurv_alpha0 <- cache_or_compute("tar_fit_desurv_alpha0_tcgacptac", {
 })
 
 # ── 1c. DeSurv at elbow k ────────────────────────────────────────────────
+tar_params_best_elbowk$k <- std_nmf_selected_k
 lambdaW_elbowk <- extract_param(tar_params_best_elbowk, "lambdaW", 0)
 lambdaH_elbowk <- extract_param(tar_params_best_elbowk, "lambdaH", 0)
 ntop_elbowk <- if (!is.null(tar_params_best_elbowk$ntop) && !is.na(tar_params_best_elbowk$ntop)) {

@@ -4,7 +4,7 @@ title: Survival-guided matrix factorization identifies reproducible prognostic p
 author:
   - name: Amber M. Young
     affiliation: a
-    orcid: 0000-0000-0000-0000  # TODO before submission: collect from Amber (no public ORCID record found via ORCID search)
+    orcid: 0000-0001-7042-6961
   - name: Alisa Yurovsky
     affiliation: b
     orcid: 0000-0002-7500-7907  # verified via ORCID public search (exact-name match)

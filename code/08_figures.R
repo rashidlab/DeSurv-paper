@@ -35,9 +35,10 @@ source("R/plot_survival.R")
 source("R/fit_cox_model.R")
 
 # ── Load prerequisites ────────────────────────────────────────────────────
-tar_fit_desurv      <- load_precomputed("tar_fit_desurv_tcgacptac")
-fit_std_desurvk     <- load_precomputed("fit_std_desurvk_tcgacptac")
-fit_std_elbowk      <- load_precomputed("fit_std_elbowk_tcgacptac")
+tar_fit_desurv        <- load_precomputed("tar_fit_desurv_tcgacptac")
+tar_fit_desurv_elbowk <- load_precomputed("tar_fit_desurv_elbowk_tcgacptac")
+fit_std_desurvk       <- load_precomputed("fit_std_desurvk_tcgacptac")
+fit_std_elbowk        <- load_precomputed("fit_std_elbowk_tcgacptac")
 fit_std              <- load_precomputed("fit_std_tcgacptac")
 tar_data_filtered   <- load_precomputed("tar_data_filtered_tcgacptac")
 data_val_filtered   <- load_precomputed("data_val_filtered_tcgacptac")
@@ -180,9 +181,10 @@ heatmap_factor_labels_std <- if (std_k == 3) {
 ntop_value <- if (!is.null(CONFIG$ntop_value)) CONFIG$ntop_value else tar_params_best$ntop
 
 # Compute top genes per model
-tar_tops_desurv      <- get_top_genes(W = tar_fit_desurv$W, ntop = ntop_value)
-tar_tops_std_desurvk <- get_top_genes(W = fit_std_desurvk$W, ntop = ntop_value)
-tar_tops_std_elbowk  <- get_top_genes(W = fit_std_elbowk$W, ntop = ntop_value)
+tar_tops_desurv        <- get_top_genes(W = tar_fit_desurv$W, ntop = ntop_value)
+tar_tops_desurv_elbowk <- get_top_genes(W = tar_fit_desurv_elbowk$W, ntop = ntop_value)
+tar_tops_std_desurvk   <- get_top_genes(W = fit_std_desurvk$W, ntop = ntop_value)
+tar_tops_std_elbowk    <- get_top_genes(W = fit_std_elbowk$W, ntop = ntop_value)
 
 tar_fit_desurv_alpha0 <- load_precomputed("tar_fit_desurv_alpha0_tcgacptac")
 tar_tops_desurv_alpha0 <- get_top_genes(W = tar_fit_desurv_alpha0$W, ntop = ntop_value)
@@ -209,6 +211,13 @@ fig_gene_overlap_heatmap_std_elbowk <- make_gene_overlap_heatmap(
     )
 saveRDS(fig_gene_overlap_heatmap_std_elbowk,
         file.path(RESULTS_DIR, "fig_gene_overlap_heatmap_std_elbowk_tcgacptac.rds"))
+
+# DeSurv at elbow k heatmap
+fig_gene_overlap_heatmap_desurv_elbowk <- make_gene_overlap_heatmap(
+      tar_fit_desurv_elbowk, tar_tops_desurv_elbowk$top_genes, top_genes
+    )
+saveRDS(fig_gene_overlap_heatmap_desurv_elbowk,
+        file.path(RESULTS_DIR, "fig_gene_overlap_heatmap_desurv_elbowk_tcgacptac.rds"))
 
 # DeSurv alpha=0 heatmap
 fig_gene_overlap_heatmap_desurv_alpha0 <- make_gene_overlap_heatmap(

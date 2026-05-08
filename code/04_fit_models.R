@@ -12,6 +12,7 @@
 # Outputs: results/precomputed/desurv_seed_fits_tcgacptac.rds
 #          results/precomputed/tar_fit_desurv_tcgacptac.rds
 #          results/precomputed/fit_std_desurvk_tcgacptac.rds
+#          results/precomputed/tar_fit_desurv_elbowk_tcgacptac.rds
 #          results/precomputed/fit_std_elbowk_tcgacptac.rds
 #
 # Runtime: ~2-4 hours on HPC, ~3 min in quick mode
@@ -148,6 +149,28 @@ tar_fit_desurv_alpha0 <- cache_or_compute("tar_fit_desurv_alpha0_tcgacptac", {
   consensus_and_fit(desurv_seed_fits_alpha0, tar_data_filtered_alpha0,
                     tar_params_best_alpha0, lambdaW_alpha0, lambdaH_alpha0,
                     ntop_alpha0, "Alpha=0")
+})
+
+# ── 1c. DeSurv at elbow k ────────────────────────────────────────────────
+lambdaW_elbowk <- extract_param(tar_params_best_elbowk, "lambdaW", 0)
+lambdaH_elbowk <- extract_param(tar_params_best_elbowk, "lambdaH", 0)
+ntop_elbowk <- if (!is.null(tar_params_best_elbowk$ntop) && !is.na(tar_params_best_elbowk$ntop)) {
+  as.integer(round(tar_params_best_elbowk$ntop))
+} else if (CONFIG$ntop_mode == "fixed") {
+  CONFIG$ntop_value
+} else {
+  100L
+}
+
+desurv_seed_fits_elbowk <- cache_or_compute("desurv_seed_fits_elbowk_tcgacptac", {
+  run_seed_fits(tar_data_filtered_elbowk, tar_params_best_elbowk,
+                lambdaW_elbowk, lambdaH_elbowk, NINIT_FULL, "DeSurv-elbowk")
+})
+
+tar_fit_desurv_elbowk <- cache_or_compute("tar_fit_desurv_elbowk_tcgacptac", {
+  consensus_and_fit(desurv_seed_fits_elbowk, tar_data_filtered_elbowk,
+                    tar_params_best_elbowk, lambdaW_elbowk, lambdaH_elbowk,
+                    ntop_elbowk, "DeSurv-elbowk")
 })
 
 # ── 2. Standard NMF at DeSurv k (k=3) ───────────────────────────────────

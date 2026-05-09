@@ -8,7 +8,7 @@
 # Usage:
 #   Rscript code/07b_merge_simulations.R
 #
-# Inputs:  results/precomputed/sim_partial_*.rds (12 files from array jobs)
+# Inputs:  results/precomputed/sim_partial_*.rds (6 files from array jobs)
 # Outputs: results/precomputed/sim_figs_by_scenario.rds
 
 message("=== Step 7b: Merge Simulation Results ===")
@@ -44,7 +44,7 @@ for (f in partial_files) message("    ", basename(f))
 
 # ── Expected partials ─────────────────────────────────────────────────────
 expected_scenarios <- c("R0_easy", "R00_null", "R_mixed")
-expected_analyses <- c("bo", "bo_alpha0", "bo_tune_ntop", "bo_tune_ntop_alpha0")
+expected_analyses <- c("bo_tune_ntop", "bo_tune_ntop_alpha0")
 expected_names <- outer(expected_scenarios, expected_analyses,
                         function(s, a) paste0("sim_partial_", s, "_", a, ".rds"))
 missing <- setdiff(as.vector(expected_names), basename(partial_files))

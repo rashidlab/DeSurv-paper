@@ -278,13 +278,27 @@ ph_args <- list(
   breaks = seq(-0.5, 1, length.out = 101),
   display_numbers = TRUE,
   number_format = "%.2f",
-  main = "NMF (rows) vs. DeSurv (cols)",
   silent = TRUE
 )
 
 ph <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = FALSE)))
 ph_grob <- ph$gtable
-pheat <- cowplot::plot_grid(NULL, cowplot::ggdraw(ph_grob), nrow = 2, rel_heights = c(0.25, 4))
+mat_idx  <- which(ph_grob$layout$name == "matrix")
+mat_l <- ph_grob$layout$l[mat_idx]; mat_r <- ph_grob$layout$r[mat_idx]
+mat_t <- ph_grob$layout$t[mat_idx]; mat_b <- ph_grob$layout$b[mat_idx]
+w_pt     <- as.numeric(grid::convertUnit(ph_grob$widths,  "pt"))
+h_pt     <- as.numeric(grid::convertUnit(ph_grob$heights, "pt"))
+x_center <- (sum(w_pt[seq_len(mat_l - 1)]) + sum(w_pt[mat_l:mat_r]) / 2) / sum(w_pt)
+y_center <- 1 - (sum(h_pt[seq_len(mat_t - 1)]) + sum(h_pt[mat_t:mat_b]) / 2) / sum(h_pt)
+
+hm <- cowplot::ggdraw(ph_grob)
+pheat <- cowplot::plot_grid(
+  hm,
+  cowplot::ggdraw() + cowplot::draw_label("NMF", angle = 90, size = 9, y = y_center, fontface = "bold"),
+  cowplot::ggdraw() + cowplot::draw_label("DeSurv", size = 9, x = x_center, fontface = "bold"),
+  NULL,
+  ncol = 2, rel_widths = c(1, 0.1), rel_heights = c(1, 0.1)
+)
 
 ph_leg <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = TRUE)))
 leg_idx <- which(ph_leg$gtable$layout$name == "legend")
@@ -315,13 +329,27 @@ ph_args <- list(
   breaks = seq(-0.5, 1, length.out = 101),
   display_numbers = TRUE,
   number_format = "%.2f",
-  main = "NMF (rows) vs. DeSurv (cols)",
   silent = TRUE
 )
 
 ph <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = FALSE)))
 ph_grob <- ph$gtable
-pheat <- cowplot::plot_grid(NULL, cowplot::ggdraw(ph_grob), nrow = 2, rel_heights = c(0.25, 4))
+mat_idx  <- which(ph_grob$layout$name == "matrix")
+mat_l <- ph_grob$layout$l[mat_idx]; mat_r <- ph_grob$layout$r[mat_idx]
+mat_t <- ph_grob$layout$t[mat_idx]; mat_b <- ph_grob$layout$b[mat_idx]
+w_pt     <- as.numeric(grid::convertUnit(ph_grob$widths,  "pt"))
+h_pt     <- as.numeric(grid::convertUnit(ph_grob$heights, "pt"))
+x_center <- (sum(w_pt[seq_len(mat_l - 1)]) + sum(w_pt[mat_l:mat_r]) / 2) / sum(w_pt)
+y_center <- 1 - (sum(h_pt[seq_len(mat_t - 1)]) + sum(h_pt[mat_t:mat_b]) / 2) / sum(h_pt)
+
+hm <- cowplot::ggdraw(ph_grob)
+pheat <- cowplot::plot_grid(
+  hm,
+  cowplot::ggdraw() + cowplot::draw_label("NMF", angle = 90, size = 9, y = y_center, fontface = "bold"),
+  cowplot::ggdraw() + cowplot::draw_label("DeSurv", size = 9, x = x_center, fontface = "bold"),
+  NULL,
+  ncol = 2, rel_widths = c(1, 0.1), rel_heights = c(1, 0.1)
+)
 
 ph_leg <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = TRUE)))
 leg_idx <- which(ph_leg$gtable$layout$name == "legend")
@@ -352,13 +380,27 @@ ph_args <- list(
   breaks = seq(-0.5, 1, length.out = 101),
   display_numbers = TRUE,
   number_format = "%.2f",
-  main = "NMF (rows) vs. DeSurv (cols)",
   silent = TRUE
 )
 
 ph <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = FALSE)))
 ph_grob <- ph$gtable
-pheat <- cowplot::plot_grid(NULL, cowplot::ggdraw(ph_grob), nrow = 2, rel_heights = c(0.25, 4))
+mat_idx  <- which(ph_grob$layout$name == "matrix")
+mat_l <- ph_grob$layout$l[mat_idx]; mat_r <- ph_grob$layout$r[mat_idx]
+mat_t <- ph_grob$layout$t[mat_idx]; mat_b <- ph_grob$layout$b[mat_idx]
+w_pt     <- as.numeric(grid::convertUnit(ph_grob$widths,  "pt"))
+h_pt     <- as.numeric(grid::convertUnit(ph_grob$heights, "pt"))
+x_center <- (sum(w_pt[seq_len(mat_l - 1)]) + sum(w_pt[mat_l:mat_r]) / 2) / sum(w_pt)
+y_center <- 1 - (sum(h_pt[seq_len(mat_t - 1)]) + sum(h_pt[mat_t:mat_b]) / 2) / sum(h_pt)
+
+hm <- cowplot::ggdraw(ph_grob)
+pheat <- cowplot::plot_grid(
+  hm,
+  cowplot::ggdraw() + cowplot::draw_label("NMF", angle = 90, size = 9, y = y_center, fontface = "bold"),
+  cowplot::ggdraw() + cowplot::draw_label("DeSurv", size = 9, x = x_center, fontface = "bold"),
+  NULL,
+  ncol = 2, rel_widths = c(1, 0.1), rel_heights = c(1, 0.1)
+)
 
 ph_leg <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = TRUE)))
 leg_idx <- which(ph_leg$gtable$layout$name == "legend")

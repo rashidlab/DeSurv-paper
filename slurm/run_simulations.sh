@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=desurv-sim
 #SBATCH --partition=general
-#SBATCH --array=0-11
+#SBATCH --array=0-5
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=30
 #SBATCH --mem=32G
@@ -9,8 +9,8 @@
 #SBATCH --output=slurm/logs/sim_%A_%a.log
 
 # Map array task ID to (scenario, analysis)
-SCENARIOS=(R0_easy R0_easy R0_easy R0_easy R00_null R00_null R00_null R00_null R_mixed R_mixed R_mixed R_mixed)
-ANALYSES=(bo bo_alpha0 bo_tune_ntop bo_tune_ntop_alpha0 bo bo_alpha0 bo_tune_ntop bo_tune_ntop_alpha0 bo bo_alpha0 bo_tune_ntop bo_tune_ntop_alpha0)
+SCENARIOS=(R0_easy R0_easy R00_null R00_null R_mixed R_mixed)
+ANALYSES=(bo_tune_ntop bo_tune_ntop_alpha0 bo_tune_ntop bo_tune_ntop_alpha0 bo_tune_ntop bo_tune_ntop_alpha0)
 
 export DESURV_SIM_SCENARIO=${SCENARIOS[$SLURM_ARRAY_TASK_ID]}
 export DESURV_SIM_ANALYSIS=${ANALYSES[$SLURM_ARRAY_TASK_ID]}

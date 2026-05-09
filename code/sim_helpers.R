@@ -49,57 +49,6 @@ SIM_BO_CANDIDATE_POOL <- 1500L
 SIM_BO_EXPLORATION_WEIGHT <- 0.01
 SIM_BO_K_LCB_LEVEL <- 0.90
 
-  list(
-    scenario_id = "R0_easy",
-    scenario = "R0",
-    description = "Default easy/sanity scenario",
-    replicates = SIM_DATASETS_PER_SCENARIO,
-    seed_offset = SIM_GLOBAL_SEED,
-    overrides = list()
-  ),
-  # list(
-  #   scenario_id = "R0k6",
-  #   scenario = "R0",
-  #   description = "R0 scenario with k = 6",
-  #   replicates = SIM_DATASETS_PER_SCENARIO,
-  #   seed_offset = SIM_GLOBAL_SEED + 4000L,
-  #   overrides = list(K = 6L,
-  #                    beta = c(2.0,-1.5,1.0,0,0,0))
-  # ),
-  list(
-    scenario_id = "R00_null",
-    scenario = "R00",
-    description = "No survival associated programs",
-    replicates = SIM_DATASETS_PER_SCENARIO,
-    seed_offset = SIM_GLOBAL_SEED,
-    overrides = list()
-  ),
-  list(
-    scenario_id = "R_mixed",
-    scenario = "R_mixed",
-    description = "Mixed marker/background survival genes",
-    replicates = SIM_DATASETS_PER_SCENARIO,
-    seed_offset = SIM_GLOBAL_SEED + 3000L,
-    overrides = list()
-  )#,
-  # list(
-  #   scenario_id = "R2_correlated",
-  #   scenario = "R2",
-  #   description = "Correlated programs with moderate noise",
-  #   replicates = SIM_DATASETS_PER_SCENARIO,
-  #   seed_offset = SIM_GLOBAL_SEED + 1000L,
-  #   overrides = list()
-  # ),
-  # list(
-  #   scenario_id = "R3_overlap",
-  #   scenario = "R3",
-  #   description = "Overlapping markers and strong background",
-  #   replicates = SIM_DATASETS_PER_SCENARIO,
-  #   seed_offset = SIM_GLOBAL_SEED + 2000L,
-  #   overrides = list()
-  # )
-)
-
 SIM_FIXED_PARAMS <- list(
   k = NULL,
   alpha = SIM_DEFAULT_ALPHA,
@@ -108,79 +57,6 @@ SIM_FIXED_PARAMS <- list(
   lambdaW = SIM_DEFAULT_LAMBDAW,
   lambdaH = SIM_DEFAULT_LAMBDAH,
   ngene = SIM_DEFAULT_NGENE
-)
-
-  # list(
-  #   analysis_id = "fixed",
-  #   label = "Fixed parameters",
-  #   mode = "fixed",
-  #   params = SIM_FIXED_PARAMS
-  # ),
-  # list(
-  #   analysis_id = "fixed_alpha0",
-  #   label = "Fixed NMF",
-  #   mode = "fixed",
-  #   params = modifyList(SIM_FIXED_PARAMS, list(alpha = 0))
-  # ),
-  list(
-    analysis_id = "bo",
-    label = "Bayesian optimization",
-    mode = "bayesopt",
-    bounds = SIM_DESURV_BO_BOUNDS,
-    bo_fixed = list(
-      ngene = SIM_DEFAULT_NGENE,
-      ntop = SIM_DEFAULT_NTOP,
-      lambdaW_grid = SIM_DEFAULT_LAMBDAW,
-      lambdaH_grid = SIM_DEFAULT_LAMBDAH
-    )
-  ),
-  list(
-    analysis_id = "bo_alpha0",
-    label = "Bayesian optimization with NMF",
-    mode = "bayesopt",
-    bounds = modifyList(
-      SIM_DESURV_BO_BOUNDS,
-      list(alpha_grid = list(lower = 0, upper = 0, type = "continuous"))
-    ),
-    bo_fixed = list(
-      ngene = SIM_DEFAULT_NGENE,
-      ntop = SIM_DEFAULT_NTOP,
-      alpha_grid = 0,
-      lambdaW_grid = SIM_DEFAULT_LAMBDAW,
-      lambdaH_grid = SIM_DEFAULT_LAMBDAH
-    ),
-    final_overrides = list(alpha = 0)
-  ),
-  list(
-    analysis_id = "bo_tune_ntop",
-    label = "Bayesian optimization adding ntop to tuning",
-    mode = "bayesopt",
-    bounds = modifyList(
-      SIM_DESURV_BO_BOUNDS,
-      list(ntop = list(lower = 50, upper = 250, type = "integer"))),
-    bo_fixed = list(
-      ngene = SIM_DEFAULT_NGENE,
-      lambdaW_grid = SIM_DEFAULT_LAMBDAW,
-      lambdaH_grid = SIM_DEFAULT_LAMBDAH
-    )
-  ),
-  list(
-    analysis_id = "bo_tune_ntop_alpha0",
-    label = "Bayesian optimization with NMF adding ntop for tuning",
-    mode = "bayesopt",
-    bounds = modifyList(
-      SIM_DESURV_BO_BOUNDS,
-      list(alpha_grid = list(lower = 0, upper = 0, type = "continuous"),
-           ntop = list(lower = 50, upper = 250, type = "integer"))
-    ),
-    bo_fixed = list(
-      ngene = SIM_DEFAULT_NGENE,
-      alpha_grid = 0,
-      lambdaW_grid = SIM_DEFAULT_LAMBDAW,
-      lambdaH_grid = SIM_DEFAULT_LAMBDAH
-    ),
-    final_overrides = list(alpha = 0)
-  )
 )
 
 build_simulation_dataset_specs <- function(

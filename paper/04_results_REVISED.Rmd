@@ -195,7 +195,7 @@ km_reclass_diff <- km_n_high_desurv - km_n_high_nmf
 We developed DeSurv, a survival-supervised deconvolution framework (Fig. \ref{fig:schema}; Methods), and evaluated it in controlled simulations and PDAC cohort analysis with external validation.
 ```{r fig-schema, fig.cap = "Overview of the DeSurv framework. (A) DeSurv jointly optimizes NMF reconstruction ($X \\approx WH$) and Cox proportional hazards likelihood. The gene program matrix $W$ is shared between objectives: factor scores $Z = W^\\top X$ serve as covariates in the Cox model with coefficients $\\beta$. A supervision parameter $\\alpha \\in [0,1)$ controls the balance between reconstruction fidelity ($\\alpha = 0$, standard NMF) and survival prediction ($\\alpha$ close to 1). (B) The factorization rank ($k$), supervision strength ($\\alpha$), and regularization ($\\lambda$) are selected via Bayesian optimization over cross-validated concordance index. \\label{fig:schema}", fig.env='figure*', fig.pos='t', out.height= "6in", out.width='\\textwidth'}
 
-knitr::include_graphics(file.path("..","figures", "model_schematic_final.pdf"))
+knitr::include_graphics(file.path("..", "figures", "model_schematic_final.pdf"))
 ```
 
 
@@ -209,32 +209,8 @@ Because the goal is prognostic factorization, DeSurv selects $k$ using the crite
 
 ```{r fig-sim, fig.width = 6.5, fig.height = 6, fig.cap = paste0("Simulation studies and model selection. (A) Test-set concordance index across 100 simulation replicates ($p = 3{,}000$ genes, $n = 200$ samples, true $k = 3$) comparing DeSurv to standard NMF ($\\alpha = 0$); paired Wilcoxon $P ", sim_wilcox_p, "$. (B) Precision (fraction of a factor's top-weighted genes, defined in main text, overlapping a true prognostic program) across replicates. In (A) and (B), boxes show median and interquartile range (IQR); whiskers extend to $1.5\\times$IQR; points beyond are individual replicates. The y-axis in (A) is truncated at 0.5 because C-index values below 0.5 indicate worse-than-random concordance. (C) Distribution of selected $k$ values across the same 100 replicates for DeSurv versus standard NMF. (D) Gaussian-process--predicted mean cross-validated C-index from Bayesian optimization over factorization rank ($k$) and supervision strength ($\\alpha$) in PDAC training data (TCGA + CPTAC). \\label{fig:sim}"), fig.env='figure*', fig.pos='t', out.height= "6in", out.width="6.5in"}
 
-load_result("fig_bo_heat_tcgacptac")
-fig_bo_heat_tcgacptac = fig_bo_heat_tcgacptac +
-  guides(fill = guide_colorbar(barheight = unit(2, "cm"), barwidth = unit(0.3, "cm"))) +
-  theme(legend.title = element_text(size = 7), legend.text = element_text(size = 7))
-leg_grob = ggplotGrob(fig_bo_heat_tcgacptac)
-guide_idx <- which(leg_grob$layout$name == "guide-box-right")
-heat_legend <- leg_grob$grobs[[guide_idx]]
-
-fig_bo_heat_tcgacptac = fig_bo_heat_tcgacptac + theme(legend.position = "none")
-upper = plot_grid(
-  alt_plots$cindex_box + labs(title = NULL) + scale_y_continuous(limits = c(.5, 1)),
-  alt_plots$precision_box + labs(title = NULL),
-  NULL,
-  ncol = 3, labels = c("A", "B",""),
-  rel_widths = c(4,4,.8)
-)
-
-lower = plot_grid(
-  alt_plots$k_hist,
-  fig_bo_heat_tcgacptac,
-  heat_legend,
-  ncol = 3, labels = c("C", "D",""),
-  rel_widths = c(4,4,.8)
-)
-
-plot_grid(upper, lower, nrow = 2)
+cowplot::ggdraw() + cowplot::draw_image(
+  magick::image_read(file.path("figures","fig2_tcgacptac.pdf"), density = 300))
 
 ```
 
@@ -263,90 +239,8 @@ We quantified per-factor contribution using two metrics (Fig. \ref{fig:pdac}C; S
 To further characterize how the two factorizations relate, we examined pairwise W-matrix gene loading correlations restricted to the top 50 genes per factor (Fig. \ref{fig:pdac}D). NMF's tumor-identity factor (N1, top-correlated with Classical programs) was anti-correlated with DeSurv's tumor factor (D3, top-correlated with Basal-like programs), reflecting genuine subtype discordance between Classical and Basal-like gene programs in the top-weighted genes of each method. NMF's microenvironmental factor (N3) mapped primarily to DeSurv's D2. Notably, DeSurv's most prognostic factor (D1) showed only weak, roughly uniform correlations with all three NMF factors, indicating that the gene program structure underlying D1 does not have a direct counterpart in the unsupervised factorization. Because D1 couples Classical tumor and restCAF-associated stromal signatures into a single survival-aligned program, its signal is distributed across multiple NMF factors, none of which individually captures the same tumor--stroma coupling. NMF's exocrine-associated factor (N2) similarly lacked a strong DeSurv counterpart, with its strongest (though weak) correlation to D3, consistent with D3's high variance and low survival contribution. Together, the two methods recover overlapping tumor and microenvironmental structure but differ in two key respects: NMF dedicates a factor to exocrine-compositional variation that DeSurv suppresses, while DeSurv constructs a prognostic tumor--stroma factor that NMF does not isolate. The net result is that DeSurv concentrates survival contribution into a single factor ($\Delta\ell = `r desurv_maxsurv_dl`$), whereas no NMF factor achieves comparable survival contribution at the same rank. Whether this translates to improved generalization across independent cohorts is tested below.
 ```{r fig-pdac, fig.width=7, fig.height=7, fig.cap = paste0("Survival supervision produces different factor structures in PDAC (TCGA + CPTAC training cohort, $n=", ncol(read_result("tar_data_filtered_tcgacptac")$ex), "$ patients, ", sum(read_result("tar_data_filtered_tcgacptac")$sampInfo$event), " events). (A--B) Spearman correlations between factor gene rankings (top 50 genes per factor) and established PDAC gene programs for DeSurv (A) and standard NMF (B) at $k = 3$. Only $|r| > 0.2$ shown. DeSurv concentrates survival signal into D1 (Classical tumor + restCAF stroma) while suppressing exocrine variation; standard NMF devotes one factor to exocrine signals. (C) Fraction of expression variance explained versus survival contribution ($\\Delta$ Cox partial log-likelihood upon factor removal) for each factor. DeSurv concentrates survival signal into D1 while the highest-variance NMF factor (N2, exocrine-associated) contributes negligibly to survival. (D) Pairwise correspondence between NMF and DeSurv factors, measured by Spearman rank correlation of W-matrix gene loadings restricted to the top 50 genes per factor. \\label{fig:pdac}"), fig.env='figure*', fig.pos='t', out.height= "7in", out.width='\\textwidth'}
 
-library(cowplot)
-library(ggplot2)
-
-# Panels A-B: gene program heatmaps
-load_result("fig_gene_overlap_heatmap_desurv_tcgacptac")
-load_result("fig_gene_overlap_heatmap_std_desurvk_tcgacptac")
-
-# Panel C: variance vs survival (promoted from supplement)
-load_result("fig_variation_explained_tcgacptac")
-
-# Panel D: W-matrix correlation (promoted from supplement)
-load_result("fig_desurv_std_correlation_tcgacptac_top50")
-
-# ── Panels A-B: heatmaps with shared legend ──
-# Add top margin so panel labels (A, B) don't overlap heatmap titles
-plot_3a <- fig_gene_overlap_heatmap_desurv_tcgacptac$plot +
-  theme(plot.margin = margin(t = 14, r = 2, b = 2, l = 2))
-plot_3b <- fig_gene_overlap_heatmap_std_desurvk_tcgacptac$plot +
-  theme(plot.margin = margin(t = 14, r = 2, b = 2, l = 2))
-legend_ab <- fig_gene_overlap_heatmap_desurv_tcgacptac$legend
-legend_ab <- gtable::gtable_add_padding(
-  legend_ab, padding = unit(c(0, 10, 0, 0), "pt")
-)
-
-top_row <- plot_grid(
-  plot_3a, plot_3b, cowplot::ggdraw(legend_ab),
-  ncol = 3, labels = c("A", "B", ""), align = "hv",
-  label_size = 12, rel_widths = c(3.5, 3.5, 0.3)
-)
-
-# ── Panel C: variance vs survival scatterplot ──
-plot_3c <- fig_variation_explained_tcgacptac +
-  theme(
-    legend.position    = c(1, 0.5),
-    legend.justification = c(1, 0),
-    legend.background  = element_rect(color = "black"),
-    axis.title         = element_text(size = 8),
-    plot.margin        = margin(2, 30, 2, 2)
-  )
-
-# ── Panel D: W-matrix correlation ──
-legend_d <- ggplot(
-  data.frame(x = 0, y = seq(-0.5, 1, length.out = 100)),
-  aes(x = x, y = y, fill = y)
-) +
-  geom_tile() +
-  scale_fill_gradientn(
-    colors = grDevices::colorRampPalette(rev(RColorBrewer::brewer.pal(n = 7, name = "RdYlBu")))(100),
-    limits = c(-0.5, 1),
-    breaks = c(-0.4, 0, 0.4, 0.8),
-    name = "Spearman\ncorrelation"
-  ) +
-  guides(fill = guide_colorbar(
-    barwidth  = unit(0.3, "cm"),
-    barheight = unit(2, "cm"),
-    title.position = "top",
-    title.hjust = 0.5
-  )) +
-  theme_void() +
-  theme(
-    legend.position = "right",
-    legend.title = element_text(size = 6),
-    legend.text  = element_text(size = 6)
-  )
-legend_d_grob <- cowplot::get_legend(legend_d)
-
-plot_3d <- plot_grid(
-  fig_desurv_std_correlation_tcgacptac_top50$plot +
-    theme(plot.margin = margin(2, 2, 2, 20)),
-  plot_grid(
-    NULL,
-    cowplot::ggdraw(legend_d_grob),
-    nrow = 2, rel_heights = c(0.08, 0.92)
-  ),
-  ncol = 2, rel_widths = c(4, 1)
-)
-
-bottom_row <- plot_grid(
-  plot_3c, plot_3d,
-  ncol = 2, labels = c("C", "D"),
-  label_size = 12, rel_widths = c(0.55, 0.45)
-)
-
-plot_grid(top_row, bottom_row, nrow = 2, rel_heights = c(1.3, 0.7))
+cowplot::ggdraw() + cowplot::draw_image(
+  magick::image_read(file.path("figures","fig3_tcgacptac.pdf"), density = 300))
 ```
 
 
@@ -360,198 +254,7 @@ To assess clinical interpretability of these continuous associations, we dichoto
 
 ```{r fig-val, fig.cap = paste0("Survival-aligned programs generalize across independent PDAC cohorts (pooled $n=", n_val_total, "$ patients across ", n_val_cohorts, " cohorts: ", paste(sprintf("%s $n=%d$", gsub("AU seq", "AU RNA-seq", gsub("PACA AU", "PACA-AU", gsub("_", " ", names(table(pool_df$dataset))))), as.integer(table(pool_df$dataset))), collapse = "; "), "). (A) Forest plot of univariate hazard ratios (95\\% CIs) from separate Cox models for each factor, showing each factor's marginal survival association in each validation cohort. DeSurv factor D1 shows a consistent protective association across all five cohorts (pooled HR = 0.76), while no standard NMF factor achieves a comparable pooled effect. Error bars are 95\\% confidence intervals; black diamonds denote inverse-variance-weighted pooled estimates. (B--C) Kaplan--Meier curves for pooled external validation samples stratified by the combined multivariate linear predictor ($\\hat{\\beta}_1 Z_1 + \\hat{\\beta}_2 Z_2 + \\hat{\\beta}_3 Z_3$, where coefficients are learned from training data), dichotomized at a cross-validated optimal cutpoint: DeSurv (B) and standard NMF (C). \\label{fig:val}"), fig.env='figure*', fig.pos='t', fig.width=7, fig.height=4.8, out.height= "4.5in", out.width='\\textwidth'}
 
-library(cowplot)
-library(ggplot2)
-library(dplyr)
-
-# ── Panel A: forest plot (rebuilt from stored data with pooled HRs) ──
-load_result("fig_hr_forest_tcgacptac")
-d <- fig_hr_forest_tcgacptac$data
-
-# Clean dataset labels
-d$dataset <- dplyr::recode(d$dataset,
-  "Puleo_array" = "Puleo", "Moffitt_GEO_array" = "Moffitt",
-  "PACA_AU_seq" = "PACA seq", "PACA_AU_array" = "PACA array")
-
-# Compute inverse-variance-weighted pooled HR per method × factor
-pooled <- d %>%
-  mutate(logHR = log(HR),
-         se = (log(upper) - log(lower)) / (2 * 1.96),
-         w = 1 / se^2) %>%
-  group_by(method, factor_name) %>%
-  summarise(pooled_logHR = sum(logHR * w) / sum(w),
-            pooled_se = sqrt(1 / sum(w)), .groups = "drop") %>%
-  mutate(HR = exp(pooled_logHR),
-         lower = exp(pooled_logHR - 1.96 * pooled_se),
-         upper = exp(pooled_logHR + 1.96 * pooled_se),
-         dataset = "Pooled")
-
-keep_cols <- c("factor_name", "HR", "lower", "upper", "dataset", "method", "row_type")
-d$row_type <- "cohort"
-pooled$row_type <- "pooled"
-all_data <- rbind(d[, keep_cols], pooled[, keep_cols])
-
-# Method label for facet panels
-all_data$method <- factor(all_data$method, levels = c("DeSurv", "NMF"),
-                          labels = c("DeSurv (D1-D3)", "Standard NMF (N1-N3)"))
-all_data$dataset <- factor(all_data$dataset,
-  levels = c("Puleo", "PACA seq", "PACA array", "Moffitt", "Dijk", "Pooled"))
-# Okabe-Ito palette (color-blind safe; Okabe & Ito 2008) plus distinct shapes
-# so cohorts remain distinguishable under deuteranopia/protanopia/tritanopia.
-cohort_cols <- c("Dijk" = "#E69F00", "Moffitt" = "#56B4E9", "PACA array" = "#009E73",
-                 "PACA seq" = "#0072B2", "Puleo" = "#CC79A7", "Pooled" = "#000000")
-cohort_shapes <- c("Dijk" = 16, "Moffitt" = 17, "PACA array" = 15,
-                   "PACA seq" = 25, "Puleo" = 8,  "Pooled" = 18)
-cohort_sizes <- c("Dijk" = 2.2, "Moffitt" = 2.2, "PACA array" = 2.2,
-                  "PACA seq" = 2.2, "Puleo" = 2.2, "Pooled" = 4)
-
-base_size <- 8
-dodge_w <- 0.6
-
-# Split into DeSurv / NMF using relabeled factor levels
-desurv_dat <- all_data[all_data$method == "DeSurv (D1-D3)", ]
-desurv_dat$factor_name <- factor(desurv_dat$factor_name,
-  levels = c("D1", "D2", "D3"))
-nmf_dat <- all_data[all_data$method == "Standard NMF (N1-N3)", ]
-nmf_dat$factor_name <- factor(nmf_dat$factor_name,
-  levels = c("N1", "N2", "N3"))
-
-# Helper to build one forest panel
-make_forest_panel <- function(dat, title, highlight_level) {
-  hl <- data.frame(
-    factor_name = factor(highlight_level, levels = levels(dat$factor_name)),
-    x = 1)
-  ggplot(dat, aes(x = HR, y = factor_name)) +
-    geom_tile(data = hl, aes(x = x, y = factor_name),
-              width = 100, height = 0.8,
-              fill = "steelblue", alpha = 0.08, inherit.aes = FALSE) +
-    geom_vline(xintercept = 1, linetype = "dashed", colour = "grey60",
-               linewidth = 0.4) +
-    geom_errorbar(aes(xmin = lower, xmax = upper, colour = dataset,
-                      linewidth = row_type),
-                  orientation = "y", width = 0,
-                  position = position_dodge(width = dodge_w)) +
-    geom_point(aes(colour = dataset, shape = dataset, size = dataset),
-               position = position_dodge(width = dodge_w)) +
-    scale_linewidth_manual(values = c("cohort" = 0.6, "pooled" = 1.2),
-                           guide = "none") +
-    scale_colour_manual(values = cohort_cols, name = NULL, drop = FALSE) +
-    scale_shape_manual(values = cohort_shapes, name = NULL, drop = FALSE) +
-    scale_size_manual(values = cohort_sizes, name = NULL, drop = FALSE) +
-    scale_x_log10(limits = c(0.35, 3)) +
-    labs(x = "Hazard ratio (95% CI)", y = NULL, title = title) +
-    theme_classic(base_size = base_size) +
-    theme(
-      legend.position = "none",
-      plot.title = element_text(face = "bold", size = 9, hjust = 0.5),
-      axis.text.y = element_text(size = 8, face = "bold"),
-      axis.text.x = element_text(size = 8, face = "bold"),
-      axis.title.x = element_text(size = 9),
-      plot.margin = margin(2, 6, 2, 4)
-    )
-}
-
-p_desurv <- make_forest_panel(desurv_dat, "DeSurv (D1-D3)", "D1")
-p_nmf    <- make_forest_panel(nmf_dat, "Standard NMF (N1-N3)", "N1")
-
-# Extract shared legend
-p_leg <- ggplot(all_data, aes(x = HR, y = factor_name, colour = dataset,
-                               shape = dataset, size = dataset)) +
-  geom_point() +
-  scale_colour_manual(values = cohort_cols, name = NULL) +
-  scale_shape_manual(values = cohort_shapes, name = NULL) +
-  scale_size_manual(values = cohort_sizes, name = NULL) +
-  guides(colour = guide_legend(nrow = 1, override.aes = list(size = 2.5)),
-         shape = guide_legend(nrow = 1), size = guide_legend(nrow = 1)) +
-  theme_void(base_size = base_size) +
-  theme(legend.position = "bottom", legend.text = element_text(size = 8))
-leg_grob = ggplotGrob(p_leg)
-forest_legend <- gtable::gtable_filter(leg_grob, "guide-box")
-
-plot_forest <- plot_grid(
-  plot_grid(p_desurv, p_nmf, ncol = 2, align = "hv", axis = "tb"),
-  forest_legend,
-  nrow = 2, rel_heights = c(15, 1)
-)
-
-# ── Panels B-C: KM curves ──
-load_result("fig_median_survival_desurv_tcgacptac")
-load_result("fig_median_survival_std_desurvk_tcgacptac")
-
-theme_pnas <- theme_classic(base_size = base_size) +
-  theme(
-    plot.title = element_text(face = "bold"),
-    plot.margin = margin(6, 10, 6, 15),
-    legend.box.margin = margin(0, 0, 0, 0),
-    legend.spacing.x = unit(6, "pt"),
-    legend.key.width = unit(12, "pt")
-  )
-
-km_text_size    <- base_size
-risk_title_size <- base_size
-
-stack_surv <- function(surv_obj, title, keep_legend = FALSE) {
-  p <- surv_obj$plot +
-    theme_pnas +
-    theme(
-      legend.position = if (keep_legend) "bottom" else "none",
-      axis.title.x = element_blank(),
-      axis.title.y = element_text(size = km_text_size),
-      axis.text.x  = element_text(size = km_text_size),
-      axis.text.y  = element_text(size = km_text_size),
-      plot.margin  = margin(4, 10, 0, 10),
-      plot.title   = element_text(size = 9)
-    ) +
-    labs(title = title)
-
-  t <- surv_obj$table +
-    theme_pnas +
-    theme(
-      legend.position = "none",
-      axis.title.y = element_blank(),
-      axis.text.x  = element_text(size = km_text_size),
-      axis.text.y  = element_text(size = km_text_size),
-      text = element_text(size = km_text_size),
-      axis.title.x = element_text(size = km_text_size),
-      plot.title   = element_text(size = risk_title_size),
-      plot.margin  = margin(4, 10, 2, 10)
-    ) +
-    labs(x = "Time (months)")
-  t$layers[[1]]$aes_params$size <- km_text_size / ggplot2::.pt
-  plot_grid(p, t, ncol = 1, rel_heights = c(2.5, 1.5), align = "v", axis = "lr")
-}
-
-km_b <- stack_surv(fig_median_survival_desurv_tcgacptac, "DeSurv")
-km_c <- stack_surv(fig_median_survival_std_desurvk_tcgacptac, "NMF")
-
-# Shared KM legend
-legend_plot <- ggplot(
-  data.frame(x = 1:2, y = 1:2,
-             group = factor(c("Low", "High"), levels = c("Low", "High"))),
-  aes(x = x, y = y, colour = group)
-) +
-  geom_line() +
-  scale_colour_manual(values = c("Low" = "violetred2", "High" = "turquoise4"),
-                      name = "Risk group") +
-  theme_pnas +
-  theme(legend.position = "bottom",
-        legend.text = element_text(size = km_text_size),
-        legend.title = element_text(size = km_text_size)) +
-  guides(colour = guide_legend(nrow = 1))
-
-legend_grob <- ggplotGrob(legend_plot)
-km_legend <- legend_grob$grobs[
-  sapply(legend_grob$grobs, function(x) x$name) == "guide-box"
-][[1]]
-
-km_block <- plot_grid(
-  km_b, km_c, ggdraw(km_legend),
-  nrow = 3, labels = c("B", "C", ""),
-  label_size = 12, rel_heights = c(5, 5, 0.6)
-)
-
-# ── Full figure: forest (left) + KM curves (right) ──
-plot_grid(plot_forest, km_block, ncol = 2, rel_widths = c(1.4, 1),
-          labels = c("A", ""), label_size = 12)
+cowplot::ggdraw() + cowplot::draw_image(
+  magick::image_read(file.path("figures","fig4_tcgacptac.pdf"), density = 300))
 ```
 

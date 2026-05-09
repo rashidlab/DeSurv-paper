@@ -2,14 +2,16 @@
 # run_pipeline.R — Run the DeSurv analysis pipeline
 #
 # Usage:
-#   Rscript run_pipeline.R                       # From precomputed (paper only)
-#   Rscript run_pipeline.R --quick               # Quick smoke test (~10 min)
-#   Rscript run_pipeline.R --full --ncores 8     # Full re-computation
-#   Rscript run_pipeline.R --step 8              # Run from step 8 onward
-#   Rscript run_pipeline.R --step 8 --only       # Run only step 8
+#   Rscript run_pipeline.R                       # Render paper only (ntop BO 50-300 by default)
+#   Rscript run_pipeline.R --step 9              # Regenerate figures + render
+#   Rscript run_pipeline.R --ntop-lower 50 --ntop-upper 300  # Explicit ntop bounds
+#   Rscript run_pipeline.R --quick                                 # Quick smoke test (~10 min)
+#   Rscript run_pipeline.R --full --ncores 8                       # Full re-computation
+#   Rscript run_pipeline.R --step 8                                # Run from step 8 onward
+#   Rscript run_pipeline.R --step 8 --only                         # Run only step 8
 
 if (!requireNamespace("optparse", quietly = TRUE)) {
-  install.packages("optparse")
+  install.packages("optparse", repos = "https://cloud.r-project.org")
 }
 library(optparse)
 
@@ -23,7 +25,13 @@ option_list <- list(
   make_option("--only", action = "store_true", default = FALSE,
               help = "Run only the specified step"),
   make_option("--ncores", type = "integer", default = 1L,
-              help = "Number of cores for parallel steps [default: %default]")
+              help = "Number of cores for parallel steps [default: %default]"),
+  make_option("--ntop-lower", type = "integer", default = 50L,
+              help = "Lower bound for BO-tuned ntop (sets DESURV_NTOP_LOWER) [default: %default]"),
+  make_option("--ntop-upper", type = "integer", default = 300L,
+              help = "Upper bound for BO-tuned ntop (sets DESURV_NTOP_UPPER) [default: %default]"),
+  make_option("--ntop", type = "integer", default = NULL,
+              help = "Fixed ntop value; overrides --ntop-lower/--ntop-upper (sets DESURV_NTOP)")
 )
 
 opts <- parse_args(OptionParser(option_list = option_list))
@@ -33,6 +41,13 @@ if (opts$quick) {
   Sys.setenv(DESURV_QUICK = "TRUE", DESURV_RECOMPUTE = "TRUE", DESURV_NCORES = "1")
 } else if (opts$full) {
   Sys.setenv(DESURV_RECOMPUTE = "TRUE", DESURV_NCORES = as.character(opts$ncores))
+}
+
+if (!is.null(opts[["ntop"]])) {
+  Sys.setenv(DESURV_NTOP = as.character(opts[["ntop"]]))
+} else {
+  Sys.setenv(DESURV_NTOP_LOWER = as.character(opts[["ntop-lower"]]),
+             DESURV_NTOP_UPPER = as.character(opts[["ntop-upper"]]))
 }
 
 steps <- c(
@@ -46,6 +61,7 @@ steps <- c(
   "code/08a_cutpoint_analysis.R",
   "code/08_figures.R",
   "code/08b_si_figures.R",
+  "code/08c_sim_figures.R",
   "code/09_render_paper.R"
 )
 

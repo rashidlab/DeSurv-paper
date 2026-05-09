@@ -10,11 +10,11 @@ message("=== Step 1: Install DeSurv ===")
 local_path <- file.path("..", "DeSurv")
 if (dir.exists(local_path)) {
   message("Installing DeSurv from local checkout: ", local_path)
-  if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+  if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools", repos = "https://cloud.r-project.org")
   devtools::install_local(local_path, upgrade = "never", force = FALSE)
 } else {
   message("Installing DeSurv from GitHub: rashidlab/DeSurv")
-  if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools")
+  if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools", repos = "https://cloud.r-project.org")
   devtools::install_github("rashidlab/DeSurv", upgrade = "never", force = FALSE)
 }
 
@@ -26,7 +26,7 @@ message("DeSurv version: ", packageVersion("DeSurv"))
 # current ggplot2 version's class system (ggplot2 >= 4.0 uses S7 with @-slot
 # accessors). If you upgrade or downgrade ggplot2 across a major version, you
 # may need to regenerate the cached figures by re-running step 8.
-if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes")
+if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes", repos = "https://cloud.r-project.org")
 
 # Check other key dependencies
 pkgs <- c("survival", "NMF", "ggplot2", "cowplot", "dplyr", "survminer",
@@ -34,7 +34,7 @@ pkgs <- c("survival", "NMF", "ggplot2", "cowplot", "dplyr", "survminer",
 missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
 if (length(missing)) {
   message("Installing missing packages: ", paste(missing, collapse = ", "))
-  install.packages(missing)
+  install.packages(missing, repos = "https://cloud.r-project.org")
 }
 
 message("=== Step 1 complete ===")

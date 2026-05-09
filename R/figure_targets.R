@@ -2606,15 +2606,40 @@ splot_cutpoint = function(data_val_filtered, tar_fit_desurv, lp_stats, ntop = NU
   lp_sd   <- lp_stats$lp_sd
   z_cut   <- lp_stats[[cutpoint_field]]
 
+  W_full <- tar_fit_desurv$W
+  beta   <- tar_fit_desurv$beta
+
+  # Pre-compute theta from the full training W so that top-gene selection is
+  # consistent with how lp_mean/lp_sd were computed in build_lp_stats.
+  # Subsetting W before calling compute_lp would re-select different top genes,
+  # shifting the LP distribution and invalidating the z-score cutpoint.
+  if (!is.null(ntop)) {
+    top_info  <- DeSurv::desurv_get_top_genes(W_full, as.integer(ntop))
+    idx_full  <- unique(as.integer(unlist(top_info$top_indices, use.names = FALSE)))
+    idx_full  <- idx_full[!is.na(idx_full) & idx_full >= 1L & idx_full <= nrow(W_full)]
+    top_genes <- rownames(W_full)[idx_full]
+    theta_sub <- (W_full %*% beta)[idx_full, , drop = FALSE]
+    tnorm     <- sqrt(sum(theta_sub^2))
+    if (is.finite(tnorm) && tnorm > 0) theta_sub <- theta_sub / tnorm
+  }
+
   df <- list()
   for (i in seq_along(data_val_filtered)) {
-    dat  <- data_val_filtered[[i]]
-    keep <- intersect(rownames(dat$ex), rownames(tar_fit_desurv$W))
-    W    <- tar_fit_desurv$W[keep, , drop = FALSE]
-    beta <- tar_fit_desurv$beta
-    X    <- dat$ex[keep, , drop = FALSE]
+    dat <- data_val_filtered[[i]]
 
-    lp_val  <- compute_lp(W, beta, X, ntop)
+    if (!is.null(ntop)) {
+      avail  <- intersect(top_genes, rownames(dat$ex))
+      if (!length(avail)) {
+        lp_val <- rep(NA_real_, ncol(dat$ex))
+      } else {
+        tidx   <- match(avail, top_genes)
+        lp_val <- drop(t(dat$ex[avail, , drop = FALSE]) %*% theta_sub[tidx, , drop = FALSE])
+      }
+    } else {
+      keep   <- intersect(rownames(dat$ex), rownames(W_full))
+      lp_val <- drop(t(dat$ex[keep, , drop = FALSE]) %*% (W_full[keep, , drop = FALSE] %*% beta))
+    }
+
     z_val   <- (lp_val - lp_mean) / lp_sd
     bin     <- as.integer(z_val > z_cut)
 

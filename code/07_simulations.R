@@ -43,13 +43,15 @@ source("sim_figs.R")
 source("code/sim_helpers.R")
 
 # ── SLURM array mode detection ────────────────────────────────────────────
-SIM_SCENARIO_FILTER <- Sys.getenv("DESURV_SIM_SCENARIO", "")
-SIM_ANALYSIS_FILTER <- Sys.getenv("DESURV_SIM_ANALYSIS", "")
+SIM_SCENARIO_FILTER  <- Sys.getenv("DESURV_SIM_SCENARIO",  "")
+SIM_ANALYSIS_FILTER  <- Sys.getenv("DESURV_SIM_ANALYSIS",  "")
+SIM_REPLICATE_FILTER <- Sys.getenv("DESURV_SIM_REPLICATE", "")
 SIM_ARRAY_MODE <- nzchar(SIM_SCENARIO_FILTER) && nzchar(SIM_ANALYSIS_FILTER)
 
 if (SIM_ARRAY_MODE) {
-  message(sprintf("  SLURM array mode: scenario=%s, analysis=%s",
-                  SIM_SCENARIO_FILTER, SIM_ANALYSIS_FILTER))
+  rep_msg <- if (nzchar(SIM_REPLICATE_FILTER)) paste0(", replicate=", SIM_REPLICATE_FILTER) else ""
+  message(sprintf("  SLURM array mode: scenario=%s, analysis=%s%s",
+                  SIM_SCENARIO_FILTER, SIM_ANALYSIS_FILTER, rep_msg))
 }
 
 # ── Quick mode overrides ──────────────────────────────────────────────────
@@ -159,7 +161,36 @@ run_sim_pipeline <- function(scenarios, analysis_specs) {
 }
 
 # ── Execute ───────────────────────────────────────────────────────────────
-if (SIM_ARRAY_MODE) {
+if (SIM_ARRAY_MODE && nzchar(SIM_REPLICATE_FILTER)) {
+  # Per-replicate SLURM mode: one job per (scenario, analysis, replicate)
+  rep_id <- as.integer(SIM_REPLICATE_FILTER)
+  partial_name <- sprintf("sim_partial_%s_%s_rep%03d",
+                          SIM_SCENARIO_FILTER, SIM_ANALYSIS_FILTER, rep_id)
+  cache_or_compute(partial_name, {
+    scen <- SIMULATION_SCENARIOS[[1]]
+    spec <- list(
+      scenario_id   = scen$scenario_id,
+      scenario_name = scen$scenario,
+      replicate     = rep_id,
+      description   = scen$description %||% "",
+      seed          = as.integer(scen$seed_offset + rep_id - 1L),
+      overrides     = scen$overrides %||% list()
+    )
+    ds <- generate_simulation_dataset(spec)
+    analysis_spec <- SIM_ANALYSIS_SPECS[[1]]
+    result <- tryCatch(
+      run_simulation_analysis(ds, analysis_spec),
+      error = function(e) {
+        warning(sprintf("FAILED: %s rep %d %s: %s",
+                        spec$scenario_id, rep_id,
+                        analysis_spec$analysis_id, conditionMessage(e)))
+        NULL
+      }
+    )
+    summarize_simulation_results(list(result))
+  })
+} else if (SIM_ARRAY_MODE) {
+  # Legacy: one job per (scenario, analysis), all replicates sequential
   partial_name <- sprintf("sim_partial_%s_%s", SIM_SCENARIO_FILTER, SIM_ANALYSIS_FILTER)
   cache_or_compute(partial_name, {
     run_sim_pipeline(SIMULATION_SCENARIOS, SIM_ANALYSIS_SPECS)

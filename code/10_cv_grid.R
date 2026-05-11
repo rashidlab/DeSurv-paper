@@ -138,9 +138,6 @@ if (!CONFIG$recompute && file.exists(cv_result_path)) {
   cv_results <- readRDS(cv_result_path)
 } else {
   cv_results <- mclapply(params_grid, function(p) {
-    point_seed <- SEED + p$k * 10000L +
-      as.integer(round(p$alpha * 100)) * 100L +
-      ifelse(is.null(p$ntop), 0L, as.integer(p$ntop))
     tryCatch(
       run_cv_grid_point(
         data           = cv_train,
@@ -149,7 +146,7 @@ if (!CONFIG$recompute && file.exists(cv_result_path)) {
         fixed_params   = resolve_fixed(p),
         nfolds         = NFOLDS,
         n_starts       = NSTARTS_CV,
-        seed           = point_seed,
+        seed           = SEED,
         parallel_init  = FALSE,
         verbose        = FALSE
       ),
@@ -216,11 +213,8 @@ if (!CONFIG$recompute && file.exists(fit_list_path)) {
   fit_list <- readRDS(fit_list_path)
 } else {
   fit_list <- mclapply(params_grid, function(p) {
-    fp         <- resolve_fixed(p)
-    point_seed <- SEED + p$k * 10000L +
-      as.integer(round(p$alpha * 100)) * 100L +
-      ifelse(is.null(p$ntop), 0L, as.integer(p$ntop))
-    ntop_num   <- if (is.null(p$ntop)) NA_real_ else as.numeric(p$ntop)
+    fp       <- resolve_fixed(p)
+    ntop_num <- if (is.null(p$ntop)) NA_real_ else as.numeric(p$ntop)
     opt_row    <- if (is.na(ntop_num)) {
       dplyr::filter(optimal_cutpoint,
                     k == p$k, alpha == p$alpha, is.na(ntop),
@@ -240,7 +234,7 @@ if (!CONFIG$recompute && file.exists(fit_list_path)) {
         alpha              = p$alpha,
         fixed_params       = fp,
         n_starts           = NSTARTS_FULL,
-        seed               = point_seed,
+        seed               = SEED,
         parallel_init      = FALSE,
         optimal_z_cutpoint = opt_z,
         verbose            = FALSE

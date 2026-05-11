@@ -17,7 +17,7 @@ NTOP_UPPER ?=
 # Use a portable Rscript invocation by default; override with `make RSCRIPT=...` on Windows.
 RSCRIPT ?= Rscript
 
-.PHONY: all quick from-precomputed paper clean install ntop ntop-bo
+.PHONY: all quick from-precomputed paper clean install ntop ntop-bo cv-grid
 
 # ── Default: from pre-computed results ────────────────────────────────────
 from-precomputed: paper
@@ -70,6 +70,10 @@ ntop-bo:
 	DESURV_NTOP_LOWER=$(NTOP_LOWER) DESURV_NTOP_UPPER=$(NTOP_UPPER) DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/08_figures.R
 	DESURV_NTOP_LOWER=$(NTOP_LOWER) DESURV_NTOP_UPPER=$(NTOP_UPPER) $(RSCRIPT) code/09_render_paper.R
 	@echo "=== ntop BO [$(NTOP_LOWER),$(NTOP_UPPER)] pipeline complete ==="
+
+# ── CV grid search (k × alpha × ntop) ────────────────────────────────────────
+cv-grid:
+	DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/10_cv_grid.R
 
 clean:
 	rm -rf results/precomputed/*.rds

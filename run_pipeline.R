@@ -56,7 +56,6 @@ steps <- c(
   "code/03_bayesian_optimization.R",
   "code/04_fit_models.R",
   "code/05_external_validation.R",
-  "code/06_sensitivity_analysis.R",
   "code/07_simulations.R",
   "code/08a_cutpoint_analysis.R",
   "code/08_figures.R",

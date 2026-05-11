@@ -73,8 +73,7 @@ Full re-computation replaces the pre-computed results with freshly computed ones
 | 3 | `code/03_bayesian_optimization.R` | BO hyperparameter search (DeSurv, alpha=0, elbow-k) | 4-8 hours | 3 min |
 | 4 | `code/04_fit_models.R` | Multi-start fitting with consensus initialization | 2-4 hours | 2 min |
 | 5 | `code/05_external_validation.R` | Project to 5 independent PDAC cohorts | 10 min | 2 min |
-| 6 | `code/06_sensitivity_analysis.R` | K-sensitivity grid across k x alpha | 2-4 hours | skipped |
-| 7 | `code/07_simulations.R` | 3 scenarios x 100 replicates x 4 methods | 6-12 hours | 10 min |
+| 6 | `code/07_simulations.R` | 3 scenarios x 100 replicates x 4 methods | 6-12 hours | 10 min |
 | 8 | `code/08_figures.R` | Generate manuscript figures | 5 min | uses cached |
 | 9 | `code/09_render_paper.R` | Compile paper + SI appendix | 2 min | 2 min |
 
@@ -104,7 +103,6 @@ DeSurv-paper/
 │   ├── 03_bayesian_optimization.R #   Hyperparameter search via BO
 │   ├── 04_fit_models.R            #   Multi-start fitting + consensus init
 │   ├── 05_external_validation.R   #   Project to 5 validation cohorts
-│   ├── 06_sensitivity_analysis.R  #   K-sensitivity grid analysis
 │   ├── 07_simulations.R           #   Simulation studies (3 scenarios)
 │   ├── 08_figures.R               #   Figure generation
 │   ├── 09_render_paper.R          #   Compile manuscript

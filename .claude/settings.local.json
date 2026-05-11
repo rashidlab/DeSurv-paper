@@ -6,7 +6,21 @@
       "Bash(git remote *)",
       "Bash(gh issue *)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\\\\paper\" -Filter \"*.Rmd\" -Recurse)",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "PowerShell(ls -Path \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\\\\docs\" -Force 2>$null | ForEach-Object { $_.FullName })",
+      "PowerShell(ls -Path \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\\\\slurm\" -Force 2>$null | ForEach-Object { $_.FullName })",
+      "PowerShell(head *)",
+      "PowerShell(ls *)",
+      "PowerShell(ls -Path \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\\\\.claude\" -Force 2>$null | ForEach-Object { $_.FullName })",
+      "PowerShell(ls -Path \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\" -Force | Where-Object { $_.Name -match '\\\\.\\(pdf|log|tex|R|Rmd\\)$' } | Select-Object Name, @{Name='SizeKB';Expression={[math]::Round\\($_.Length/1KB,2\\)}} | Format-Table -AutoSize)",
+      "PowerShell(ls -Recurse -Path \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\\\\paper\" -Force 2>$null | Where-Object { -not $_.PSIsContainer } | Select-Object FullName, @{Name='SizeKB';Expression={[math]::Round\\($_.Length/1KB,2\\)}})",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\\\\figures\" -File -Force | Select-Object Name, @{Name='SizeKB';Expression={[math]::Round\\($_.Length/1KB,2\\)}})",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\\\\paper\" -File -Force | Select-Object Name, @{Name='SizeKB';Expression={[math]::Round\\($_.Length/1KB,2\\)}})",
+      "PowerShell(dir \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\\\\figures\" | where { -not $_.PSIsContainer })",
+      "PowerShell(dir \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\\\\paper\" | where { -not $_.PSIsContainer })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\\\\results\\\\precomputed\\\\ntop_bo_50_300\" -Recurse | Select-Object @{N='Name';E={$_.Name}}, @{N='Size';E={$_.Length}} | Select-Object -First 20 | Format-Table -AutoSize)",
+      "PowerShell(cd \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\"; git ls-files results/precomputed/ | Where-Object { $_ -match \"ntop_bo_50_300\" } | Measure-Object; git ls-files results/precomputed/ | Where-Object { $_ -notmatch \"ntop_bo_50_300\" } | Measure-Object)",
+      "PowerShell(cd \"C:\\\\Users\\\\amyou\\\\Documents\\\\GitHub\\\\DeSurv-paper-rl\"; git ls-files results/precomputed/ | Where-Object { $_ -notmatch \"ntop_bo_50_300\" })"
     ]
   }
 }

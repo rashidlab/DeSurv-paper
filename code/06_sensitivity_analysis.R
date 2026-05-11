@@ -24,7 +24,7 @@ message("=== Step 6: Sensitivity Analysis ===")
 source("code/00_helpers.R")
 
 cv_grid_files <- c(
-  "adj_p_270_matrix.rds", "adj_p_all_matrix.rds", "unadj_p_270_matrix.rds",
+  "adj_p_270_matrix.rds", "adj_p_all_matrix.rds",
   "hcor_270_matrix.rds", "hcor_all_matrix.rds",
   "master_rows_270.rds", "master_rows_all.rds",
   "k3_k7_summary.rds", "lam300_summary.rds", "production_summary.rds"

@@ -103,7 +103,7 @@ fig_bo_heat_maxed <- ggplot(curve, aes(x = k, y = alpha, fill = mean)) +
     legend.title = element_text(face = "bold"),
     legend.text  = element_text(color = "black")
   )
-saveRDS(fig_bo_heat_maxed, file.path(RESULTS_DIR, "fig_bo_heat_maxed_tcgacptac.rds"))
+
 
 # ── Variance explained vs survival contribution scatter ───────────────────
 df_nmf <- build_variance_survival_df(
@@ -194,16 +194,14 @@ fig_gene_overlap_heatmap_desurv <- make_gene_overlap_heatmap(
       tar_fit_desurv, tar_tops_desurv$top_genes, top_genes,
       factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7
     )
-saveRDS(fig_gene_overlap_heatmap_desurv,
-        file.path(RESULTS_DIR, "fig_gene_overlap_heatmap_desurv_tcgacptac.rds"))
+
 
 # Standard NMF at DeSurv k heatmap
 fig_gene_overlap_heatmap_std_desurvk <- make_gene_overlap_heatmap(
       fit_std_desurvk, tar_tops_std_desurvk$top_genes, top_genes,
       factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7
     )
-saveRDS(fig_gene_overlap_heatmap_std_desurvk,
-        file.path(RESULTS_DIR, "fig_gene_overlap_heatmap_std_desurvk_tcgacptac.rds"))
+
 
 # Standard NMF at elbow k heatmap
 fig_gene_overlap_heatmap_std_elbowk <- make_gene_overlap_heatmap(
@@ -259,7 +257,7 @@ fig_hr_forest <- ggplot(df, aes(x = HR, y = factor_name, color = dataset, group 
     coord_cartesian(xlim = c(min(df$lower), max(df$upper) * 1.4)) +
     labs(x = "Hazard ratio (95% CI)", y = NULL) +
     facet_wrap(~method)
-saveRDS(fig_hr_forest, file.path(RESULTS_DIR, "fig_hr_forest_tcgacptac.rds"))
+
 
 # ── NMF vs DeSurv Spearman correlation heatmap ────────────────────────────
 c_mat <- cor(fit_std_desurvk$W, tar_fit_desurv$W, method = "spearman")
@@ -305,8 +303,7 @@ leg_idx <- which(ph_leg$gtable$layout$name == "legend")
 legend_grob <- if (length(leg_idx) > 0) ph_leg$gtable$grobs[[leg_idx[1]]] else grid::nullGrob()
 
 fig_desurv_std_correlation <- list(plot = pheat, legend = legend_grob)
-saveRDS(fig_desurv_std_correlation,
-        file.path(RESULTS_DIR, "fig_desurv_std_correlation_tcgacptac.rds"))
+
 
 
 # ── ntop NMF vs DeSurv Spearman correlation heatmap ────────────────────────────
@@ -356,8 +353,7 @@ leg_idx <- which(ph_leg$gtable$layout$name == "legend")
 legend_grob <- if (length(leg_idx) > 0) ph_leg$gtable$grobs[[leg_idx[1]]] else grid::nullGrob()
 
 fig_desurv_std_correlation_ntop <- list(plot = pheat, legend = legend_grob)
-saveRDS(fig_desurv_std_correlation_ntop,
-        file.path(RESULTS_DIR, "fig_desurv_std_correlation_tcgacptac_ntop.rds"))
+
 
 
 # ── top 50 NMF vs DeSurv Spearman correlation heatmap ────────────────────────────
@@ -407,8 +403,7 @@ leg_idx <- which(ph_leg$gtable$layout$name == "legend")
 legend_grob <- if (length(leg_idx) > 0) ph_leg$gtable$grobs[[leg_idx[1]]] else grid::nullGrob()
 
 fig_desurv_std_correlation_top50 <- list(plot = pheat, legend = legend_grob)
-saveRDS(fig_desurv_std_correlation_top50,
-        file.path(RESULTS_DIR, "fig_desurv_std_correlation_tcgacptac_top50.rds"))
+
 
 
 

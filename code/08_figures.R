@@ -26,12 +26,11 @@ library(glmnet)
 library(dplyr)
 
 # Source figure-building functions
+source("R/bo_helpers.R")
 source("R/figure_targets.R")
 source("R/cluster_alignment.R")
-source("R/compare_models.R")
 source("R/cv_grid_helpers.R")
 source("R/get_top_genes.R")
-source("R/plot_survival.R")
 source("R/fit_cox_model.R")
 
 # ── Load prerequisites ────────────────────────────────────────────────────

@@ -147,7 +147,6 @@ plot_sim_metric_box <- function(results, metric, title, ylab, base_size = 12) {
         size = 0.8,
         alpha = 0.35
       ) +
-      # ggplot2::facet_wrap(~ scenario_panel) +
       ggplot2::scale_fill_manual(values = sim_method_colors) +
       ggplot2::scale_color_manual(values = sim_method_colors, guide = "none") +
       ggplot2::labs(

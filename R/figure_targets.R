@@ -82,114 +82,6 @@ make_bo_k_panels <- function(history_df, include_alpha = TRUE, cindex_label = "B
   panels
 }
 
-collect_bo_diagnostics <- function(bo_results, history_df = NULL) {
-  if (is.null(bo_results)) {
-    return(NULL)
-  }
-  if (!is.null(bo_results$diagnostics)) {
-    diag_df <- bo_results$diagnostics
-    if (!"run_id" %in% names(diag_df)) {
-      diag_df$run_id <- NA_integer_
-    }
-    if (!is.null(history_df) && nrow(history_df)) {
-      join_cols <- intersect(c("run_id", "eval_id"), names(diag_df))
-      join_cols <- join_cols[join_cols %in% names(history_df)]
-      if (!length(join_cols)) {
-        join_cols <- "eval_id"
-      }
-      diag_df <- dplyr::left_join(
-        diag_df,
-        history_df,
-        by = join_cols,
-        suffix = c("", "_history")
-      )
-    }
-    return(diag_df)
-  }
-  runs <- bo_results$runs
-  if (is.null(runs)) {
-    return(NULL)
-  }
-  diag_list <- lapply(seq_along(runs), function(idx) {
-    diag_df <- runs[[idx]]$diagnostics
-    if (is.null(diag_df) || !nrow(diag_df)) {
-      return(NULL)
-    }
-    diag_df$run_id <- idx
-    diag_df
-  })
-  diag_list <- diag_list[!vapply(diag_list, is.null, logical(1))]
-  if (!length(diag_list)) {
-    return(NULL)
-  }
-  diag_df <- do.call(rbind, diag_list)
-  if (!is.null(history_df) && nrow(history_df)) {
-    join_cols <- intersect(c("run_id", "eval_id"), names(diag_df))
-    join_cols <- join_cols[join_cols %in% names(history_df)]
-    if (!length(join_cols)) {
-      join_cols <- "eval_id"
-    }
-    diag_df <- dplyr::left_join(
-      diag_df,
-      history_df,
-      by = join_cols,
-      suffix = c("", "_history")
-    )
-  }
-  diag_df
-}
-
-compute_bo_eval_se <- function(diagnostics) {
-  if (is.null(diagnostics) || !nrow(diagnostics)) {
-    return(data.frame(eval_id = integer(0), c_se = numeric(0), n_folds = integer(0)))
-  }
-  if (!"eval_id" %in% names(diagnostics)) {
-    stop("BO diagnostics must include eval_id.")
-  }
-  if (!"fold" %in% names(diagnostics)) {
-    stop("BO diagnostics must include fold.")
-  }
-  if (!"val_cindex" %in% names(diagnostics)) {
-    stop("BO diagnostics must include val_cindex.")
-  }
-
-  safe_mean <- function(x) {
-    x <- x[is.finite(x)]
-    if (length(x) == 0L) return(NA_real_)
-    mean(x)
-  }
-  safe_se <- function(x) {
-    x <- x[is.finite(x)]
-    if (length(x) <= 1L) return(NA_real_)
-    stats::sd(x) / sqrt(length(x))
-  }
-
-  group_cols <- c("eval_id", "fold")
-  if ("run_id" %in% names(diagnostics)) {
-    group_cols <- c("run_id", group_cols)
-  }
-
-  fold_means <- diagnostics %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(group_cols))) %>%
-    dplyr::summarise(
-      fold_mean = safe_mean(val_cindex),
-      .groups = "drop"
-    )
-
-  se_group_cols <- "eval_id"
-  if ("run_id" %in% names(fold_means)) {
-    se_group_cols <- c("run_id", se_group_cols)
-  }
-
-  fold_means %>%
-    dplyr::group_by(dplyr::across(dplyr::all_of(se_group_cols))) %>%
-    dplyr::summarise(
-      c_se = safe_se(fold_mean),
-      n_folds = sum(is.finite(fold_mean)),
-      .groups = "drop"
-    )
-}
-
 summarize_bo_best_per_k <- function(history_df, eval_se_df, method_label) {
   k_col <- intersect(c("k", "k_grid"), names(history_df))[1]
   if (is.na(k_col)) {
@@ -294,14 +186,7 @@ summarize_bo_best_per_alpha <- function(history_df, eval_se_df, method_label) {
     join_cols <- "eval_id"
   }
   history_df <- dplyr::left_join(history_df, eval_se_df, by = join_cols)
-  
-  # history_df$alpha_bin <- cut(
-  #   history_df$alpha_col,
-  #   breaks = c(-Inf,0,seq(.1, 1, by = 0.1)),
-  #   include.lowest = FALSE,
-  #   right = TRUE
-  # )
-  
+
   history_df$k = history_df[[k_col]]
   
   history_df$alpha = ifelse(

@@ -25,11 +25,8 @@ library(ggplot2)
 library(survival)
 library(survminer)
 library(cowplot)
-# library(enrichplot)  # not used in chunks; figures come from cached .rds
 library(magick)
-# library(Seurat)      # not used in chunks; figures come from cached .rds
 library(gt)
-# library(VAM)         # not used in chunks; figures come from cached .rds
 library(grid)
 library(viridis)
 library(ggplotify)

@@ -140,14 +140,15 @@ if (!CONFIG$recompute && file.exists(cv_result_path)) {
   cv_results <- mclapply(params_grid, function(p) {
     tryCatch(
       run_cv_grid_point(
-        data         = cv_train,
-        k            = p$k,
-        alpha        = p$alpha,
-        fixed_params = resolve_fixed(p),
-        nfolds       = NFOLDS,
-        n_starts     = NSTARTS_CV,
-        seed         = SEED,
-        verbose      = FALSE
+        data           = cv_train,
+        k              = p$k,
+        alpha          = p$alpha,
+        fixed_params   = resolve_fixed(p),
+        nfolds         = NFOLDS,
+        n_starts       = NSTARTS_CV,
+        seed           = SEED,
+        parallel_init  = FALSE,
+        verbose        = FALSE
       ),
       error = function(e) {
         warning(sprintf("CV failed k=%d alpha=%.2f: %s", p$k, p$alpha, e$message))
@@ -234,6 +235,7 @@ if (!CONFIG$recompute && file.exists(fit_list_path)) {
         fixed_params       = fp,
         n_starts           = NSTARTS_FULL,
         seed               = SEED,
+        parallel_init      = FALSE,
         optimal_z_cutpoint = opt_z,
         verbose            = FALSE
       ),

@@ -15,6 +15,7 @@ header-includes:
 - \usepackage{algpseudocode}
 - \usepackage{setspace}
 - \usepackage{enumitem}
+- \usepackage[nolists,nomarkers]{endfloat}
 - \DeclareMathOperator*{\argmin}{argmin}
 - \DeclareMathOperator*{\argmax}{argmax}
 - \DeclareMathOperator\diag{diag}
@@ -1094,8 +1095,10 @@ n_combinations   <- length(k_labs) * length(alpha_labs)
 
 Across datasets and initialization schemes, the DeSurv algorithm consistently converged to numerically stable solutions within the designated iteration budget. Warm-start strategies, in which solutions at $\alpha=0$ initialized supervised runs, substantially reduced variability across restarts and improved reproducibility. Fig. \ref{fig:fig-converge} shows representative loss trajectories demonstrating monotone decreases until convergence across restarts. Compared with naive random initialization, warm-starts produced tighter distributions of cross-validated C-index and partial likelihood, confirming stability of the optimization procedure.
 
-```{r fig-converge, fig.width = 5, fig.height= 3, fig.cap="Convergence trajectories of the DeSurv objective across five randomly selected multi-start initializations on the PDAC training cohort (TCGA + CPTAC). Each line shows the relative loss (loss at iteration $t$ divided by the initial loss for that restart) as a function of iteration number, restricted to the first 5{,}000 iterations for readability. The total objective decreases monotonically and stabilizes well within the iteration budget across all initializations, confirming convergence of the alternating block-update scheme.", fig.env='figure*', fig.pos='htbp', out.height= "3in", out.width='5in'}
-knitr::include_graphics("../figures/si_fig_converge_tcgacptac.pdf")
+
+```{r fig-converge, fig.width = 5, fig.height= 3, fig.cap="Convergence trajectories of the DeSurv objective across five randomly selected multi-start initializations on the PDAC training cohort (TCGA + CPTAC). Each line shows the relative loss (loss at iteration $t$ divided by the initial loss for that restart) as a function of iteration number, restricted to the first 5{,}000 iterations for readability. The total objective decreases monotonically and stabilizes well within the iteration budget across all initializations, confirming convergence of the alternating block-update scheme.", fig.env='figure*', fig.pos='t', out.height= "3in", out.width='5in', fig.align='center'}
+cowplot::ggdraw() + cowplot::draw_image(
+  magick::image_read("figures/si_fig_converge_tcgacptac.pdf", density = 300))
 
 ```
 

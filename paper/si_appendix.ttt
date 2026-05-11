@@ -1,0 +1,223 @@
+\begin{table}[ht]
+\centering
+\caption{Summary of PDAC cohorts used in this study. $N$ denotes the number of
+samples after all quality-control filters (histology, survival validity,
+dataset-specific exclusions). Patient-level metadata: OS = overall survival
+(time and event indicator); PurIST = tumor subtype classification
+(Rashid et al. 2020); DeCAF = CAF subtype classification
+(Peng et al. 2020). Expression data and molecular classifications
+for the validation cohorts were originally compiled for the DeCAF study
+(Peng et al. 2020).}
+\label{tab:cohorts}
+\footnotesize
+\begin{tabular}{llrllll}
+\toprule
+Cohort & Platform & $N$ & Role & Accession & Metadata & Reference \\
+\midrule
+TCGA-PAAD        & RNA-seq    & 144 & Training   & GDC (TCGA-PAAD) & OS, PurIST, DeCAF & Raphael et al. (2017) \\
+CPTAC            & RNA-seq    & 129 & Training   & GDC (CPTAC-3)    & OS, PurIST, DeCAF & Ellis et al. (2013) \\
+\addlinespace
+Dijk             & RNA-seq    &  90 & Validation & E-MTAB-6830      & OS, PurIST, DeCAF & Dijk et al. (2020) \\
+Moffitt          & Microarray & 123 & Validation & GSE71729         & OS, PurIST, DeCAF & Moffitt et al. (2015) \\
+PACA-AU (array)  & Microarray &  63 & Validation & GSE36924         & OS, PurIST, DeCAF & Zhao et al. (2018) \\
+PACA-AU (RNA-seq) & RNA-seq   &  52 & Validation & EGAS00001000154  & OS, PurIST, DeCAF & Zhao et al. (2018) \\
+Puleo            & Microarray & 288 & Validation & E-MTAB-6134      & OS, PurIST, DeCAF & Puleo et al. (2018) \\
+\addlinespace
+\multicolumn{2}{l}{Training total} & 273 & & & & \\
+\multicolumn{2}{l}{Validation total} & 616 & & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+\efloatseparator
+ 
+\begin{table}[H]
+\centering
+\caption{\label{tab:tab-hr-adjusted}Pooled external validation hazard ratios (per SD of linear predictor) for DeSurv at $k = 3$ and standard NMF at BO-selected $k = 7$ ($\alpha = 0$). Adjusted models include PurIST and DeCAF molecular classifiers as covariates, with stratification by dataset.}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{lll}
+\toprule
+Method & Unadjusted HR per SD (95\% CI), $P$ & Adjusted HR per SD (95\% CI), $P$\\
+\midrule
+DeSurv ($k = 3$) & 1.50 (1.31--1.72), $< 0.001$ & 1.33 (1.13--1.56), $< 0.001$\\
+Std NMF ($k = 7$, BO $\alpha = 0$) & 1.48 (1.34--1.64), $< 0.001$ & 1.47 (1.27--1.70), $< 0.001$\\
+\bottomrule
+\end{tabular}
+\end{table}
+\efloatseparator
+ 
+\begin{table}[H]
+\centering
+\caption{\label{tab:tab-gene-list-270}Top 270 genes for DeSurv factor D1 (Factor D1 (Classical tumor + restCAF stroma)), ranked by factor specificity score $s_{ij}$. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}}$). \label{tab:gene-list-270-D1}}
+\centering
+\fontsize{8}{10}\selectfont
+\begin{tabular}[t]{llllll}
+\toprule
+\multicolumn{6}{c}{\textbf{Factor D1 (Classical tumor + restCAF stroma)}} \\
+\cmidrule(l{3pt}r{3pt}){1-6}
+1--45 & 46--90 & 91--135 & 136--180 & 181--225 & 226--270\\
+\midrule
+DMBT1 & FGFR2 & GOLGA8A & PTPRN2 & RPL9 & PPP1R12B\\
+IGFBP2 & COL9A2 & IL2RG & FCGBP & CD79A & PIP5K1B\\
+S100A4 & COL22A1 & KIAA1211 & PLA2G2A & PROM1 & AHCYL2\\
+KRT23 & IRF7 & SFRP1 & FABP4 & SCD & SST\\
+LIF & SBNO2 & ADH1B & EPPK1 & TMC5 & CYP3A5\\
+IFI6 & MGAT3 & MFSD2A & CPXM2 & CCL14 & SMAP2\\
+PDLIM3 & SYNM & CLU & KIF1A & PLXNB1 & ZG16B\\
+CLDN18 & APOD & CLMN & NGFR & TMEM119 & SERPINF1\\
+MYO15B & SEMA6A & CHPF & NFKBIA & SORBS2 & CLDN3\\
+SYT8 & TNXB & MTMR11 & SPOCK2 & C7 & NR1I2\\
+TFF2 & PTGIS & TTR & ATP2C2 & SLC12A7 & JUND\\
+TMPRSS2 & CCL18 & WFDC2 & NBEAL2 & QSOX1 & NCF2\\
+CHGB & ZC3H12A & C2orf72 & CAPN9 & UNC5CL & CELSR1\\
+CST1 & CELSR3 & CCND2 & PTGDS & LONRF2 & MUC17\\
+B3GNT7 & EMB & ARHGAP4 & LSP1 & VSIG2 & INPP5D\\
+F5 & KCNJ15 & PKDCC & LAMA5 & ADAMTSL2 & TM4SF5\\
+TNRC18 & SORBS1 & SRPX & FASN & ARHGEF16 & HNF4A\\
+IGF2 & PAQR8 & CCL21 & GFRA1 & PCOLCE & CFD\\
+ARSD & SLC4A4 & CARD11 & PTPRH & CFC1B & HCLS1\\
+ZDHHC7 & ACSS1 & CTRB2 & FMOD & SLC9A3 & SH3PXD2B\\
+LENG8 & ST6GALNAC1 & GOLGA8B & FHL1 & ACACB & PCSK2\\
+ATP9A & DES & IYD & PCDH20 & BCAS1 & HMGCS2\\
+TMPRSS3 & PRUNE2 & CORO1A & CCR7 & RASD1 & FILIP1L\\
+CES1 & PLCB4 & SAA2 & CHIT1 & LGALS4 & ETNK1\\
+HOPX & CADPS & CDCA7 & PARM1 & MS4A1 & TNNI2\\
+CNN1 & FMO5 & BOC & ITM2A & CAPN6 & TOX3\\
+MIA & RAP1GAP2 & LTB & NAPSB & SCCPDH & FRZB\\
+CRIP2 & GALNT12 & COMP & AGT & PTPRCAP & HABP2\\
+NEURL1B & CCL2 & MANSC1 & FUT3 & VNN1 & GDA\\
+CHGA & REG3A & SLC19A3 & SIPA1L2 & PI16 & NCOR2\\
+ACTG2 & ZCCHC24 & STEAP2 & SPINK5 & SEMA7A & DNAH2\\
+CXCL14 & LTF & FOXA1 & ACSL1 & IL10RA & DOK4\\
+TPPP3 & EFHD2 & WNK2 & BTNL8 & GALNT3 & HOXB9\\
+PIGR & ATP11A & SELL & CORO2A & GOLM1 & KIAA1324\\
+CYP27A1 & GP2 & PLEKHA6 & LAD1 & TNFAIP2 & TRIM2\\
+ADAM8 & HIPK2 & NFASC & TMEM63A & CD79B & FGFBP1\\
+FGFR3 & SLC26A9 & EGR3 & GC & ENPP2 & IRX3\\
+IGF1R & TACC2 & PLIN4 & C1orf21 & SQLE & TINAGL1\\
+PLEKHB1 & TRAK1 & WDR72 & MIF & KLF4 & SFRP4\\
+CPXM1 & SAA1 & AMY2A & FOXA2 & PDLIM7 & APLNR\\
+ATP7B & CLDN23 & IL16 & CCL19 & FOSB & AGRN\\
+SLC12A2 & FOXJ1 & TJP3 & GSTA1 & RHPN2 & SLC25A25\\
+CCL20 & FRY & SLC9A2 & LLGL2 & SCG2 & PODN\\
+AKNA & GATA6 & LMOD1 & ACP5 & EMILIN1 & ITIH2\\
+COL16A1 & PLXNA2 & CPS1 & UGT2B15 & BACE2 & FLJ23867\\
+\bottomrule
+\end{tabular}
+\end{table}\begin{table}[H]
+\centering
+\caption{\label{tab:tab-gene-list-270}Top 270 genes for DeSurv factor D2 (Factor D2 (proCAF stroma)), ranked by factor specificity score $s_{ij}$. \label{tab:gene-list-270-D2}}
+\centering
+\fontsize{8}{10}\selectfont
+\begin{tabular}[t]{llllll}
+\toprule
+\multicolumn{6}{c}{\textbf{Factor D2 (proCAF stroma)}} \\
+\cmidrule(l{3pt}r{3pt}){1-6}
+1--45 & 46--90 & 91--135 & 136--180 & 181--225 & 226--270\\
+\midrule
+UHMK1 & RPS26 & SAMD9L & ATP8A1 & IRF6 & RASSF2\\
+DDR2 & MYLK & DOCK2 & TGFBR1 & KLHL6 & ZNF83\\
+INHBA & COL11A1 & IGF1 & SYNPO2 & C1QTNF3 & CYTIP\\
+DYNC2H1 & NFIB & TACC1 & PDE4B & PCLO & SRPX2\\
+ZDHHC20 & PTPN13 & CFH & SGCD & ITGA2 & LY75\\
+ITPR2 & PDE3A & DMD & STK17B & LRIG3 & HLA-DOA\\
+HMCN1 & TRIM22 & PCDH7 & NUAK1 & SSPN & STK38L\\
+LAMA2 & DPYD & MALAT1 & FCGR3A & F2R & RSAD2\\
+SLFN5 & COL14A1 & NOTCH2 & GPNMB & PDGFC & HBB\\
+PLXNC1 & CNTN1 & CDK6 & VCAM1 & CD109 & HERC2P2\\
+SVEP1 & NCKAP1L & FBN1 & ADAMTS9 & CLIC4 & AOX1\\
+CYBB & PHLDB2 & SYNE2 & ITGB8 & SORL1 & PLIN2\\
+SYNE1 & ITGA4 & RHOBTB3 & CR1 & AOAH & PFKFB2\\
+SAMHD1 & MACC1 & CALCRL & SEPT11 & FMO2 & OGN\\
+SKIL & SEMA5A & NRP1 & IFI44L & RDX & DOCK10\\
+ADAMTS12 & MRC1 & LIFR & ELL2 & IL1RAP & RGS4\\
+BICC1 & SLIT2 & STAB1 & GPR183 & GBP1 & AXL\\
+ITGA1 & ZEB2 & FLRT2 & ZBTB16 & CXCR4 & FGD6\\
+COL8A1 & ADAM10 & RNF144A & FRMD6 & WNK1 & CDC42BPA\\
+PDGFRA & SAMD9 & BCAT1 & PDE5A & MFAP5 & SLC6A6\\
+ABCA1 & MS4A7 & CILP & CSF1R & ALDH1A3 & RGS1\\
+TCF4 & EFEMP1 & CCDC80 & PLEK & CD53 & KIAA1324L\\
+CEP170 & BIRC3 & FAT4 & SLK & OMD & CPA3\\
+CD163 & WISP1 & BNC2 & SLC7A2 & PLOD2 & CHL1\\
+MAN1A1 & LAMA4 & LTBP1 & HEG1 & ITGAV & SLC7A11\\
+MSR1 & FAM198B & COL12A1 & GREM1 & MACF1 & GFPT2\\
+CCDC88A & PTPRC & IL1R1 & VGLL3 & NID2 & RAI14\\
+F13A1 & FAP & SLA & GBP5 & NAMPT & LMAN1\\
+RPS28 & ARRDC3 & MBOAT2 & SLC1A3 & ADAM28 & MECOM\\
+RALGAPA2 & MYH10 & FNDC3B & FGF7 & GNE & FPR1\\
+ZEB1 & FCGR2A & PRRX1 & ABCA8 & ENAH & EDEM3\\
+FBXO32 & PARP14 & COL10A1 & ADAM12 & FAM129A & RASSF6\\
+INPP4B & DSE & DDX60 & CYBRD1 & ECM2 & IQGAP2\\
+CDH11 & EHF & DOCK9 & TFRC & VSIG4 & MIAT\\
+PKHD1 & OSMR & SRGN & CTSK & MTAP & PRICKLE1\\
+AKAP2 & ARID5B & FOXO1 & COLEC12 & INMT & CHST15\\
+CYP1B1 & ASPN & MS4A6A & ALDH1L2 & SGMS2 & GEM\\
+CCL5 & SLCO2B1 & ADAMTS2 & PGM2L1 & COL4A4 & CHRDL1\\
+FGL2 & FPR3 & CPVL & FAM135A & CAPRIN2 & DSC2\\
+MAP1B & DOCK8 & CD93 & DOCK11 & CENPF & RAB31\\
+PLXDC2 & SLFN11 & DST & EPHA3 & DCLK1 & SLC38A1\\
+LRRK2 & ZNF532 & CDK14 & PAPPA & EDNRA & CNN3\\
+KIAA0754 & SPON1 & MSRB3 & EGFR & WNT5A & FLT1\\
+EDIL3 & SEMA3C & RNF213 & RASA1 & GALNT5 & TMEM200A\\
+ITGBL1 & FERMT2 & SEL1L & AHR & SLC38A2 & SLC2A3\\
+\bottomrule
+\end{tabular}
+\end{table}\begin{table}[H]
+\centering
+\caption{\label{tab:tab-gene-list-270}Top 270 genes for DeSurv factor D3 (Factor D3 (Basal-like tumor)), ranked by factor specificity score $s_{ij}$. \label{tab:gene-list-270-D3}}
+\centering
+\fontsize{8}{10}\selectfont
+\begin{tabular}[t]{llllll}
+\toprule
+\multicolumn{6}{c}{\textbf{Factor D3 (Basal-like tumor)}} \\
+\cmidrule(l{3pt}r{3pt}){1-6}
+1--45 & 46--90 & 91--135 & 136--180 & 181--225 & 226--270\\
+\midrule
+HSPB1 & HLA-H & LAMB3 & MYL9 & IL1RN & SDC1\\
+KRT7 & HSPA1A & FSCN1 & COL17A1 & TST & KLK11\\
+MSLN & LGALS3 & TSPAN13 & EPS8L1 & RAPGEFL1 & PERP\\
+RPSAP58 & FAM83H & TSPAN8 & CDH3 & C15orf48 & ARHGAP23\\
+S100P & EPB41L1 & ALDH3B1 & RNASET2 & PFKP & HPGD\\
+RPS16 & EFNA1 & ANPEP & TUBA1C & STARD10 & AKR1C3\\
+IL32 & TKT & GSTP1 & RAP1GAP & FOXQ1 & CRABP2\\
+SH3BGRL3 & SLC2A1 & KLK10 & H19 & REG4 & GRB7\\
+IFITM2 & PLOD1 & B4GALT1 & LTBP3 & GJB1 & SERPINA4\\
+RPS21 & IER3 & GAS6 & AQP3 & SLC29A1 & SLC39A4\\
+SEMA4B & B3GNT3 & ABCC3 & MPZL2 & NOTCH3 & FA2H\\
+APOL1 & PRSS3 & CLDN2 & ID1 & TRIM16 & RPL8\\
+S100A16 & TOB1 & CEACAM6 & RARRES2 & TAP2 & MT1X\\
+DNAJB1 & EGR1 & CREB3L1 & SLC25A6 & KRT19 & TCN1\\
+MT2A & PLA2G16 & MST1R & RBP1 & CRP & AKAP1\\
+TNFRSF21 & OCIAD2 & CEBPB & HSPA5 & SNHG5 & GJB3\\
+RPL28 & LPCAT4 & TXN & PER1 & KRT18 & DUOXA2\\
+FXYD3 & BST2 & NR4A1 & ADAP1 & CA12 & HLA-DRB5\\
+SERPING1 & EPHA2 & AP1M2 & TMC4 & MYEOV & ARRDC2\\
+HMGA1 & MUC5B & SYNPO & HSD17B2 & P4HB & OAS1\\
+S100A14 & KCNN4 & ANO1 & PTP4A1 & VILL & ADRA2A\\
+H1F0 & ITGA3 & SIK1 & PLAUR & HKDC1 & NQO1\\
+KRT17 & TSTA3 & EFNB2 & ANXA10 & STEAP3 & LRG1\\
+CSTB & IFI27 & CDKN1A & PYGB & PLEK2 & SERPINH1\\
+ASS1 & MMP1 & S100A10 & CYP2S1 & CD68 & COL18A1\\
+EFNB1 & SLPI & PKP3 & ALDOA & MAFF & CERCAM\\
+MDK & CLTB & MCM7 & CDCP1 & CD9 & CA9\\
+LY6E & SPINK1 & RARRES3 & IFITM3 & PLLP & CDHR2\\
+CAMK2N1 & JUP & CEACAM1 & BAIAP2L1 & EPHB4 & ESRP1\\
+MGLL & PPP1R15A & ALDH2 & MGST1 & KRT16 & CRYZ\\
+PDZK1IP1 & TRIM29 & CES2 & TFF1 & ABLIM3 & TAGLN2\\
+BCL2L1 & PPP1R1B & SLC6A8 & MUC4 & PTPRU & HNF1B\\
+C19orf33 & ARPC1A & PPL & MMP28 & MUC6 & BMP4\\
+SFN & GPRC5A & NDRG1 & CLDN1 & FDFT1 & MT1E\\
+ITGB4 & RAB25 & AZGP1 & TM4SF1 & GAPDH & ANGPTL4\\
+TSPAN1 & ZFP36L2 & S100A11 & TFF3 & EPS8L3 & CFB\\
+SLC16A3 & CLDN7 & SEMA3B & UNC13D & CLDN10 & GDF15\\
+C4A & DDIT4 & TNFRSF12A & SERINC2 & ITPKC & PADI1\\
+KLF5 & FKBP4 & SOX9 & SPNS2 & LOXL2 & TMSB10\\
+IER2 & LAPTM4B & PMEPA1 & AQP5 & AMIGO2 & B2M\\
+ZFP36L1 & MUC13 & CYR61 & IGFBP4 & DUOX2 & CAV2\\
+MAL2 & PSCA & EPCAM & SLC7A5 & CLDN4 & CTSH\\
+SCNN1A & SDCBP2 & BHLHE40 & TESC & CAPG & PABPC1\\
+MALL & PROM2 & CX3CL1 & IFITM1 & CEACAM5 & KRT8\\
+BGN & LRRC8A & SMAD3 & KCNK5 & VWA1 & TAP1\\
+\bottomrule
+\end{tabular}
+\end{table}

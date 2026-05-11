@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=128G
-#SBATCH --time=48:00:00
+#SBATCH --time=06:00:00
 #SBATCH --output=slurm/logs/cv_grid_%j.log
 
 module purge

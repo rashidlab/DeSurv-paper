@@ -1,6 +1,6 @@
 {
-  "title": "rashidlab/DeSurv-paper: Reproducibility code for 'Survival-guided matrix factorization identifies reproducible prognostic programs in pancreatic cancer'",
-  "description": "<p>Reproducibility code, processed data, and pre-computed analysis results for the manuscript <em>Survival-guided matrix factorization identifies reproducible prognostic programs in pancreatic cancer</em> (Young, Yurovsky, Peng, Yeh, Li, Rashid). The pipeline is a numbered series of R scripts (<code>code/01_install.R</code> &hellip; <code>code/09_render_paper.R</code>) that re-render the manuscript and supplement from cached results. Depends on the DeSurv R package (separate Zenodo deposit).</p>",
+  "title": "rashidlab/DeSurv-paper: Reproducibility code for 'Survival-guided matrix factorization identifies generalizable prognostic programs in pancreatic cancer'",
+  "description": "<p>Reproducibility code, processed data, and pre-computed analysis results for the manuscript <em>Survival-guided matrix factorization identifies generalizable prognostic programs in pancreatic cancer</em> (Young, Yurovsky, Peng, Yeh, Li, Rashid). The pipeline is a numbered series of R scripts (<code>code/01_install.R</code> &hellip; <code>code/09_render_paper.R</code>) that re-render the manuscript and supplement from cached results. Depends on the DeSurv R package (separate Zenodo deposit).</p>",
   "creators": [
     {
       "name": "Young, Amber M.",

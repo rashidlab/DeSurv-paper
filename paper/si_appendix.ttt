@@ -32,6 +32,25 @@ Puleo            & Microarray & 288 & Validation & E-MTAB-6134      & OS, PurIST
  
 \begin{table}[H]
 \centering
+\caption{\label{tab:tab-cindex-comparison}External validation C-index by method and cohort. DeSurv at BO-selected rank ($k = 3$) is compared with standard NMF at matched rank ($k = 3$), elbow-selected rank ($k = 5$), and BO-selected rank ($k = 7$, $\alpha = 0$). Higher values indicate better discrimination. \label{tab:tab-cindex-comparison}}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{lrrrr}
+\toprule
+Cohort & DeSurv (K=3) & Std NMF (K=3) & Std NMF (K=5, elbow) & Std NMF (K=7, BO $\alpha$=0)\\
+\midrule
+Dijk & 0.607 & 0.542 & 0.633 & 0.631\\
+Moffitt\_GEO\_array & 0.562 & 0.521 & 0.552 & 0.578\\
+PACA\_AU\_array & 0.649 & 0.470 & 0.657 & 0.669\\
+PACA\_AU\_seq & 0.634 & 0.430 & 0.679 & 0.702\\
+Puleo\_array & 0.636 & 0.534 & 0.642 & 0.651\\
+\bottomrule
+\end{tabular}
+\end{table}
+\efloatseparator
+ 
+\begin{table}[H]
+\centering
 \caption{\label{tab:tab-hr-adjusted}Pooled external validation hazard ratios (per SD of linear predictor) for DeSurv at $k = 3$ and standard NMF at BO-selected $k = 7$ ($\alpha = 0$). Adjusted models include PurIST and DeCAF molecular classifiers as covariates, with stratification by dataset. \label{tab:tab-hr-adjusted}}
 \centering
 \fontsize{9}{11}\selectfont

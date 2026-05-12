@@ -75,9 +75,7 @@ build_lp_stats <- function(fit, data_filtered, ntop, summary_tbl) {
 }
 
 # ── DeSurv cutpoint (5-fold CV at the BO-selected (k, alpha)) ────────────
-desurv_cv_cutpoint_result <- cache_or_compute(
-  "desurv_cv_cutpoint_result_tcgacptac",
-  run_cv_grid_point(
+desurv_cv_cutpoint_result <- run_cv_grid_point(
     data         = tar_data_filtered,
     k            = tar_params_best$k,
     alpha        = tar_params_best$alpha,
@@ -92,42 +90,26 @@ desurv_cv_cutpoint_result <- cache_or_compute(
     n_starts = 30,
     seed     = 125,
     verbose  = FALSE
-  )
-)
+    )
 
-desurv_cutpoint_summary <- cache_or_compute(
-  "desurv_cutpoint_summary_tcgacptac",
-  summarize_cutpoint(desurv_cv_cutpoint_result)
-)
+desurv_cutpoint_summary <- summarize_cutpoint(desurv_cv_cutpoint_result)
 
-desurv_lp_stats <- cache_or_compute(
-  "desurv_lp_stats_tcgacptac",
-  build_lp_stats(tar_fit_desurv, tar_data_filtered,
+desurv_lp_stats <- build_lp_stats(tar_fit_desurv, tar_data_filtered,
                  ntop_for_lp, desurv_cutpoint_summary)
-)
 
 # ── Standard NMF (at DeSurv-selected k) cutpoint ─────────────────────────
-std_desurvk_cv_cutpoint_result <- cache_or_compute(
-  "std_desurvk_cv_cutpoint_result_tcgacptac",
-  run_cv_grid_point_std_nmf(
+std_desurvk_cv_cutpoint_result <- run_cv_grid_point_std_nmf(
     data   = tar_data_filtered,
     k      = tar_params_best$k,
     nrun   = 30,
     nfolds = 5,
     seed   = 123
   )
-)
 
-std_desurvk_cutpoint_summary <- cache_or_compute(
-  "std_desurvk_cutpoint_summary_tcgacptac",
-  summarize_cutpoint(std_desurvk_cv_cutpoint_result)
-)
+std_desurvk_cutpoint_summary <- summarize_cutpoint(std_desurvk_cv_cutpoint_result)
 
-std_desurvk_lp_stats <- cache_or_compute(
-  "std_desurvk_lp_stats_tcgacptac",
-  build_lp_stats(fit_std_desurvk, tar_data_filtered,
+std_desurvk_lp_stats <- build_lp_stats(fit_std_desurvk, tar_data_filtered,
                  ntop = NULL, std_desurvk_cutpoint_summary)
-)
 
 message(sprintf("  DeSurv optimal z (logrank): %.2f   (cindex): %.2f",
                 desurv_lp_stats$optimal_z_cutpoint,

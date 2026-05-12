@@ -2534,8 +2534,12 @@ splot_cutpoint = function(data_val_filtered, tar_fit_desurv, lp_stats, ntop = NU
   }
   df <- do.call("rbind", df)
 
-  sfit       <- survfit(Surv(time, event) ~ factor, data = df)
-  hr_fit     <- coxph(Surv(time, event) ~ factor, data = df)
+  sfit    <- survfit(Surv(time, event) ~ factor, data = df)
+  has_ds  <- "dataset" %in% names(df) && length(unique(df$dataset)) > 1
+  hr_fit  <- if (has_ds)
+    coxph(Surv(time, event) ~ factor + strata(dataset), data = df)
+  else
+    coxph(Surv(time, event) ~ factor, data = df)
   hr_summary <- summary(hr_fit)$conf.int
   hr_label   <- sprintf(
     "HR (High vs Low) = %.2f\n(95%% CI %.2f-%.2f)",
@@ -2543,7 +2547,10 @@ splot_cutpoint = function(data_val_filtered, tar_fit_desurv, lp_stats, ntop = NU
     hr_summary[1, "lower .95"],
     hr_summary[1, "upper .95"]
   )
-  lr_test <- survdiff(Surv(time, event) ~ factor, data = df)
+  lr_test <- if (has_ds)
+    survdiff(Surv(time, event) ~ factor + strata(dataset), data = df)
+  else
+    survdiff(Surv(time, event) ~ factor, data = df)
   p_val   <- 1 - pchisq(lr_test$chisq, df = 1)
   p_label <- if (p_val < 0.001) "Log-rank p < 0.001" else sprintf("Log-rank p = %.3f", p_val)
   

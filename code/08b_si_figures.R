@@ -235,10 +235,13 @@ set_fig_font <- function(plot_obj, size = 10) {
 }
 
 # ── SI S4: NMF rank selection diagnostics ─────────────────────────────────
-fig_res  <- load_precomputed("fig_residuals_tcgacptac")
-fig_coph <- load_precomputed("fig_cophenetic_tcgacptac")
-fig_sil  <- load_precomputed("fig_silhouette_tcgacptac")
+# ── NMF diagnostic plots (residuals, cophenetic, silhouette) ─────────────
 fit_std_loaded <- load_precomputed("fit_std_tcgacptac")
+fig_res <- make_nmf_metric_plot(fit_std_loaded, "residuals")
+
+fig_coph <- make_nmf_metric_plot(fit_std_loaded, "cophenetic")
+
+fig_sil <- make_nmf_metric_plot(fit_std_loaded, "silhouette")
 
 legend_plot_s4 <- plot(fit_std_loaded) + ggplot2::theme(legend.position = "bottom")
 legend_grob_s4 <- ggplotGrob(legend_plot_s4)

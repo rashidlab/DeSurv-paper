@@ -415,16 +415,25 @@ ntop_for_lp <- if (!is.null(CONFIG$ntop_value)) CONFIG$ntop_value else tar_param
 lp_stats     <- load_precomputed("desurv_lp_stats_tcgacptac")
 lp_stats_std <- load_precomputed("std_desurvk_lp_stats_tcgacptac")
 
+# Deduplicate PACA_AU (array + seq share subjects); mirrors 08b_si_figures.R
+val_named <- data_val_filtered
+nms <- vapply(val_named, function(x) {
+  if (!is.null(x$dataname) && nzchar(x$dataname)) x$dataname
+  else paste0("dataset_", seq_along(val_named))
+}, character(1))
+names(val_named) <- nms
+data_val_filtered_surv <- merge_paca_au_datasets(val_named)
+
 # DeSurv KM figure
 fig_median_survival_desurv <- cache_or_compute(
   "fig_median_survival_desurv_tcgacptac",
-  splot_cutpoint(data_val_filtered, tar_fit_desurv, lp_stats, ntop = ntop_for_lp)
+  splot_cutpoint(data_val_filtered_surv, tar_fit_desurv, lp_stats, ntop = ntop_for_lp)
 )
 
 # Standard NMF at DeSurv k KM figure
 fig_median_survival_std_desurvk <- cache_or_compute(
   "fig_median_survival_std_desurvk_tcgacptac",
-  splot_cutpoint(data_val_filtered, fit_std_desurvk, lp_stats_std, ntop = NULL)
+  splot_cutpoint(data_val_filtered_surv, fit_std_desurvk, lp_stats_std, ntop = NULL)
 )
 
 # ── Complete figure PDFs ──────────────────────────────────────────────────

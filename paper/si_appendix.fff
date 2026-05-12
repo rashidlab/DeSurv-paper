@@ -1,6 +1,6 @@
 \begin{figure*}[t]
 
-{\centering \includegraphics[width=5in,height=3in]{figures/ntop_bo_50_300/fig-converge-1}
+{\centering \includegraphics[width=5in,height=3in]{figures/ntop_bo_50_300fig-converge-1}
 
 }
 
@@ -9,33 +9,33 @@
 \efloatseparator
  
 \begin{figure*}[t]
-\includegraphics[width=\textwidth,height=6.5in]{figures/ntop_bo_50_300/fig-sim-null-mixed-1} \caption{DeSurv performance under null and mixed simulation scenarios. (A--B) Null scenario ($\beta = 0$): both methods yield C-index $\approx 0.5$ (A) and comparable rank distributions (B), confirming DeSurv does not hallucinate prognostic structure; precision is omitted as no true survival genes exist. (C--F) Mixed scenario: survival depends on factor-specific marker genes (50\%) and shared background genes (50\%). (C) C-index is modestly higher for DeSurv. (D) Precision by gene-set definition: marker-only precision (150 genes; left facet) substantially favors DeSurv; full 300-gene survival-set precision (right facet) shows a more modest improvement. (E) The matched factor receives a substantially larger Cox coefficient $|\beta|$ under DeSurv, confirming preferential amplification of marker-specific signal. (F) Selected-rank distributions. DeSurv (blue); NMF (red, $\alpha = 0$); both Bayesian-optimized. \label{fig:sim-null-mixed}}\label{fig:fig-sim-null-mixed}
+\includegraphics[width=\textwidth,height=6.5in]{figures/ntop_bo_50_300fig-sim-null-mixed-1} \caption{DeSurv performance under null and mixed simulation scenarios. (A--B) Null scenario ($\beta = 0$): both methods yield C-index $\approx 0.5$ (A) and comparable rank distributions (B), confirming DeSurv does not hallucinate prognostic structure; precision is omitted as no true survival genes exist. (C--F) Mixed scenario: survival depends on factor-specific marker genes (50\%) and shared background genes (50\%). (C) C-index is modestly higher for DeSurv. (D) Precision by gene-set definition: marker-only precision (150 genes; left facet) substantially favors DeSurv; full 300-gene survival-set precision (right facet) shows a more modest improvement. (E) The matched factor receives a substantially larger Cox coefficient $|\beta|$ under DeSurv, confirming preferential amplification of marker-specific signal. (F) Selected-rank distributions. DeSurv (blue); NMF (red, $\alpha = 0$); both Bayesian-optimized. \label{fig:sim-null-mixed}}\label{fig:fig-sim-null-mixed}
 \end{figure*}
 \efloatseparator
  
 \begin{figure*}[t]
-\includegraphics[width=\textwidth]{figures/ntop_bo_50_300/fig-cindex-by-k-1} \caption{Training (CV) and external validation C-index as a function of factorization rank $k$ for DeSurv (blue) and standard NMF (red, $\alpha = 0$). Shaded ribbons show $\pm 1$ SE. For each $k$, the best $\alpha$ was selected by maximizing the mean CV C-index. Validation C-index is pooled across all external cohorts. (A) Results using $n_{\text{top}} = 270$ top genes per factor ($\lambda = 0.349$, $\xi = 0.056$). (B) Results retaining all genes ($n_{\text{top}} = \text{ALL}$; $\lambda = 0.349$, $\xi = 0.056$).}\label{fig:fig-cindex-by-k}
+\includegraphics[width=\textwidth]{figures/ntop_bo_50_300fig-cindex-by-k-1} \caption{Training (CV) and external validation C-index as a function of factorization rank $k$ for DeSurv (blue) and standard NMF (red, $\alpha = 0$). Shaded ribbons show $\pm 1$ SE. For each $k$, the best $\alpha$ was selected by maximizing the mean CV C-index. Validation C-index is pooled across all external cohorts. (A) Results using $n_{\text{top}} = 270$ top genes per factor ($\lambda = 0.349$, $\xi = 0.056$). (B) Results retaining all genes ($n_{\text{top}} = \text{ALL}$; $\lambda = 0.349$, $\xi = 0.056$).}\label{fig:fig-cindex-by-k}
 \end{figure*}
 \efloatseparator
  
 \begin{figure*}[t]
-\includegraphics[width=\textwidth,height=3.5in]{figures/ntop_bo_50_300/fig-nmf-diagnostics-1} \caption{Standard unsupervised NMF rank selection heuristics for the PDAC training cohort (TCGA + CPTAC). (A) Reconstruction residuals as a function of factorization rank $k$. (B) Cophenetic correlation coefficient as a function of $k$. (C) Mean silhouette width across multiple distance metrics as a function of $k$. These criteria yield inconsistent guidance, motivating the survival-supervised model selection approach (main text Fig. 2D). \label{fig:nmf-diagnostics}}\label{fig:fig-nmf-diagnostics}
+\includegraphics[width=\textwidth,height=3.5in]{figures/ntop_bo_50_300fig-nmf-diagnostics-1} \caption{Standard unsupervised NMF rank selection heuristics for the PDAC training cohort (TCGA + CPTAC). (A) Reconstruction residuals as a function of factorization rank $k$. (B) Cophenetic correlation coefficient as a function of $k$. (C) Mean silhouette width across multiple distance metrics as a function of $k$. These criteria yield inconsistent guidance, motivating the survival-supervised model selection approach (main text Fig. 2D). \label{fig:nmf-diagnostics}}\label{fig:fig-nmf-diagnostics}
 \end{figure*}
 \efloatseparator
  
 \begin{figure*}[t]
-\includegraphics[width=\textwidth,height=8in]{figures/ntop_bo_50_300/fig-cutpoint-km-1} \caption{Cutpoint selection and external validation of dichotomized risk groups. (A) Cross-validated mean absolute log-rank z-statistic as a function of z-score cutpoint; red dashed line indicates the selected optimum. (B) Pooled validation Kaplan--Meier curves (stratified log-rank test). (C--D) Per-cohort validation KM curves: (C) Dijk, (D) Moffitt. (E--F) Per-cohort validation KM curves: (E) PACA-AU, (F) Puleo.}\label{fig:fig-cutpoint-km}
+\includegraphics[width=\textwidth,height=8in]{figures/ntop_bo_50_300fig-cutpoint-km-1} \caption{Cutpoint selection and external validation of dichotomized risk groups. (A) Cross-validated mean absolute log-rank z-statistic as a function of z-score cutpoint; red dashed line indicates the selected optimum. (B) Pooled validation Kaplan--Meier curves (stratified log-rank test). (C--D) Per-cohort validation KM curves: (C) Dijk, (D) Moffitt. (E--F) Per-cohort validation KM curves: (E) PACA-AU, (F) Puleo.}\label{fig:fig-cutpoint-km}
 \end{figure*}
 \efloatseparator
  
 \begin{figure*}[t]
-\includegraphics[width=\textwidth]{figures/ntop_bo_50_300/fig-subtype-overlap-1} \caption{Subtype composition of DeSurv (top) and standard NMF $k=3$ (bottom) risk groups in pooled external validation cohorts. Stacked bar charts show the proportion of PurIST (left) and DeCAF (right) subtypes within Low and High risk groups defined by the log-rank-optimized cutpoint. Numbers indicate sample counts; Fisher's exact test P-values are shown above each panel. DeSurv risk groups are enriched for both Basal-like (PurIST) and proCAF (DeCAF) poor-prognosis subtypes; NMF risk groups separate Basal-like from Classical tumors but show no significant CAF subtype enrichment.}\label{fig:fig-subtype-overlap}
+\includegraphics[width=\textwidth]{figures/ntop_bo_50_300fig-subtype-overlap-1} \caption{Subtype composition of DeSurv (top) and standard NMF $k=3$ (bottom) risk groups in pooled external validation cohorts. Stacked bar charts show the proportion of PurIST (left) and DeCAF (right) subtypes within Low and High risk groups defined by the log-rank-optimized cutpoint. Numbers indicate sample counts; Fisher's exact test P-values are shown above each panel. DeSurv risk groups are enriched for both Basal-like (PurIST) and proCAF (DeCAF) poor-prognosis subtypes; NMF risk groups separate Basal-like from Classical tumors but show no significant CAF subtype enrichment.}\label{fig:fig-subtype-overlap}
 \end{figure*}
 \efloatseparator
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/ntop_bo_50_300/fig-desurv-k5-heatmap-1.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Gene program overlap heatmap for DeSurv at elbow-selected rank k = 5. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). DeSurv at k = 5 splits the ECM/activated-stroma (proCAF-associated) signal into two factors with opposing Classical-tumor correlations and isolates restCAF as a separate factor; exocrine and Basal-like programs are not represented as dominant factors. }]{si_appendix_files/figures/ntop_bo_50_300fig-desurv-k5-heatmap-1.png}}
 \caption{Gene program overlap heatmap for DeSurv at elbow-selected rank
 \(k = 5\). Each cell shows the number of top genes from a given factor
 (rows) overlapping established PDAC gene programs (columns). DeSurv at
@@ -48,7 +48,7 @@ represented as dominant factors. \label{fig:fig-desurv-k5-heatmap}}
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/ntop_bo_50_300/fig-nmf-k5-heatmap-1.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Gene program overlap heatmap for standard NMF at elbow-selected rank k = 5. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). The three core programs from k = 3 are recovered; two additional factors overlap Exocrine-like and iCAF signatures, capturing transcriptional variance not aligned with survival outcomes. }]{si_appendix_files/figures/ntop_bo_50_300fig-nmf-k5-heatmap-1.png}}
 \caption{Gene program overlap heatmap for standard NMF at elbow-selected
 rank \(k = 5\). Each cell shows the number of top genes from a given
 factor (rows) overlapping established PDAC gene programs (columns). The
@@ -61,7 +61,7 @@ variance not aligned with survival outcomes.
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/ntop_bo_50_300/fig-nmf-k7-heatmap-1.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Gene program overlap heatmap for standard NMF at k = 7 (BO-selected rank with \textbackslash alpha = 0). Compared with k = 3 and k = 5, the 7-factor solution shows increased fragmentation: multiple factors partially capture the same PDAC gene signatures and no new coherent biological program emerges. }]{si_appendix_files/figures/ntop_bo_50_300fig-nmf-k7-heatmap-1.png}}
 \caption{Gene program overlap heatmap for standard NMF at \(k = 7\)
 (BO-selected rank with \(\alpha = 0\)). Compared with \(k = 3\) and
 \(k = 5\), the 7-factor solution shows increased fragmentation: multiple
@@ -72,7 +72,7 @@ coherent biological program emerges. \label{fig:fig-nmf-k7-heatmap}}
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/ntop_bo_50_300/fig-varsurvival-k5-1.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Fraction of expression variance explained versus Type III partial likelihood contribution for each standard NMF factor at elbow-selected k = 5. Each point represents one factor, labeled N1--N5. Survival contribution is quantified as the reduction in Cox partial log-likelihood when each factor is removed from the full model. The two factors new relative to k = 3 (N4, N5) contribute negligibly to survival, confirming that elbow selection recovers no additional prognostic structure. }]{si_appendix_files/figures/ntop_bo_50_300fig-varsurvival-k5-1.png}}
 \caption{Fraction of expression variance explained versus Type III
 partial likelihood contribution for each standard NMF factor at
 elbow-selected \(k = 5\). Each point represents one factor, labeled

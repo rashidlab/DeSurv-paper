@@ -25,9 +25,9 @@ if (CONFIG$quick) {
 }
 
 # ── Paths ──────────────────────────────────────────────────────────────────
-RESULTS_DIR <- "results"
+RESULTS_DIR <- if (CONFIG$quick) "results/quick" else "results"
 CV_GRID_DIR <- "results/cv_grid"
-FIGURE_DIR  <- "figures"
+FIGURE_DIR  <- if (CONFIG$quick) "figures/quick" else "figures"
 
 dir.create(RESULTS_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(CV_GRID_DIR, recursive = TRUE, showWarnings = FALSE)

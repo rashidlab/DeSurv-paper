@@ -33,7 +33,7 @@ NCORES ?= 1
 # Use a portable Rscript invocation by default; override with `make RSCRIPT=...`
 RSCRIPT ?= Rscript
 
-.PHONY: all main quick from-precomputed paper clean install cv-grid
+.PHONY: all main quick from-precomputed paper clean clean-quick install cv-grid
 
 # ── Default: from pre-computed results ────────────────────────────────────
 from-precomputed: paper
@@ -89,3 +89,7 @@ cv-grid:
 clean:
 	rm -rf results/*.rds
 	@echo "Cleaned pre-computed results. Static figures and cv_grid results preserved."
+
+clean-quick:
+	rm -rf results/quick figures/quick
+	@echo "Cleaned quick-mode outputs."

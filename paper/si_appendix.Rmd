@@ -1101,9 +1101,10 @@ cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_nmf_k7_heatmap_tcgacptac.pdf", density = 300))
 ```
 
-```{r tab-cindex-comparison, echo=FALSE}
+```{r tab-cindex-comparison, echo=FALSE, results='asis'}
 library(dplyr)
 library(knitr)
+library(kableExtra)
 load_result("val_cindex_desurv_tcgacptac")
 load_result("val_cindex_std_desurvk_tcgacptac")
 load_result("val_cindex_std_elbowk_tcgacptac")
@@ -1120,16 +1121,12 @@ cindex_wide <- fmt_cindex(val_cindex_desurv_tcgacptac, "DeSurv (K=3)") %>%
   dplyr::left_join(fmt_cindex(val_cindex_std_elbowk_tcgacptac, "Std NMF (K=5, elbow)"), by = "dataset") %>%
   dplyr::left_join(fmt_cindex(val_cindex_desurv_alpha0_tcgacptac, "Std NMF (K=7, BO $\\alpha$=0)"), by = "dataset") %>%
   dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3))) %>%
-  dplyr::rename(Cohort = dataset)
+  dplyr::rename(Cohort = dataset) %>%
+  dplyr::mutate(Cohort = gsub("_", "\\_", Cohort, fixed = TRUE))
 
-knitr::kable(
-  cindex_wide,
-  caption = "External validation C-index by method and cohort. DeSurv at BO-selected rank ($k = 3$) is compared with standard NMF at matched rank ($k = 3$), elbow-selected rank ($k = 5$), and BO-selected rank ($k = 7$, $\\alpha = 0$). Higher values indicate better discrimination. \\label{tab:tab-cindex-comparison}",
-  label = "tab-cindex-comparison",
-  booktabs = TRUE,
-  linesep = "",
-  escape = FALSE
-)
+kable(cindex_wide, format = "latex", booktabs = TRUE, linesep = "", escape = FALSE,
+      caption = "External validation C-index by method and cohort. DeSurv at BO-selected rank ($k = 3$) is compared with standard NMF at matched rank ($k = 3$), elbow-selected rank ($k = 5$), and BO-selected rank ($k = 7$, $\\alpha = 0$). Higher values indicate better discrimination. \\label{tab:tab-cindex-comparison}") |>
+  kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
 Standard NMF at elbow-selected $k = 5$ and BO-selected $k = 7$ both substantially improve over NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}), confirming that additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, NMF matches or exceeds DeSurv's per-cohort C-index in most cohorts, demonstrating that unsupervised factorization can approach supervised concordance given enough factors. However, this comes at the cost of a less parsimonious and less interpretable factorization: the $k = 7$ NMF solution shows increased fragmentation (Fig. \ref{fig:fig-nmf-k7-heatmap}). DeSurv's advantage thus combines biological concordance and methodological complementarity: its risk groups identify the same poor-prognosis subtypes as established classifiers (Basal-like, proCAF; Fig. \ref{fig:fig-subtype-overlap}), while its linear predictor retains significant prognostic value after adjustment for those classifiers (Table \ref{tab:tab-hr-adjusted}).

@@ -32,6 +32,9 @@ cluster via Slurm.
 # Survival analysis and NMF
 install.packages(c("survival", "NMF", "glmnet"))
 
+# Bayesian optimization
+install.packages(c("DiceKriging", "lhs"))
+
 # Figures and reporting
 install.packages(c("ggplot2", "cowplot", "survminer", "dplyr",
                    "purrr", "ggrepel", "rmarkdown"))

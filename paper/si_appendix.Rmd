@@ -1,6 +1,6 @@
 ---
 title: "SI Appendix"
-subtitle: "Survival-guided matrix factorization identifies reproducible prognostic programs in pancreatic cancer"
+subtitle: "Survival-guided matrix factorization identifies generalizable prognostic programs in pancreatic cancer"
 author: Amber M. Young, Alisa Yurovsky, Xianlu Laura Peng, Jen Jen Yeh, Didong Li, Naim U. Rashid
 header-includes:
 - \providecommand{\pandocbounded}[1]{#1}
@@ -1103,14 +1103,14 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 Throughout the main text, both DeSurv and standard NMF were fit at the same rank ($k = 3$), enabling a controlled comparison of the effect of survival supervision on factor structure. When each method selects its own rank independently, standard NMF chooses $k = 5$ via residual elbow detection or $k = 7$ via Bayesian optimization with $\alpha = 0$, while supervised DeSurv BO selects $k = 3$. We examine here the gene program structure at elbow-selected $k = 5$ for both DeSurv (Fig. \ref{fig:fig-desurv-k5-heatmap}) and standard NMF (Fig. \ref{fig:fig-nmf-k5-heatmap}), and the NMF $k = 7$ structure to illustrate additional fragmentation when supervision is absent (Fig. \ref{fig:fig-nmf-k7-heatmap}).
 
-At elbow-selected $k = 5$, supervised and unsupervised factorizations yield substantially different gene-program structures. DeSurv at $k = 5$ (Fig. \ref{fig:fig-desurv-k5-heatmap}) splits the ECM/activated-stroma (proCAF-associated) signal into two factors with opposing tumor correlations (one positively correlated with Classical tumor programs, one negatively correlated) and isolates restCAF as a separate factor; exocrine and Basal-like programs are not represented as dominant factors in the supervised solution. Standard NMF at $k = 5$ (Fig. \ref{fig:fig-nmf-k5-heatmap}), by contrast, recovers the three core programs from its $k = 3$ solution and adds two factors capturing Exocrine-like and iCAF variance, transcriptional variance not aligned with survival outcomes. These biologically redundant NMF factors explain why supervised BO selects $k = 3$ in the production model: the additional NMF factors at $k = 5$ contribute no independent prognostic content beyond the three core programs (Fig. \ref{fig:varsurvival-k5}), even though the overall higher-rank model still validates externally on per-cohort C-index (Table \ref{tab:tab-cindex-comparison}).
+At elbow-selected $k = 5$, supervised and unsupervised factorizations yield substantially different gene-program structures. DeSurv at $k = 5$ (Fig. \ref{fig:fig-desurv-k5-heatmap}) splits the ECM/activated-stroma (proCAF-associated) signal into two factors with opposing tumor correlations (one positively correlated with Classical tumor programs, one negatively correlated) and isolates restCAF as a separate factor; exocrine and Basal-like programs are not represented as dominant factors in the supervised solution. Standard NMF at $k = 5$ (Fig. \ref{fig:fig-nmf-k5-heatmap}), by contrast, recovers the three core programs from its $k = 3$ solution and adds two factors capturing Exocrine-like and restCAF variance, transcriptional variance not aligned with survival outcomes. These biologically redundant NMF factors explain why supervised BO selects $k = 3$ in the production model: the additional NMF factors at $k = 5$ contribute no independent prognostic content beyond the three core programs (Fig. \ref{fig:varsurvival-k5}), even though the overall higher-rank model still validates externally on per-cohort C-index (Table \ref{tab:tab-cindex-comparison}).
 
 ```{r fig-desurv-k5-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene program overlap heatmap for DeSurv at elbow-selected rank $k = 5$. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). DeSurv at $k = 5$ splits the ECM/activated-stroma (proCAF-associated) signal into two factors with opposing Classical-tumor correlations and isolates restCAF as a separate factor; exocrine and Basal-like programs are not represented as dominant factors. \\label{fig:fig-desurv-k5-heatmap}", fig.env='figure', fig.pos='t'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_desurv_k5_heatmap_tcgacptac.pdf", density = 300))
 ```
 
-```{r fig-nmf-k5-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene program overlap heatmap for standard NMF at elbow-selected rank $k = 5$. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). The three core programs from $k = 3$ are recovered; two additional factors overlap Exocrine-like and iCAF signatures, capturing transcriptional variance not aligned with survival outcomes. \\label{fig:fig-nmf-k5-heatmap}", fig.env='figure', fig.pos='t'}
+```{r fig-nmf-k5-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene program overlap heatmap for standard NMF at elbow-selected rank $k = 5$. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). The three core programs from $k = 3$ are recovered; two additional factors overlap Exocrine-like and restCAF signatures, capturing transcriptional variance not aligned with survival outcomes. \\label{fig:fig-nmf-k5-heatmap}", fig.env='figure', fig.pos='t'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_nmf_k5_heatmap_tcgacptac.pdf", density = 300))
 ```
@@ -1248,7 +1248,7 @@ colnames(tab_df) <- c("Method", "Unadjusted HR per SD (95\\% CI), $P$",
                        "Adjusted HR per SD (95\\% CI), $P$")
 
 kable(tab_df, format = "latex", escape = FALSE, booktabs = TRUE,
-      caption = "Pooled external validation hazard ratios (per SD of linear predictor) for DeSurv at $k = 3$ and standard NMF at BO-selected $k = 7$ ($\\alpha = 0$). Adjusted models include PurIST and DeCAF molecular classifiers as covariates, with stratification by dataset.") |>
+      caption = "Pooled external validation hazard ratios (per SD of linear predictor) for DeSurv at $k = 3$ and standard NMF at BO-selected $k = 7$ ($\\alpha = 0$). Adjusted models include PurIST and DeCAF molecular classifiers as covariates, with stratification by dataset. \\label{tab:tab-hr-adjusted}") |>
   kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 

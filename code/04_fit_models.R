@@ -37,6 +37,12 @@ if (CONFIG$quick) {
   RUN_MAXIT  <- 4000L
 }
 
+NCORES <- CONFIG$ncores
+if (.Platform$OS.type == "windows" && NCORES > 1L) {
+  message("  Warning: mclapply is not supported on Windows. Falling back to NCORES=1.")
+  NCORES <- 1L
+}
+
 # ── Load prerequisites ────────────────────────────────────────────────────
 tar_data_filtered  <- load_precomputed("tar_data_filtered_tcgacptac")
 tar_params_best    <- load_precomputed("tar_params_best_tcgacptac")
@@ -53,13 +59,9 @@ extract_param <- function(params, name, default) {
 
 lambdaW_value <- extract_param(tar_params_best, "lambdaW", 0)
 lambdaH_value <- extract_param(tar_params_best, "lambdaH", 0)
-# ntop for consensus seeding (requires a positive integer).
-# In default mode (no DESURV_NTOP), BO and validation use NULL (all genes),
-# but consensus seeding needs a value — default to 100L.
+# ntop for consensus seeding (requires a positive integer; falls back to 100L).
 ntop_value <- if (!is.null(tar_params_best$ntop) && !is.na(tar_params_best$ntop)) {
   as.integer(round(tar_params_best$ntop))
-} else if (CONFIG$ntop_mode == "fixed") {
-  CONFIG$ntop_value
 } else {
   100L
 }
@@ -85,8 +87,8 @@ run_seed_fits <- function(data, params, lambdaW, lambdaH, ninit, label) {
       list(fit = NULL, cindex = NA_real_)
     }
   }
-  if (CONFIG$ncores > 1) {
-    results <- parallel::mclapply(seeds, fit_one_seed, mc.cores = CONFIG$ncores)
+  if (NCORES > 1L) {
+    results <- parallel::mclapply(seeds, fit_one_seed, mc.cores = NCORES)
   } else {
     results <- lapply(seeds, fit_one_seed)
   }
@@ -134,8 +136,6 @@ lambdaW_alpha0 <- extract_param(tar_params_best_alpha0, "lambdaW", 0)
 lambdaH_alpha0 <- extract_param(tar_params_best_alpha0, "lambdaH", 0)
 ntop_alpha0 <- if (!is.null(tar_params_best_alpha0$ntop) && !is.na(tar_params_best_alpha0$ntop)) {
   as.integer(round(tar_params_best_alpha0$ntop))
-} else if (CONFIG$ntop_mode == "fixed") {
-  CONFIG$ntop_value
 } else {
   100L
 }
@@ -157,8 +157,6 @@ lambdaW_elbowk <- extract_param(tar_params_best_elbowk, "lambdaW", 0)
 lambdaH_elbowk <- extract_param(tar_params_best_elbowk, "lambdaH", 0)
 ntop_elbowk <- if (!is.null(tar_params_best_elbowk$ntop) && !is.na(tar_params_best_elbowk$ntop)) {
   as.integer(round(tar_params_best_elbowk$ntop))
-} else if (CONFIG$ntop_mode == "fixed") {
-  CONFIG$ntop_value
 } else {
   100L
 }

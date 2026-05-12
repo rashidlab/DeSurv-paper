@@ -975,33 +975,12 @@ as columns (main text, Fig.\ 3D).
      Internal scenario code names (R0_easy, R00_null, R_mixed) should be replaced with
      descriptive labels (primary, null, mixed) consistent with main text terminology. -->
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-# Determine figure output path (respects DESURV_NTOP subfolder)
-.ntop_env <- Sys.getenv("DESURV_NTOP", "")
-.ntop_lo  <- Sys.getenv("DESURV_NTOP_LOWER", "")
-.ntop_hi  <- Sys.getenv("DESURV_NTOP_UPPER", "")
-.fig_sub  <- if (nzchar(.ntop_env)) {
-  paste0("ntop_", .ntop_env)
-} else if (nzchar(.ntop_lo) && nzchar(.ntop_hi)) {
-  paste0("ntop_bo_", .ntop_lo, "_", .ntop_hi)
-} else {
-  ""
-}
-.param_rule_env <- Sys.getenv("DESURV_PARAM_RULE", "best")
-if (identical(.param_rule_env, "1se") && nzchar(.fig_sub)) {
-  .fig_sub <- paste0(.fig_sub, "_1se")
-}
-.fig_path <- if (nzchar(.fig_sub)) {
-  file.path("figures", .fig_sub, "")
-} else {
-  "figures/"
-}
-
 knitr::opts_chunk$set(message = FALSE,
                       warning = FALSE,
-                      echo = FALSE,
-                      fig.path = .fig_path,
-                      dev = "png",
-                      dpi = 300)
+                      echo    = FALSE,
+                      fig.path = "figures/",
+                      dev     = "png",
+                      dpi     = 300)
 source("paper/load_precomputed.R")
 library(dplyr)
 library(ggplot2)
@@ -1059,7 +1038,7 @@ Fig. \ref{fig:fig-cindex-by-k} shows the resulting C-index curves for both train
 # NOTE: DL flagged duplicate legend across panels A and B. The legend is baked
 # into the pre-rendered PDF; consolidating it requires regenerating the source
 # figure in inst/cv_grid_validation_analysis_amber_optimal.R on HPC.
-img <- magick::image_read("figures/cv_grid/cv_cindex_by_k_primary.pdf", density = 300)
+img <- magick::image_read("figures/cv_cindex_by_k_primary.pdf", density = 300)
 cowplot::ggdraw() + cowplot::draw_image(img)
 ```
 

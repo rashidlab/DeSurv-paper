@@ -1,80 +1,91 @@
 # DeSurv-paper Makefile
 #
-# Usage:
-#   make from-precomputed   # Figures + paper from pre-computed results (~2 min)
-#   make quick              # Smoke test full pipeline end-to-end (~10 min)
-#   make all NCORES=8       # Full pipeline re-computation (hours, HPC recommended)
-#   make paper              # Just compile the manuscript
+# Pipeline steps (run in order):
+#   01  install packages
+#   02  load + preprocess data
+#   03  Bayesian optimisation (ntop tuned in [50, 300])
+#   04  fit final models
+#   05  external validation
+#   06  CV grid search (HPC only, ~24-48h — separate make target)
+#   07  simulations (HPC: SLURM array via slurm/run_simulations.sh)
+#   07b merge simulation array results (HPC only)
+#   08  cutpoint analysis
+#   09a main figures
+#   09b SI figures
+#   09c simulation figures (needs step 07/07b output)
+#   10  render paper
 #
-# ntop-specific runs (steps 3-5, 8-9 only — assumes step 2 data exists):
-#   make ntop NTOP=150 NCORES=8                              # Fixed ntop
-#   make ntop-bo NTOP_LOWER=50 NTOP_UPPER=250 NCORES=8      # BO-tuned ntop
+# Usage:
+#   make all NCORES=8         # Full pipeline, simulations run locally (~6-12h)
+#   make main NCORES=8        # Steps 01-05, 08, 09a, 09b (no simulations or render)
+#   make from-precomputed     # Figures + paper from cached results (~2 min)
+#   make quick                # Smoke test full pipeline end-to-end (~10 min)
+#   make paper                # Just compile the manuscript
+#   make cv-grid NCORES=32    # CV grid search only (also runs as part of make all)
+#
+# On HPC, use slurm/submit_all.sh to run main pipeline, simulation array,
+# and CV grid search in parallel, then merge results and render.
+#
+# Default: DESURV_RECOMPUTE=TRUE (recompute everything).
+# Use DESURV_RECOMPUTE=FALSE to load from cache.
 
 NCORES ?= 1
-NTOP ?=
-NTOP_LOWER ?=
-NTOP_UPPER ?=
-# Use a portable Rscript invocation by default; override with `make RSCRIPT=...` on Windows.
+# Use a portable Rscript invocation by default; override with `make RSCRIPT=...`
 RSCRIPT ?= Rscript
 
-.PHONY: all quick from-precomputed paper clean install ntop ntop-bo cv-grid
+.PHONY: all main quick from-precomputed paper clean install cv-grid
 
 # ── Default: from pre-computed results ────────────────────────────────────
 from-precomputed: paper
 
 # ── Quick mode (smoke test) ───────────────────────────────────────────────
 quick:
-	DESURV_QUICK=TRUE DESURV_RECOMPUTE=TRUE DESURV_NCORES=1 $(RSCRIPT) code/01_install.R
-	DESURV_QUICK=TRUE DESURV_RECOMPUTE=TRUE DESURV_NCORES=1 $(RSCRIPT) code/02_load_data.R
-	DESURV_QUICK=TRUE DESURV_RECOMPUTE=TRUE DESURV_NCORES=1 $(RSCRIPT) code/03_bayesian_optimization.R
-	DESURV_QUICK=TRUE DESURV_RECOMPUTE=TRUE DESURV_NCORES=1 $(RSCRIPT) code/04_fit_models.R
-	DESURV_QUICK=TRUE DESURV_RECOMPUTE=TRUE DESURV_NCORES=1 $(RSCRIPT) code/05_external_validation.R
+	DESURV_QUICK=TRUE DESURV_NCORES=1 $(RSCRIPT) code/01_install.R
+	DESURV_QUICK=TRUE DESURV_NCORES=1 $(RSCRIPT) code/02_load_data.R
+	DESURV_QUICK=TRUE DESURV_NCORES=1 $(RSCRIPT) code/03_bayesian_optimization.R
+	DESURV_QUICK=TRUE DESURV_NCORES=1 $(RSCRIPT) code/04_fit_models.R
+	DESURV_QUICK=TRUE DESURV_NCORES=1 $(RSCRIPT) code/05_external_validation.R
 	@echo "=== Quick mode complete. Pipeline runs end-to-end. ==="
 
-# ── Full pipeline ─────────────────────────────────────────────────────────
+# ── Main pipeline (no simulations — for HPC parallel workflow) ────────────
+main:
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/01_install.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/02_load_data.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/03_bayesian_optimization.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/04_fit_models.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/05_external_validation.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/08_cutpoint_analysis.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09a_figures.R
+	@echo "=== Main pipeline complete (figures 3-4 ready) ==="
+
+# ── Full pipeline (simulations run locally) ───────────────────────────────
 all:
-	DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/01_install.R
-	DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/02_load_data.R
-	DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/03_bayesian_optimization.R
-	DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/04_fit_models.R
-	DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/05_external_validation.R
-	DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/07_simulations.R
-	DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/08_figures.R
-	$(RSCRIPT) code/09_render_paper.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/01_install.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/02_load_data.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/03_bayesian_optimization.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/04_fit_models.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/05_external_validation.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/06_cv_grid.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/07_simulations.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/08_cutpoint_analysis.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09a_figures.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09b_si_figures.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09c_sim_figures.R
+	DESURV_RECOMPUTE=FALSE $(RSCRIPT) code/10_render_paper.R
 	@echo "=== Full pipeline complete ==="
 
 # ── Paper only ────────────────────────────────────────────────────────────
 paper:
-	DESURV_NTOP_LOWER=50 DESURV_NTOP_UPPER=300 $(RSCRIPT) code/09_render_paper.R
+	DESURV_RECOMPUTE=FALSE $(RSCRIPT) code/10_render_paper.R
 
 # ── Install DeSurv ────────────────────────────────────────────────────────
 install:
 	$(RSCRIPT) code/01_install.R
 
-# ── ntop-specific pipeline (steps 3-5, 8-9) ─────────────────────────────
-ntop:
-	@test -n "$(NTOP)" || (echo "Error: NTOP not set. Usage: make ntop NTOP=150" && exit 1)
-	DESURV_NTOP=$(NTOP) DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/03_bayesian_optimization.R
-	DESURV_NTOP=$(NTOP) DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/04_fit_models.R
-	DESURV_NTOP=$(NTOP) DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/05_external_validation.R
-	DESURV_NTOP=$(NTOP) DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/08_figures.R
-	DESURV_NTOP=$(NTOP) $(RSCRIPT) code/09_render_paper.R
-	@echo "=== ntop=$(NTOP) pipeline complete ==="
-
-ntop-bo:
-	@test -n "$(NTOP_LOWER)" || (echo "Error: NTOP_LOWER not set. Usage: make ntop-bo NTOP_LOWER=50 NTOP_UPPER=250" && exit 1)
-	@test -n "$(NTOP_UPPER)" || (echo "Error: NTOP_UPPER not set." && exit 1)
-	DESURV_NTOP_LOWER=$(NTOP_LOWER) DESURV_NTOP_UPPER=$(NTOP_UPPER) DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/03_bayesian_optimization.R
-	DESURV_NTOP_LOWER=$(NTOP_LOWER) DESURV_NTOP_UPPER=$(NTOP_UPPER) DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/04_fit_models.R
-	DESURV_NTOP_LOWER=$(NTOP_LOWER) DESURV_NTOP_UPPER=$(NTOP_UPPER) DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/05_external_validation.R
-	DESURV_NTOP_LOWER=$(NTOP_LOWER) DESURV_NTOP_UPPER=$(NTOP_UPPER) DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/08_figures.R
-	DESURV_NTOP_LOWER=$(NTOP_LOWER) DESURV_NTOP_UPPER=$(NTOP_UPPER) $(RSCRIPT) code/09_render_paper.R
-	@echo "=== ntop BO [$(NTOP_LOWER),$(NTOP_UPPER)] pipeline complete ==="
-
-# ── CV grid search (k × alpha × ntop) ────────────────────────────────────────
+# ── CV grid search (k × alpha × ntop) — HPC only ─────────────────────────
 cv-grid:
-	DESURV_RECOMPUTE=TRUE DESURV_NCORES=$(NCORES) $(RSCRIPT) code/10_cv_grid.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/06_cv_grid.R
 
 clean:
-	rm -rf results/precomputed/*.rds
+	rm -rf results/*.rds
 	@echo "Cleaned pre-computed results. Static figures and cv_grid results preserved."

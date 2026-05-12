@@ -23,7 +23,7 @@
 #   bo_tune_ntop        — DeSurv with BO-tuned alpha + ntop
 #   bo_tune_ntop_alpha0 — NMF with BO-tuned ntop
 #
-# Inputs:  R/simulation_functions/*.R, code/sim_helpers.R, sim_figs.R
+# Inputs:  R/simulation_functions/*.R, R/sim_figs.R, R/sim_helpers.R
 # Runtime: ~6-12 hours on HPC (30 cores per analysis), ~10-15 min in quick mode
 
 message("=== Step 7: Simulation Studies ===")
@@ -39,8 +39,8 @@ sim_files <- list.files("R/simulation_functions", pattern = "[.]R$", full.names 
 purrr::walk(sim_files, source)
 source("R/get_top_genes.R")
 source("R/bo_helpers.R")
-source("sim_figs.R")
-source("code/sim_helpers.R")
+source("R/sim_figs.R")
+source("R/sim_helpers.R")
 
 # ── SLURM array mode detection ────────────────────────────────────────────
 SIM_SCENARIO_FILTER  <- Sys.getenv("DESURV_SIM_SCENARIO",  "")

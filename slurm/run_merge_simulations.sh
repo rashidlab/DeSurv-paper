@@ -7,8 +7,10 @@
 #SBATCH --time=1:00:00
 #SBATCH --output=slurm/logs/merge_%j.log
 
-# Merges partial simulation results and compiles the manuscript.
-# Should run after both the main pipeline and simulation array complete.
+# Runs after main pipeline, simulation array, and CV grid all complete.
+# Merges simulation results, generates all SI figures (including CV grid figure),
+# generates Fig 2, and renders the paper.
+# Use slurm/submit_all.sh to set up job dependencies automatically.
 
 module purge
 module load r/4.4.0
@@ -20,7 +22,13 @@ echo "Start: $(date)"
 
 Rscript code/07b_merge_simulations.R
 
+echo "=== Generating SI figures ==="
+Rscript code/09b_si_figures.R
+
+echo "=== Generating simulation figures ==="
+Rscript code/09c_sim_figures.R
+
 echo "=== Compiling manuscript ==="
-Rscript code/09_render_paper.R
+make paper
 
 echo "=== Merge + paper complete: $(date) ==="

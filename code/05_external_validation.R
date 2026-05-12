@@ -19,7 +19,7 @@ library(DeSurv)
 library(survival)
 source("R/load_data.R")
 source("R/load_data_internal.R")
-source("R/targets_config.R")
+source("R/preprocess_helpers.R")
 source("R/predict_validation_scores.R")
 source("R/cv_grid_helpers.R")
 
@@ -38,10 +38,8 @@ tar_params_best          <- load_precomputed("tar_params_best_tcgacptac")
 # ntop for validation C-index: NULL means all genes (no top-gene filtering)
 ntop_value <- if (!is.null(tar_params_best$ntop) && !is.na(tar_params_best$ntop)) {
   as.integer(round(tar_params_best$ntop))
-} else if (CONFIG$ntop_mode == "fixed") {
-  CONFIG$ntop_value
 } else {
-  NULL  # default: all genes
+  NULL
 }
 
 # ── Helper: preprocess and filter validation data ────────────────────────

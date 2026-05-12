@@ -27,8 +27,8 @@ sim_files <- list.files("R/simulation_functions", pattern = "[.]R$", full.names 
 purrr::walk(sim_files, source)
 source("R/get_top_genes.R")
 source("R/bo_helpers.R")
-source("sim_figs.R")
-source("code/sim_helpers.R")
+source("R/sim_figs.R")
+source("R/sim_helpers.R")
 
 # ── Find partial result files ─────────────────────────────────────────────
 partial_files <- sort(list.files(

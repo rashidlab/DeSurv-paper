@@ -58,16 +58,9 @@ BO_FIXED <- list(
 )
 
 # ── ntop handling ──────────────────────────────────────────────────────────
-if (CONFIG$ntop_mode == "fixed") {
-  BO_FIXED$ntop <- CONFIG$ntop_value
-  message("  ntop fixed at ", CONFIG$ntop_value, " (not tuned by BO)")
-} else if (CONFIG$ntop_mode == "bo") {
-  BO_BOUNDS$ntop <- list(lower = CONFIG$ntop_lower, upper = CONFIG$ntop_upper,
-                         type = "integer")
-  message("  ntop added to BO bounds: [", CONFIG$ntop_lower, ", ",
-          CONFIG$ntop_upper, "]")
-}
-# default mode: ntop not in BO_FIXED or BO_BOUNDS → ntop=NULL (all genes)
+BO_BOUNDS$ntop <- list(lower = CONFIG$ntop_lower, upper = CONFIG$ntop_upper,
+                       type = "integer")
+message("  ntop BO bounds: [", CONFIG$ntop_lower, ", ", CONFIG$ntop_upper, "]")
 
 BO_COMMON <- list(
   preprocess        = TRUE,
@@ -124,7 +117,7 @@ tar_params_best <- cache_or_compute("tar_params_best_tcgacptac", {
 })
 
 # Preprocess training data with BO-selected ngene
-source("R/targets_config.R")  # for preprocess_training_data
+source("R/preprocess_helpers.R")
 tar_data_filtered <- cache_or_compute("tar_data_filtered_tcgacptac", {
   ngene_value <- if (!is.null(tar_params_best$ngene) && !is.na(tar_params_best$ngene)) {
     as.integer(round(tar_params_best$ngene))

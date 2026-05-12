@@ -24,23 +24,29 @@ source("R/pick_k_elbow.R")
 
 # ── Configuration ─────────────────────────────────────────────────────────
 if (CONFIG$quick) {
-  NINIT        <- 2L
-  BO_N_INIT    <- 4L
-  BO_N_ITER    <- 4L
-  NCORES_GRID  <- 1L
-  PARALLEL     <- FALSE
-  STD_NMF_NRUN <- 2L
+  NINIT          <- 2L
+  BO_N_INIT      <- 4L
+  BO_N_ITER      <- 4L
+  NCORES_GRID    <- 1L
+  PARALLEL       <- FALSE
+  STD_NMF_NRUN   <- 2L
   STD_NMF_K_GRID <- 2:6
-  BO_K_UPPER   <- 6L
+  BO_K_UPPER     <- 6L
+  BO_TOL         <- 1e-3
+  BO_MAXIT       <- 200L
+  BO_NGENE       <- 500L
 } else {
-  NINIT        <- 30L
-  BO_N_INIT    <- 50L
-  BO_N_ITER    <- 100L
-  NCORES_GRID  <- CONFIG$ncores
-  PARALLEL     <- CONFIG$ncores > 1
-  STD_NMF_NRUN <- 30L
+  NINIT          <- 30L
+  BO_N_INIT      <- 50L
+  BO_N_ITER      <- 100L
+  NCORES_GRID    <- CONFIG$ncores
+  PARALLEL       <- CONFIG$ncores > 1
+  STD_NMF_NRUN   <- 30L
   STD_NMF_K_GRID <- 2:12
-  BO_K_UPPER   <- 12L
+  BO_K_UPPER     <- 12L
+  BO_TOL         <- 1e-5
+  BO_MAXIT       <- 4000L
+  BO_NGENE       <- 3000L
 }
 
 BO_BOUNDS <- list(
@@ -52,7 +58,7 @@ BO_BOUNDS <- list(
 
 BO_FIXED <- list(
   n_starts     = NINIT,
-  ngene        = 3000L,
+  ngene        = BO_NGENE,
   lambdaW_grid = 0,
   lambdaH_grid = 0
 )
@@ -67,8 +73,8 @@ BO_COMMON <- list(
   method_trans_train = "rank",
   engine            = "warmstart",
   nfolds            = 5L,
-  tol               = 1e-5,
-  maxit             = 4000L,
+  tol               = BO_TOL,
+  maxit             = BO_MAXIT,
   max_refinements   = 0L,
   tol_gain          = 0.002,
   plateau           = 1L,

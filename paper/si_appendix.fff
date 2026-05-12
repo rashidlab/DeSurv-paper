@@ -48,12 +48,12 @@ represented as dominant factors. \label{fig:fig-desurv-k5-heatmap}}
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio,alt={Gene program overlap heatmap for standard NMF at elbow-selected rank k = 5. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). The three core programs from k = 3 are recovered; two additional factors overlap Exocrine-like and iCAF signatures, capturing transcriptional variance not aligned with survival outcomes. }]{si_appendix_files/figures/fig-nmf-k5-heatmap-1.png}}
+\pandocbounded{\includegraphics[keepaspectratio,alt={Gene program overlap heatmap for standard NMF at elbow-selected rank k = 5. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). The three core programs from k = 3 are recovered; two additional factors overlap Exocrine-like and restCAF signatures, capturing transcriptional variance not aligned with survival outcomes. }]{si_appendix_files/figures/fig-nmf-k5-heatmap-1.png}}
 \caption{Gene program overlap heatmap for standard NMF at elbow-selected
 rank \(k = 5\). Each cell shows the number of top genes from a given
 factor (rows) overlapping established PDAC gene programs (columns). The
 three core programs from \(k = 3\) are recovered; two additional factors
-overlap Exocrine-like and iCAF signatures, capturing transcriptional
+overlap Exocrine-like and restCAF signatures, capturing transcriptional
 variance not aligned with survival outcomes.
 \label{fig:fig-nmf-k5-heatmap}}
 \end{figure}

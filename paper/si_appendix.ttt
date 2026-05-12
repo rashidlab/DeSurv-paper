@@ -32,7 +32,7 @@ Puleo            & Microarray & 288 & Validation & E-MTAB-6134      & OS, PurIST
  
 \begin{table}[H]
 \centering
-\caption{\label{tab:tab-hr-adjusted}Pooled external validation hazard ratios (per SD of linear predictor) for DeSurv at $k = 3$ and standard NMF at BO-selected $k = 7$ ($\alpha = 0$). Adjusted models include PurIST and DeCAF molecular classifiers as covariates, with stratification by dataset.}
+\caption{\label{tab:tab-hr-adjusted}Pooled external validation hazard ratios (per SD of linear predictor) for DeSurv at $k = 3$ and standard NMF at BO-selected $k = 7$ ($\alpha = 0$). Adjusted models include PurIST and DeCAF molecular classifiers as covariates, with stratification by dataset. \label{tab:tab-hr-adjusted}}
 \centering
 \fontsize{9}{11}\selectfont
 \begin{tabular}[t]{lll}

@@ -19,3 +19,6 @@ logs/
 CLAUDE.md
 CLAUDE.local.md
 .claudeignore
+
+# Internal review docs (kept local; not for public archive)
+docs/

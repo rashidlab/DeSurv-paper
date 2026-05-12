@@ -2,7 +2,7 @@
 # slurm/submit_all.sh — Submit the full DeSurv pipeline to SLURM
 #
 # Workflow (jobs 1-3 start immediately in parallel):
-#   1. Main pipeline    (steps 01-05, 08, 09a, 09b)  ─┐
+#   1. Main pipeline    (steps 01-05, 08, 09a)        ─┐
 #   2. Simulation array (step 07, 600 tasks)           ─┤→ 4. Merge + render (steps 07b, 09c, 10)
 #   3. CV grid search   (step 06)                     ─┘
 #
@@ -21,7 +21,7 @@ mkdir -p "$PROJ_DIR/slurm/logs"
 echo "=== Submitting DeSurv pipeline from: $PROJ_DIR ==="
 
 MAIN_JOB=$(sbatch --parsable slurm/run_main_pipeline.sh)
-echo "Main pipeline:    job $MAIN_JOB  (steps 01-05, 08, 09a, 09b)"
+echo "Main pipeline:    job $MAIN_JOB  (steps 01-05, 08, 09a)"
 
 SIM_JOB=$(sbatch --parsable slurm/run_simulations.sh)
 echo "Simulation array: job $SIM_JOB  (step 07, 600 tasks)"

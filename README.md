@@ -1,31 +1,62 @@
-# DeSurv Paper — Reproducible Analysis
+# Survival-Guided Matrix Factorization Identifies Reproducible Prognostic Programs in Pancreatic Cancer
 
-Reproducible analysis for: **"Survival-guided matrix factorization identifies reproducible prognostic programs in pancreatic cancer"**
+**Replication Materials for Young et al., *Proceedings of the National Academy of Sciences***
 
-By Amber M. Young, Alisa Yurovsky, Xianlu Laura Peng, Didong Li, Jen Jen Yeh, and Naim U. Rashid.
+This repository contains all code, configuration, and manuscript source
+needed to reproduce every figure, table, and numerical result in the paper.
+The pipeline can run locally on a laptop (serial or parallel), or on an HPC
+cluster via Slurm.
 
-## Prerequisites
+## Software Requirements
 
-- **R >= 4.3** with a C++ compiler (for RcppArmadillo)
-- **Required R packages:** Install the DeSurv package first, then remaining dependencies:
+### System Dependencies
+
+| Dependency | Version | Purpose |
+|------------|---------|---------|
+| R | >= 4.3 | Statistical computing |
+| GNU Make | any | Build automation |
+| C++ compiler | any | Required by RcppArmadillo (DeSurv) |
+
+**Compiler installation by platform:**
+
+| Platform | Command |
+|----------|---------|
+| Ubuntu/Debian | `sudo apt-get install build-essential` |
+| Fedora/RHEL | `sudo dnf install gcc gcc-c++` |
+| macOS | `xcode-select --install` |
+| Windows | Install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) matching your R version |
+
+### R Package Dependencies
 
 ```r
-# Install DeSurv
-devtools::install_github("rashidlab/DeSurv")
+# Survival analysis and NMF
+install.packages(c("survival", "NMF", "glmnet"))
 
-# Other key packages (install if missing)
-install.packages(c("survival", "NMF", "ggplot2", "cowplot", "dplyr",
-                    "survminer", "rmarkdown", "optparse"))
+# Figures and reporting
+install.packages(c("ggplot2", "cowplot", "survminer", "dplyr",
+                   "purrr", "ggrepel", "rmarkdown"))
 
-# Bioconductor packages
+# Bioconductor
 BiocManager::install(c("preprocessCore", "ComplexHeatmap"))
 ```
 
-Or run: `Rscript code/01_install.R`
+Or install everything at once: `Rscript code/01_install.R`
 
-## Quick Start
+### Companion R Package
 
-### Compile the manuscript from pre-computed results (~2 min)
+| Package | Purpose | Install |
+|---------|---------|---------|
+| [DeSurv](https://github.com/rashidlab/DeSurv) | Survival-driven NMF with Bayesian optimization | `remotes::install_github("rashidlab/DeSurv")` |
+
+See the DeSurv repository for documentation, vignettes, and platform-specific
+compiler prerequisites.
+
+## Reproducing All Results
+
+### Option A: Manuscript from Pre-computed Results (~2 min)
+
+Uses the pre-computed analysis objects in `results/` to regenerate the
+manuscript PDFs without running any pipeline steps.
 
 ```bash
 git clone https://github.com/rashidlab/DeSurv-paper.git
@@ -33,130 +64,215 @@ cd DeSurv-paper
 make paper
 ```
 
-This compiles `paper/paper.pdf` and `paper/si_appendix.pdf` from pre-computed analysis objects — no pipeline execution needed.
+This produces `paper/paper.pdf` and `paper/si_appendix.pdf`.
 
-### Smoke test the full pipeline (~10-15 min, any laptop)
+### Option B: Smoke Test (~10-15 min, any laptop)
+
+Runs every pipeline step end-to-end with reduced iterations (4 BO iterations
+vs 100, 3 initialization seeds vs 100). Confirms the code runs on your
+system; results will differ from production due to reduced fidelity.
 
 ```bash
 make quick
 ```
 
-Runs every analysis step end-to-end with reduced iterations (4 BO iterations vs 100, 3 initialization seeds vs 100, 2 simulation replicates vs 100). Proves the code works on your system. Results will differ from production due to reduced iterations.
+### Option C: Full Re-computation Locally (~6-16 hours)
 
-### Full production re-computation
+Reruns all analysis steps including Bayesian optimization and simulation
+studies. Times depend on your hardware and number of CPU cores.
 
-**Locally (single machine, multi-core):**
 ```bash
 make all NCORES=8
 ```
 
-**On a Slurm HPC cluster:**
+This runs steps 01–05, 06 (CV grid), 07 (simulations), 08, 09a–09c, and 10
+in order. Steps 03, 04, 06, and 07 benefit most from additional cores.
+
+### Option D: HPC / Slurm Reproduction (Production)
+
+For large-scale runs on a Slurm-managed cluster. This is how the paper's
+results were originally produced.
+
 ```bash
-sbatch slurm/run_full_pipeline.sh
+# Submits main pipeline, simulation array, and CV grid in parallel;
+# the merge job runs after all three complete.
+bash slurm/submit_all.sh
 ```
 
-**Step by step (to run or re-run individual steps):**
+This dispatches four jobs with automatic dependency chaining:
+- `run_main_pipeline.sh` — steps 01–05, 08, 09a (~6–12 h)
+- `run_simulations.sh` — step 07 as a Slurm array (~2 h wall time)
+- `run_cv_grid.sh` — step 06 (~6 h with 32 cores)
+- `run_merge_simulations.sh` — steps 07b, 09b, 09c, `make paper` (~1 h, after all three complete)
+
+See `slurm/` for individual job scripts.
+
+## Controlling Parallelism
+
+Steps 03, 04, 06, and 07 use `parallel::mclapply` for within-step parallelism.
+`mclapply` requires a POSIX system (Linux/macOS); on Windows the pipeline
+automatically falls back to serial execution with a warning.
+
+Set the number of cores via the `NCORES` Make variable or `DESURV_NCORES`
+environment variable:
+
 ```bash
-Rscript run_pipeline.R --full --ncores 8              # All steps
-Rscript run_pipeline.R --full --step 3 --only          # Just step 3 (BO)
-Rscript run_pipeline.R --full --step 7 --only --ncores 30  # Just simulations
+make all NCORES=8            # via Make
+DESURV_NCORES=8 Rscript code/03_bayesian_optimization.R   # directly
 ```
 
-Full re-computation replaces the pre-computed results with freshly computed ones. BO and simulations have stochastic elements, so exact numerical values may differ slightly but conclusions are unchanged.
+## Configuration
 
-## Pipeline Steps
+Runtime behavior is controlled by environment variables:
 
-| Step | Script | What it does | Runtime (full) | Runtime (quick) |
-|------|--------|-------------|----------------|-----------------|
-| 1 | `code/01_install.R` | Install DeSurv and check dependencies | 1 min | 1 min |
-| 2 | `code/02_load_data.R` | Load TCGA+CPTAC training data | 1 min | 1 min |
-| 3 | `code/03_bayesian_optimization.R` | BO hyperparameter search (DeSurv, alpha=0, elbow-k) | 4-8 hours | 3 min |
-| 4 | `code/04_fit_models.R` | Multi-start fitting with consensus initialization | 2-4 hours | 2 min |
-| 5 | `code/05_external_validation.R` | Project to 5 independent PDAC cohorts | 10 min | 2 min |
-| 6 | `code/07_simulations.R` | 3 scenarios x 100 replicates x 4 methods | 6-12 hours | 10 min |
-| 8 | `code/08_figures.R` | Generate manuscript figures | 5 min | uses cached |
-| 9 | `code/09_render_paper.R` | Compile paper + SI appendix | 2 min | 2 min |
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `DESURV_NCORES` | 1 | Cores for parallel steps (03, 04, 06, 07) |
+| `DESURV_RECOMPUTE` | TRUE | Recompute even if cached results exist |
+| `DESURV_QUICK` | FALSE | Reduced iterations for smoke testing |
 
-Steps 3, 4, and 7 benefit from multiple cores. DeSurv handles within-step parallelism internally via `parallel::mclapply` — set `NCORES` to control this.
+Each pipeline script uses a `cache_or_compute()` pattern: if a result file
+exists in `results/` and `DESURV_RECOMPUTE=FALSE`, the cached result is
+loaded rather than recomputed. This means:
 
-## How It Works
+- `make paper` loads all pre-computed results, renders the manuscript
+- `make quick` forces recomputation with reduced parameters
+- `make all` forces full production recomputation
 
-Each script uses a `cache_or_compute()` pattern: if a result file exists in `results/precomputed/`, it loads it; if not (or if `DESURV_RECOMPUTE=TRUE`), it computes and saves the result. This means:
+## Figure and Table Provenance
 
-- **`make paper`** — loads all 30 pre-computed results, renders the manuscript
-- **`make quick`** — forces recomputation with reduced parameters, overwrites cached results
-- **`make all`** — forces full production recomputation
+Every figure in the manuscript is generated by a specific pipeline script.
+No values are hardcoded in the manuscript; numerical results are computed
+dynamically from pre-computed RDS objects via inline R code.
 
-Environment variables that control behavior:
-- `DESURV_QUICK=TRUE` — reduced iterations for smoke testing
-- `DESURV_RECOMPUTE=TRUE` — recompute even if cached results exist
-- `DESURV_NCORES=N` — number of cores for parallel steps (default: 1)
+### Main Manuscript Figures
+
+| Figure | Content | Generation Script |
+|--------|---------|-------------------|
+| 1 | Model schematic | Static (`figures/model_schematic_final.pdf`) |
+| 2 | Simulation results | `code/09c_sim_figures.R` |
+| 3 | DeSurv subtypes + survival | `code/09a_figures.R` |
+| 4 | External validation | `code/09a_figures.R` |
+
+### SI Appendix Figures
+
+| Figure | Content | Generation Script |
+|--------|---------|-------------------|
+| S1 | BO convergence | `code/09b_si_figures.R` |
+| S2 | NMF diagnostics (cophenetic, dispersion) | `code/09b_si_figures.R` |
+| S3 | CV C-index across factorization rank | `code/09b_si_figures.R` |
+| S4 | Gene program heatmaps (k=3, k=5, k=7) | `code/09b_si_figures.R` |
+| S5 | Variational survival curves | `code/09b_si_figures.R` |
+| S6 | Cutpoint analysis | `code/08_cutpoint_analysis.R` |
+| S7 | Kaplan-Meier curves — external validation | `code/09b_si_figures.R` |
+| S8 | Subtype overlap with molecular subtypes | `code/09b_si_figures.R` |
+| S9 | Simulation results (null/mixed scenarios) | `code/09c_sim_figures.R` |
 
 ## Repository Structure
 
 ```
 DeSurv-paper/
-├── code/                          # Analysis pipeline (numbered scripts)
-│   ├── 00_helpers.R               #   Shared config, caching utilities
-│   ├── 01_install.R               #   Install DeSurv package
-│   ├── 02_load_data.R             #   Load TCGA+CPTAC training data
-│   ├── 03_bayesian_optimization.R #   Hyperparameter search via BO
-│   ├── 04_fit_models.R            #   Multi-start fitting + consensus init
-│   ├── 05_external_validation.R   #   Project to 5 validation cohorts
-│   ├── 07_simulations.R           #   Simulation studies (3 scenarios)
-│   ├── 08_figures.R               #   Figure generation
-│   ├── 09_render_paper.R          #   Compile manuscript
-│   └── sim_helpers.R              #   Simulation infrastructure functions
+├── code/                              # Analysis pipeline (numbered scripts)
+│   ├── 00_helpers.R                   #   Shared config, caching utilities
+│   ├── 01_install.R                   #   Install DeSurv and check deps
+│   ├── 02_load_data.R                 #   Load TCGA+CPTAC training data
+│   ├── 03_bayesian_optimization.R     #   BO hyperparameter search
+│   ├── 04_fit_models.R                #   Multi-start fitting + consensus init
+│   ├── 05_external_validation.R       #   Project to 5 validation cohorts
+│   ├── 06_cv_grid.R                   #   CV grid search k×α×ntop (HPC only)
+│   ├── 07_simulations.R               #   3 scenarios × 100 replicates
+│   ├── 07b_merge_simulations.R        #   Merge Slurm array results
+│   ├── 08_cutpoint_analysis.R         #   Cutpoint selection + evaluation
+│   ├── 09a_figures.R                  #   Main manuscript figures
+│   ├── 09b_si_figures.R               #   SI appendix figures
+│   ├── 09c_sim_figures.R              #   Simulation figures
+│   └── 10_render_paper.R              #   Compile manuscript PDFs
 │
-├── R/                             # Helper functions
-│   ├── simulation_functions/      #   Simulation data generation
-│   └── *.R                        #   Data loading, BO, validation, figures
+├── R/                                 # Helper functions
+│   ├── bo_helpers.R                   #   Bayesian optimization utilities
+│   ├── cluster_alignment.R            #   Cluster label alignment across runs
+│   ├── cv_grid_helpers.R              #   CV grid evaluation functions
+│   ├── fit_cox_model.R                #   Cross-validated Cox fitting
+│   ├── get_top_genes.R                #   Top gene extraction per factor
+│   ├── load_data.R                    #   Load training cohort data
+│   ├── load_data_internal.R           #   Load validation cohort data
+│   ├── pick_k_elbow.R                 #   Elbow-method rank selection
+│   ├── predict_validation_scores.R    #   Score new cohorts from fitted model
+│   ├── preprocess_helpers.R           #   Data preprocessing utilities
+│   ├── sim_figs.R                     #   Simulation figure helpers
+│   └── sim_helpers.R                  #   Simulation infrastructure
 │
-├── paper/                         # Manuscript source
-│   ├── paper.Rmd                  #   Main document
-│   ├── si_appendix.Rmd            #   SI Appendix
-│   ├── load_precomputed.R         #   Loads results from results/precomputed/
-│   └── *.Rmd                      #   Child sections (intro, methods, results, discussion)
+├── paper/                             # Manuscript source
+│   ├── paper.Rmd                      #   Main document
+│   ├── si_appendix.Rmd                #   SI Appendix
+│   ├── load_precomputed.R             #   Loads results from results/
+│   └── references_30102025.bib        #   Bibliography
 │
-├── results/
-│   ├── precomputed/               # Pre-computed analysis objects (30 RDS files)
-│   └── cv_grid/                   # K-sensitivity analysis tables
+├── results/                           # Pre-computed analysis objects
+│   ├── *.rds                          #   ~40 RDS files from pipeline
+│   └── cv_grid/                       #   CV grid CSVs (generated by step 06)
 │
-├── data/original/                 # Input datasets (7 PDAC cohorts)
-├── figures/                       # Static PDF figures
-├── slurm/                         # HPC job scripts
+├── data/original/                     # Input datasets (7 PDAC cohorts)
+├── figures/                           # Generated figures (PDF)
 │
-├── Makefile                       # make quick / make all / make paper
-└── run_pipeline.R                 # Rscript run_pipeline.R --quick / --full
+├── slurm/                             # HPC job scripts
+│   ├── submit_all.sh                  #   Submit full job chain
+│   ├── run_main_pipeline.sh           #   Steps 01-05, 08, 09a
+│   ├── run_simulations.sh             #   Step 07 as Slurm array
+│   ├── run_cv_grid.sh                 #   Step 06
+│   └── run_merge_simulations.sh       #   Steps 07b, 09b, 09c, make paper
+│
+└── Makefile                           # Build automation
 ```
 
-## DeSurv Package
+## Build Targets Reference
 
-This analysis requires the [DeSurv](https://github.com/rashidlab/DeSurv) R package:
-
-```r
-devtools::install_github("rashidlab/DeSurv")
-```
-
-DeSurv provides survival-driven nonnegative matrix factorization with Bayesian optimization for hyperparameter selection. See the package repository for documentation and vignettes.
+| Command | Purpose | Time |
+|---------|---------|------|
+| `make install` | Install R package dependencies | ~2 min |
+| `make paper` | Render manuscript from pre-computed results | ~2 min |
+| `make quick` | Smoke test full pipeline (reduced iterations) | ~10-15 min |
+| `make main NCORES=N` | Steps 01-05, 08, 09a (no sims, no render) | ~6-12 h |
+| `make all NCORES=N` | Full pipeline including sims and cv-grid | ~20-60 h |
+| `make cv-grid NCORES=N` | CV grid search only (HPC recommended) | ~24-48 h |
+| `make clean` | Remove cached results (preserves figures and cv_grid) | instant |
 
 ## Data Availability
 
-All input data files and pre-computed results are included in this repository. See `data/README.md` for provenance of each dataset:
+All input data files and pre-computed results are included in this
+repository. See `data/README.md` for dataset provenance.
 
-- **TCGA-PAAD** — The Cancer Genome Atlas
-- **CPTAC** — Clinical Proteomic Tumor Analysis Consortium
-- **Moffitt** — GEO GSE71729
-- **Puleo** — ArrayExpress E-MTAB-6134
-- **Dijk** — ArrayExpress E-MTAB-6830
-- **PACA-AU** — ICGC EGA EGAS00001000154
+| Cohort | Role | Source |
+|--------|------|--------|
+| TCGA-PAAD | Training | [The Cancer Genome Atlas](https://www.cancer.gov/tcga) |
+| CPTAC | Training | Clinical Proteomic Tumor Analysis Consortium |
+| Moffitt | Validation | GEO [GSE71729](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE71729) |
+| Puleo | Validation | ArrayExpress [E-MTAB-6134](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6134/) |
+| Dijk | Validation | ArrayExpress [E-MTAB-6830](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6830/) |
+| PACA-AU (array) | Validation | ICGC EGA [EGAS00001000154](https://ega-archive.org/studies/EGAS00001000154) |
+| PACA-AU (seq) | Validation | ICGC EGA [EGAS00001000154](https://ega-archive.org/studies/EGAS00001000154) |
 
-## Development History
+## Citation
 
-Development history prior to submission is archived at the original repositories:
-- Paper: https://github.com/ayoung31/DeSurv-paper
-- Package: https://github.com/ayoung31/DeSurv
+```bibtex
+@article{young2025desurv,
+  title   = {Survival-Guided Matrix Factorization Identifies Reproducible
+             Prognostic Programs in Pancreatic Cancer},
+  author  = {Young, Amber M. and Yurovsky, Alisa and Peng, Xianlu Laura and
+             Li, Didong and Yeh, Jen Jen and Rashid, Naim U.},
+  journal = {Proceedings of the National Academy of Sciences},
+  year    = {2025}
+}
+```
 
 ## License
 
-MIT License. See [LICENSE](LICENSE).
+MIT License. See [LICENSE](LICENSE) for details.
+
+## Contact
+
+**Naim Rashid** — Department of Biostatistics, UNC Chapel Hill; Lineberger
+Comprehensive Cancer Center
+
+- Email: naim_rashid@unc.edu
+- DeSurv package issues: https://github.com/rashidlab/DeSurv/issues

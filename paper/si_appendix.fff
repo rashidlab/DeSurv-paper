@@ -24,7 +24,7 @@
 \efloatseparator
  
 \begin{figure*}[t]
-\includegraphics[width=\textwidth,height=8in]{figures/fig-cutpoint-km-1} \caption{Cutpoint selection and external validation of dichotomized risk groups. (A) Cross-validated mean absolute log-rank z-statistic as a function of z-score cutpoint; red dashed line indicates the selected optimum. (B) Pooled validation Kaplan--Meier curves (stratified log-rank test). (C--D) Per-cohort validation KM curves: (C) Dijk, (D) Moffitt. (E--F) Per-cohort validation KM curves: (E) PACA-AU, (F) Puleo.}\label{fig:fig-cutpoint-km}
+\includegraphics[width=\textwidth,height=8in]{figures/fig-cutpoint-km-1} \caption{Cutpoint selection and external validation of dichotomized risk groups. (A) Cross-validated mean absolute log-rank z-statistic as a function of z-score cutpoint; red dashed line indicates the selected optimum. (B) Pooled validation Kaplan--Meier curves (stratified log-rank test). (C--D) Per-cohort validation KM curves: (C) Dijk, (D) Moffitt. (E--F) Per-cohort validation KM curves: (E) PACA-AU (array and RNA-seq subsets pooled), (F) Puleo.}\label{fig:fig-cutpoint-km}
 \end{figure*}
 \efloatseparator
  
@@ -35,7 +35,7 @@
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio,alt={Gene program overlap heatmap for DeSurv at elbow-selected rank k = 5. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). DeSurv at k = 5 splits the ECM/activated-stroma (proCAF-associated) signal into two factors with opposing Classical-tumor correlations and isolates restCAF as a separate factor; exocrine and Basal-like programs are not represented as dominant factors. }]{si_appendix_files/figures/fig-desurv-k5-heatmap-1.png}}
+\includegraphics{si_appendix_files/figures/fig-desurv-k5-heatmap-1.png}
 \caption{Gene program overlap heatmap for DeSurv at elbow-selected rank
 \(k = 5\). Each cell shows the number of top genes from a given factor
 (rows) overlapping established PDAC gene programs (columns). DeSurv at
@@ -48,7 +48,7 @@ represented as dominant factors. \label{fig:fig-desurv-k5-heatmap}}
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio,alt={Gene program overlap heatmap for standard NMF at elbow-selected rank k = 5. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). The three core programs from k = 3 are recovered; two additional factors overlap Exocrine-like and restCAF signatures, capturing transcriptional variance not aligned with survival outcomes. }]{si_appendix_files/figures/fig-nmf-k5-heatmap-1.png}}
+\includegraphics{si_appendix_files/figures/fig-nmf-k5-heatmap-1.png}
 \caption{Gene program overlap heatmap for standard NMF at elbow-selected
 rank \(k = 5\). Each cell shows the number of top genes from a given
 factor (rows) overlapping established PDAC gene programs (columns). The
@@ -61,7 +61,7 @@ variance not aligned with survival outcomes.
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio,alt={Gene program overlap heatmap for standard NMF at k = 7 (BO-selected rank with \textbackslash alpha = 0). Compared with k = 3 and k = 5, the 7-factor solution shows increased fragmentation: multiple factors partially capture the same PDAC gene signatures and no new coherent biological program emerges. }]{si_appendix_files/figures/fig-nmf-k7-heatmap-1.png}}
+\includegraphics{si_appendix_files/figures/fig-nmf-k7-heatmap-1.png}
 \caption{Gene program overlap heatmap for standard NMF at \(k = 7\)
 (BO-selected rank with \(\alpha = 0\)). Compared with \(k = 3\) and
 \(k = 5\), the 7-factor solution shows increased fragmentation: multiple
@@ -72,7 +72,7 @@ coherent biological program emerges. \label{fig:fig-nmf-k7-heatmap}}
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio,alt={Fraction of expression variance explained versus Type III partial likelihood contribution for each standard NMF factor at elbow-selected k = 5. Each point represents one factor, labeled N1--N5. Survival contribution is quantified as the reduction in Cox partial log-likelihood when each factor is removed from the full model. The two factors new relative to k = 3 (N4, N5) contribute negligibly to survival, confirming that elbow selection recovers no additional prognostic structure. }]{si_appendix_files/figures/fig-varsurvival-k5-1.png}}
+\includegraphics{si_appendix_files/figures/fig-varsurvival-k5-1.png}
 \caption{Fraction of expression variance explained versus Type III
 partial likelihood contribution for each standard NMF factor at
 elbow-selected \(k = 5\). Each point represents one factor, labeled

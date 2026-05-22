@@ -805,7 +805,7 @@ The parameter $n_{\text{top}}$ controls which genes enter the survival linear pr
 We analyzed PDAC cohorts from TCGA-PAAD and CPTAC-PDAC as training data
 [@raphael2017integrated;@ellis2013clinical]. External validation used
 independent cohorts from Dijk, Moffitt, PACA-AU (array and RNA-seq), and Puleo
-[@dijk2020unsupervised;@moffitt2015virtual;@zhao2018gene;@puleo2018stratification].
+[@dijk2020unsupervised;@moffitt2015virtual;@Bailey2016;@puleo2018stratification].
 Training models were fit on the combined TCGA and CPTAC expression matrices
 after harmonizing gene identifiers; validation datasets were processed with the
 same gene set and transformations before prediction and clustering.
@@ -863,8 +863,8 @@ CPTAC            & RNA-seq    & 129 & Training   & GDC (CPTAC-3)    & OS, PurIST
 \addlinespace
 Dijk             & RNA-seq    &  90 & Validation & E-MTAB-6830      & OS, PurIST, DeCAF & Dijk et al. (2020) \\
 Moffitt          & Microarray & 123 & Validation & GSE71729         & OS, PurIST, DeCAF & Moffitt et al. (2015) \\
-PACA-AU (array)  & Microarray &  63 & Validation & GSE36924         & OS, PurIST, DeCAF & Zhao et al. (2018) \\
-PACA-AU (RNA-seq) & RNA-seq   &  52 & Validation & EGAS00001000154  & OS, PurIST, DeCAF & Zhao et al. (2018) \\
+PACA-AU (array)  & Microarray &  63 & Validation & GSE36924         & OS, PurIST, DeCAF & Bailey et al. (2016) \\
+PACA-AU (RNA-seq) & RNA-seq   &  52 & Validation & EGAS00001000154  & OS, PurIST, DeCAF & Bailey et al. (2016) \\
 Puleo            & Microarray & 288 & Validation & E-MTAB-6134      & OS, PurIST, DeCAF & Puleo et al. (2018) \\
 \addlinespace
 \multicolumn{2}{l}{Training total} & 273 & & & & \\

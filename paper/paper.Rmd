@@ -100,12 +100,11 @@ source("paper/load_precomputed.R")
 ```
 
 <!-- ============================================================
-     EDITOR'S SUMMARY (Nature ~75 words, 3 sentences, plain-language).
-     Draft below derived from the prior PNAS Significance Statement;
-     trim and reframe for the chosen Nature venue before submission.
+     EDITORIAL SUMMARY (Nature Cancer convention, ~3 sentences,
+     plain-language for the broader cancer research community).
      ============================================================ -->
 
-\noindent\textbf{Editor's Summary.} Bulk tumor expression reflects a mixture of cancer cells and surrounding normal tissue, and the gene programs that dominate this variance are often not the ones that predict patient outcomes. The authors present DeSurv, a survival-supervised matrix-factorisation framework that learns prognostically informative gene programs during discovery rather than after. In pancreatic cancer, DeSurv recovers a compact three-program decomposition that generalises across five independent cohorts and stratifies survival more reliably than standard unsupervised factorisation.
+\noindent\textbf{Editorial Summary.} Unsupervised matrix factorisation of bulk tumour transcriptomes typically recovers the gene programs that explain the most expression variance — often tissue-composition signals — rather than the programs that predict patient outcomes. Young et al. introduce DeSurv, a deconvolution framework that couples nonnegative matrix factorisation to a Cox survival model so that prognostically informative programs are learned during discovery rather than retrofitted afterwards. Applied to pancreatic ductal adenocarcinoma, DeSurv recovers a compact three-program decomposition centred on a tumour--stroma axis that generalises across five independent cohorts and retains prognostic value after adjustment for established molecular classifiers.
 
 \bigskip
 

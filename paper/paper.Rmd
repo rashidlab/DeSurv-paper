@@ -1,8 +1,8 @@
 ---
-title: "Survival-guided matrix factorization identifies generalizable prognostic programs in pancreatic cancer"
+title: "Tumor--stroma coupling defines a generalizable prognostic program in pancreatic cancer"
 
 abstract: |
-  The transcriptional programs that explain the most variance in bulk tumor expression data are often not those that predict patient survival. Standard nonnegative matrix factorization (NMF) discovers latent structure by minimizing reconstruction error, which may be driven by high-variance but prognostically neutral signals such as tissue composition. Here we present DeSurv, a survival-supervised deconvolution framework that jointly integrates NMF with Cox proportional hazards modeling, shaping gene programs to capture outcome-relevant structure during discovery rather than only in post hoc evaluation. In simulations with known latent structure, DeSurv places more true prognostic genes among the top-weighted genes of each factor than standard NMF (precision, defined as the fraction of top-weighted factor genes that are true prognostic markers, 0.50 vs. 0.07), with the largest advantage when variance and prognosis diverge. In pancreatic ductal adenocarcinoma (PDAC), DeSurv recovers a compact, three-factor decomposition in which a single tumor--stroma coupling drives prognosis while exocrine-compositional signals are suppressed. These survival-aligned factors generalize to five independent PDAC cohorts without retraining, with stronger out-of-sample survival stratification than their unsupervised counterparts (pooled validation hazard ratio (HR) per standard deviation (SD) = 1.50, 95% confidence interval (CI) 1.31--1.72, P < 0.001), demonstrating that outcome supervision during factorization yields more generalizable transcriptional signatures than the standard discover-then-evaluate paradigm. By prioritizing transcriptional programs that survive cross-cohort generalization, DeSurv supports the development of generalizable prognostic biomarkers for the bulk-transcriptomic cohorts that dominate clinical cancer research.
+  Pancreatic ductal adenocarcinoma (PDAC) outcomes are shaped by the joint configuration of tumor-intrinsic and stromal programs, yet bulk-transcriptomic deconvolution methods that discover gene programs by variance maximization fragment this prognostic axis across multiple factors that fail to generalize across cohorts. We present DeSurv, a survival-supervised matrix factorization framework that jointly learns gene programs with a Cox proportional hazards model. Applied to pooled TCGA and CPTAC PDAC training data, DeSurv recovers a compact three-program decomposition centered on a single tumor--stroma coupling axis -- combining Classical tumor identity with restraining-CAF stroma -- that generalizes across five independent PDAC validation cohorts (Dijk, Moffitt, PACA-AU array and RNA-seq, Puleo; pooled hazard ratio per standard deviation = 1.50, 95% CI 1.31--1.72, P < 0.001) and retains independent prognostic value after adjustment for the established PurIST and DeCAF molecular classifiers, providing a single-sample-scorable risk stratifier for PDAC.
 
 keywords:
   - nonnegative matrix factorization
@@ -99,14 +99,8 @@ set_fig_font <- function(plot_obj, size = 10) {
 source("paper/load_precomputed.R")
 ```
 
-<!-- ============================================================
-     EDITORIAL SUMMARY (Nature Cancer convention, ~3 sentences,
-     plain-language for the broader cancer research community).
-     ============================================================ -->
-
-\noindent\textbf{Editorial Summary.} Unsupervised matrix factorisation of bulk tumour transcriptomes typically recovers the gene programs that explain the most expression variance — often tissue-composition signals — rather than the programs that predict patient outcomes. Young et al. introduce DeSurv, a deconvolution framework that couples nonnegative matrix factorisation to a Cox survival model so that prognostically informative programs are learned during discovery rather than retrofitted afterwards. Applied to pancreatic ductal adenocarcinoma, DeSurv recovers a compact three-program decomposition centred on a tumour--stroma axis that generalises across five independent cohorts and retains prognostic value after adjustment for established molecular classifiers.
-
-\bigskip
+<!-- NOTE: Nature Cancer editors write the Editorial Summary post-acceptance.
+     Authors should NOT draft one for submission. -->
 
 ```{r child="paper/02_introduction_REVISED.Rmd"}
 

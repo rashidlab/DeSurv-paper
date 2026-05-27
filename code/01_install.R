@@ -6,16 +6,24 @@
 
 message("=== Step 1: Install DeSurv ===")
 
+# Pinned to the rashidlab/DeSurv tag that produced the cached .rds files in
+# results/precomputed/. Reviewers reproducing the manuscript should install
+# this exact version; the rashidlab/DeSurv tip may include post-submission
+# fixes (e.g., RNG seeding) that change numerical results.
+DESURV_REF <- "submission/pnas-2026"   # rashidlab/DeSurv @ afb00d5
+
 # Try local install first (for development), then GitHub
 local_path <- file.path("..", "DeSurv")
 if (dir.exists(local_path)) {
   message("Installing DeSurv from local checkout: ", local_path)
+  message("  NOTE: local checkout is NOT pinned — confirm it is at tag '", DESURV_REF, "'")
+  message("        (rashidlab/DeSurv @ afb00d5) before relying on byte-exact reproduction.")
   if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools", repos = "https://cloud.r-project.org")
   devtools::install_local(local_path, upgrade = "never", force = FALSE)
 } else {
-  message("Installing DeSurv from GitHub: rashidlab/DeSurv")
+  message("Installing DeSurv from GitHub: rashidlab/DeSurv@", DESURV_REF)
   if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools", repos = "https://cloud.r-project.org")
-  devtools::install_github("rashidlab/DeSurv", upgrade = "never", force = FALSE)
+  devtools::install_github(paste0("rashidlab/DeSurv@", DESURV_REF), upgrade = "never", force = FALSE)
 }
 
 # Verify DeSurv loads

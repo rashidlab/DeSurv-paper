@@ -25,6 +25,8 @@ header-includes:
 - \renewcommand{\thetable}{S\arabic{table}}
 - \renewcommand{\thealgorithm}{S\arabic{algorithm}}
 bibliography: references_30102025.bib
+csl: nature.csl
+link-citations: true
 reference-section-title: "SI References"
 output:
   pdf_document:
@@ -970,10 +972,10 @@ as columns (main text, Fig.\ 3D).
 
 \part{Supplementary Results}
 
-<!-- PNAS CONVENTION: All supplementary figures should be labeled "Fig. S1", "Fig. S2", etc.
-     not "Figure 1", "Figure 2". Tables should be "Table S1", etc.
-     Internal scenario code names (R0_easy, R00_null, R_mixed) should be replaced with
-     descriptive labels (primary, null, mixed) consistent with main text terminology. -->
+<!-- Supplementary numbering convention: all SI figures labeled "Fig. S1", "Fig. S2", etc.
+     (not "Figure 1"). Tables: "Table S1", etc. Internal scenario code names
+     (R0_easy, R00_null, R_mixed) are replaced with descriptive labels (primary,
+     null, mixed) consistent with main-text terminology. -->
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(message = FALSE,
                       warning = FALSE,

@@ -1,4 +1,4 @@
-<!-- REVISED RESULTS — prediction-validation structure for PNAS -->
+<!-- REVISED RESULTS — prediction-validation structure (originally for PNAS; retained for Nature submission) -->
 <!-- All R code chunks are preserved from 04_results.Rmd -->
 <!-- Prose revisions: bolded one-sentence summaries, prediction-validation transitions -->
 

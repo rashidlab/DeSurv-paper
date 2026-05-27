@@ -1,4 +1,4 @@
-<!-- REVISED DISCUSSION — restructured for PNAS: biology first, broader implications early -->
+<!-- REVISED DISCUSSION — restructured biology-first, broader implications early (originally for PNAS; structure retained for Nature submission) -->
 <!-- Citation keys used: cook2007fisher, tishby1999information, peng2024determination, -->
 <!--   elyada2019cross, rashid2020purity, moffitt2015virtual, Maurer2019, peng2019novo, -->
 <!--   collisson2011subtypes, Bailey2016, collisson2019molecular -->

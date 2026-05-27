@@ -1,4 +1,4 @@
-<!-- REVISED INTRODUCTION — trimmed from ~1087 to ~790 words for PNAS -->
+<!-- REVISED INTRODUCTION — trimmed from ~1087 to ~790 words (originally for PNAS; comfortably under Nature Med/Cancer Article limits as well) -->
 <!-- Revision: merged P1+P2, trimmed P3 (cut rank-selection pre-emption), trimmed P4 (cut BO/alpha-0 detail) -->
 <!-- Citation keys used in this file: -->
 <!--   collisson2011subtypes, nguyen2024fourteen, lee1999learning, moffitt2015virtual, -->

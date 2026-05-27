@@ -1,72 +1,8 @@
 ---
-title: Survival-guided matrix factorization identifies generalizable prognostic programs in pancreatic cancer
-  # Use letters for affiliations, numbers to show equal authorship (if applicable) and to indicate the corresponding author
-author:
-  - name: Amber M. Young
-    affiliation: a
-    orcid: 0000-0001-7042-6961
-  - name: Alisa Yurovsky
-    affiliation: b
-    orcid: 0000-0002-7500-7907  # verified via ORCID public search (exact-name match)
-  - name: Xianlu Laura Peng
-    affiliation: c,d
-    orcid: 0000-0002-8684-5762  # verified via ORCID: "Xianlu Laura Peng | Pharmacology | UNC Chapel Hill"
-  - name: Jen Jen Yeh
-    affiliation: c,d,e
-    orcid: 0000-0003-2542-6211  # verified via ORCID public search (exact-name match)
-  - name: Didong Li
-    affiliation: a
-    orcid: 0000-0001-9146-705X  # verified via ORCID: "Didong Li | Asst Prof Biostatistics | UNC Chapel Hill"
-  - name: Naim U. Rashid
-    affiliation: a,d,1
-    orcid: 0000-0002-7274-8259  # provided directly by author
-address:
-  - code: a
-    address: Department of Biostatistics, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
-  - code: b
-    address: Department of Biomedical Informatics, Stony Brook University, Stony Brook, NY 11794, USA
-  - code: c
-    address: Department of Pharmacology, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
-  - code: d
-    address: Lineberger Comprehensive Cancer Center, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
-  - code: e
-    address: Department of Surgery, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA
-
-corresponding_author:
-  code: 1
-  text: "To whom correspondence should be addressed. E-mail: nur2@email.unc.edu"
-
-# For footer text
-lead_author_surname: Young
-
-
-# CRediT taxonomy used below for internal record. PNAS submission portal uses
-# its own simpler 5-category set (designed research / performed research /
-# contributed new reagents or analytic tools / analyzed data / wrote the paper);
-# the portal entries are what get published, not this YAML field. Mapping for
-# portal entry at submission:
-#   designed research:                      A.M.Y., N.U.R.
-#   performed research:                     A.M.Y.
-#   contributed new reagents/analytic tools: A.M.Y., A.Y., D.L.
-#   analyzed data:                          A.M.Y.
-#   wrote the paper:                        A.M.Y., N.U.R., A.Y., X.L.P., J.J.Y., D.L.
-author_contributions: |
-  Conceptualization: A.M.Y., N.U.R. Methodology: A.M.Y., A.Y., D.L., N.U.R. Software: A.M.Y. Formal analysis: A.M.Y. Investigation: A.M.Y. Data curation: A.M.Y., X.L.P. Visualization: A.M.Y. Writing -- original draft: A.M.Y., N.U.R. Writing -- review and editing: A.M.Y., A.Y., X.L.P., J.J.Y., D.L., N.U.R. Resources (PDAC domain expertise and biological interpretation): X.L.P., J.J.Y. Supervision: N.U.R. Funding acquisition: A.M.Y., N.U.R. All authors reviewed and approved the final manuscript.
-
-## Remove this if not required
-conflict_of_interest: |
-  N.U.R. and J.J.Y. are named as inventors on US patents US20220127676A1 and US20250066856A1, which relate to pancreatic cancer subtype classification (establishment of Basal and Classical subtypes and their prediction) derived from prior work and were not used directly in this study. The other authors declare no competing interests.
+title: "Survival-guided matrix factorization identifies generalizable prognostic programs in pancreatic cancer"
 
 abstract: |
   The transcriptional programs that explain the most variance in bulk tumor expression data are often not those that predict patient survival. Standard nonnegative matrix factorization (NMF) discovers latent structure by minimizing reconstruction error, which may be driven by high-variance but prognostically neutral signals such as tissue composition. Here we present DeSurv, a survival-supervised deconvolution framework that jointly integrates NMF with Cox proportional hazards modeling, shaping gene programs to capture outcome-relevant structure during discovery rather than only in post hoc evaluation. In simulations with known latent structure, DeSurv places more true prognostic genes among the top-weighted genes of each factor than standard NMF (precision, defined as the fraction of top-weighted factor genes that are true prognostic markers, 0.50 vs. 0.07), with the largest advantage when variance and prognosis diverge. In pancreatic ductal adenocarcinoma (PDAC), DeSurv recovers a compact, three-factor decomposition in which a single tumor--stroma coupling drives prognosis while exocrine-compositional signals are suppressed. These survival-aligned factors generalize to five independent PDAC cohorts without retraining, with stronger out-of-sample survival stratification than their unsupervised counterparts (pooled validation hazard ratio (HR) per standard deviation (SD) = 1.50, 95% confidence interval (CI) 1.31--1.72, P < 0.001), demonstrating that outcome supervision during factorization yields more generalizable transcriptional signatures than the standard discover-then-evaluate paradigm. By prioritizing transcriptional programs that survive cross-cohort generalization, DeSurv supports the development of generalizable prognostic biomarkers for the bulk-transcriptomic cohorts that dominate clinical cancer research.
-
-significance: |
-  Bulk tumor samples mix cancer cells with surrounding normal cells, obscuring the genes that truly predict patient outcomes. Existing deconvolution methods discover latent gene programs but do not ensure prognostic relevance, while supervised predictors often sacrifice biological interpretability. We present DeSurv, a survival-supervised deconvolution framework that integrates nonnegative matrix factorization with Cox modeling to learn gene programs and their survival associations jointly. By embedding outcome information into discovery, DeSurv yields prognostically informative programs that generalize across cohorts. This provides a general framework for identifying prognostic gene programs without requiring post hoc filtering or pre-specified signatures. Such generalizable programs are essential for risk stratification and clinical-trial enrichment in the bulk-transcriptomic cohorts that dominate clinical cancer research.
-
-acknowledgements: |
-  This work was supported by the National Cancer Institute grants U01 CA274298, P50 CA257911, T32 CA106209, and R01 CA288145, and by the Department of Defense Peer Reviewed Cancer Research Program (HT9425241103100121). Training data were obtained from the Cancer Genome Atlas (TCGA) Research Network (https://www.cancer.gov/tcga) and the Clinical Proteomic Tumor Analysis Consortium (CPTAC). External validation data were obtained from the Gene Expression Omnibus (GSE71729, Moffitt et al.; accessed via NCBI GEO), ArrayExpress (E-MTAB-6134, Puleo et al.; E-MTAB-6830, Dijk et al.; accessed via EMBL-EBI), and the International Cancer Genome Consortium data portal (PACA-AU; EGA study EGAS00001000154). We thank the patients and research teams who contributed samples and clinical data to these resources.
-
-  \textbf{Inclusion and Diversity.} The patient cohorts analyzed in this study were curated by the original investigators or consortia (TCGA, CPTAC, ICGC, and the original Moffitt, Dijk, and Puleo studies, deposited to GEO and ArrayExpress) and our access was limited to the de-identified expression and survival data they provide; we did not stratify analyses by sex, race, or ethnicity because consistent demographic annotations were not available across all cohorts. Sex and other demographic variables that could modify the prognostic relevance of the gene programs identified here remain important directions for follow-up work as more comprehensively annotated cohorts become available. The author team includes investigators at multiple career stages, with leadership and analytic contributions from both early-career and senior researchers across statistical, computational, and clinical disciplines.
 
 keywords:
   - nonnegative matrix factorization
@@ -81,19 +17,24 @@ params:
   run_label: ~
   val_label: ~
 
-## must be one of: pnasresearcharticle (usual two-column layout), pnasmathematics (one column layout), or pnasinvited (invited submissions only)
-pnas_type: pnasresearcharticle
-
 bibliography: references_30102025.bib
-csl: pnas.csl
+csl: nature.csl
+link-citations: true
 
-## change to true to add optional line numbering
-lineno: false
+output:
+  pdf_document:
+    latex_engine: pdflatex
+    keep_tex: true
+    number_sections: false
+    fig_caption: true
+    toc: false
 
-output: rticles::pnas_article
+geometry: margin=1in
+fontsize: 11pt
 
 header-includes:
   - \providecommand{\pandocbounded}[1]{#1}
+  - \usepackage{authblk}
   - \usepackage{booktabs}
   - \usepackage{float}
   - \usepackage{graphicx}
@@ -102,12 +43,31 @@ header-includes:
   - \usepackage{amssymb}
   - \usepackage{algorithm}
   - \usepackage{algpseudocode}
-  - \usepackage{setspace} 
+  - \usepackage{setspace}
+  - \usepackage{orcidlink}
   - \DeclareMathOperator*{\argmin}{argmin}
   - \DeclareMathOperator*{\argmax}{argmax}
   - \DeclareMathOperator\diag{diag}
   - \renewcommand{\algorithmicrequire}{\textbf{Input:}}
   - \renewcommand{\algorithmicensure}{\textbf{Output:}}
+  # authblk affiliation formatting
+  - \renewcommand\Authsep{, }
+  - \renewcommand\Authand{, }
+  - \renewcommand\Authands{, }
+  - \setlength{\affilsep}{0.5em}
+  # author + affiliation block (rendered by \maketitle)
+  - \author[a]{Amber M.\ Young\,\orcidlink{0000-0001-7042-6961}}
+  - \author[b]{Alisa Yurovsky\,\orcidlink{0000-0002-7500-7907}}
+  - \author[c,d]{Xianlu Laura Peng\,\orcidlink{0000-0002-8684-5762}}
+  - \author[c,d,e]{Jen Jen Yeh\,\orcidlink{0000-0003-2542-6211}}
+  - \author[a]{Didong Li\,\orcidlink{0000-0001-9146-705X}}
+  - \author[a,d,*]{Naim U.\ Rashid\,\orcidlink{0000-0002-7274-8259}}
+  - \affil[a]{Department of Biostatistics, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA}
+  - \affil[b]{Department of Biomedical Informatics, Stony Brook University, Stony Brook, NY 11794, USA}
+  - \affil[c]{Department of Pharmacology, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA}
+  - \affil[d]{Lineberger Comprehensive Cancer Center, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA}
+  - \affil[e]{Department of Surgery, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA}
+  - '\affil[*]{Corresponding author: nur2@email.unc.edu}'
 ---
 ```{r, echo=FALSE}
 knitr::opts_chunk$set(
@@ -139,7 +99,15 @@ set_fig_font <- function(plot_obj, size = 10) {
 source("paper/load_precomputed.R")
 ```
 
+<!-- ============================================================
+     EDITOR'S SUMMARY (Nature ~75 words, 3 sentences, plain-language).
+     Draft below derived from the prior PNAS Significance Statement;
+     trim and reframe for the chosen Nature venue before submission.
+     ============================================================ -->
 
+\noindent\textbf{Editor's Summary.} Bulk tumor expression reflects a mixture of cancer cells and surrounding normal tissue, and the gene programs that dominate this variance are often not the ones that predict patient outcomes. The authors present DeSurv, a survival-supervised matrix-factorisation framework that learns prognostically informative gene programs during discovery rather than after. In pancreatic cancer, DeSurv recovers a compact three-program decomposition that generalises across five independent cohorts and stratifies survival more reliably than standard unsupervised factorisation.
+
+\bigskip
 
 ```{r child="paper/02_introduction_REVISED.Rmd"}
 
@@ -157,21 +125,29 @@ source("paper/load_precomputed.R")
 
 ```
 
-# Materials and Methods {.unnumbered}
+# Methods {.unnumbered}
 
 ```{r child="paper/03_methods_REVISED.Rmd"}
 
 ```
 
+# Data and Code Availability {.unnumbered}
 
+The DeSurv R package is available at \url{https://github.com/rashidlab/DeSurv} (archived at Zenodo, DOI \texttt{10.5281/zenodo.20150929}). Reproducibility code, processed data, and session-info for this manuscript are available at \url{https://github.com/rashidlab/DeSurv-paper} (archived at Zenodo, DOI \texttt{10.5281/zenodo.20150946}). All training and validation cohorts are publicly available: TCGA-PAAD and CPTAC-3 from the Genomic Data Commons; Dijk (E-MTAB-6830) and Puleo (E-MTAB-6134) from ArrayExpress; Moffitt (GSE71729) from the Gene Expression Omnibus; and PACA-AU (EGA study EGAS00001000154) from the ICGC Data Portal.
 
+# Acknowledgements {.unnumbered}
 
-<!-- Leave these lines as they are at the end of your .Rmd file to ensure placement of methods & acknowledgements sections before the references-->
-\showmatmethods
-\showacknow
+This work was supported by the National Cancer Institute grants U01 CA274298, P50 CA257911, T32 CA106209, and R01 CA288145, and by the Department of Defense Peer Reviewed Cancer Research Program (HT9425241103100121). We thank the patients and research teams who contributed samples and clinical data to the public cohorts used here (TCGA, CPTAC, Dijk, Moffitt, Puleo, PACA-AU).
 
+\textbf{Inclusion and Diversity.} The patient cohorts analyzed in this study were curated by the original investigators or consortia (TCGA, CPTAC, ICGC, and the original Moffitt, Dijk, and Puleo studies) and our access was limited to the de-identified expression and survival data they provide; we did not stratify analyses by sex, race, or ethnicity because consistent demographic annotations were not available across all cohorts. Sex and other demographic variables that could modify the prognostic relevance of the gene programs identified here remain important directions for follow-up work as more comprehensively annotated cohorts become available.
 
-\pnasbreak
+# Author Contributions {.unnumbered}
+
+Conceptualization: A.M.Y., N.U.R. Methodology: A.M.Y., A.Y., D.L., N.U.R. Software: A.M.Y. Formal analysis: A.M.Y. Investigation: A.M.Y. Data curation: A.M.Y., X.L.P. Visualization: A.M.Y. Writing -- original draft: A.M.Y., N.U.R. Writing -- review and editing: A.M.Y., A.Y., X.L.P., J.J.Y., D.L., N.U.R. Resources (PDAC domain expertise and biological interpretation): X.L.P., J.J.Y. Supervision: N.U.R. Funding acquisition: A.M.Y., N.U.R. All authors reviewed and approved the final manuscript.
+
+# Competing Interests {.unnumbered}
+
+N.U.R. and J.J.Y. are named as inventors on US patents US20220127676A1 and US20250066856A1, which relate to pancreatic cancer subtype classification (establishment of Basal and Classical subtypes and their prediction) derived from prior work and were not used directly in this study. The other authors declare no competing interests.
 
 # References
 

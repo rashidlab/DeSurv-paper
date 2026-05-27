@@ -19,8 +19,8 @@ CPTAC            & RNA-seq    & 129 & Training   & GDC (CPTAC-3)    & OS, PurIST
 \addlinespace
 Dijk             & RNA-seq    &  90 & Validation & E-MTAB-6830      & OS, PurIST, DeCAF & Dijk et al. (2020) \\
 Moffitt          & Microarray & 123 & Validation & GSE71729         & OS, PurIST, DeCAF & Moffitt et al. (2015) \\
-PACA-AU (array)  & Microarray &  63 & Validation & GSE36924         & OS, PurIST, DeCAF & Zhao et al. (2018) \\
-PACA-AU (RNA-seq) & RNA-seq   &  52 & Validation & EGAS00001000154  & OS, PurIST, DeCAF & Zhao et al. (2018) \\
+PACA-AU (array)  & Microarray &  63 & Validation & GSE36924         & OS, PurIST, DeCAF & Bailey et al. (2016) \\
+PACA-AU (RNA-seq) & RNA-seq   &  52 & Validation & EGAS00001000154  & OS, PurIST, DeCAF & Bailey et al. (2016) \\
 Puleo            & Microarray & 288 & Validation & E-MTAB-6134      & OS, PurIST, DeCAF & Puleo et al. (2018) \\
 \addlinespace
 \multicolumn{2}{l}{Training total} & 273 & & & & \\

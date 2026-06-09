@@ -19,7 +19,7 @@
 \efloatseparator
  
 \begin{figure*}[t]
-\includegraphics[width=\textwidth,height=3.5in]{figures/fig-nmf-diagnostics-1} \caption{Standard unsupervised NMF rank selection heuristics for the PDAC training cohort (TCGA + CPTAC). (A) Reconstruction residuals as a function of factorization rank $k$. (B) Cophenetic correlation coefficient as a function of $k$. (C) Mean silhouette width across multiple distance metrics as a function of $k$. These criteria yield inconsistent guidance, motivating the survival-supervised model selection approach (main text Fig. 2D). \label{fig:nmf-diagnostics}}\label{fig:fig-nmf-diagnostics}
+\includegraphics[width=\textwidth,height=3.5in]{figures/fig-nmf-diagnostics-1} \caption{Standard unsupervised NMF rank selection heuristics for the PDAC training cohort (TCGA + CPTAC). (A) Reconstruction residuals as a function of factorization rank $k$. (B) Cophenetic correlation coefficient as a function of $k$. (C) Mean silhouette width across multiple distance metrics as a function of $k$. These criteria yield inconsistent guidance, motivating the survival-supervised model selection approach (main text Fig. 4D). \label{fig:nmf-diagnostics}}\label{fig:fig-nmf-diagnostics}
 \end{figure*}
 \efloatseparator
  

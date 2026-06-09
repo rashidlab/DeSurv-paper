@@ -1230,6 +1230,65 @@ kable(tab_df, format = "latex", escape = FALSE, booktabs = TRUE,
   kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
+Table \ref{tab:tab-bic-percohort} provides a complementary perspective that isolates the prognostic information carried by each method's factor decomposition from the transfer quality of its trained linear predictor. Whereas Table \ref{tab:tab-hr-adjusted} freezes the training-derived $\beta$ coefficients into a single risk-score covariate, Table \ref{tab:tab-bic-percohort} re-estimates $\beta$ on each validation cohort using the individual factor scores (F1, F2, F3 for DeSurv; F1--F7 for NMF) as separate covariates and reports the Bayesian Information Criterion (BIC) of the resulting Cox proportional hazards fits. BIC uses $k \log n_{\text{events}}$ as the complexity penalty (Volinsky and Raftery, \textit{Biometrics} 52, 203--223, 1996; Kass and Raftery, \textit{JASA} 90, 773--795, 1995). DeSurv's parsimonious 3-factor decomposition is BIC-preferred over NMF's 7-factor decomposition in three of five validation cohorts (Dijk, Moffitt, PACA-AU array), with the remaining two cohorts essentially tied: NMF's four additional factors do not provide sufficient log-likelihood improvement to overcome their complexity penalty.
+
+```{r tab-bic-percohort, echo=FALSE, results='asis'}
+library(survival); library(knitr); library(kableExtra)
+
+extract_factor_df <- function(val_latent) {
+  pool_dfs <- lapply(val_latent, function(entry) {
+    surv <- entry$survival
+    if (is.null(surv) || !all(c("time","event") %in% names(surv))) return(NULL)
+    if (is.null(entry$latent)) return(NULL)
+    k <- ncol(entry$latent)
+    df <- data.frame(time = surv$time, event = surv$event, dataset = entry$dataset)
+    for (j in seq_len(k)) df[[paste0("F",j)]] <- entry$latent[, j]
+    df
+  })
+  df <- dplyr::bind_rows(Filter(Negate(is.null), pool_dfs))
+  df[is.finite(df$time), ]
+}
+
+pool_d_bic <- extract_factor_df(val_latent_desurv_tcgacptac)
+pool_n_bic <- extract_factor_df(val_latent_desurv_alpha0_tcgacptac)
+
+fit_bic <- function(df, fmla) {
+  fit <- coxph(fmla, data = df)
+  list(BIC = BIC(fit), n = nrow(df), events = sum(df$event))
+}
+
+display_name <- function(ds) {
+  nm <- c("Dijk" = "Dijk", "Moffitt_GEO_array" = "Moffitt GEO array",
+          "PACA_AU_array" = "PACA-AU array", "PACA_AU_seq" = "PACA-AU RNA-seq",
+          "Puleo_array" = "Puleo array")
+  if (ds %in% names(nm)) nm[[ds]] else ds
+}
+
+rows <- list()
+for (ds in unique(pool_d_bic$dataset)) {
+  d <- pool_d_bic[pool_d_bic$dataset == ds, ]
+  n <- pool_n_bic[pool_n_bic$dataset == ds, ]
+  if (sum(d$event) < 5) next
+  r_d <- fit_bic(d, Surv(time, event) ~ F1 + F2 + F3)
+  r_n <- fit_bic(n, Surv(time, event) ~ F1 + F2 + F3 + F4 + F5 + F6 + F7)
+  rows[[ds]] <- data.frame(
+    Cohort = display_name(ds), n = r_d$n, events = r_d$events,
+    BICd = sprintf("%.1f", r_d$BIC),
+    BICn = sprintf("%.1f", r_n$BIC),
+    dBIC = sprintf("%+.1f", r_n$BIC - r_d$BIC),
+    stringsAsFactors = FALSE)
+}
+
+tbl <- dplyr::bind_rows(rows)
+colnames(tbl) <- c("Cohort", "$n$", "events",
+                    "DeSurv ($k = 3$) BIC", "NMF ($k = 7$) BIC", "$\\Delta$ BIC")
+
+kable(tbl, format = "latex", booktabs = TRUE, linesep = "", escape = FALSE,
+      align = c("l","r","r","r","r","r"),
+      caption = "Per-cohort Bayesian Information Criterion (BIC) for Cox proportional hazards models using individual factor scores as predictors of overall survival in each external validation cohort. $\\beta$ coefficients are re-fit on each validation cohort separately. DeSurv uses three factor scores (F1, F2, F3); NMF at BO-selected $k = 7$ uses seven (F1--F7). BIC penalises complexity as $k \\log n_{\\text{events}}$. Positive $\\Delta$BIC (NMF $-$ DeSurv) indicates DeSurv's parsimonious 3-factor decomposition is preferred. DeSurv is BIC-preferred in three of five validation cohorts; the remaining two are essentially tied. \\label{tab:tab-bic-percohort}") |>
+  kable_styling(latex_options = c("HOLD_position"), font_size = 9)
+```
+
 The variance--survival decomposition at $k = 5$ (Fig. \ref{fig:varsurvival-k5}) confirms that elbow selection does not recover additional prognostic structure. At $k = 5$, standard NMF continues to distribute survival contribution negligibly across all factors; the two factors new relative to $k = 3$ (N4 and N5) contribute minimally, confirming that the additional rank captures background transcriptional variance rather than independent prognostic programs.
 
 ```{r fig-varsurvival-k5, fig.width = 4.5, fig.height = 3.5, fig.cap = "Fraction of expression variance explained versus Type III partial likelihood contribution for each standard NMF factor at elbow-selected $k = 5$. Each point represents one factor, labeled N1--N5. Survival contribution is quantified as the reduction in Cox partial log-likelihood when each factor is removed from the full model. The two factors new relative to $k = 3$ (N4, N5) contribute negligibly to survival, confirming that elbow selection recovers no additional prognostic structure. \\label{fig:varsurvival-k5}", fig.env='figure', fig.pos='t'}

@@ -67,6 +67,25 @@ Std NMF ($k = 7$, BO $\alpha = 0$) & 1.48 (1.34--1.64), $< 0.001$ & 1.47 (1.27--
  
 \begin{table}[H]
 \centering
+\caption{\label{tab:tab-bic-percohort}Per-cohort Bayesian Information Criterion (BIC) for Cox proportional hazards models using individual factor scores as predictors of overall survival in each external validation cohort. $\beta$ coefficients are re-fit on each validation cohort separately. DeSurv uses three factor scores (F1, F2, F3); NMF at BO-selected $k = 7$ uses seven (F1--F7). BIC penalises complexity as $k \log n_{\text{events}}$. Positive $\Delta$BIC (NMF $-$ DeSurv) indicates DeSurv's parsimonious 3-factor decomposition is preferred. DeSurv is BIC-preferred in three of five validation cohorts; the remaining two are essentially tied. \label{tab:tab-bic-percohort}}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{lrrrrr}
+\toprule
+Cohort & $n$ & events & DeSurv ($k = 3$) BIC & NMF ($k = 7$) BIC & $\Delta$ BIC\\
+\midrule
+Dijk & 90 & 81 & 598.4 & 605.8 & +7.4\\
+Moffitt GEO array & 123 & 83 & 674.8 & 686.0 & +11.2\\
+PACA-AU array & 63 & 38 & 265.6 & 278.5 & +12.9\\
+PACA-AU RNA-seq & 52 & 31 & 197.8 & 199.3 & +1.5\\
+Puleo array & 288 & 181 & 1782.0 & 1782.6 & +0.6\\
+\bottomrule
+\end{tabular}
+\end{table}
+\efloatseparator
+ 
+\begin{table}[H]
+\centering
 \caption{\label{tab:tab-gene-list-270}Top 270 genes for DeSurv factor D1 (Factor D1 (Classical tumor + restCAF stroma)), ranked by factor specificity score $s_{ij}$. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}}$). \label{tab:gene-list-270-D1}}
 \centering
 \fontsize{8}{10}\selectfont

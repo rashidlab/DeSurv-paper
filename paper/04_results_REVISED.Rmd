@@ -136,6 +136,45 @@ ci_pool_lo   <- sprintf("%.2f", desurv_stats$ci_lo)
 ci_pool_hi   <- sprintf("%.2f", desurv_stats$ci_hi)
 p_pool       <- desurv_stats$p
 
+# ── Pooled adjusted (PurIST + DeCAF) statistics for DeSurv ───────────────────
+load_result("data_val_filtered_tcgacptac")
+
+extract_pool_df_with_covariates <- function(val_latent, data_val) {
+  pool_dfs <- lapply(val_latent, function(entry) {
+    surv <- entry$survival
+    if (is.null(surv) || !all(c("time", "event") %in% names(surv))) return(NULL)
+    df <- data.frame(sample_id = rownames(surv), time = surv$time, event = surv$event,
+                     dataset = entry$dataset, risk_score = entry$risk_score,
+                     stringsAsFactors = FALSE)
+    ds_match <- Filter(function(d) d$sampInfo$dataset[1] == entry$dataset, data_val)
+    if (length(ds_match) > 0) {
+      si <- ds_match[[1]]$sampInfo; si$sample_id <- rownames(si)
+      covars <- si[, intersect(c("sample_id", "PurIST", "DeCAF"), names(si)), drop = FALSE]
+      if ("DeCAF" %in% names(covars)) covars$DeCAF[covars$DeCAF == "permCAF"] <- "proCAF"
+      df <- merge(df, covars, by = "sample_id", all.x = TRUE)
+    }
+    df
+  })
+  df <- dplyr::bind_rows(Filter(Negate(is.null), pool_dfs))
+  df[is.finite(df$time) & is.finite(df$risk_score), ]
+}
+
+pool_df_adj_complete <- extract_pool_df_with_covariates(
+  val_latent_desurv_tcgacptac, data_val_filtered_tcgacptac)
+pool_df_adj_complete <- pool_df_adj_complete[
+  complete.cases(pool_df_adj_complete[, c("PurIST", "DeCAF")]), ]
+rs_sd_adj <- sd(pool_df_adj_complete$risk_score, na.rm = TRUE)
+if (is.na(rs_sd_adj) || rs_sd_adj < 1e-12) rs_sd_adj <- 1
+pool_df_adj_complete$risk_z <- pool_df_adj_complete$risk_score / rs_sd_adj
+cox_adj_sum <- summary(coxph(
+  Surv(time, event) ~ risk_z + PurIST + DeCAF + strata(dataset),
+  data = pool_df_adj_complete))
+hr_adj      <- sprintf("%.2f", cox_adj_sum$conf.int["risk_z", "exp(coef)"])
+ci_adj_lo   <- sprintf("%.2f", cox_adj_sum$conf.int["risk_z", "lower .95"])
+ci_adj_hi   <- sprintf("%.2f", cox_adj_sum$conf.int["risk_z", "upper .95"])
+p_adj_val   <- cox_adj_sum$coefficients["risk_z", "Pr(>|z|)"]
+p_adj_text  <- if (p_adj_val < 0.001) "< 0.001" else paste0("= ", signif(p_adj_val, 2))
+
 # ── Pooled PDAC validation statistics (NMF at matched rank) ──────────────────
 load_result("val_latent_std_desurvk_tcgacptac")
 pool_df_nmf  <- extract_pool_df(val_latent_std_desurvk_tcgacptac)
@@ -219,13 +258,69 @@ knitr::include_graphics(file.path("..", "figures", "fig3_tcgacptac.pdf"))
 
 A prognostic factorization is useful only if it generalizes beyond the training cohort. Having established that survival supervision and standard NMF produce different factor structures in the training data, we next tested whether each method's structure transfers to independent cohorts without retraining. The five external validation cohorts (Dijk, Moffitt, PACA-AU array and RNA-seq, and Puleo) likewise consist of non-metastatic, treatment-naive specimens (SI Appendix, Table S1). We computed factor scores in each validation dataset by projecting the gene programs learned in the training cohort ($Z = \widetilde{W}^\top X_{\text{new}}$), yielding a continuous score for each factor per sample.
 
-External validation C-index for NMF at independently selected ranks is summarized in SI Appendix, Table S2. Standard NMF at elbow-selected $k = 5$ and BO-selected $k = 7$ substantially improved over NMF at $k = 3$, with $k = 7$ matching or exceeding DeSurv's per-cohort C-index in most cohorts, though only when DeSurv's tuning framework is applied ($\alpha = 0$ in the joint BO over rank and hyperparameters), since NMF's own rank-selection heuristics (cophenetic, silhouette, residual; SI Appendix, Fig.\ S4) do not converge on this rank. However, this concordance gain still requires more than twice as many factors. DeSurv at $k = 3$ retains a significant adjusted hazard ratio after adjustment for PurIST and DeCAF (SI Appendix, Table S3), achieving independent prognostic value more parsimoniously. When $\beta$ coefficients are re-fit on each validation cohort, DeSurv's three-factor decomposition is BIC-preferred over NMF's seven-factor decomposition in three of five cohorts, with the remaining two essentially tied (SI Appendix, Table S4). Across `r n_val_cohorts` independent PDAC cohorts ($n = `r n_val_total`$), the DeSurv linear predictor showed a consistent survival association (stratified Cox model: pooled HR per SD $`r hr_pool`$; 95% CI $`r ci_pool_lo`$--$`r ci_pool_hi`$; $P = `r p_pool`$; per-cohort forest plot in Fig. \ref{fig:val}A; KM curves in SI Appendix, Fig. S5C--F). At the matched rank ($k = 3$), the analogous NMF linear predictor showed a weaker pooled effect (HR per SD $`r hr_pool_nmf`$; 95% CI $`r ci_pool_lo_nmf`$--$`r ci_pool_hi_nmf`$; $P = `r p_pool_nmf`$); a direct comparison using dichotomized risk groups is presented below.
+External validation C-index for NMF at independently selected ranks is summarized in SI Appendix, Table S2. Standard NMF at elbow-selected $k = 5$ and BO-selected $k = 7$ substantially improved over NMF at $k = 3$, with $k = 7$ matching or exceeding DeSurv's per-cohort C-index in most cohorts, though only when DeSurv's tuning framework is applied ($\alpha = 0$ in the joint BO over rank and hyperparameters), since NMF's own rank-selection heuristics (cophenetic, silhouette, residual; SI Appendix, Fig.\ S4) do not converge on this rank. However, this concordance gain still requires more than twice as many factors. DeSurv at $k = 3$ retains a significant adjusted hazard ratio after adjustment for PurIST and DeCAF (per-SD HR = `r hr_adj`, 95\% CI `r ci_adj_lo`--`r ci_adj_hi`, $P `r p_adj_text`$; Table \ref{tab:hr-adjusted}), achieving independent prognostic value more parsimoniously. When $\beta$ coefficients are re-fit on each validation cohort, DeSurv's three-factor decomposition is BIC-preferred over NMF's seven-factor decomposition in three of five cohorts, with the remaining two essentially tied (SI Appendix, Table S4). Across `r n_val_cohorts` independent PDAC cohorts ($n = `r n_val_total`$), the DeSurv linear predictor showed a consistent survival association (stratified Cox model: pooled HR per SD $`r hr_pool`$; 95% CI $`r ci_pool_lo`$--$`r ci_pool_hi`$; $P = `r p_pool`$; per-cohort forest plot in Fig. \ref{fig:val}A; KM curves in SI Appendix, Fig. S5C--F). At the matched rank ($k = 3$), the analogous NMF linear predictor showed a weaker pooled effect (HR per SD $`r hr_pool_nmf`$; 95% CI $`r ci_pool_lo_nmf`$--$`r ci_pool_hi_nmf`$; $P = `r p_pool_nmf`$); a direct comparison using dichotomized risk groups is presented below.
 
 To assess clinical interpretability of these continuous associations, we dichotomized validation samples into high- and low-risk groups using method-specific cutpoints, each independently optimized via cross-validation on the training data. The DeSurv linear predictor separated survival trajectories in the pooled validation cohort (HR $= `r km_desurv$hr`$, 95% CI $`r km_desurv$ci_lo`$--$`r km_desurv$ci_hi`$, $P `r if(km_desurv$p_lt) "< 0.001" else paste0("= ", km_desurv$p_val)`$; Fig. \ref{fig:val}B). The same procedure applied to NMF at $k = 3$ yielded weaker stratification (HR $= `r km_nmf$hr`$, 95% CI $`r km_nmf$ci_lo`$--$`r km_nmf$ci_hi`$, $P `r if(km_nmf$p_lt) "< 0.001" else paste0("= ", km_nmf$p_val)`$; Fig. \ref{fig:val}C). The DeSurv cutpoint classified a larger validation subset as high risk (`r km_n_high_desurv` vs `r km_n_high_nmf` high-risk patients; `r km_reclass_diff` reclassified) while preserving strong survival separation. The DeSurv high-risk group was enriched for both established poor-prognosis subtypes (Basal-like by PurIST, proCAF by DeCAF; Fisher's exact, SI Appendix, Fig. S6), capturing established consensus biology while adding independent prognostic information. The same analysis applied to NMF risk groups at $k = 3$ showed Basal-like enrichment but no significant proCAF enrichment (SI Appendix, Fig. S6), consistent with NMF's failure to isolate the tumor--stroma coupling that underlies D1. Together, these results indicate that survival supervision yields a compact, biologically interpretable prognostic structure that generalizes across independent PDAC cohorts. Compared with standard NMF at the matched rank, DeSurv produced stronger validation survival stratification and recovered a tumor--stroma program enriched for both Basal-like tumor and proCAF-like stromal biology. Although higher-rank NMF models could achieve similar per-cohort concordance in some validation datasets, they required substantially greater complexity and did not yield the same parsimonious tumor--stroma coupling axis. DeSurv therefore identifies a lower-dimensional prognostic program that integrates established malignant and stromal PDAC subtype biology while retaining independent prognostic value beyond PurIST and DeCAF.
 
 ```{r fig-val, fig.cap = paste0("Survival-aligned programs generalize across independent PDAC cohorts (pooled $n=", n_val_total, "$ patients across ", n_val_cohorts, " cohorts: ", paste(sprintf("%s $n=%d$", gsub("AU seq", "AU RNA-seq", gsub("PACA AU", "PACA-AU", gsub("_", " ", names(table(pool_df$dataset))))), as.integer(table(pool_df$dataset))), collapse = "; "), "). (A) Forest plot of univariate hazard ratios (95\\% CIs) from separate Cox models for each factor, showing each factor's marginal survival association in each validation cohort. DeSurv factor D1 shows a consistent protective association across all five cohorts (pooled HR = 0.76), while no standard NMF factor achieves a comparable pooled effect. Error bars are 95\\% confidence intervals; black diamonds denote inverse-variance-weighted pooled estimates. (B--C) Kaplan--Meier curves for pooled external validation samples stratified by the combined multivariate linear predictor ($\\hat{\\beta}_1 Z_1 + \\hat{\\beta}_2 Z_2 + \\hat{\\beta}_3 Z_3$, where coefficients are learned from training data), dichotomized at a cross-validated optimal cutpoint: DeSurv (B) and standard NMF (C). \\label{fig:val}"), fig.env='figure*', fig.pos='t', fig.width=7, fig.height=4.8, out.height= "4.5in", out.width='\\textwidth'}
 
 knitr::include_graphics(file.path("..", "figures", "fig4_tcgacptac.pdf"))
+```
+
+```{r tab-hr-adjusted, echo=FALSE, results='asis'}
+library(knitr); library(kableExtra)
+# extract_pool_df_with_covariates() and data_val_filtered_tcgacptac
+# are defined in the setup chunks above.
+load_result("val_latent_desurv_alpha0_tcgacptac")
+
+pooled_cox_unadj_adj <- function(df) {
+  rs_sd <- sd(df$risk_score, na.rm = TRUE)
+  if (is.na(rs_sd) || rs_sd < 1e-12) rs_sd <- 1
+  df$risk_z <- df$risk_score / rs_sd
+  cox_u <- summary(coxph(Surv(time, event) ~ risk_z + strata(dataset), data = df))
+  df_adj <- df[complete.cases(df[, c("PurIST", "DeCAF")]), ]
+  cox_a <- summary(coxph(Surv(time, event) ~ risk_z + PurIST + DeCAF + strata(dataset),
+                          data = df_adj))
+  fmt <- function(cx) {
+    coef_row <- cx$coefficients["risk_z", , drop = FALSE]
+    ci_row   <- cx$conf.int["risk_z", , drop = FALSE]
+    list(hr = round(ci_row[, "exp(coef)"], 2),
+         ci_lo = round(ci_row[, "lower .95"], 2),
+         ci_hi = round(ci_row[, "upper .95"], 2),
+         p = coef_row[, "Pr(>|z|)"])
+  }
+  list(unadj = fmt(cox_u), adj = fmt(cox_a))
+}
+
+fmt_p <- function(p) {
+  if (p < 0.001) return("$< 0.001$")
+  paste0("$", formatC(p, format = "f", digits = 3), "$")
+}
+fmt_hr <- function(s) {
+  paste0(sprintf("%.2f", s$hr), " (",
+         sprintf("%.2f", s$ci_lo), "--",
+         sprintf("%.2f", s$ci_hi), "), ", fmt_p(s$p))
+}
+
+pool_desurv_t1 <- extract_pool_df_with_covariates(
+  val_latent_desurv_tcgacptac, data_val_filtered_tcgacptac)
+stats_desurv_t1 <- pooled_cox_unadj_adj(pool_desurv_t1)
+pool_nmf7_t1 <- extract_pool_df_with_covariates(
+  val_latent_desurv_alpha0_tcgacptac, data_val_filtered_tcgacptac)
+stats_nmf7_t1 <- pooled_cox_unadj_adj(pool_nmf7_t1)
+
+tab_df <- data.frame(
+  Method = c("DeSurv ($k = 3$)", "Std NMF ($k = 7$, BO $\\alpha = 0$)"),
+  Unadjusted = c(fmt_hr(stats_desurv_t1$unadj), fmt_hr(stats_nmf7_t1$unadj)),
+  Adjusted = c(fmt_hr(stats_desurv_t1$adj), fmt_hr(stats_nmf7_t1$adj)),
+  stringsAsFactors = FALSE
+)
+colnames(tab_df) <- c("Method", "Unadjusted HR per SD (95\\% CI), $P$",
+                       "Adjusted HR per SD (95\\% CI), $P$")
+
+kable(tab_df, format = "latex", escape = FALSE, booktabs = TRUE,
+      caption = paste0("Pooled external validation hazard ratios (per SD of the linear predictor) for DeSurv at $k = 3$ and standard NMF at BO-selected $k = 7$ ($\\alpha = 0$), across the five validation cohorts ($n = ", n_val_total, "$ patients, ", n_val_events, " events). Adjusted models include the PurIST tumor-intrinsic and DeCAF stromal molecular classifiers as covariates, with stratification by dataset. Both methods retain significant prognostic value after adjustment, with DeSurv's larger HR drop reflecting biological concordance with established subtypes and NMF $k = 7$'s smaller drop reflecting orthogonal residual content from its additional, less interpretable factors. \\label{tab:hr-adjusted}")) |>
+  kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
 

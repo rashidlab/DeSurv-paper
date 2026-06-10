@@ -30,6 +30,7 @@ library(glmnet)
 
 source("R/cv_grid_helpers.R")
 source("R/preprocess_helpers.R")
+source("R/variance_helpers.R")
 
 # ── Identifier used in output filenames ──────────────────────────────────
 # Mirrors the bo_label convention from the original DeSurv-paper repo. The
@@ -277,18 +278,15 @@ ggsave(
 )
 message(sprintf("Saved si_fig_nmf_k7_heatmap_%s.pdf", bo_label))
 
-# ── SI S10: Variance vs survival at k=5 ──────────────────────────────────────
+# ── SI S10: Variance vs survival at k=5 (centered metric, issue #6) ──────────
 fit_std_elbowk  <- load_precomputed("fit_std_elbowk_tcgacptac")
 tar_data_elbowk <- load_precomputed("tar_data_filtered_elbowk_tcgacptac")
 
-df_varsurvk5 <- build_variance_survival_df(
-  X        = tar_data_elbowk$ex,
-  scores   = fit_std_elbowk$W,
-  loadings = fit_std_elbowk$H,
-  time     = tar_data_elbowk$sampInfo$time,
-  event    = tar_data_elbowk$sampInfo$event,
-  method   = "NMF"
-) |> dplyr::mutate(factor_label = paste0("N", factor))
+df_varsurvk5 <- build_var_surv_df(
+  W = fit_std_elbowk$W, H = fit_std_elbowk$H, X = tar_data_elbowk$ex,
+  time = tar_data_elbowk$sampInfo$time,
+  event = tar_data_elbowk$sampInfo$event, method = "NMF")
+df_varsurvk5$factor_label <- paste0("N", df_varsurvk5$factor)
 
 ggsave(
   file.path(FIGURE_DIR, sprintf("si_fig_varsurvival_k5_%s.pdf", bo_label)),
@@ -299,7 +297,7 @@ ggsave(
                               point.padding = 0.3, segment.size = 0.3) +
     ggplot2::scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
     ggplot2::labs(
-      x = "Conditional variance explained\n(semi-partial R²)",
+      x = "Cross-sample variance explained\n(gene-centered)",
       y = expression(atop(Delta ~ "partial log-likelihood", "(full vs. k-1 factor model)"))
     ) +
     ggplot2::theme_classic(base_size = 10),

@@ -243,3 +243,18 @@ BGN & LRRC8A & SMAD3 & KCNK5 & VWA1 & TAP1\\
 \bottomrule
 \end{tabular}
 \end{table}
+\efloatseparator
+ 
+\begin{table}[H]
+\centering
+\caption{Marginal per-factor Cox hazard ratios for overall survival in OKane (univariate, no treatment adjustment). $n = 173$, 123 events. Each factor score is z-standardized within OKane. \label{tab:okane-marginal}}
+\begin{tabular}{lccc}
+\toprule
+Factor & HR per SD & 95\% CI & $P$ \\
+\midrule
+$Z_1$ (D1, Classical + restCAF)  & $0.73$ & $0.61$--$0.88$ & $< 0.001$ \\
+$Z_2$ (D2, proCAF stroma)        & $1.14$ & $0.95$--$1.36$ & $0.16$ \\
+$Z_3$ (D3, Basal-like tumor)     & $0.98$ & $0.82$--$1.18$ & $0.87$ \\
+\bottomrule
+\end{tabular}
+\end{table}

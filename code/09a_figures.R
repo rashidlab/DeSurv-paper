@@ -31,6 +31,7 @@ source("R/cluster_alignment.R")
 source("R/cv_grid_helpers.R")
 source("R/get_top_genes.R")
 source("R/fit_cox_model.R")
+source("R/variance_helpers.R")
 
 # ── Load prerequisites ────────────────────────────────────────────────────
 tar_fit_desurv        <- load_precomputed("tar_fit_desurv_tcgacptac")
@@ -103,31 +104,22 @@ fig_bo_heat_maxed <- ggplot(curve, aes(x = k, y = alpha, fill = mean)) +
   )
 
 
-# ── Variance explained vs survival contribution scatter ───────────────────
-df_nmf <- build_variance_survival_df(
-  X = tar_data_filtered$ex,
-  scores = fit_std_desurvk$W,
-  loadings = fit_std_desurvk$H,
+# ── Variance explained vs survival contribution scatter (issue #6) ────────
+# build_var_surv_df is defined in R/variance_helpers.R. Uses gene-centered
+# cross-sample variance fraction (correcting the uncentered metric that
+# deflated exocrine variation; see helper comments and SI Section 11).
+df_nmf <- build_var_surv_df(
+  W = fit_std_desurvk$W, H = fit_std_desurvk$H, X = tar_data_filtered$ex,
   time = tar_data_filtered$sampInfo$time,
-  event = tar_data_filtered$sampInfo$event,
-  method = "NMF"
-)
-df_desurv <- build_variance_survival_df(
-  X = tar_data_filtered$ex,
-  scores = tar_fit_desurv$W,
-  loadings = tar_fit_desurv$H,
+  event = tar_data_filtered$sampInfo$event, method = "NMF")
+df_desurv <- build_var_surv_df(
+  W = tar_fit_desurv$W, H = tar_fit_desurv$H, X = tar_data_filtered$ex,
   time = tar_data_filtered$sampInfo$time,
-  event = tar_data_filtered$sampInfo$event,
-  method = "DeSurv"
-)
-df_plot <- dplyr::bind_rows(df_nmf, df_desurv) |>
-  dplyr::mutate(
-    factor_label = dplyr::case_when(
-      method == "NMF" ~ paste0("N", factor),
-      method == "DeSurv" ~ paste0("D", factor),
-      TRUE ~ paste0("F", factor)
-    )
-  )
+  event = tar_data_filtered$sampInfo$event, method = "DeSurv")
+df_plot <- rbind(df_nmf, df_desurv)
+df_plot$factor_label <- ifelse(df_plot$method == "NMF",
+                                paste0("N", df_plot$factor),
+                                paste0("D", df_plot$factor))
 fig_variation_explained <- ggplot(df_plot,
          aes(x = variance_explained, y = delta_loglik,
              label = factor_label, color = method)) +
@@ -139,7 +131,7 @@ fig_variation_explained <- ggplot(df_plot,
     scale_color_manual(values = c("NMF" = "red", "DeSurv" = "blue")) +
     scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
     labs(
-      x = "Conditional variance explained\n(semi-partial R\u00b2)",
+      x = "Cross-sample variance explained\n(gene-centered)",
       y = expression(atop(Delta ~ "partial log-likelihood",
                           "(full vs. k-1 factor model)")),
       color = "Method"

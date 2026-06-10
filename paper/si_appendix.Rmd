@@ -931,14 +931,31 @@ factors.
 
 For each factor $j \in \{1, \ldots, k\}$, we quantified two quantities to assess
 the alignment between expression variance and prognostic relevance. The
-conditional variance explained by factor $j$ was quantified as the semi-partial
-$R^2$:
-$$V_j = \frac{\mathrm{RSS}_{-j} - \mathrm{RSS}_{\text{full}}}{\|X\|_F^2},$$
-where $\mathrm{RSS}_{\text{full}} = \|X - WH\|_F^2$ is the residual sum of
-squares from the full $k$-factor reconstruction and
-$\mathrm{RSS}_{-j} = \|X - W_{-j}H_{-j}\|_F^2$ is the residual from the
-$(k-1)$-factor reconstruction omitting factor $j$. This measures the incremental
-fraction of total variance accounted for by factor $j$ given all other factors.
+cross-sample variance fraction of factor $j$ was quantified as
+$$V_j = \frac{\| (W_j H_j^\top)^{(c)} \|_F^2}{\| X^{(c)} \|_F^2},$$
+where $W_j H_j^\top \in \mathbb{R}^{p \times n}$ is the rank-one outer product
+contribution of factor $j$ to the reconstruction $WH$, the superscript $(c)$
+denotes gene-by-gene centering across samples (subtracting each row's mean), and
+$X^{(c)}$ is the centered expression matrix. This measures the cross-sample
+variance encoded by factor $j$'s rank-one contribution, relative to the total
+cross-sample variance in the data.
+
+Gene centering is required to recover a metric that reflects cross-sample
+variation. The uncentered analogue $\|W_j H_j^\top\|_F^2 / \|X\|_F^2$ is
+dominated by the grand-mean baseline of the rank-normalized $X$ (sample ranks
+$1, \ldots, p$ have no zeros, so $X$ has a large constant component) and
+under-represents factors that encode genuine differences across samples.
+
+For non-orthogonal factorizations such as NMF, the $V_j$ defined this way does
+not partition to $\sum_j V_j = 1$ because the Frobenius cross-terms
+$\langle (W_i H_i^\top)^{(c)}, (W_j H_j^\top)^{(c)} \rangle_F$ between
+rank-one contributions are generally non-zero. In PDAC at $k = 3$, the centered
+NMF per-factor fractions sum to approximately $1.97$, reflecting shared and
+complementary structure between the three NMF factors. PCA partitions cleanly
+because its components are orthogonal by construction. We report $V_j$ as the
+isolated reconstruction contribution of each factor, recognizing that for
+non-orthogonal factorizations such per-factor shares do not constitute a
+partition of total variance.
 
 The survival contribution of factor $j$ was quantified as the Type III partial
 likelihood increment: the reduction in Cox partial log-likelihood when factor $j$
@@ -1252,13 +1269,13 @@ for (i in seq_along(factor_labels)) {
 \section{Translational analysis in treated metastatic PDAC (OKane/COMPASS)}
 \label{si:okane}
 
-The primary analysis evaluated DeSurv in treatment-naive resected primary PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the same trained programs, when projected onto a clinically distinct cohort (microdissected metastatic specimens from patients receiving first-line chemotherapy), continue to carry prognostic information and whether any factor's prognostic effect depends on the chemotherapy regimen. We emphasize at the outset that this analysis is hypothesis-generating: a single cohort of moderate size, no preregistered analysis plan, and no functional validation of the candidate mechanism. We report it here so the field can attempt replication in independent treatment-stratified cohorts.
+The primary analysis evaluated DeSurv in treatment-naive resected primary PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the same trained programs project sensibly into a clinically distinct cohort (microdissected metastatic specimens from patients receiving first-line chemotherapy), and specifically whether the $D_1$ protective effect on overall survival documented in the treatment-naive validation cohorts (main text Table~\ref{tab:hr-adjusted}, pooled adjusted HR $1.33$ per SD after PurIST + DeCAF adjustment, $P < 0.001$) extends to treated metastatic disease independently of the PurIST molecular classifier.
 
 \subsection{Cohort and projection}
 
 We obtained the O'Kane et al.\ COMPASS cohort [@aung2018compass]: $n = 195$ microdissected PDAC samples (171 metastatic, 23 locally advanced, 1 stage not annotated) with bulk RNA-seq, overall survival, and first-line treatment arm. After restricting to samples with non-missing factor scores, treatment arm $\in \{$FOLFIRINOX (FFX), gemcitabine/nab-paclitaxel (GA)$\}$, and finite survival times, the analytic sample comprised $n = 173$ patients (123 deaths; FFX $n = 102$, GA $n = 71$). 1,925 of the 1,970 trained genes (97.7\%) were present in OKane.
 
-Factor scores were computed by projection using the same trained gene-program matrix $W$ used for the main paper validation cohorts: $Z_i = X_{\text{OKane}}^\top W_{\cdot, i}$ for each factor $i \in \{1, 2, 3\}$, where $X_{\text{OKane}}$ is the within-sample rank-transformed OKane expression matrix restricted to the 1,925 shared genes. We deliberately did \emph{not} apply the trained Cox coefficients $\beta$ to collapse $Z$ into a single linear predictor, because doing so masks per-factor differences in treatment-dependent prognostic behavior (Sections~\ref{si:okane-marginal}--\ref{si:okane-interaction} below). Each factor score was z-standardized within OKane prior to Cox modeling so that hazard ratios are interpretable per standard deviation of the factor.
+Factor scores were computed by projection using the same trained gene-program matrix $W$ used for the main paper validation cohorts: $Z_i = X_{\text{OKane}}^\top W_{\cdot, i}$ for each factor $i \in \{1, 2, 3\}$, where $X_{\text{OKane}}$ is the within-sample rank-transformed OKane expression matrix restricted to the 1,925 shared genes. Each factor score was z-standardized within OKane prior to Cox modeling so that hazard ratios are interpretable per standard deviation of the factor.
 
 \subsection{Per-factor marginal prognostic effects recapitulate the treatment-naive validation pattern}
 \label{si:okane-marginal}
@@ -1279,7 +1296,7 @@ $Z_3$ (D3, Basal-like tumor)     & $0.98$ & $0.82$--$1.18$ & $0.87$ \\
 \end{tabular}
 \end{table}
 
-The factor-1 (D1) protective effect in OKane (HR $0.73$ per SD, $P < 0.001$) closely matches the D1 effect in the treatment-naive pooled validation (pooled HR $0.76$; main text Fig.\ \ref{fig:val}A), indicating that the trained gene-program structure projects sensibly into a clinically distinct sample context (microdissected metastatic versus bulk primary, treated versus treatment-naive). Factors $Z_2$ and $Z_3$ each carry weak or null marginal signal in OKane, paralleling their weaker individual contributions in the treatment-naive validation forest plot. The marginal continuity of D1's effect (Figure~\ref{fig:figS-okane-marginal-continuity}) provides face validity for the projection before we examine treatment-stratified effects.
+The factor-1 (D1) protective effect in OKane (HR $0.73$ per SD, $P < 0.001$) closely matches the D1 effect in the treatment-naive pooled validation (pooled HR $0.76$; main text Fig.\ \ref{fig:val}A), indicating that the trained gene-program structure projects sensibly into a clinically distinct sample context (microdissected metastatic versus bulk primary, treated versus treatment-naive). Factors $Z_2$ and $Z_3$ each carry weak or null marginal signal in OKane, paralleling their weaker individual contributions in the treatment-naive validation forest plot. The marginal continuity of D1's effect (Figure~\ref{fig:figS-okane-marginal-continuity}) provides face validity for the projection.
 
 \begin{figure}[H]
 \centering
@@ -1287,109 +1304,12 @@ The factor-1 (D1) protective effect in OKane (HR $0.73$ per SD, $P < 0.001$) clo
 \caption{Marginal $Z_1$ (D1, Classical/restCAF) hazard ratio per SD across the five treatment-naive PDAC validation cohorts (top, blue) and OKane treated metastatic cohort (bottom, red). OKane's marginal $Z_1$ effect sits within the range of the treatment-naive cohorts and matches the pooled validation estimate, confirming that the projection of the trained gene-program matrix transfers into the treated-metastatic sample context.\label{fig:figS-okane-marginal-continuity}}
 \end{figure}
 
-\subsection{Only factor 3 shows a significant treatment-by-factor interaction}
-\label{si:okane-interaction}
+\subsection{D1's protective effect on overall survival is independent of PurIST in OKane}
+\label{si:okane-purist}
 
-We next fit three separate Cox proportional hazards models, each containing a single factor and its interaction with first-line treatment arm: $\text{Surv}(\text{OS}) \sim Z_i \cdot \text{tx} + Z_i + \text{tx}$, with FFX as reference. Table~\ref{tab:okane-interaction} reports each model's coefficient for the factor (interpreted as the per-SD hazard ratio in the FFX arm), the main effect of treatment, the interaction term (the multiplicative modification of the factor's effect in GA versus FFX), and the per-factor likelihood-ratio test for the interaction.
+We next tested whether $Z_1$'s protective association with overall survival in OKane is captured by the PurIST molecular classifier --- the established Basal-like/Classical tumor classifier for PDAC --- or whether $Z_1$ carries additional prognostic information independent of PurIST. After adjustment for PurIST in a Cox model fit on the same FFX+GA analytic sample ($n = 173$, $123$ events), $Z_1$ retains a significant protective effect: HR per SD $= 0.74$ ($95\%$ CI $0.59$--$0.92$, $P = 0.006$), nearly unchanged from the unadjusted marginal estimate (Table~\ref{tab:okane-marginal}, HR $0.73$, $P < 0.001$). The same pattern holds in both treatment arms separately: $Z_1$ PurIST-adjusted HR per SD $= 0.71$ ($95\%$ CI $0.53$--$0.96$, $P = 0.024$) in the FFX arm; $Z_1$ PurIST-adjusted HR per SD $= 0.73$ ($95\%$ CI $0.52$--$1.03$, $P = 0.069$) in the GA arm. $Z_1$'s protective association with overall survival in OKane is therefore independent of PurIST, extending the main paper's PurIST + DeCAF-adjusted finding from treatment-naive primary PDAC (main text Table~\ref{tab:hr-adjusted}: pooled HR $1.33$ per SD, $P < 0.001$) to the treated metastatic setting on the OS endpoint. DeCAF, the established stromal classifier, was not applied to OKane samples in this analysis because OKane biospecimens are microdissected tumor with substantially depleted stromal content, the expressional substrate on which the DeCAF classifier was trained; the PurIST-adjusted result therefore tests independence from the tumor-compartment classifier only.
 
-\begin{table}[H]
-\centering
-\caption{Per-factor Cox interaction models in OKane. Three separate models, each of the form $\text{Surv} \sim Z_i \cdot \text{tx}_{\text{arm}}$, with FFX as reference. Z-standardized factors. The interaction-term HR is the multiplicative change in the factor's hazard ratio going from FFX to GA; only $Z_3$ shows a significant interaction. $n = 173$, 123 events. \label{tab:okane-interaction}}
-\begin{tabular}{lcccc}
-\toprule
-Factor & HR (FFX arm) & HR (tx\textsubscript{GA}) & Interaction HR & LRT $P$ (interaction) \\
-\midrule
-$Z_1$ (D1) & $0.69$ ($0.54$--$0.88$) & $1.45$ ($1.01$--$2.08$) & $1.09$ ($0.76$--$1.58$) & $0.63$ \\
-$Z_2$ (D2) & $1.15$ ($0.87$--$1.52$) & $1.45$ ($1.01$--$2.09$) & $1.05$ ($0.73$--$1.51$) & $0.81$ \\
-$Z_3$ (D3) & $0.79$ ($0.61$--$1.02$) & $1.40$ ($0.97$--$2.00$) & $\mathbf{1.67}$ ($1.13$--$2.47$) & $\mathbf{0.010}$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+\subsection{Caveats}
 
-Factor $Z_1$ (D1, Classical/restCAF) is the dominant prognostic axis but its effect is not treatment-modified (interaction $P = 0.63$): D1 is protective at HR $0.69$ in FFX and approximately HR $0.75$ in GA, with the interaction term centered at $1$. Factor $Z_2$ (D2, proCAF stroma) carries no marginal signal in either arm and no interaction ($P = 0.81$). Factor $Z_3$ (D3, Basal-like tumor) shows a significant treatment-by-factor interaction (LRT $P = 0.010$): the per-SD D3 hazard ratio is $0.79$ (borderline protective) in the FFX arm and approximately $0.79 \times 1.67 \approx 1.32$ in the GA arm --- a directional reversal. Figure~\ref{fig:figS-okane-km-z3} displays the corresponding median-split Kaplan--Meier curves for $Z_3$, stratified by treatment arm: high-$Z_3$ patients show a survival advantage on FOLFIRINOX but worse outcomes on gemcitabine/nab-paclitaxel, the visual signature of the interaction term.
+This analysis is exploratory and is limited to a single endpoint (overall survival) in a single cohort. (i) $n = 173$, $123$ events; modest power for subgroup or interaction analyses. (ii) No analysis plan was preregistered. (iii) DeCAF was not applied owing to OKane's microdissected sample context; the PurIST-adjustment claim is therefore one-sided (tumor classifier only) rather than the dual PurIST + DeCAF adjustment reported for treatment-naive validation in the main paper (Table~\ref{tab:hr-adjusted}). (iv) Per-factor analyses for $Z_2$ and $Z_3$ are reported in Table~\ref{tab:okane-marginal} for transparency; both show weak or null marginal effects in OKane and do not support separate translational claims from this cohort. Prospective replication in an independent treated PDAC cohort with both PurIST and DeCAF available is the natural next test.
 
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{figures/figS_okane_km_z3.pdf}
-\caption{Kaplan--Meier overall survival curves for OKane patients stratified by $Z_3$ (D3, Basal-like tumor) median split, within each first-line treatment arm. (A) FOLFIRINOX arm: high-$Z_3$ patients trend toward better OS. (B) Gemcitabine + nab-paclitaxel arm: high-$Z_3$ patients show worse OS. The directional reversal between arms is the visual manifestation of the $Z_3 \times \text{tx}$ interaction (Table~\ref{tab:okane-interaction}, LRT $P = 0.010$). Median split is shown for interpretability; the continuous-scale interaction test in Table~\ref{tab:okane-interaction} is the primary analysis.\label{fig:figS-okane-km-z3}}
-\end{figure}
-
-Figure~\ref{fig:figS-okane-forest-interactions} compares the per-factor interaction effects across overall survival, continuous tumor response, and binary RECIST response: only the $Z_3 \times \text{tx}$ effect on OS reaches significance, while interaction effects for all other factor--endpoint combinations are statistically null.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{figures/figS_okane_forest_interactions.pdf}
-\caption{Forest plot of $Z_i \times \text{tx}$ interaction effects across overall survival (HR scale; reference $1$), continuous tumor response (linear coefficient scale; reference $0$), and binary RECIST response (OR scale; reference $1$). Each point is the GA-arm modifier of the corresponding factor's effect, with $95\%$ confidence intervals from the same model used to derive Tables~\ref{tab:okane-interaction} and~\ref{tab:okane-response}. The $Z_3 \times \text{tx}$ effect on OS is the only point whose $95\%$ CI excludes the null.\label{fig:figS-okane-forest-interactions}}
-\end{figure}
-
-The same interaction is significant in a joint multivariate model containing all three factors and all three factor-by-treatment terms (joint LRT $\chi^2 = 15.55$ on $3$ df, $P = 0.001$; multivariate $Z_3 \times \text{tx}_{\text{GA}}$ HR $= 2.19$, $95\%$ CI $1.46$--$3.29$, $P < 0.001$). Bonferroni correction across the three factor-level interaction tests yields adjusted $P = 0.030$ for the $Z_3$ effect, still significant at conventional thresholds.
-
-\subsection{Treatment-by-factor interactions on tumor response endpoints}
-\label{si:okane-response}
-
-We applied the same per-factor analytic convention (raw factor scores $Z_i$, no Stage adjustment, no collapse onto the trained Cox linear predictor) to two additional endpoints recorded in OKane: continuous best tumor response (percent change in lesion size; negative values indicate shrinkage) and dichotomized RECIST response (CR/PR versus SD/PD). For each factor we fit two models: a main-effects model $Y \sim Z_i + \text{tx}_{\text{arm}}$ and an interaction model $Y \sim Z_i \cdot \text{tx}_{\text{arm}}$. The samples with both expression and first-line response data comprised $n = 154$ patients (FFX $n = 91$, GA $n = 63$; 45 responders by RECIST).
-
-\begin{table}[H]
-\centering
-\caption{Per-factor effects on tumor response endpoints in OKane. Main-effect coefficient is the factor's contribution at the reference (FFX); interaction term is the modification in the GA arm. The Z3 prognostic-modifier signal observed for overall survival (Table~\ref{tab:okane-interaction}) is \emph{not} mirrored in response endpoints; Z1 and Z2 carry independent main effects on tumor response but neither shows a treatment-modified effect. \label{tab:okane-response}}
-\begin{tabular}{lcccc}
-\toprule
-Endpoint & Factor & Main effect (FFX arm) & Interaction (GA modifier) & LRT $P$ (interaction) \\
-\midrule
-Continuous pct change & $Z_1$ & $\beta = -7.99$, $P = 0.011$ & $+0.53$  & $0.92$ \\
-                      & $Z_2$ & $\beta = +10.14$, $P = 0.005$ & $-7.80$  & $0.12$ \\
-                      & $Z_3$ & $\beta = -2.55$, $P = 0.50$   & $+2.77$  & $0.61$ \\
-\midrule
-Binary RECIST response & $Z_1$ & $\text{OR} = 1.15$, $P = 0.56$  & $\times 1.19$ & $0.64$ \\
-                       & $Z_2$ & $\text{OR} = 0.53$, $P = 0.023$ & $\times 1.70$ & $0.15$ \\
-                       & $Z_3$ & $\text{OR} = 1.08$, $P = 0.78$  & $\times 0.81$ & $0.58$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Two findings emerge. First, the $Z_3 \times \text{tx}$ interaction observed for overall survival (Table~\ref{tab:okane-interaction}, LRT $P = 0.010$) is \emph{not} reproduced in tumor response endpoints (continuous and binary, both LRT $P > 0.5$). The treatment-modification signal therefore appears specific to the time-to-event endpoint rather than to early radiographic response, consistent with the chemoresistance-program interpretation in which therapeutic durability rather than initial cytotoxicity differs by regimen. Second, both $Z_1$ and $Z_2$ carry significant main effects on tumor response without treatment modification: higher $Z_1$ (D1, Classical/restCAF) predicts greater tumor shrinkage ($\beta = -7.99$, $P = 0.011$), and higher $Z_2$ (D2, proCAF stroma) predicts both greater tumor growth ($\beta = +10.14$, $P = 0.005$) and reduced odds of RECIST response ($\text{OR} = 0.53$, $P = 0.023$). The directionality is consistent with the main-paper interpretation of D2 as an aggressive proCAF stromal program and D1 as a protective Classical-tumor + restCAF program. Figure~\ref{fig:figS-okane-scatter-pctchange} visualizes these associations: $Z_1$ slopes are uniformly negative and $Z_2$ slopes are uniformly positive across both arms, with no clear divergence in slope by arm in any of the three panels.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{figures/figS_okane_scatter_pctchange.pdf}
-\caption{Best tumor response (percent change in lesion size; negative values indicate shrinkage) versus each DeSurv factor score in OKane, with per-arm linear fits. $Z_1$ shows a significant negative slope and $Z_2$ a significant positive slope; both slopes are approximately parallel between the FFX (blue) and GA (red) arms, consistent with main-effect prognostic associations on response without treatment-modifying interactions. $Z_3$ shows no significant slope in either arm.\label{fig:figS-okane-scatter-pctchange}}
-\end{figure}
-
-\subsection{Per-factor median-split overall survival with treatment interaction}
-\label{si:okane-median-split}
-
-For interpretability we repeated the OS analysis with each factor dichotomized at its OKane median (rather than treated as a continuous z-standardized score) and fit $\text{Surv}(\text{OS}) \sim \mathbb{1}(Z_i \geq \text{median}_i) \cdot \text{tx}_{\text{arm}}$ separately for each factor. This is the median split applied to the factor score itself rather than to the trained-coefficient linear predictor.
-
-\begin{table}[H]
-\centering
-\caption{Per-factor median-split Cox interaction models for overall survival in OKane (no Stage adjustment). High-factor group is defined as $Z_i \geq \text{median}_i$ within OKane. Z1 confirms a robust marginal protective effect at the dichotomized cutoff. The Z3 treatment-modification signal is in the same direction as the continuous analysis (Table~\ref{tab:okane-interaction}) but does not reach significance after dichotomization, consistent with information loss from the binarization. \label{tab:okane-median-split}}
-\begin{tabular}{lcccc}
-\toprule
-Factor & HR (high vs low, FFX) & HR (tx\textsubscript{GA}) & Interaction HR (GA $\times$ high) & LRT $P$ (interaction) \\
-\midrule
-$Z_1$ (D1) & $0.60$ ($0.37$--$0.98$) & $1.16$ ($0.71$--$1.89$) & $1.38$ ($0.67$--$2.81$) & $0.38$ \\
-$Z_2$ (D2) & $1.07$ ($0.65$--$1.76$) & $1.10$ ($0.65$--$1.87$) & $1.83$ ($0.88$--$3.78$) & $0.11$ \\
-$Z_3$ (D3) & $0.92$ ($0.57$--$1.50$) & $1.08$ ($0.65$--$1.79$) & $1.78$ ($0.87$--$3.67$) & $0.12$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The continuous and median-split analyses are concordant in direction. $Z_1$ (D1) is robustly protective at both the continuous (HR per SD $0.69$ in FFX, Table~\ref{tab:okane-interaction}) and dichotomized (HR $0.60$ in high-Z1 group, Table~\ref{tab:okane-median-split}) scales, with no treatment modification at either resolution. The $Z_3$ treatment-modification interaction is significant on the continuous scale (LRT $P = 0.010$) but not after dichotomization at the median (LRT $P = 0.12$), consistent with the loss of information that median-splitting imposes on continuous biomarker scales. We present the continuous-scale result (Table~\ref{tab:okane-interaction}) as the primary analysis and the median-split as a sensitivity analysis at a defensibly chosen threshold.
-
-\subsection{Factor 3 gene composition is consistent with chemoresistance and gemcitabine inactivation}
-
-Factor 3 ($D3$) is identified in the main paper as a basal-like tumor program (Table \ref{tab:gene-list-270-D3}). Among the genes with highest factor-3 specificity score $s_{ij}$, several have direct mechanistic ties to chemotherapy metabolism and to the basal-like / squamous phenotype known to associate with chemoresistance in PDAC: \textit{CDA} (cytidine deaminase, which inactivates gemcitabine to its inactive metabolite dFdU), \textit{GSTP1} (glutathione S-transferase $\pi$, which detoxifies platinum and alkylating agents), \textit{UGT1A6} (UDP-glucuronosyltransferase), \textit{ALDH3A1} (aldehyde dehydrogenase, a canonical chemoresistance marker), heat-shock chaperones \textit{HSPB1}, \textit{HSPA1A}, and \textit{DNAJB1}, and basal-squamous cytokeratins \textit{KRT13}, \textit{KRT14}, \textit{KRT17}, and \textit{KRT19}.
-
-Figure~\ref{fig:figS-okane-factor3-genes} displays the top 30 factor-3-specific genes grouped by functional category. Drug-metabolism and basal-squamous lineage genes dominate the high-specificity tail of the distribution, with heat-shock chaperones and immune-evasion genes contributing additional members.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\textwidth]{figures/figS_okane_factor3_genes.pdf}
-\caption{Top 30 genes most specific to DeSurv factor 3 (D3, Basal-like tumor), ranked by factor specificity score $s_{ij} = W_{ij} / \sum_l W_{il}$. Bars are color-coded by functional category. Drug-metabolism and chemoresistance-associated genes (red) including \textit{CDA}, \textit{GSTP1}, \textit{UGT1A6}, and \textit{ALDH3A1} are interspersed throughout the high-specificity tail, alongside basal-squamous lineage markers (purple, including \textit{KRT13}, \textit{KRT14}) and heat-shock chaperones (orange). The composition is consistent with a coordinated chemoresistant basal-like tumor phenotype.\label{fig:figS-okane-factor3-genes}}
-\end{figure}
-
-The direction of the $Z_3 \times \text{tx}$ interaction is biologically consistent with this gene composition. Gemcitabine, the cytotoxic backbone of the GA regimen, is directly inactivated by cytidine deaminase prior to intracellular phosphorylation; tumors with high expression of CDA and related drug-inactivating enzymes are expected to derive less benefit from gemcitabine specifically. The cytotoxics in FFX (5-fluorouracil, oxaliplatin, irinotecan) are metabolized by distinct pathways (DPYD/TYMS, glutathione conjugation, and UGT1A1, respectively) that overlap less with the factor-3 gene set. A high-$Z_3$ tumor is therefore predicted to derive less benefit from GA than from FFX, which is the direction the interaction in Table~\ref{tab:okane-interaction} recovers.
-
-\subsection{Caveats and framing}
-
-This analysis is hypothesis-generating, not confirmatory. Specifically: (i) the analysis is in a single cohort of moderate size ($n = 173$, $123$ events); (ii) no analysis plan was preregistered, and the per-factor breakdown was selected after the trained-coefficient-weighted linear predictor failed to show a treatment interaction; (iii) the candidate mechanism (CDA-mediated gemcitabine inactivation) is correlative within the gene-program structure rather than functionally validated in this cohort; (iv) we have not adjusted for additional clinical covariates beyond stage and treatment arm; (v) microdissected metastatic samples are a different sample context than the bulk treatment-naive primary cohorts on which DeSurv was trained, and pathway-level reactivity in advanced disease may differ from primary tumor biology. Prospective replication in an independent treatment-stratified cohort, and functional confirmation of the candidate CDA-mediated mechanism (for example, in PDAC cell lines or patient-derived organoids with CDA modulation), would be required before recommending the $D_3$ axis as a treatment-selection biomarker. The primary purpose of this Supplementary Section is to record an observation that the field can attempt to replicate.

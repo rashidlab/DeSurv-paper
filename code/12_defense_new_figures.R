@@ -31,10 +31,14 @@ PAL <- list(
   X      = "#3b3b3b",  # expression matrix X (greyscale)
   cox    = "#c0392b",  # survival / Cox gradient (red) — used on Slides 6,8,10
   recon  = "#2c3e50",  # reconstruction gradient (slate)
-  surv_lo = "#2166ac", # long survival (blue)
-  surv_hi = "#b2182b", # short survival (red)
-  cell = c(Malignant = "#e41a1c", CAF = "#377eb8",
-           Immune = "#4daf4a", Exocrine = "#984ea3")
+  surv_lo = "#2166ac", # long survival / good prognosis (blue)
+  surv_hi = "#b2182b", # short survival / poor prognosis (red)
+  surv_neutral = "#bdbdbd", # outcome-neutral (grey, hollow)
+  # program identity — RESERVE red/blue for survival; avoid orange; subtypes by label, not color
+  cell = c(Malignant = "#7B3FA0",  # tumor (purple)
+           CAF       = "#7F5539",  # stroma/CAF (brown)
+           Immune    = "#4DAF4A",  # immune (green)
+           Exocrine  = "#969696")  # exocrine/purity (grey)
 )
 
 # Save helper: vector PDF + matching 300-dpi PNG.
@@ -223,59 +227,95 @@ fig_B <- function() {
 }
 
 # ════════════════════════════════════════════════════════════════════════════
-# Figure C — variance-vs-prognosis misalignment  (Slide 4; callback Slide 12)
+# Figure C — the same genes, factored two ways  (Slide 4; callback Slide 12)
+#   Same heatmap idiom as Fig A (gene rows, same cell-type ORIGIN colors), but
+#   the cell-type columns are MERGED/REGROUPED into each method's 3 factors.
+#   Std NMF merges into composition (Tumor / Microenvironment / Exocrine).
+#   DeSurv SPLITS the tumor rows (Classical genes -> D1, Basal genes -> D3) and
+#   the CAF rows (restCAF -> D1, proCAF -> D2), and has NO exocrine factor
+#   (the exocrine rows stay blank on the right). Each cell keeps its Fig A
+#   origin color; intensity = loading. Survival bar: blue good / red poor /
+#   grey-hollow neutral.
 # ════════════════════════════════════════════════════════════════════════════
 fig_C <- function() {
-  set.seed(42)
-  n <- 170
-  v <- rnorm(n, 0, 3.0)    # highest-variance latent coord (purity/exocrine)
-  u <- rnorm(n, 0, 0.85)   # prognostic latent coord (low variance)
-  risk <- u                 # survival risk driven by the LOW-variance axis
+  genes  <- c("TFF1", "LGALS4", "KRT17", "S100A2", "COL1A1", "POSTN", "PTPRC", "PRSS1")
+  origin <- c("Mal", "Mal", "Mal", "Mal", "CAF", "CAF", "Imm", "Exo")  # cell-type of origin
+  g <- length(genes)
+  ocol <- c(Mal = unname(PAL$cell["Malignant"]), CAF = unname(PAL$cell["CAF"]),
+            Imm = unname(PAL$cell["Immune"]),     Exo = unname(PAL$cell["Exocrine"]))
 
-  # rotate so neither latent axis aligns with the plot axes
-  th <- 27 * pi / 180
-  R <- matrix(c(cos(th), sin(th), -sin(th), cos(th)), 2)
-  XY <- cbind(v, u) %*% t(R)
-  dat <- data.frame(X = XY[, 1], Y = XY[, 2], risk = risk)
+  # per-method gene x 3-factor loadings (0 = blank/white)
+  nmf <- matrix(0, g, 3)
+  nmf[1:4, 1] <- c(.90, .82, .86, .80)         # Tumor  = Classical+Basal genes
+  nmf[5:7, 2] <- c(.85, .82, .83)              # Microenv = CAF + Immune
+  nmf[8,   3] <- .90                            # Exocrine
+  des <- matrix(0, g, 3)
+  des[c(1, 2, 5), 1] <- c(.90, .82, .80)        # D1 Classical + restCAF
+  des[c(6, 7),    2] <- c(.82, .83)             # D2 proCAF + Immune
+  des[c(3, 4),    3] <- c(.88, .83)             # D3 Basal       (exocrine -> none)
 
-  # axis arrows (unit directions scaled), anchored at centroid
-  c0 <- c(mean(dat$X), mean(dat$Y))
-  var_dir  <- as.vector(R %*% c(1, 0))   # high-variance direction
-  prog_dir <- as.vector(R %*% c(0, 1))   # prognostic direction
-  arr <- function(dir, len) data.frame(
-    x = c0[1] - dir[1] * len, y = c0[2] - dir[2] * len,
-    xend = c0[1] + dir[1] * len, yend = c0[2] + dir[2] * len)
-  a_var  <- arr(var_dir, 6.0)
-  a_prog <- arr(prog_dir, 2.1)
+  ramp1 <- function(v, hi) {
+    pal <- grDevices::colorRampPalette(c("#ffffff", hi))(100)
+    pal[max(1, min(100, ceiling(v * 100)))]
+  }
+  cellfill <- function(vals) mapply(function(v, og) ramp1(v, ocol[[og]]), vals, origin)
 
-  ggplot(dat, aes(X, Y)) +
-    geom_point(aes(color = risk), size = 2.6, alpha = 0.9) +
-    scale_color_gradient(low = PAL$surv_lo, high = PAL$surv_hi,
-                         name = "patient risk", breaks = c(min(risk), max(risk)),
-                         labels = c("low\n(long surv.)", "high\n(short surv.)")) +
-    # variance axis (what unsupervised NMF chases)
-    geom_segment(data = a_var, aes(x, y, xend = xend, yend = yend),
-                 arrow = arrow(length = unit(0.3, "cm"), ends = "both", type = "closed"),
-                 linewidth = 1.2, color = "grey25") +
-    annotate("text", x = a_var$xend, y = a_var$yend + 0.5,
-             label = "Highest-variance axis\n(tumor purity / exocrine)",
-             fontface = "bold", size = 4.1, hjust = 0.7, color = "grey20") +
-    # prognostic axis (what we actually care about)
-    geom_segment(data = a_prog, aes(x, y, xend = xend, yend = yend),
-                 arrow = arrow(length = unit(0.3, "cm"), ends = "both", type = "closed"),
-                 linewidth = 1.2, color = PAL$cox) +
-    annotate("text", x = a_prog$xend + 1.4, y = a_prog$yend + 0.2,
-             label = "True prognostic axis", fontface = "bold",
-             size = 4.1, color = PAL$cox) +
-    labs(title = "Variance ≠ prognosis",
-         subtitle = "Unsupervised NMF projects onto the grey axis and misses the survival gradient") +
-    coord_equal() +
-    theme_minimal(base_size = 13) +
-    theme(plot.title = element_text(face = "bold", size = 16),
-          plot.subtitle = element_text(size = 10.5, color = "grey30"),
-          axis.title = element_blank(), axis.text = element_blank(),
-          panel.grid = element_blank(),
-          legend.position = "right", legend.title = element_text(face = "bold"))
+  # layout mirrors Fig A: contiguous evenly-spaced columns, white tile borders,
+  # grey75 frames, header + colored subtitle (prognosis, like A's "%"),
+  # rotated "genes" axis title, presentation fonts, landscape. A thin dashed
+  # divider separates the two factorizations.
+  colw <- 2.2
+  genes_x <- 0.15; name_x <- 2.1
+  xcols <- c(4, 7, 10, 13, 16, 19)
+  nmf_x <- xcols[1:3]; des_x <- xcols[4:6]
+  divx <- (xcols[3] + xcols[4]) / 2
+  ymid <- -(g + 1) / 2
+  tile_df <- function(M, xs) do.call(rbind, lapply(1:3, function(j)
+    data.frame(x = xs[j], y = -(1:g), fill = cellfill(M[, j]))))
+  dat <- rbind(tile_df(nmf, nmf_x), tile_df(des, des_x))
+
+  at <- function(...) annotate("text", ...)
+  frame <- function(cx) annotate("rect", xmin = cx - colw / 2, xmax = cx + colw / 2,
+    ymin = -(g + 0.5), ymax = -0.5, fill = NA, color = "grey75", linewidth = 0.5)
+  Sgd <- PAL$surv_lo; Spr <- PAL$surv_hi; Sne <- PAL$surv_neutral
+  # column header: factor name (bold) + colored prognosis subtitle (like A's %)
+  hdr <- function(cx, name, word, wcol) list(
+    at(x = cx, y = 1.7, label = name, fontface = "bold", size = 5.4, lineheight = 0.85),
+    at(x = cx, y = 0.4, label = word, size = 4.6, color = wcol, fontface = "bold"))
+  cx_all <- (genes_x + max(xcols) + colw / 2) / 2
+
+  ggplot(dat, aes(x, y, fill = fill)) +
+    geom_tile(width = colw, height = 1, color = "white", linewidth = 0.5) +
+    scale_fill_identity() +
+    lapply(xcols, frame) +
+    # thin dashed divider between the two factorizations
+    annotate("segment", x = divx, xend = divx, y = 2.6, yend = -(g + 0.6),
+             color = "grey55", linewidth = 0.6, linetype = "22") +
+    # gene names + rotated "genes" axis title (Fig A style)
+    at(x = name_x, y = -(1:g), label = genes, hjust = 1, size = 4.9, color = "grey15") +
+    at(x = genes_x, y = ymid, label = "genes", angle = 90, size = 5.6,
+       fontface = "italic", color = "grey40") +
+    # method labels over each triplet
+    at(x = mean(nmf_x), y = 3.3, label = "Standard NMF", fontface = "bold", size = 6.0) +
+    at(x = mean(des_x), y = 3.3, label = "DeSurv",       fontface = "bold", size = 6.0) +
+    # column headers + colored prognosis subtitles
+    hdr(nmf_x[1], "Tumor", "neutral", "grey45") +
+    hdr(nmf_x[2], "Micro-\nenviron.", "neutral", "grey45") +
+    hdr(nmf_x[3], "Exocrine", "neutral", "grey45") +
+    hdr(des_x[1], "Classical\n+ restCAF", "good", Sgd) +
+    hdr(des_x[2], "proCAF\n+ Immune", "poor", Spr) +
+    hdr(des_x[3], "Basal", "poor", Spr) +
+    # title + caption (Fig A style)
+    at(x = cx_all, y = 4.6, label = "Same genes, regrouped into each method's 3 factors",
+       fontface = "bold", size = 7) +
+    at(x = cx_all, y = -(g + 1.8),
+       label = paste("DeSurv splits the tumor rows (Classical → D1, Basal → D3) and the CAF rows (restCAF/proCAF);",
+                     "it models no exocrine factor — the exocrine row stays blank on the right.", sep = "\n"),
+       size = 4.7, fontface = "italic", color = "grey30", lineheight = 0.95) +
+    coord_equal(xlim = c(-0.4, max(xcols) + colw / 2 + 0.3),
+                ylim = c(-(g + 2.7), 5.2), clip = "off") +
+    theme_void() +
+    theme(plot.margin = margin(6, 12, 6, 8))
 }
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -466,7 +506,7 @@ fig_F <- function() {
 # ── Render all ──────────────────────────────────────────────────────────────
 save_fig(fig_A(), "new_A_bulk_mixture",        width = 12,  height = 7.6)
 save_fig(fig_B(), "new_B_nmf_decomposition",   width = 12,  height = 6.5)
-save_fig(fig_C(), "new_C_variance_vs_prognosis", width = 8, height = 6)
+save_fig(fig_C(), "new_C_reconstruction_vs_prognosis", width = 12.5, height = 9.5)
 save_fig(fig_D(), "new_D_supervise_W_not_H",   width = 8.5, height = 6.5)
 save_fig(fig_E(), "new_E_sim_ground_truth",    width = 7.5, height = 6)
 save_fig(fig_F(), "new_F_cohort_flow",         width = 9,   height = 6)

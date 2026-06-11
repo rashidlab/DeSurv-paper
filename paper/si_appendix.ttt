@@ -32,6 +32,43 @@ Puleo            & Microarray & 288 & Validation & E-MTAB-6134      & OS, PurIST
  
 \begin{table}[H]
 \centering
+\caption{\label{tab:tab-projection-r2}Cross-method projection $R^2$: how reconstructable each factor's gene-loading vector is from the other method's full basis (OLS $R^2$). DeSurv retains the bulk of the unsupervised structure (NMF N1 and N3 carry over at $R^2 \ge 0.88$) and reorganizes it: the survival-aligned D1 program is essentially unreconstructable from the NMF basis ($R^2 = 0.09$), i.e. created de novo by supervision, while the exocrine NMF factor N2 dissolves ($R^2 = 0.38$). \label{tab:projection-r2}}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{lll}
+\toprule
+Factor & $R^2$ from other basis & Interpretation\\
+\midrule
+NMF N1 (tumor) & 0.90 & preserved\\
+NMF N2 (exocrine) & 0.38 & dissolved\\
+NMF N3 (microenviron.) & 0.88 & preserved\\
+DeSurv D1 (Classical/restCAF) & 0.09 & novel ($\approx$91\% de novo)\\
+DeSurv D2 (proCAF) & 0.81 & inherited ($\approx$N3)\\
+\addlinespace
+DeSurv D3 (Basal-like) & 0.75 & inherited ($\approx$N1)\\
+\bottomrule
+\end{tabular}
+\end{table}
+\efloatseparator
+ 
+\begin{table}[H]
+\centering
+\caption{\label{tab:tab-overall-r2}Whole-matrix reconstruction $R^2$ for unsupervised NMF versus DeSurv at $k = 3$. DeSurv sacrifices only $\approx 1.5$ percentage points of reconstruction $R^2$ to gain its prognostic structure. \label{tab:overall-r2}}
+\centering
+\fontsize{9}{11}\selectfont
+\begin{tabular}[t]{lll}
+\toprule
+Model & Reconstruction $R^2$ & Residual fraction\\
+\midrule
+NMF ($k = 3$) & 0.953 & 0.047\\
+DeSurv ($k = 3$) & 0.938 & 0.062\\
+\bottomrule
+\end{tabular}
+\end{table}
+\efloatseparator
+ 
+\begin{table}[H]
+\centering
 \caption{\label{tab:tab-cindex-comparison}External validation C-index by method and cohort. DeSurv at BO-selected rank ($k = 3$) is compared with standard NMF at matched rank ($k = 3$), elbow-selected rank ($k = 5$), and BO-selected rank ($k = 7$, $\alpha = 0$). Higher values indicate better discrimination. \label{tab:tab-cindex-comparison}}
 \centering
 \fontsize{9}{11}\selectfont

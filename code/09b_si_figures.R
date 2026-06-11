@@ -31,6 +31,7 @@ library(glmnet)
 source("R/cv_grid_helpers.R")
 source("R/preprocess_helpers.R")
 source("R/variance_helpers.R")
+source("R/reconstruction_helpers.R")
 
 # ── Identifier used in output filenames ──────────────────────────────────
 # Mirrors the bo_label convention from the original DeSurv-paper repo. The
@@ -278,11 +279,11 @@ ggsave(
 )
 message(sprintf("Saved si_fig_nmf_k7_heatmap_%s.pdf", bo_label))
 
-# ── SI S10: Variance vs survival at k=5 (centered metric, issue #6) ──────────
+# ── SI S10: Reconstruction vs survival at k=5 (Shapley share, issue #7) ──────
 fit_std_elbowk  <- load_precomputed("fit_std_elbowk_tcgacptac")
 tar_data_elbowk <- load_precomputed("tar_data_filtered_elbowk_tcgacptac")
 
-df_varsurvk5 <- build_var_surv_df(
+df_varsurvk5 <- build_recon_surv_df(
   W = fit_std_elbowk$W, H = fit_std_elbowk$H, X = tar_data_elbowk$ex,
   time = tar_data_elbowk$sampInfo$time,
   event = tar_data_elbowk$sampInfo$event, method = "NMF")
@@ -297,7 +298,7 @@ ggsave(
                               point.padding = 0.3, segment.size = 0.3) +
     ggplot2::scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
     ggplot2::labs(
-      x = "Cross-sample variance explained\n(gene-centered)",
+      x = "Contribution to reconstruction\n(Shapley share, %)",
       y = expression(atop(Delta ~ "partial log-likelihood", "(full vs. k-1 factor model)"))
     ) +
     ggplot2::theme_classic(base_size = 10),

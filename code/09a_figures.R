@@ -32,6 +32,8 @@ source("R/cv_grid_helpers.R")
 source("R/get_top_genes.R")
 source("R/fit_cox_model.R")
 source("R/variance_helpers.R")
+source("R/reconstruction_helpers.R")
+source("R/figure_plot_helpers.R")
 
 # ── Load prerequisites ────────────────────────────────────────────────────
 tar_fit_desurv        <- load_precomputed("tar_fit_desurv_tcgacptac")
@@ -104,15 +106,15 @@ fig_bo_heat_maxed <- ggplot(curve, aes(x = k, y = alpha, fill = mean)) +
   )
 
 
-# ── Variance explained vs survival contribution scatter (issue #6) ────────
-# build_var_surv_df is defined in R/variance_helpers.R. Uses gene-centered
-# cross-sample variance fraction (correcting the uncentered metric that
-# deflated exocrine variation; see helper comments and SI Section 11).
-df_nmf <- build_var_surv_df(
+# ── Reconstruction contribution vs survival contribution scatter (issue #7) ──
+# x-axis: per-factor reconstruction Shapley share (sums to 100% by the
+# efficiency axiom; supersedes the non-partitioning centered-variance metric).
+# build_recon_surv_df is defined in R/reconstruction_helpers.R.
+df_nmf <- build_recon_surv_df(
   W = fit_std_desurvk$W, H = fit_std_desurvk$H, X = tar_data_filtered$ex,
   time = tar_data_filtered$sampInfo$time,
   event = tar_data_filtered$sampInfo$event, method = "NMF")
-df_desurv <- build_var_surv_df(
+df_desurv <- build_recon_surv_df(
   W = tar_fit_desurv$W, H = tar_fit_desurv$H, X = tar_data_filtered$ex,
   time = tar_data_filtered$sampInfo$time,
   event = tar_data_filtered$sampInfo$event, method = "DeSurv")
@@ -131,7 +133,7 @@ fig_variation_explained <- ggplot(df_plot,
     scale_color_manual(values = c("NMF" = "red", "DeSurv" = "blue")) +
     scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
     labs(
-      x = "Cross-sample variance explained\n(gene-centered)",
+      x = "Contribution to reconstruction\n(Shapley share, %)",
       y = expression(atop(Delta ~ "partial log-likelihood",
                           "(full vs. k-1 factor model)")),
       color = "Method"
@@ -161,7 +163,7 @@ heatmap_factor_labels <- if (desurv_k == 3) {
   paste0("D", seq_len(desurv_k))
 }
 heatmap_factor_labels_std <- if (std_k == 3) {
-  c("N1 Classical", "N2 Exocrine", "N3 Microenviron.")
+  c("N1 Tumor", "N2 Exocrine", "N3 Microenviron.")
 } else {
   paste0("N", seq_len(std_k))
 }
@@ -365,7 +367,7 @@ legend_d_plot <- ggplot(
 legend_d_grob <- cowplot::get_legend(legend_d_plot)
 
 plot_3d <- plot_grid(
-  fig_desurv_std_correlation_top50$plot + theme(plot.margin = margin(2, 2, 2, 20)),
+  fig_desurv_std_correlation$plot + theme(plot.margin = margin(2, 2, 2, 20)),
   plot_grid(NULL, cowplot::ggdraw(legend_d_grob), nrow = 2, rel_heights = c(0.08, 0.92)),
   ncol = 2, rel_widths = c(4, 1)
 )

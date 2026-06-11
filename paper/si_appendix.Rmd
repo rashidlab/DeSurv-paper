@@ -927,35 +927,28 @@ periductal subtypes, and MSI subtypes were excluded from visualization due to
 redundancy with other included programs or low overall correlation across all
 factors.
 
-\section{Variance and Survival Contribution per Factor}
+\section{Reconstruction and Survival Contribution per Factor}
 
-For each factor $j \in \{1, \ldots, k\}$, we quantified two quantities to assess
-the alignment between expression variance and prognostic relevance. The
-cross-sample variance fraction of factor $j$ was quantified as
-$$V_j = \frac{\| (W_j H_j^\top)^{(c)} \|_F^2}{\| X^{(c)} \|_F^2},$$
-where $W_j H_j^\top \in \mathbb{R}^{p \times n}$ is the rank-one outer product
-contribution of factor $j$ to the reconstruction $WH$, the superscript $(c)$
-denotes gene-by-gene centering across samples (subtracting each row's mean), and
-$X^{(c)}$ is the centered expression matrix. This measures the cross-sample
-variance encoded by factor $j$'s rank-one contribution, relative to the total
-cross-sample variance in the data.
-
-Gene centering is required to recover a metric that reflects cross-sample
-variation. The uncentered analogue $\|W_j H_j^\top\|_F^2 / \|X\|_F^2$ is
-dominated by the grand-mean baseline of the rank-normalized $X$ (sample ranks
-$1, \ldots, p$ have no zeros, so $X$ has a large constant component) and
-under-represents factors that encode genuine differences across samples.
-
-For non-orthogonal factorizations such as NMF, the $V_j$ defined this way does
-not partition to $\sum_j V_j = 1$ because the Frobenius cross-terms
-$\langle (W_i H_i^\top)^{(c)}, (W_j H_j^\top)^{(c)} \rangle_F$ between
-rank-one contributions are generally non-zero. In PDAC at $k = 3$, the centered
-NMF per-factor fractions sum to approximately $1.97$, reflecting shared and
-complementary structure between the three NMF factors. PCA partitions cleanly
-because its components are orthogonal by construction. We report $V_j$ as the
-isolated reconstruction contribution of each factor, recognizing that for
-non-orthogonal factorizations such per-factor shares do not constitute a
-partition of total variance.
+NMF does not provide an orthogonal variance decomposition; it seeks a low-rank
+reconstruction of the expression matrix $X \approx WH$. We therefore measure
+each factor's contribution to reconstruction rather than to ``variance
+explained.'' For a subset of factors $S \subseteq \{1, \ldots, k\}$, define the
+reconstruction value
+$$v(S) = \|X\|_F^2 - \Big\| X - \sum_{j \in S} W_j H_j^\top \Big\|_F^2,$$
+the reduction in residual error relative to the null (zero-factor) model, where
+$W_j H_j^\top$ is the rank-one outer-product contribution of factor $j$. The
+reconstruction Shapley value of factor $j$,
+$$\phi_j = \sum_{S \subseteq \{1,\ldots,k\} \setminus \{j\}}
+\frac{|S|!\,(k - |S| - 1)!}{k!}\,\big(v(S \cup \{j\}) - v(S)\big),$$
+is its average marginal reconstruction gain over all orderings of the factors.
+By the Shapley efficiency axiom, $\sum_j \phi_j = v(\{1,\ldots,k\})$, the total
+reconstruction gain of the full model, so the normalized shares
+$\phi_j / \sum_l \phi_l$ partition the model's reconstruction and sum to exactly
+$1$. This is a genuine additive decomposition, in contrast to per-factor
+variance fractions, which for non-orthogonal factorizations such as NMF do not
+partition (cross-terms between rank-one contributions are non-zero). The Shapley
+shares are computed exactly by enumerating the $2^k$ subsets (trivial at
+$k = 3$ or $k = 5$).
 
 The survival contribution of factor $j$ was quantified as the Type III partial
 likelihood increment: the reduction in Cox partial log-likelihood when factor $j$
@@ -966,7 +959,11 @@ where $\ell(\cdot)$ denotes the Cox partial log-likelihood evaluated at the
 maximum partial likelihood estimates. Larger $\Delta\ell_j$ indicates a greater
 marginal contribution of factor $j$ to survival prediction given all other
 factors. These two quantities are plotted against each other in
-main text, Fig.\ 2C.
+main text, Fig.\ 2C. In PDAC at $k = 3$, the reconstruction shares are
+$41.8\%/18.6\%/39.7\%$ for NMF (N1/N2/N3) and $18.8\%/25.2\%/56.0\%$ for DeSurv
+(D1/D2/D3), while the survival contribution $\Delta\ell$ concentrates in DeSurv
+D1 ($\Delta\ell = 66.4$) with all NMF factors negligible --- the factors that
+contribute most to reconstruction are not the most prognostic.
 
 \section{Factor Correspondence Analysis}
 
@@ -975,13 +972,72 @@ under survival supervision, we quantified the pairwise correspondence between
 NMF and DeSurv factor loadings. For each pair of factors
 $(j_{\text{NMF}},\, j_{\text{DeSurv}})$, we computed the Spearman rank
 correlation between the corresponding columns of the NMF gene program matrix
-$W_{\text{NMF}}$ and the DeSurv gene program matrix $W_{\text{DeSurv}}$,
-restricted to the top 50 genes per factor (by factor-specificity score $s_{ij}$;
-SI Appendix, Section~\ref{sec:gene-program-correlation}) present in both models.
+$W_{\text{NMF}}$ and the DeSurv gene program matrix $W_{\text{DeSurv}}$ over all
+genes. We use the full loading profile rather than a top-gene subset, which
+would impose an arbitrary threshold and overstate apparent preservation.
 Spearman correlation was used to capture monotone correspondence in gene loading
 ranks while remaining robust to scale differences between the two methods.
 Results are displayed as a heatmap with NMF factors as rows and DeSurv factors
 as columns (main text, Fig.\ 2D).
+
+\subsection{Cross-method projection \texorpdfstring{$R^2$}{R2}: novelty versus inheritance}
+
+The correlation heatmap summarizes pairwise similarity; to make a direction-aware
+statement of how much of each factor is reconstructable from the \emph{other}
+method's basis, we regressed each factor's gene-loading vector onto the full set
+of the other method's loading vectors and report the ordinary least-squares
+$R^2$ (Table~\ref{tab:projection-r2}). A high $R^2$ means the factor is inherited
+(reconstructable from the other basis); a low $R^2$ means it is novel.
+
+```{r tab-projection-r2, echo=FALSE, results='asis'}
+source("R/reconstruction_helpers.R")
+.fit_d  <- read_result("tar_fit_desurv_tcgacptac")
+.fit_n  <- read_result("fit_std_desurvk_tcgacptac")
+.r2_N <- projection_r2(.fit_n$W, .fit_d$W)   # NMF factor -> DeSurv basis
+.r2_D <- projection_r2(.fit_d$W, .fit_n$W)   # DeSurv factor -> NMF basis
+.pr <- data.frame(
+  Factor = c("NMF N1 (tumor)", "NMF N2 (exocrine)", "NMF N3 (microenviron.)",
+             "DeSurv D1 (Classical/restCAF)", "DeSurv D2 (proCAF)", "DeSurv D3 (Basal-like)"),
+  R2 = sprintf("%.2f", c(.r2_N, .r2_D)),
+  Interpretation = c("preserved", "dissolved", "preserved",
+                     "novel ($\\approx$91\\% de novo)", "inherited ($\\approx$N3)", "inherited ($\\approx$N1)"),
+  stringsAsFactors = FALSE)
+colnames(.pr) <- c("Factor", "$R^2$ from other basis", "Interpretation")
+knitr::kable(.pr, format = "latex", escape = FALSE, booktabs = TRUE,
+  caption = "Cross-method projection $R^2$: how reconstructable each factor's gene-loading vector is from the other method's full basis (OLS $R^2$). DeSurv retains the bulk of the unsupervised structure (NMF N1 and N3 carry over at $R^2 \\ge 0.88$) and reorganizes it: the survival-aligned D1 program is essentially unreconstructable from the NMF basis ($R^2 = 0.09$), i.e. created de novo by supervision, while the exocrine NMF factor N2 dissolves ($R^2 = 0.38$). \\label{tab:projection-r2}") |>
+  kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 9)
+```
+
+The headline is DeSurv D1: $R^2 = 0.09$ from the NMF basis, i.e. essentially
+unreconstructable from any combination of NMF factors. The prognostic program
+DeSurv creates is therefore novel, not a reweighting of an existing unsupervised
+factor. Conversely, the biologically dominant tumor (N1) and stromal (N3)
+programs carry over intact ($R^2 = 0.90$ and $0.88$), so supervision conserves
+nearly all of the unsupervised structure and spends its remaining capacity
+resolving tumor into Basal- and Classical-aligned programs and shedding the
+prognostically uninformative exocrine factor.
+
+\subsection{Overall reconstruction \texorpdfstring{$R^2$}{R2}: the price of supervision}
+
+```{r tab-overall-r2, echo=FALSE, results='asis'}
+.X <- as.matrix(read_result("tar_data_filtered_tcgacptac")$ex)
+.or <- data.frame(
+  Model = c("NMF ($k = 3$)", "DeSurv ($k = 3$)"),
+  R2 = sprintf("%.3f", c(overall_recon_r2(.fit_n$W, .fit_n$H, .X),
+                         overall_recon_r2(.fit_d$W, .fit_d$H, .X))),
+  Resid = sprintf("%.3f", c(1 - overall_recon_r2(.fit_n$W, .fit_n$H, .X),
+                            1 - overall_recon_r2(.fit_d$W, .fit_d$H, .X))),
+  stringsAsFactors = FALSE)
+colnames(.or) <- c("Model", "Reconstruction $R^2$", "Residual fraction")
+knitr::kable(.or, format = "latex", escape = FALSE, booktabs = TRUE,
+  caption = "Whole-matrix reconstruction $R^2$ for unsupervised NMF versus DeSurv at $k = 3$. DeSurv sacrifices only $\\approx 1.5$ percentage points of reconstruction $R^2$ to gain its prognostic structure. \\label{tab:overall-r2}") |>
+  kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 9)
+```
+
+DeSurv gives up only about $1.5$ percentage points of reconstruction $R^2$
+relative to unsupervised NMF (Table~\ref{tab:overall-r2}) --- very little
+reconstruction fidelity is sacrificed in exchange for the prognostic
+reorganization documented above.
 
 \clearpage
 
@@ -1209,9 +1265,9 @@ kable(tbl, format = "latex", booktabs = TRUE, linesep = "", escape = FALSE,
   kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
-The variance--survival decomposition at $k = 5$ (Fig. \ref{fig:varsurvival-k5}) confirms that elbow selection does not recover additional prognostic structure. At $k = 5$, standard NMF continues to distribute survival contribution negligibly across all factors; the two factors new relative to $k = 3$ (N4 and N5) contribute minimally, confirming that the additional rank captures background transcriptional variance rather than independent prognostic programs.
+The reconstruction--survival decomposition at $k = 5$ (Fig. \ref{fig:varsurvival-k5}) confirms that elbow selection does not recover additional prognostic structure. At $k = 5$, standard NMF continues to distribute survival contribution negligibly across all factors; the two factors new relative to $k = 3$ (N4 and N5) contribute minimally, confirming that the additional rank captures background transcriptional variance rather than independent prognostic programs.
 
-```{r fig-varsurvival-k5, fig.width = 4.5, fig.height = 3.5, fig.cap = "Fraction of expression variance explained versus Type III partial likelihood contribution for each standard NMF factor at elbow-selected $k = 5$. Each point represents one factor, labeled N1--N5. Survival contribution is quantified as the reduction in Cox partial log-likelihood when each factor is removed from the full model. The two factors new relative to $k = 3$ (N4, N5) contribute negligibly to survival, confirming that elbow selection recovers no additional prognostic structure. \\label{fig:varsurvival-k5}", fig.env='figure', fig.pos='t'}
+```{r fig-varsurvival-k5, fig.width = 4.5, fig.height = 3.5, fig.cap = "Per-factor contribution to reconstruction (normalized reconstruction Shapley share) versus Type III partial likelihood contribution for each standard NMF factor at elbow-selected $k = 5$. Each point represents one factor, labeled N1--N5. Survival contribution is quantified as the reduction in Cox partial log-likelihood when each factor is removed from the full model. The two factors new relative to $k = 3$ (N4, N5) contribute negligibly to survival, confirming that elbow selection recovers no additional prognostic structure. \\label{fig:varsurvival-k5}", fig.env='figure', fig.pos='t'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_varsurvival_k5_tcgacptac.pdf", density = 300))
 ```
@@ -1269,7 +1325,7 @@ for (i in seq_along(factor_labels)) {
 \section{Translational analysis in treated metastatic PDAC (OKane/COMPASS)}
 \label{si:okane}
 
-The primary analysis evaluated DeSurv in treatment-naive resected primary PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the same trained programs project sensibly into a clinically distinct cohort (microdissected metastatic specimens from patients receiving first-line chemotherapy), and specifically whether the $D_1$ protective effect on overall survival documented in the treatment-naive validation cohorts (main text Table~\ref{tab:hr-adjusted}, pooled adjusted HR $1.33$ per SD after PurIST + DeCAF adjustment, $P < 0.001$) extends to treated metastatic disease independently of the PurIST molecular classifier.
+The primary analysis evaluated DeSurv in treatment-naive resected primary PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the same trained programs project sensibly into a clinically distinct cohort (microdissected metastatic specimens from patients receiving first-line chemotherapy), and specifically whether the $D_1$ protective effect on overall survival documented in the treatment-naive validation cohorts (main text Table~\ref{tab:hr-adjusted}, pooled adjusted HR $1.33$ per SD after PurIST + DeCAF adjustment, $P < 0.001$) persists in treated metastatic disease independently of the PurIST molecular classifier. We emphasize at the outset an important interpretive constraint: OKane biospecimens are laser-microdissected tumor, so the stromal compartment is physically depleted. The restCAF stromal genes that co-load on the $D_1$ program therefore have minimal expressional support in OKane, and the surviving $D_1$ signal reflects its Classical-epithelial (tumor-intrinsic) component rather than the coupled tumor--stroma axis that $D_1$ encodes in bulk tissue. The OKane finding below is consequently an \emph{epithelial-intrinsic} observation; it does not test, and should not be read as validating, the tumor--stroma coupling that is the manuscript's biological contribution. That coupling is established in the bulk treatment-naive validation cohorts (main text), where the stromal compartment is intact.
 
 \subsection{Cohort and projection}
 
@@ -1296,7 +1352,7 @@ $Z_3$ (D3, Basal-like tumor)     & $0.98$ & $0.82$--$1.18$ & $0.87$ \\
 \end{tabular}
 \end{table}
 
-The factor-1 (D1) protective effect in OKane (HR $0.73$ per SD, $P < 0.001$) closely matches the D1 effect in the treatment-naive pooled validation (pooled HR $0.76$; main text Fig.\ \ref{fig:val}A), indicating that the trained gene-program structure projects sensibly into a clinically distinct sample context (microdissected metastatic versus bulk primary, treated versus treatment-naive). Factors $Z_2$ and $Z_3$ each carry weak or null marginal signal in OKane, paralleling their weaker individual contributions in the treatment-naive validation forest plot. The marginal continuity of D1's effect (Figure~\ref{fig:figS-okane-marginal-continuity}) provides face validity for the projection.
+The factor-1 (D1) protective effect in OKane (HR $0.73$ per SD, $P < 0.001$) closely matches the D1 effect in the treatment-naive pooled validation (pooled HR $0.76$; main text Fig.\ \ref{fig:val}A), indicating that the epithelial component of the trained gene-program structure projects sensibly into a clinically distinct sample context (microdissected metastatic versus bulk primary, treated versus treatment-naive). The within-OKane pattern across factors is itself diagnostic of the stromal depletion: the epithelial-containing $D_1$ factor survives (HR $0.73$, $P < 0.001$), whereas the \emph{purely stromal} proCAF factor $D_2$ is null (HR $1.14$, $P = 0.16$) --- the same cohort and the same trained model, yet only the stromal factor collapses. This is the expected signature of microdissection: the proCAF genes that define $D_2$ have minimal expressional support once stroma is removed, while the Classical-tumor genes that anchor $D_1$ remain. Factor $D_3$ (Basal-like tumor) is also weak marginally. The marginal continuity of $D_1$'s effect (Figure~\ref{fig:figS-okane-marginal-continuity}) therefore provides face validity for the projection of the epithelial program specifically, not for the stromal axis.
 
 \begin{figure}[H]
 \centering
@@ -1304,12 +1360,12 @@ The factor-1 (D1) protective effect in OKane (HR $0.73$ per SD, $P < 0.001$) clo
 \caption{Marginal $Z_1$ (D1, Classical/restCAF) hazard ratio per SD across the five treatment-naive PDAC validation cohorts (top, blue) and OKane treated metastatic cohort (bottom, red). OKane's marginal $Z_1$ effect sits within the range of the treatment-naive cohorts and matches the pooled validation estimate, confirming that the projection of the trained gene-program matrix transfers into the treated-metastatic sample context.\label{fig:figS-okane-marginal-continuity}}
 \end{figure}
 
-\subsection{D1's protective effect on overall survival is independent of PurIST in OKane}
+\subsection{The epithelial $D_1$ signal in OKane is independent of PurIST}
 \label{si:okane-purist}
 
-We next tested whether $Z_1$'s protective association with overall survival in OKane is captured by the PurIST molecular classifier --- the established Basal-like/Classical tumor classifier for PDAC --- or whether $Z_1$ carries additional prognostic information independent of PurIST. After adjustment for PurIST in a Cox model fit on the same FFX+GA analytic sample ($n = 173$, $123$ events), $Z_1$ retains a significant protective effect: HR per SD $= 0.74$ ($95\%$ CI $0.59$--$0.92$, $P = 0.006$), nearly unchanged from the unadjusted marginal estimate (Table~\ref{tab:okane-marginal}, HR $0.73$, $P < 0.001$). The same pattern holds in both treatment arms separately: $Z_1$ PurIST-adjusted HR per SD $= 0.71$ ($95\%$ CI $0.53$--$0.96$, $P = 0.024$) in the FFX arm; $Z_1$ PurIST-adjusted HR per SD $= 0.73$ ($95\%$ CI $0.52$--$1.03$, $P = 0.069$) in the GA arm. $Z_1$'s protective association with overall survival in OKane is therefore independent of PurIST, extending the main paper's PurIST + DeCAF-adjusted finding from treatment-naive primary PDAC (main text Table~\ref{tab:hr-adjusted}: pooled HR $1.33$ per SD, $P < 0.001$) to the treated metastatic setting on the OS endpoint. DeCAF, the established stromal classifier, was not applied to OKane samples in this analysis because OKane biospecimens are microdissected tumor with substantially depleted stromal content, the expressional substrate on which the DeCAF classifier was trained; the PurIST-adjusted result therefore tests independence from the tumor-compartment classifier only.
+We next tested whether $Z_1$'s protective association with overall survival in OKane is captured by the PurIST molecular classifier --- the established Basal-like/Classical tumor classifier for PDAC --- or whether $Z_1$ carries additional prognostic information independent of PurIST. After adjustment for PurIST in a Cox model fit on the same FFX+GA analytic sample ($n = 173$, $123$ events), $Z_1$ retains a significant protective effect: HR per SD $= 0.74$ ($95\%$ CI $0.59$--$0.92$, $P = 0.006$), nearly unchanged from the unadjusted marginal estimate (Table~\ref{tab:okane-marginal}, HR $0.73$, $P < 0.001$). The same pattern holds in both treatment arms separately: $Z_1$ PurIST-adjusted HR per SD $= 0.71$ ($95\%$ CI $0.53$--$0.96$, $P = 0.024$) in the FFX arm; $Z_1$ PurIST-adjusted HR per SD $= 0.73$ ($95\%$ CI $0.52$--$1.03$, $P = 0.069$) in the GA arm. The epithelial $D_1$ signal --- which in this microdissected cohort is its Classical-tumor component (Section~\ref{si:okane-marginal}) --- is therefore prognostic beyond the binary PurIST classification, indicating that the continuous $D_1$ program captures Classical-epithelial prognostic information not reducible to the Basal/Classical dichotomy. This is consistent with, but does not independently replicate, the main paper's PurIST + DeCAF-adjusted finding from treatment-naive primary PDAC (main text Table~\ref{tab:hr-adjusted}: pooled HR $1.33$ per SD, $P < 0.001$): DeCAF, the established stromal classifier, cannot be applied to OKane because its expressional substrate (intact stroma) is removed by microdissection, so the OKane result tests independence from the tumor-compartment classifier only and speaks to the epithelial axis alone.
 
 \subsection{Caveats}
 
-This analysis is exploratory and is limited to a single endpoint (overall survival) in a single cohort. (i) $n = 173$, $123$ events; modest power for subgroup or interaction analyses. (ii) No analysis plan was preregistered. (iii) DeCAF was not applied owing to OKane's microdissected sample context; the PurIST-adjustment claim is therefore one-sided (tumor classifier only) rather than the dual PurIST + DeCAF adjustment reported for treatment-naive validation in the main paper (Table~\ref{tab:hr-adjusted}). (iv) Per-factor analyses for $Z_2$ and $Z_3$ are reported in Table~\ref{tab:okane-marginal} for transparency; both show weak or null marginal effects in OKane and do not support separate translational claims from this cohort. Prospective replication in an independent treated PDAC cohort with both PurIST and DeCAF available is the natural next test.
+This analysis is exploratory and is limited to a single endpoint (overall survival) in a single cohort. (i) \emph{Microdissected substrate.} OKane is laser-microdissected tumor with the stromal compartment depleted, so the result speaks to the epithelial (Classical-tumor) component of $D_1$ and cannot test the tumor--stroma coupling that is the paper's biological contribution; that coupling is established in the bulk treatment-naive validation cohorts. (ii) $n = 173$, $123$ events; modest power for subgroup or interaction analyses. (iii) No analysis plan was preregistered. (iv) DeCAF was not applied because its expressional substrate (intact stroma) is removed by microdissection; the PurIST-adjustment claim is therefore one-sided (tumor classifier only) rather than the dual PurIST + DeCAF adjustment reported for treatment-naive validation in the main paper (Table~\ref{tab:hr-adjusted}). (v) Per-factor analyses for $Z_2$ and $Z_3$ are reported in Table~\ref{tab:okane-marginal} for transparency; both show weak or null marginal effects in OKane and do not support separate translational claims from this cohort. Prospective replication of the coupled program in an independent \emph{bulk-tissue} treated PDAC cohort with both PurIST and DeCAF available is the natural next test.
 

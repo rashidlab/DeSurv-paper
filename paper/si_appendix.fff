@@ -73,14 +73,15 @@ coherent biological program emerges. \label{fig:fig-nmf-k7-heatmap}}
 \begin{figure}
 \centering
 \includegraphics{si_appendix_files/figures/fig-varsurvival-k5-1.png}
-\caption{Fraction of expression variance explained versus Type III
-partial likelihood contribution for each standard NMF factor at
-elbow-selected \(k = 5\). Each point represents one factor, labeled
-N1--N5. Survival contribution is quantified as the reduction in Cox
-partial log-likelihood when each factor is removed from the full model.
-The two factors new relative to \(k = 3\) (N4, N5) contribute negligibly
-to survival, confirming that elbow selection recovers no additional
-prognostic structure. \label{fig:varsurvival-k5}}
+\caption{Per-factor contribution to reconstruction (normalized
+reconstruction Shapley share) versus Type III partial likelihood
+contribution for each standard NMF factor at elbow-selected \(k = 5\).
+Each point represents one factor, labeled N1--N5. Survival contribution
+is quantified as the reduction in Cox partial log-likelihood when each
+factor is removed from the full model. The two factors new relative to
+\(k = 3\) (N4, N5) contribute negligibly to survival, confirming that
+elbow selection recovers no additional prognostic structure.
+\label{fig:varsurvival-k5}}
 \end{figure}
 \efloatseparator
  

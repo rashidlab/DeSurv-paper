@@ -5,6 +5,7 @@ author: Amber M. Young, Alisa Yurovsky, Xianlu Laura Peng, Jen Jen Yeh, Didong L
 header-includes:
 - \providecommand{\pandocbounded}[1]{#1}
 - \usepackage{booktabs}
+- \usepackage{multirow}
 - \usepackage{float}
 - \usepackage{graphicx}
 - \usepackage{amsmath}
@@ -1322,50 +1323,39 @@ for (i in seq_along(factor_labels)) {
 }
 ```
 
-\section{Translational analysis in treated metastatic PDAC (OKane/COMPASS)}
-\label{si:okane}
+\section{Translational analysis in independent bulk treated PDAC cohorts (RASH-ACCEPT and Linehan)}
+\label{si:treated}
 
-The primary analysis evaluated DeSurv in treatment-naive resected primary PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the same trained programs project sensibly into a clinically distinct cohort (microdissected metastatic specimens from patients receiving first-line chemotherapy), and specifically whether the $D_1$ protective effect on overall survival documented in the treatment-naive validation cohorts (main text Table~\ref{tab:hr-adjusted}, pooled adjusted HR $1.33$ per SD after PurIST + DeCAF adjustment, $P < 0.001$) persists in treated metastatic disease independently of the PurIST molecular classifier. We emphasize at the outset an important interpretive constraint: OKane biospecimens are laser-microdissected tumor, so the stromal compartment is physically depleted. The restCAF stromal genes that co-load on the $D_1$ program therefore have minimal expressional support in OKane, and the surviving $D_1$ signal reflects its Classical-epithelial (tumor-intrinsic) component rather than the coupled tumor--stroma axis that $D_1$ encodes in bulk tissue. The OKane finding below is consequently an \emph{epithelial-intrinsic} observation; it does not test, and should not be read as validating, the tumor--stroma coupling that is the manuscript's biological contribution. That coupling is established in the bulk treatment-naive validation cohorts (main text), where the stromal compartment is intact.
+The primary analysis evaluated DeSurv in treatment-naive resected primary PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the trained programs retain prognostic value in treated PDAC, and specifically whether they remain prognostic after adjustment for the established PurIST (tumor-intrinsic) and DeCAF (stromal) molecular classifiers --- the same dual adjustment applied to the treatment-naive validation cohorts in the main paper (Table~\ref{tab:hr-adjusted}). We used two independent bulk-tissue treated cohorts: RASH-ACCEPT ($n = 155$ metastatic PDAC, bulk RNA-seq, first-line chemotherapy) and Linehan ($n = 66$ borderline-resectable / locally advanced PDAC, bulk biopsy; FOLFIRINOX $\pm$ the CCR2 inhibitor PF-04136309). Both cohorts are bulk tissue, so PurIST and DeCAF are both computable and the full dual adjustment is valid --- unlike microdissected cohorts, where the stromal classifier cannot be applied.
 
-\subsection{Cohort and projection}
+\subsection{Per-factor and linear-predictor effects, unadjusted and PurIST + DeCAF-adjusted}
 
-We obtained the O'Kane et al.\ COMPASS cohort [@aung2018compass]: $n = 195$ microdissected PDAC samples (171 metastatic, 23 locally advanced, 1 stage not annotated) with bulk RNA-seq, overall survival, and first-line treatment arm. After restricting to samples with non-missing factor scores, treatment arm $\in \{$FOLFIRINOX (FFX), gemcitabine/nab-paclitaxel (GA)$\}$, and finite survival times, the analytic sample comprised $n = 173$ patients (123 deaths; FFX $n = 102$, GA $n = 71$). 1,925 of the 1,970 trained genes (97.7\%) were present in OKane.
-
-Factor scores were computed by projection using the same trained gene-program matrix $W$ used for the main paper validation cohorts: $Z_i = X_{\text{OKane}}^\top W_{\cdot, i}$ for each factor $i \in \{1, 2, 3\}$, where $X_{\text{OKane}}$ is the within-sample rank-transformed OKane expression matrix restricted to the 1,925 shared genes. Each factor score was z-standardized within OKane prior to Cox modeling so that hazard ratios are interpretable per standard deviation of the factor.
-
-\subsection{Per-factor marginal prognostic effects recapitulate the treatment-naive validation pattern}
-\label{si:okane-marginal}
-
-We first asked whether the marginal univariate Cox effect of each factor (without conditioning on treatment) in the OKane treated metastatic cohort reproduces the marginal effects observed in the treatment-naive primary PDAC validation cohorts (the main paper's per-factor forest plot, Fig.\ \ref{fig:val}A). Table~\ref{tab:okane-marginal} reports OKane per-factor hazard ratios.
+Factor scores were computed by projection using the same trained $W$ matrix as the main paper validation cohorts ($Z_i = X^\top W_{\cdot,i}$, full-W projection), z-standardized within cohort; the linear predictor (LP) is the trained-coefficient risk score $Z\beta$. Table~\ref{tab:rash-lin} reports per-cohort hazard ratios for overall survival per standard deviation, both marginal and after PurIST + DeCAF adjustment.
 
 \begin{table}[H]
 \centering
-\caption{Marginal per-factor Cox hazard ratios for overall survival in OKane (univariate, no treatment adjustment). $n = 173$, 123 events. Each factor score is z-standardized within OKane. \label{tab:okane-marginal}}
-\begin{tabular}{lccc}
+\caption{Overall-survival hazard ratios per SD for the DeSurv linear predictor (LP) and per-factor scores in two bulk treated PDAC cohorts, unadjusted and after PurIST + DeCAF adjustment. RASH-ACCEPT marginal $n = 155$ (130 events), adjusted $n = 125$ (107 events); Linehan $n = 66$ (22 events). \label{tab:rash-lin}}
+\begin{tabular}{llcc}
 \toprule
-Factor & HR per SD & 95\% CI & $P$ \\
+Cohort & Score & Marginal HR/SD (95\% CI), $P$ & PurIST + DeCAF-adjusted HR/SD (95\% CI), $P$ \\
 \midrule
-$Z_1$ (D1, Classical + restCAF)  & $0.73$ & $0.61$--$0.88$ & $< 0.001$ \\
-$Z_2$ (D2, proCAF stroma)        & $1.14$ & $0.95$--$1.36$ & $0.16$ \\
-$Z_3$ (D3, Basal-like tumor)     & $0.98$ & $0.82$--$1.18$ & $0.87$ \\
+\multirow{4}{*}{RASH-ACCEPT}
+ & LP        & $1.09$ ($0.93$--$1.30$), $0.29$  & $\mathbf{1.25}$ ($1.02$--$1.52$), $\mathbf{0.033}$ \\
+ & $D_1$     & $0.93$ ($0.78$--$1.09$), $0.36$  & $\mathbf{0.81}$ ($0.66$--$0.99$), $\mathbf{0.038}$ \\
+ & $D_2$     & $0.82$ ($0.68$--$0.99$), $0.039$ & $\mathbf{0.74}$ ($0.59$--$0.93$), $\mathbf{0.010}$ \\
+ & $D_3$     & $1.08$ ($0.90$--$1.28$), $0.41$  & $0.99$ ($0.79$--$1.24$), $0.93$ \\
+\midrule
+\multirow{4}{*}{Linehan}
+ & LP        & $\mathbf{1.82}$ ($1.10$--$3.03$), $\mathbf{0.021}$ & $1.23$ ($0.71$--$2.15$), $0.46$ \\
+ & $D_1$     & $\mathbf{0.59}$ ($0.37$--$0.96$), $\mathbf{0.032}$ & $0.84$ ($0.49$--$1.43$), $0.52$ \\
+ & $D_2$     & $\mathbf{0.64}$ ($0.44$--$0.94$), $\mathbf{0.022}$ & $\mathbf{0.51}$ ($0.33$--$0.78$), $\mathbf{0.002}$ \\
+ & $D_3$     & $1.16$ ($0.73$--$1.83$), $0.53$  & $1.18$ ($0.67$--$2.08$), $0.56$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The factor-1 (D1) protective effect in OKane (HR $0.73$ per SD, $P < 0.001$) closely matches the D1 effect in the treatment-naive pooled validation (pooled HR $0.76$; main text Fig.\ \ref{fig:val}A), indicating that the epithelial component of the trained gene-program structure projects sensibly into a clinically distinct sample context (microdissected metastatic versus bulk primary, treated versus treatment-naive). The within-OKane pattern across factors is itself diagnostic of the stromal depletion: the epithelial-containing $D_1$ factor survives (HR $0.73$, $P < 0.001$), whereas the \emph{purely stromal} proCAF factor $D_2$ is null (HR $1.14$, $P = 0.16$) --- the same cohort and the same trained model, yet only the stromal factor collapses. This is the expected signature of microdissection: the proCAF genes that define $D_2$ have minimal expressional support once stroma is removed, while the Classical-tumor genes that anchor $D_1$ remain. Factor $D_3$ (Basal-like tumor) is also weak marginally. The marginal continuity of $D_1$'s effect (Figure~\ref{fig:figS-okane-marginal-continuity}) therefore provides face validity for the projection of the epithelial program specifically, not for the stromal axis.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{figures/figS_okane_marginal_continuity.pdf}
-\caption{Marginal $Z_1$ (D1, Classical/restCAF) hazard ratio per SD across the five treatment-naive PDAC validation cohorts (top, blue) and OKane treated metastatic cohort (bottom, red). OKane's marginal $Z_1$ effect sits within the range of the treatment-naive cohorts and matches the pooled validation estimate, confirming that the projection of the trained gene-program matrix transfers into the treated-metastatic sample context.\label{fig:figS-okane-marginal-continuity}}
-\end{figure}
-
-\subsection{The epithelial $D_1$ signal in OKane is independent of PurIST}
-\label{si:okane-purist}
-
-We next tested whether $Z_1$'s protective association with overall survival in OKane is captured by the PurIST molecular classifier --- the established Basal-like/Classical tumor classifier for PDAC --- or whether $Z_1$ carries additional prognostic information independent of PurIST. After adjustment for PurIST in a Cox model fit on the same FFX+GA analytic sample ($n = 173$, $123$ events), $Z_1$ retains a significant protective effect: HR per SD $= 0.74$ ($95\%$ CI $0.59$--$0.92$, $P = 0.006$), nearly unchanged from the unadjusted marginal estimate (Table~\ref{tab:okane-marginal}, HR $0.73$, $P < 0.001$). The same pattern holds in both treatment arms separately: $Z_1$ PurIST-adjusted HR per SD $= 0.71$ ($95\%$ CI $0.53$--$0.96$, $P = 0.024$) in the FFX arm; $Z_1$ PurIST-adjusted HR per SD $= 0.73$ ($95\%$ CI $0.52$--$1.03$, $P = 0.069$) in the GA arm. The epithelial $D_1$ signal --- which in this microdissected cohort is its Classical-tumor component (Section~\ref{si:okane-marginal}) --- is therefore prognostic beyond the binary PurIST classification, indicating that the continuous $D_1$ program captures Classical-epithelial prognostic information not reducible to the Basal/Classical dichotomy. This is consistent with, but does not independently replicate, the main paper's PurIST + DeCAF-adjusted finding from treatment-naive primary PDAC (main text Table~\ref{tab:hr-adjusted}: pooled HR $1.33$ per SD, $P < 0.001$): DeCAF, the established stromal classifier, cannot be applied to OKane because its expressional substrate (intact stroma) is removed by microdissection, so the OKane result tests independence from the tumor-compartment classifier only and speaks to the epithelial axis alone.
+The two cohorts give complementary results. In RASH-ACCEPT, the LP and $D_1$ are not significant marginally but become independently prognostic after PurIST + DeCAF adjustment (LP HR $1.25$, $P = 0.033$; $D_1$ HR $0.81$, $P = 0.038$). This is a suppression pattern: the established classifiers are positively correlated with the DeSurv score and partially mask its prognostic effect, so the DeSurv signal is revealed only once they are conditioned out. The pattern is the bulk-tissue analogue of the main paper's finding that the DeSurv linear predictor retains prognostic value beyond PurIST + DeCAF (Table~\ref{tab:hr-adjusted}), and arguably strengthens the independence claim, since the classifiers do not merely fail to capture the DeSurv signal but oppose it. In Linehan, by contrast, $D_1$ and the LP are prognostic marginally ($D_1$ HR $0.59$, $P = 0.032$; LP HR $1.82$, $P = 0.021$) but their effect is absorbed by the joint adjustment, indicating that in that cohort the $D_1$ prognostic information is largely captured by PurIST + DeCAF. The one program independent of both classifiers in \emph{both} cohorts is the proCAF stromal program $D_2$ (RASH-ACCEPT HR $0.74$, $P = 0.010$; Linehan HR $0.51$, $P = 0.002$); we note its protective direction in treated disease runs opposite the aggressive proCAF association in treatment-naive primary tumors, and we do not interpret this further given the cohort heterogeneity.
 
 \subsection{Caveats}
 
-This analysis is exploratory and is limited to a single endpoint (overall survival) in a single cohort. (i) \emph{Microdissected substrate.} OKane is laser-microdissected tumor with the stromal compartment depleted, so the result speaks to the epithelial (Classical-tumor) component of $D_1$ and cannot test the tumor--stroma coupling that is the paper's biological contribution; that coupling is established in the bulk treatment-naive validation cohorts. (ii) $n = 173$, $123$ events; modest power for subgroup or interaction analyses. (iii) No analysis plan was preregistered. (iv) DeCAF was not applied because its expressional substrate (intact stroma) is removed by microdissection; the PurIST-adjustment claim is therefore one-sided (tumor classifier only) rather than the dual PurIST + DeCAF adjustment reported for treatment-naive validation in the main paper (Table~\ref{tab:hr-adjusted}). (v) Per-factor analyses for $Z_2$ and $Z_3$ are reported in Table~\ref{tab:okane-marginal} for transparency; both show weak or null marginal effects in OKane and do not support separate translational claims from this cohort. Prospective replication of the coupled program in an independent \emph{bulk-tissue} treated PDAC cohort with both PurIST and DeCAF available is the natural next test.
-
+This analysis is exploratory. (i) The two cohorts give cohort-dependent results --- RASH-ACCEPT supports classifier-independent prognostic value of the LP and $D_1$, Linehan does not --- so the treated-cohort evidence is partial rather than uniform. (ii) The suppression pattern in RASH-ACCEPT (marginal null, adjusted significant) is statistically legitimate but should be presented as such rather than as a marginal prognostic claim. (iii) Cohorts differ in stage (RASH-ACCEPT metastatic; Linehan borderline-resectable / locally advanced), regimen (chemotherapy vs FOLFIRINOX $\pm$ CCR2 inhibitor), platform, and size (Linehan $n = 66$, 22 events, is small). (iv) No analysis plan was preregistered. (v) The $D_2$ direction reversal in treated disease relative to treatment-naive primaries is unexplained and not interpreted. Robust treated-cohort validation of the coupled tumor--stroma program will require larger, harmonized bulk-tissue series with both PurIST and DeCAF available.

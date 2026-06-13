@@ -83,10 +83,3 @@ factor is removed from the full model. The two factors new relative to
 elbow selection recovers no additional prognostic structure.
 \label{fig:varsurvival-k5}}
 \end{figure}
-\efloatseparator
- 
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.95\textwidth]{figures/figS_okane_marginal_continuity.pdf}
-\caption{Marginal $Z_1$ (D1, Classical/restCAF) hazard ratio per SD across the five treatment-naive PDAC validation cohorts (top, blue) and OKane treated metastatic cohort (bottom, red). OKane's marginal $Z_1$ effect sits within the range of the treatment-naive cohorts and matches the pooled validation estimate, confirming that the projection of the trained gene-program matrix transfers into the treated-metastatic sample context.\label{fig:figS-okane-marginal-continuity}}
-\end{figure}

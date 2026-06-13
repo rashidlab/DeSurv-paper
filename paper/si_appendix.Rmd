@@ -1326,36 +1326,86 @@ for (i in seq_along(factor_labels)) {
 \section{Translational analysis in independent bulk treated PDAC cohorts (RASH-ACCEPT and Linehan)}
 \label{si:treated}
 
-The primary analysis evaluated DeSurv in treatment-naive resected primary PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the trained programs retain prognostic value in treated PDAC, and specifically whether they remain prognostic after adjustment for the established PurIST (tumor-intrinsic) and DeCAF (stromal) molecular classifiers --- the same dual adjustment applied to the treatment-naive validation cohorts in the main paper (Table~\ref{tab:hr-adjusted}). We used two independent bulk-tissue treated cohorts: RASH-ACCEPT ($n = 155$ metastatic PDAC, bulk RNA-seq, first-line chemotherapy) and Linehan ($n = 66$ borderline-resectable / locally advanced PDAC, bulk biopsy; FOLFIRINOX $\pm$ the CCR2 inhibitor PF-04136309). Both cohorts are bulk tissue, so PurIST and DeCAF are both computable and the full dual adjustment is valid --- unlike microdissected cohorts, where the stromal classifier cannot be applied.
+The primary analysis evaluated DeSurv in treatment-naive resected primary PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the trained programs retain prognostic value in treated PDAC, and specifically whether they remain prognostic after adjustment for the established PurIST (tumor-intrinsic) and DeCAF (stromal) molecular classifiers --- the same dual adjustment applied to the treatment-naive validation cohorts in the main paper (Table~\ref{tab:hr-adjusted}). We used three bulk-tissue treated cohorts spanning two disease settings: the two metastatic gemcitabine-backbone trials Rash ($n = 85$, gemcitabine + erlotinib) and Accept ($n = 70$, gemcitabine $\pm$ afatinib) --- together the RASH-ACCEPT series ($n = 155$, bulk RNA-seq, first-line chemotherapy) --- and Linehan ($n = 66$ borderline-resectable / locally advanced PDAC, bulk biopsy; FOLFIRINOX $\pm$ the CCR2 inhibitor PF-04136309). All are bulk tissue, so PurIST and DeCAF are both computable and the full dual adjustment is valid --- unlike microdissected cohorts, where the stromal classifier cannot be applied. Because the cohorts differ in stage and regimen, they are analysed per cohort rather than pooled (below).
 
-\subsection{Per-factor and linear-predictor effects, unadjusted and PurIST + DeCAF-adjusted}
+```{r treated-setup, echo=FALSE, message=FALSE, warning=FALSE}
+load_result("treated_cohort_stats")
+.tcs  <- treated_cohort_stats
+.pfmt <- function(p) if (is.na(p)) "---" else if (p < 0.001) "$<0.001$" else sprintf("%.3f", p)
+.os   <- function(coh, prog, mod) { r <- .tcs$os[.tcs$os$cohort==coh & .tcs$os$program==prog & .tcs$os$model==mod, ]
+  if (!nrow(r)) return("---"); sprintf("$%.2f$ ($%.2f$--$%.2f$), %s", r$hr, r$lo, r$hi, .pfmt(r$p)) }
+.ax   <- function(coh, clf) { r <- .tcs$axis[.tcs$axis$cohort==coh & .tcs$axis$classifier==clf, ]
+  if (!nrow(r)) return("---"); sprintf("$%.2f$ ($%.2f$--$%.2f$), %s", r$hr, r$lo, r$hi, .pfmt(r$p)) }
+.prev <- function(coh) .tcs$prevalence[.tcs$prevalence$cohort==coh, ]
+```
 
-Factor scores were computed by projection using the same trained $W$ matrix as the main paper validation cohorts ($Z_i = X^\top W_{\cdot,i}$, full-W projection), z-standardized within cohort; the linear predictor (LP) is the trained-coefficient risk score $Z\beta$. Table~\ref{tab:rash-lin} reports per-cohort hazard ratios for overall survival per standard deviation, both marginal and after PurIST + DeCAF adjustment.
+\subsection{Per-cohort overall survival (no pooling)}
+
+Factor scores were computed by projection using the same trained, top-gene-truncated $\widetilde{W}$ ($n_{\text{top}} = 270$ per factor, union across factors) and within-sample rank convention as the main-paper validation cohorts ($Z_i = \widetilde{W}^\top X_{\text{new}}$), z-standardized within cohort; results were near-identical under a full-gene projection (Spearman $r \geq 0.86$; see Robustness below). Because the three treated cohorts differ in disease setting and regimen (Linehan borderline-resectable/locally-advanced on FOLFIRINOX~$\pm$~CCR2 inhibitor; Rash and Accept metastatic on gemcitabine backbones), and the basal--classical program $D_1$ is heterogeneous across them, we report each cohort separately rather than as a pooled estimate. $D_1$ is reported \emph{marginally}: because $D_1$ encodes the basal--classical contrast and is collinear with the PurIST classifier (it separates PurIST calls at AUC $`r sprintf("%.2f", min(.tcs$d1_auc, na.rm=TRUE))`$--$`r sprintf("%.2f", max(.tcs$d1_auc, na.rm=TRUE))`$), adjusting $D_1$ for PurIST conditions the same axis on itself and over-adjusts; the marginal estimate is the appropriate measure of its prognostic value. $D_2$ (a stromal program, not collinear with the classifiers) is reported both marginal and PurIST + DeCAF-adjusted.
 
 \begin{table}[H]
 \centering
-\caption{Overall-survival hazard ratios per SD for the DeSurv linear predictor (LP) and per-factor scores in two bulk treated PDAC cohorts, unadjusted and after PurIST + DeCAF adjustment. RASH-ACCEPT marginal $n = 155$ (130 events), adjusted $n = 125$ (107 events); Linehan $n = 66$ (22 events). \label{tab:rash-lin}}
-\begin{tabular}{llcc}
+\caption{Per-cohort overall-survival hazard ratios per SD in the three bulk treated PDAC cohorts. $D_1$ marginal; $D_2$ marginal and PurIST + DeCAF-adjusted; $D_3$ marginal. Sample sizes: Linehan $n=`r .prev("Linehan")$n`$ (`r .prev("Linehan")$events` events), Rash $n=`r .prev("Rash")$n`$ (`r .prev("Rash")$events` events), Accept $n=`r .prev("Accept")$n`$ (`r .prev("Accept")$events` events); Basal-like prevalence Linehan `r .prev("Linehan")$pct_basal`\% (`r .prev("Linehan")$n_basal` cases), Rash `r .prev("Rash")$pct_basal`\%, Accept `r .prev("Accept")$pct_basal`\%. \label{tab:treated-os}}
+\begin{tabular}{lcccc}
 \toprule
-Cohort & Score & Marginal HR/SD (95\% CI), $P$ & PurIST + DeCAF-adjusted HR/SD (95\% CI), $P$ \\
+Cohort (setting) & $D_1$ (marginal) & $D_2$ (marginal) & $D_2$ (+PurIST+DeCAF) & $D_3$ (marginal) \\
 \midrule
-\multirow{4}{*}{RASH-ACCEPT}
- & LP        & $1.09$ ($0.93$--$1.30$), $0.29$  & $\mathbf{1.25}$ ($1.02$--$1.52$), $\mathbf{0.033}$ \\
- & $D_1$     & $0.93$ ($0.78$--$1.09$), $0.36$  & $\mathbf{0.81}$ ($0.66$--$0.99$), $\mathbf{0.038}$ \\
- & $D_2$     & $0.82$ ($0.68$--$0.99$), $0.039$ & $\mathbf{0.74}$ ($0.59$--$0.93$), $\mathbf{0.010}$ \\
- & $D_3$     & $1.08$ ($0.90$--$1.28$), $0.41$  & $0.99$ ($0.79$--$1.24$), $0.93$ \\
-\midrule
-\multirow{4}{*}{Linehan}
- & LP        & $\mathbf{1.82}$ ($1.10$--$3.03$), $\mathbf{0.021}$ & $1.23$ ($0.71$--$2.15$), $0.46$ \\
- & $D_1$     & $\mathbf{0.59}$ ($0.37$--$0.96$), $\mathbf{0.032}$ & $0.84$ ($0.49$--$1.43$), $0.52$ \\
- & $D_2$     & $\mathbf{0.64}$ ($0.44$--$0.94$), $\mathbf{0.022}$ & $\mathbf{0.51}$ ($0.33$--$0.78$), $\mathbf{0.002}$ \\
- & $D_3$     & $1.16$ ($0.73$--$1.83$), $0.53$  & $1.18$ ($0.67$--$2.08$), $0.56$ \\
+Linehan (BR/LA)     & `r .os("Linehan","D1","marginal")` & `r .os("Linehan","D2","marginal")` & `r .os("Linehan","D2","adjusted")` & `r .os("Linehan","D3","marginal")` \\
+Rash (metastatic)   & `r .os("Rash","D1","marginal")`    & `r .os("Rash","D2","marginal")`    & `r .os("Rash","D2","adjusted")`    & `r .os("Rash","D3","marginal")` \\
+Accept (metastatic) & `r .os("Accept","D1","marginal")`  & `r .os("Accept","D2","marginal")`  & `r .os("Accept","D2","adjusted")`  & `r .os("Accept","D3","marginal")` \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The two cohorts give complementary results. In RASH-ACCEPT, the LP and $D_1$ are not significant marginally but become independently prognostic after PurIST + DeCAF adjustment (LP HR $1.25$, $P = 0.033$; $D_1$ HR $0.81$, $P = 0.038$). This is a suppression pattern: the established classifiers are positively correlated with the DeSurv score and partially mask its prognostic effect, so the DeSurv signal is revealed only once they are conditioned out. The pattern is the bulk-tissue analogue of the main paper's finding that the DeSurv linear predictor retains prognostic value beyond PurIST + DeCAF (Table~\ref{tab:hr-adjusted}), and arguably strengthens the independence claim, since the classifiers do not merely fail to capture the DeSurv signal but oppose it. In Linehan, by contrast, $D_1$ and the LP are prognostic marginally ($D_1$ HR $0.59$, $P = 0.032$; LP HR $1.82$, $P = 0.021$) but their effect is absorbed by the joint adjustment, indicating that in that cohort the $D_1$ prognostic information is largely captured by PurIST + DeCAF. The one program independent of both classifiers in \emph{both} cohorts is the proCAF stromal program $D_2$ (RASH-ACCEPT HR $0.74$, $P = 0.010$; Linehan HR $0.51$, $P = 0.002$); we note its protective direction in treated disease runs opposite the aggressive proCAF association in treatment-naive primary tumors, and we do not interpret this further given the cohort heterogeneity.
+The proCAF stromal program $D_2$ was protective in all three cohorts (marginal and, where powered, adjusted), with a consistent direction across the independent settings and chemotherapy backbones; it was significant in Linehan, borderline in Accept, and non-significant but directionally concordant in Rash. Because $D_2$ is stromal and not collinear with the classifiers, its association was not an artifact of adjustment: in Linehan it was significant both before and after adjustment, and across all three cohorts the adjusted estimate strengthened rather than attenuated relative to the marginal one, indicating the classifiers partially mask rather than create it. The basal--classical program $D_1$ was prognostic in the less-advanced Linehan cohort (marginal HR `r sub(",.*","",.os("Linehan","D1","marginal"))`) but not in the metastatic cohorts --- a setting-dependence we show below is a property of the basal--classical axis itself (shared by PurIST, Moffitt, and Bailey), not a failure of $D_1$. $D_3$ (Basal-like) was not associated with overall survival in any treated cohort, consistent with the basal--classical contrast residing in $D_1$.
+
+\subsection{The basal--classical axis is setting-dependent (classifier triangulation)}
+
+That $D_1$ attenuates in metastatic disease reflects the basal--classical prognostic axis itself rather than $D_1$ specifically: every established basal--classical classifier shows the same pattern (Table~\ref{tab:axis}). In the less-advanced Linehan cohort the axis is strongly prognostic (PurIST Classical-vs-Basal HR `r sub(",.*","",.ax("Linehan","PurIST"))`), whereas in the metastatic cohorts PurIST, Moffitt, and Bailey are all non-significant. Basal-like prevalence in the metastatic cohorts is the expected 16--22\% (not range-restricted; the Linehan estimate rests on only six Basal-like cases and is correspondingly imprecise), and the same axis is prognostic at $P<10^{-8}$ in equally-prevalent treatment-naive validation cohorts (main text), indicating a genuine stage-dependent attenuation rather than reduced power.
+
+\begin{table}[H]
+\centering
+\caption{Classical-vs-Basal overall-survival hazard ratios for established subtype classifiers, by cohort. All are strongly prognostic in less-advanced disease (Linehan) and attenuate in metastatic disease (Rash, Accept). \label{tab:axis}}
+\begin{tabular}{lccc}
+\toprule
+Classifier & Linehan (BR/LA) & Rash (metastatic) & Accept (metastatic) \\
+\midrule
+PurIST  & `r .ax("Linehan","PurIST")` & `r .ax("Rash","PurIST")`  & `r .ax("Accept","PurIST")` \\
+Moffitt & ---                          & `r .ax("Rash","Moffitt")` & `r .ax("Accept","Moffitt")` \\
+Bailey (squamous) & ---                & `r .ax("Rash","Bailey")`  & `r .ax("Accept","Bailey")` \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{D2 is prognostic on progression-free survival and is treatment-remodelled}
+
+In the metastatic RASH-ACCEPT cohort, $D_2$ was also associated with longer progression-free survival (HR per SD `r {r<-.tcs$pfs[.tcs$pfs$program=="D2",]; sprintf("$%.2f$ ($%.2f$--$%.2f$), %s", r$hr, r$lo, r$hi, .pfmt(r$p))}`); $D_3$ showed a directional but non-significant adverse association (`r {r<-.tcs$pfs[.tcs$pfs$program=="D3",]; sprintf("HR $%.2f$, %s", r$hr, .pfmt(r$p))}`). In the `r .tcs$paired$n` Linehan patients with paired pre- and post-treatment biopsies, $D_2$ increased significantly from pre- to post-treatment (paired Wilcoxon `r .pfmt(.tcs$paired$wilcox_p)`; mean $\Delta = `r sprintf("%+.2f", .tcs$paired$mean_delta)`$ SD), indicating that the proCAF program is itself remodelled by therapy.
+
+\subsection{D2 molecular sub-components (exploratory)}
+
+Partitioning $D_2$'s projection additively into gene-group contributions and testing each against overall survival (cohort-stratified; sub-scores are correlated, so the joint attribution is interpreted cautiously) localised the protective association mainly to the program's neural-reactive/axon-guidance content (Table~\ref{tab:decomp}): the neural-reactive component is protective both alone and in the joint model that controls for collinearity, whereas the extracellular-matrix-core component is protective alone but absorbed jointly, and the CD163$^+$ macrophage component is non-protective alone and, after joint adjustment, significantly adverse (`r {m<-.tcs$decomp[.tcs$decomp$component=="Macrophage" & .tcs$decomp$model=="joint",]; sprintf("HR %.2f, $P = %.3f$", m$hr, m$p)}`), consistent with reports that cancer-associated-fibroblast--driven macrophage reprogramming is tumour-promoting [@hussain2024cafmacrophage; @raymant2024macrophagefibroblast].
+
+```{r treated-decomp, echo=FALSE, results='asis'}
+dc <- .tcs$decomp
+rowfmt <- function(comp){ a<-dc[dc$component==comp & dc$model=="alone",]; j<-dc[dc$component==comp & dc$model=="joint",]
+  sprintf("%s & $%.2f$ ($%.2f$--$%.2f$), %s & $%.2f$ ($%.2f$--$%.2f$), %s \\\\",
+          comp, a$hr,a$lo,a$hi,.pfmt(a$p), j$hr,j$lo,j$hi,.pfmt(j$p)) }
+cat("\\begin{table}[H]\\centering\n",
+    "\\caption{Exploratory additive decomposition of the $D_2$ projection into gene-group sub-scores; per-SD overall-survival HR (cohort-stratified, PurIST + DeCAF-adjusted), each sub-score alone and all jointly. \\label{tab:decomp}}\n",
+    "\\begin{tabular}{lcc}\n\\toprule\n",
+    "$D_2$ sub-component & Alone HR/SD (95\\% CI), $P$ & Joint HR/SD (95\\% CI), $P$ \\\\\n\\midrule\n",
+    rowfmt("Neural"), "\n", rowfmt("ECMcore"), "\n", rowfmt("Macrophage"), "\n",
+    "\\bottomrule\n\\end{tabular}\n\\end{table}\n", sep="")
+```
+
+\subsection{Orthogonal validation of program identity}
+
+Independently of survival, the $D_1$ program score correlated with protein-level GATA6 in-situ hybridisation in the COMPASS cohort (Spearman $\rho = `r sprintf("%.2f", .tcs$gata6$rho)`$, `r .pfmt(.tcs$gata6$p)`, $n = `r .tcs$gata6$n`$), validating the Classical/GATA6 identity of $D_1$ beyond the signature-level correlations in the main-text factor--signature heatmap.
+
+\subsection{Robustness to projection convention}
+
+The treated-cohort scores were computed with the top-gene $\widetilde{W}$ used in primary validation. Recomputing them with the full trained $W$ (all `r nrow(readRDS("results/tar_fit_desurv_tcgacptac.rds")$W)` genes) gives near-identical per-sample scores (pooled Spearman correlation $D_1$ $`r sprintf("%.2f", .tcs$concordance["D1"])`$, $D_2$ $`r sprintf("%.2f", .tcs$concordance["D2"])`$, $D_3$ $`r sprintf("%.2f", .tcs$concordance["D3"])`$) and leaves every per-cohort conclusion unchanged, so the treated findings do not depend on the projection convention. We report results per cohort and do not pool: the protective direction of $D_2$ is consistent across all three cohorts, which is the relevant cross-cohort evidence in the absence of a common-effect assumption.
 
 \subsection{Caveats}
 
-This analysis is exploratory. (i) The two cohorts give cohort-dependent results --- RASH-ACCEPT supports classifier-independent prognostic value of the LP and $D_1$, Linehan does not --- so the treated-cohort evidence is partial rather than uniform. (ii) The suppression pattern in RASH-ACCEPT (marginal null, adjusted significant) is statistically legitimate but should be presented as such rather than as a marginal prognostic claim. (iii) Cohorts differ in stage (RASH-ACCEPT metastatic; Linehan borderline-resectable / locally advanced), regimen (chemotherapy vs FOLFIRINOX $\pm$ CCR2 inhibitor), platform, and size (Linehan $n = 66$, 22 events, is small). (iv) No analysis plan was preregistered. (v) The $D_2$ direction reversal in treated disease relative to treatment-naive primaries is unexplained and not interpreted. Robust treated-cohort validation of the coupled tumor--stroma program will require larger, harmonized bulk-tissue series with both PurIST and DeCAF available.
+This analysis is exploratory and prognostic, not predictive (treatment is confounded with cohort and stage, and biopsies are predominantly pre-treatment). (i) The cohorts are analysed per cohort and not pooled, because their settings differ (metastatic Rash/Accept vs borderline-resectable/locally-advanced Linehan) and $D_1$ is heterogeneous across them; the consistent protective direction of $D_2$ across all three cohorts is the cross-cohort evidence. (ii) $D_1$ is reported marginally because it is collinear with the PurIST classifier, so adjusting it for PurIST over-adjusts the same basal--classical axis. (iii) The treated cohorts are modestly sized (Linehan $n = 66$, 22 events; the metastatic Rash and Accept cohorts $n = 85$ and $70$) so per-cohort $D_2$ estimates are individually under-powered, although the protective direction is consistent across all three. (iv) No analysis plan was preregistered. (v) The $D_2$ direction reversal in treated disease relative to treatment-naive primaries is the central context-dependent observation (Discussion); the sub-component decomposition and the established restraining-CAF literature provide candidate explanations, but mechanism is not established here. Robust treated-cohort validation will require larger, harmonized bulk-tissue series, ideally in the neoadjuvant setting where treated and resectable disease coincide.

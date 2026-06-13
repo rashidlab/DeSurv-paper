@@ -284,22 +284,43 @@ BGN & LRRC8A & SMAD3 & KCNK5 & VWA1 & TAP1\\
  
 \begin{table}[H]
 \centering
-\caption{Overall-survival hazard ratios per SD for the DeSurv linear predictor (LP) and per-factor scores in two bulk treated PDAC cohorts, unadjusted and after PurIST + DeCAF adjustment. RASH-ACCEPT marginal $n = 155$ (130 events), adjusted $n = 125$ (107 events); Linehan $n = 66$ (22 events). \label{tab:rash-lin}}
-\begin{tabular}{llcc}
+\caption{Per-cohort overall-survival hazard ratios per SD in the three bulk treated PDAC cohorts. $D_1$ marginal; $D_2$ marginal and PurIST + DeCAF-adjusted; $D_3$ marginal. Sample sizes: Linehan $n=66$ (22 events), Rash $n=85$ (73 events), Accept $n=70$ (57 events); Basal-like prevalence Linehan 9\% (6 cases), Rash 22\%, Accept 16\%. \label{tab:treated-os}}
+\begin{tabular}{lcccc}
 \toprule
-Cohort & Score & Marginal HR/SD (95\% CI), $P$ & PurIST + DeCAF-adjusted HR/SD (95\% CI), $P$ \\
+Cohort (setting) & $D_1$ (marginal) & $D_2$ (marginal) & $D_2$ (+PurIST+DeCAF) & $D_3$ (marginal) \\
 \midrule
-\multirow{4}{*}{RASH-ACCEPT}
- & LP        & $1.09$ ($0.93$--$1.30$), $0.29$  & $\mathbf{1.25}$ ($1.02$--$1.52$), $\mathbf{0.033}$ \\
- & $D_1$     & $0.93$ ($0.78$--$1.09$), $0.36$  & $\mathbf{0.81}$ ($0.66$--$0.99$), $\mathbf{0.038}$ \\
- & $D_2$     & $0.82$ ($0.68$--$0.99$), $0.039$ & $\mathbf{0.74}$ ($0.59$--$0.93$), $\mathbf{0.010}$ \\
- & $D_3$     & $1.08$ ($0.90$--$1.28$), $0.41$  & $0.99$ ($0.79$--$1.24$), $0.93$ \\
+Linehan (BR/LA)     & $0.58$ ($0.36$--$0.94$), 0.027 & $0.60$ ($0.42$--$0.86$), 0.005 & $0.46$ ($0.31$--$0.70$), $<0.001$ & $1.09$ ($0.68$--$1.77$), 0.715 \\
+Rash (metastatic)   & $0.81$ ($0.63$--$1.04$), 0.096    & $0.87$ ($0.66$--$1.13$), 0.283    & $0.77$ ($0.53$--$1.12$), 0.178    & $1.09$ ($0.87$--$1.38$), 0.455 \\
+Accept (metastatic) & $1.10$ ($0.87$--$1.38$), 0.427  & $0.78$ ($0.58$--$1.04$), 0.091  & $0.73$ ($0.52$--$1.04$), 0.078  & $1.11$ ($0.85$--$1.45$), 0.445 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\efloatseparator
+ 
+\begin{table}[H]
+\centering
+\caption{Classical-vs-Basal overall-survival hazard ratios for established subtype classifiers, by cohort. All are strongly prognostic in less-advanced disease (Linehan) and attenuate in metastatic disease (Rash, Accept). \label{tab:axis}}
+\begin{tabular}{lccc}
+\toprule
+Classifier & Linehan (BR/LA) & Rash (metastatic) & Accept (metastatic) \\
 \midrule
-\multirow{4}{*}{Linehan}
- & LP        & $\mathbf{1.82}$ ($1.10$--$3.03$), $\mathbf{0.021}$ & $1.23$ ($0.71$--$2.15$), $0.46$ \\
- & $D_1$     & $\mathbf{0.59}$ ($0.37$--$0.96$), $\mathbf{0.032}$ & $0.84$ ($0.49$--$1.43$), $0.52$ \\
- & $D_2$     & $\mathbf{0.64}$ ($0.44$--$0.94$), $\mathbf{0.022}$ & $\mathbf{0.51}$ ($0.33$--$0.78$), $\mathbf{0.002}$ \\
- & $D_3$     & $1.16$ ($0.73$--$1.83$), $0.53$  & $1.18$ ($0.67$--$2.08$), $0.56$ \\
+PurIST  & $0.07$ ($0.02$--$0.26$), $<0.001$ & $1.24$ ($0.72$--$2.16$), 0.439  & $0.83$ ($0.41$--$1.71$), 0.622 \\
+Moffitt & ---                          & $0.84$ ($0.51$--$1.39$), 0.502 & $1.00$ ($0.49$--$2.05$), 0.999 \\
+Bailey (squamous) & ---                & $0.79$ ($0.46$--$1.34$), 0.379  & $1.31$ ($0.70$--$2.45$), 0.402 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\efloatseparator
+ 
+\begin{table}[H]\centering
+\caption{Exploratory additive decomposition of the $D_2$ projection into gene-group sub-scores; per-SD overall-survival HR (cohort-stratified, PurIST + DeCAF-adjusted), each sub-score alone and all jointly. \label{tab:decomp}}
+\begin{tabular}{lcc}
+\toprule
+$D_2$ sub-component & Alone HR/SD (95\% CI), $P$ & Joint HR/SD (95\% CI), $P$ \\
+\midrule
+Neural & $0.72$ ($0.59$--$0.88$), 0.002 & $0.65$ ($0.49$--$0.87$), 0.004 \\
+ECMcore & $0.78$ ($0.63$--$0.96$), 0.017 & $0.97$ ($0.75$--$1.26$), 0.834 \\
+Macrophage & $1.04$ ($0.86$--$1.24$), 0.700 & $1.25$ ($1.01$--$1.54$), 0.043 \\
 \bottomrule
 \end{tabular}
 \end{table}

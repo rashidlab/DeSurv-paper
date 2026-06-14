@@ -1040,6 +1040,42 @@ relative to unsupervised NMF (Table~\ref{tab:overall-r2}) --- very little
 reconstruction fidelity is sacrificed in exchange for the prognostic
 reorganization documented above.
 
+\subsection{The D1 coupling axis is recovered by survival supervision, not by DeSurv specifically}
+
+```{r suprec-stats, echo=FALSE, message=FALSE, warning=FALSE}
+load_result("supervised_recovery_stats")
+.sr <- supervised_recovery_stats
+.srt <- .sr$table
+.srcor <- function(m) abs(.srt$score_cor_D1[.srt$method == m])
+```
+
+If the D1 tumour--stroma coupling were an artifact of DeSurv's particular
+optimizer, independent survival-supervised methods should not recover it. We
+therefore fit three other supervised dimension-reduction methods on the same
+training cohort ($n = `r .sr$meta$n`$, `r .sr$meta$n_events` events) --- supervised
+principal components (Cox-screened genes followed by PCA), one-component Cox
+partial least squares against martingale residuals, and a sparse Cox model
+(lasso-penalized, `r .sr$meta$n_sparse_cox_genes` selected genes) --- and compared
+their leading survival-aligned direction to the DeSurv D1 score. All three
+recovered D1 closely (per-patient $|r| = `r sprintf("%.2f", .srcor("Supervised PCA"))`$
+for supervised PCA, $`r sprintf("%.2f", .srcor("Cox-PLS"))`$ for Cox-PLS, and
+$`r sprintf("%.2f", .srcor("Sparse Cox"))`$ for sparse Cox; mean
+$`r sprintf("%.2f", .sr$sup_mean_score_cor)`$), and each aligned specifically with
+D1 rather than the stromal D2 or Basal-like D3 programs
+(Fig.~\ref{fig:suprec}). By contrast, the leading \emph{unsupervised} direction
+(the first principal component, which dominant-variance methods such as standard
+NMF and DECODER follow) was nearly orthogonal to D1
+($|r| = `r sprintf("%.2f", .srcor("Unsupervised PCA"))`$) and instead tracked the
+high-variance D2/D3 stroma--Basal axis. The coupling is thus a property of
+survival supervision shared across methods --- consistent with its being
+unreconstructable from the unsupervised NMF basis (Table~\ref{tab:projection-r2})
+and with standard NMF's failure to enrich for the proCAF stroma at matched rank
+--- and not an idiosyncrasy of the DeSurv algorithm.
+
+```{r fig-suprec, echo=FALSE, fig.width = 8, fig.height = 3.6, fig.cap = "Independent survival-supervised methods recover the D1 coupling axis; an unsupervised method does not. (A) Absolute per-patient correlation of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox all recover D1 (green), whereas the leading unsupervised principal component does not (grey). (B) Per-patient agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \\label{fig:suprec}", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
+knitr::include_graphics(file.path("..", "figures", "fig_supervised_recovery.pdf"), error = FALSE)
+```
+
 \clearpage
 
 \newpage

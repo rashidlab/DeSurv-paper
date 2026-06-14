@@ -16,7 +16,8 @@
 # ---------------------------------------------------------------------------
 
 suppressMessages({ library(survival) })
-setwd("/home/naimrashid/Downloads/DeSurv-paper-clean")
+# Run from the repository root (paths below are repo-root-relative), like the
+# other pipeline scripts. No hardcoded absolute path, for portability.
 
 val  <- readRDS("results/val_latent_desurv_tcgacptac.rds")
 dval <- readRDS("results/data_val_filtered_tcgacptac.rds")

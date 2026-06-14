@@ -71,8 +71,20 @@ all:
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09a_figures.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09b_si_figures.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09c_sim_figures.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/14_d1_variance_partition.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/15_supervised_recovery.R
 	DESURV_RECOMPUTE=FALSE $(RSCRIPT) code/10_render_paper.R
 	@echo "=== Full pipeline complete ==="
+
+# NOTE: code/14 and code/15 are derived-stats + figure producers that use only
+# in-repo results, so they run as part of `make all` (each writes both its
+# results/<name>.rds and its figures/<name>.pdf). code/11 (treated cohorts),
+# code/12 (Elyada scRNA), and code/13 (UNC Visium spatial) are run OUT OF BAND
+# because they require external/restricted data not shipped in this repo
+# (response_master_canonical.rds; ~/Downloads/DeSurv-paper/data/derv/Elyada*;
+# GEO GSE311783). Their committed results/*.rds and figures/*.pdf are the
+# canonical artifacts the manuscript loads via load_result(); see each script
+# header for the data each requires.
 
 # ── Paper only ────────────────────────────────────────────────────────────
 paper:

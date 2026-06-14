@@ -1,4 +1,9 @@
 \begin{figure*}[t]
+\includegraphics[width=\textwidth]{../figures/fig_supervised_recovery} \caption{Independent survival-supervised methods recover the D1 coupling axis; an unsupervised method does not. (A) Absolute per-patient correlation of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox all recover D1 (green), whereas the leading unsupervised principal component does not (grey). (B) Per-patient agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \label{fig:suprec}}\label{fig:fig-suprec}
+\end{figure*}
+\efloatseparator
+ 
+\begin{figure*}[t]
 
 {\centering \includegraphics[width=5in,height=3in]{figures/fig-converge-1}
 

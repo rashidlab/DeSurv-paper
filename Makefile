@@ -73,18 +73,20 @@ all:
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09c_sim_figures.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/14_d1_variance_partition.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/15_supervised_recovery.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/16_desurv_vs_supervised.R
 	DESURV_RECOMPUTE=FALSE $(RSCRIPT) code/10_render_paper.R
 	@echo "=== Full pipeline complete ==="
 
-# NOTE: code/14 and code/15 are derived-stats + figure producers that use only
-# in-repo results, so they run as part of `make all` (each writes both its
-# results/<name>.rds and its figures/<name>.pdf). code/11 (treated cohorts),
-# code/12 (Elyada scRNA), and code/13 (UNC Visium spatial) are run OUT OF BAND
-# because they require external/restricted data not shipped in this repo
+# NOTE: code/14, code/15 and code/16 are derived-stats + figure producers that use
+# only in-repo results, so they run as part of `make all` (each writes both its
+# results/<name>.rds and its figures/<name>.pdf). code/16 additionally needs the
+# DeSurv package (installed by code/01) and the cached cv_grid. code/11 (treated
+# cohorts), code/12 (Elyada scRNA), and code/13 (UNC Visium spatial) are run OUT OF
+# BAND because they require external/restricted data not shipped in this repo
 # (response_master_canonical.rds; ~/Downloads/DeSurv-paper/data/derv/Elyada*;
 # GEO GSE311783). Their committed results/*.rds and figures/*.pdf are the
-# canonical artifacts the manuscript loads via load_result(); see each script
-# header for the data each requires.
+# canonical artifacts the manuscript loads via load_result() and are PRESERVED by
+# `make clean` (see the clean target) since `make all` cannot regenerate them.
 
 # ── Paper only ────────────────────────────────────────────────────────────
 paper:
@@ -99,8 +101,15 @@ cv-grid:
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/06_cv_grid.R
 
 clean:
-	rm -rf results/*.rds
-	@echo "Cleaned pre-computed results. Static figures and cv_grid results preserved."
+	@# delete only the results that `make all` can regenerate; PRESERVE the out-of-band
+	@# artifacts from code/11-13 (external/restricted data; not regenerable by `make all`).
+	find results -maxdepth 1 -name '*.rds' \
+	  ! -name 'treated_cohort_stats.rds' \
+	  ! -name 'sc_validation_stats.rds' ! -name 'sc_validation_cells.rds' \
+	  ! -name 'spatial_cooccurrence_stats.rds' ! -name 'spatial_spots_scored.rds' \
+	  ! -name 'spatial_adjacency_perspot.rds' \
+	  -delete
+	@echo "Cleaned regenerable results. External-data artifacts (code/11-13), static figures, and cv_grid preserved."
 
 clean-quick:
 	rm -rf results/quick figures/quick

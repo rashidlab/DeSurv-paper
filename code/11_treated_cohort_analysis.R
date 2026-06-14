@@ -11,14 +11,15 @@
 # `r load_result("treated_cohort_stats")$...` / `read_result(...)`. External users without the raw data
 # cannot regenerate the .rds but can inspect/verify the derived values it contains.
 #
-# Scoring convention (identical to training + main-paper validation): within-sample
-# rank over the shared trained-W gene namespace, project Z = t(rank(X)) %*% W, then
-# z-standardize each factor WITHIN cohort. D1 is reported MARGINAL (it is the
-# basal-classical axis and is collinear with the PurIST classifier; adjusting D1 for
-# PurIST over-adjusts the same axis). D2/D3 are reported marginal and PurIST+DeCAF-
-# adjusted. Cohorts are NOT pooled for the primary claim (settings differ:
-# Linehan borderline/locally-advanced vs Rash/Accept metastatic; D1 I^2=62%); a
-# random-effects meta for D2 (homogeneous, I^2=0%) is provided as secondary sensitivity.
+# Scoring convention (matches main-paper validation, code/05): within-sample rank over the
+# shared trained-W namespace, then project on the top-270-per-factor union Wtilde (PGENES);
+# z-standardize each factor WITHIN cohort. D1 is reported MARGINAL (basal-classical axis,
+# collinear with PurIST; adjusting over-adjusts the same axis); D2 marginal + PurIST+DeCAF-
+# adjusted; D3 marginal. Cohorts are NOT pooled (settings differ; D1 heterogeneous).
+# NOTE: a D2 random-effects meta is still COMPUTED and stored ($meta) for reference, but it is
+# NOT used in the manuscript -- under the top-270 projection the D2 between-cohort heterogeneity
+# is moderate (I^2 approx 49%), so the homogeneity that would justify pooling does not hold;
+# the manuscript reports per-cohort results plus the full-vs-top-gene concordance only.
 # ---------------------------------------------------------------------------
 suppressMessages({library(survival)})
 

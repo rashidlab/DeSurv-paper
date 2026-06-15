@@ -326,8 +326,15 @@ Amber M. Young
 </section>
 <section id="supervision-reorganizes-pdac-factors-around-prognosis" class="slide level2">
 <h2>Supervision reorganizes PDAC factors around prognosis</h2>
-
-<img data-src="figures/defense/fig3_AB_heatmaps.png" style="width:96.0%" class="r-stretch"><aside class="notes">
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><img data-src="figures/defense/fig3_nmf_heatmap.png"></p>
+</div><div class="column" style="width:50%;">
+<div class="fragment">
+<p><img data-src="figures/defense/fig3_desurv_heatmap.png"></p>
+</div>
+</div></div>
+<aside class="notes">
 <p>Same data, same rank k=3, different factors. DeSurv’s D1 fuses Classical tumor <em>and</em> restCAF stroma into one prognostic axis — a tumor–stroma coupling, not a pure tumor signal. Unsupervised NMF instead burns a whole factor (N2) on exocrine/ADEX — normal-pancreas contamination and purity — and splits the rest across N1/N3. Supervision rebuilds what each factor captures; D1 has no clean NMF counterpart.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {

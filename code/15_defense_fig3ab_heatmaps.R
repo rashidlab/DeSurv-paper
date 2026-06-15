@@ -54,19 +54,24 @@ hm_nmf <- make_gene_overlap_heatmap(
   factor_labels = heatmap_factor_labels_std, title = "NMF",
   fontsize_row = FS_ROW, fontsize = FS_TITLE, legend_fontsize = FS_LEG)
 
-plot_a <- hm_desurv$plot + theme(plot.margin = margin(t = 14, r = 2, b = 2, l = 2))
-plot_b <- hm_nmf$plot    + theme(plot.margin = margin(t = 14, r = 2, b = 2, l = 2))
-legend_ab <- gtable::gtable_add_padding(
-  hm_desurv$legend, padding = unit(c(0, 10, 0, 0), "pt"))
+# Two standalone panels (no A/B labels), each with its own colour bar so it can
+# stand alone on the slide. NMF is revealed first, DeSurv on click.
+panel <- function(hm) {
+  leg <- gtable::gtable_add_padding(hm$legend, padding = unit(c(0, 8, 0, 0), "pt"))
+  plot_grid(hm$plot + theme(plot.margin = margin(t = 14, r = 2, b = 2, l = 2)),
+            ggdraw(leg), ncol = 2, rel_widths = c(4, 0.6))
+}
 
-fig <- plot_grid(
-  plot_a, plot_b, ggdraw(legend_ab),
-  ncol = 3, labels = c("A", "B", ""), align = "hv",
-  label_size = 22, rel_widths = c(3.5, 3.5, 0.45)
-)
+fig_nmf    <- panel(hm_nmf)
+fig_desurv <- panel(hm_desurv)
 
-ggsave(file.path(OUT, "fig3_AB_heatmaps.pdf"), fig,
-       width = 13, height = 6.2, device = cairo_pdf)
-ggsave(file.path(OUT, "fig3_AB_heatmaps.png"), fig,
-       width = 13, height = 6.2, dpi = 300, bg = "white")
-message("Saved fig3_AB_heatmaps (13x6.2 in, enlarged fonts)")
+save_panel <- function(p, stem) {
+  ggsave(file.path(OUT, paste0(stem, ".pdf")), p, width = 6.8, height = 6.2,
+         device = cairo_pdf)
+  ggsave(file.path(OUT, paste0(stem, ".png")), p, width = 6.8, height = 6.2,
+         dpi = 300, bg = "white")
+}
+
+save_panel(fig_nmf,    "fig3_nmf_heatmap")
+save_panel(fig_desurv, "fig3_desurv_heatmap")
+message("Saved fig3_nmf_heatmap and fig3_desurv_heatmap (6.8x6.2 in, enlarged fonts)")

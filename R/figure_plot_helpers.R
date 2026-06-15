@@ -132,7 +132,7 @@ extract_gp_curve_maxed <- function(bo_results, ci_level = 0.95,
   )
 }
 
-make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_labels = NULL, title = NULL, fontsize_row = 6){
+make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_labels = NULL, title = NULL, fontsize_row = 6, fontsize = 6, fontsize_number = 20, legend_fontsize = 6){
 
   if (is.null(top_genes_ref) || !length(top_genes_ref)) {
     stop("Reference gene signatures are missing.")
@@ -254,11 +254,11 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
     cluster_cols = FALSE,
     color = my_colors,
     breaks = seq(-0.5, 0.5, length.out = 101),
-    fontsize = 6,
+    fontsize = fontsize,
     fontsize_row = fontsize_row,
     fontsize_col = fontsize_row,
     silent = TRUE,
-    fontsize_number = 20,
+    fontsize_number = fontsize_number,
     treeheight_row = 0,
     show_colnames = TRUE
   )
@@ -291,8 +291,8 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
     ggplot2::theme_void() +
     ggplot2::theme(
       legend.position = "right",
-      legend.title = ggplot2::element_text(size = 6),
-      legend.text  = ggplot2::element_text(size = 6)
+      legend.title = ggplot2::element_text(size = legend_fontsize),
+      legend.text  = ggplot2::element_text(size = legend_fontsize)
     )
   legend_gg <- cowplot::get_legend(legend_dummy)
 

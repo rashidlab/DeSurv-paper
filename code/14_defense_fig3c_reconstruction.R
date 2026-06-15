@@ -104,8 +104,8 @@ brk_x <- c(0.160, 0.196)                  # straddles the y-axis line (NPC x ~ 0
 body <- ggdraw(stacked) +
   draw_label(y_title, x = 0.045, y = 0.55, angle = 90,
              fontface = "bold", size = 18, hjust = 0.5) +
-  draw_line(x = brk_x, y = boundary + c(-0.004, 0.016), linewidth = 1.1) +
-  draw_line(x = brk_x, y = boundary + c(0.010, 0.030), linewidth = 1.1)
+  draw_line(x = brk_x, y = boundary + c(0.024, 0.044), linewidth = 1.1) +
+  draw_line(x = brk_x, y = boundary + c(0.038, 0.058), linewidth = 1.1)
 
 # Shared horizontal legend, placed below the plot.
 legend_row <- get_legend(

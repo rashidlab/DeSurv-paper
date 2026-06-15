@@ -65,13 +65,15 @@ panel <- function(hm) {
 fig_nmf    <- panel(hm_nmf)
 fig_desurv <- panel(hm_desurv)
 
-save_panel <- function(p, stem) {
-  ggsave(file.path(OUT, paste0(stem, ".pdf")), p, width = 6.8, height = 6.2,
+# DeSurv has 16 signature rows vs NMF's 15 (plus longer column labels), so it is
+# saved slightly taller to keep per-cell height matched across the two panels.
+save_panel <- function(p, stem, height = 6.2) {
+  ggsave(file.path(OUT, paste0(stem, ".pdf")), p, width = 6.8, height = height,
          device = cairo_pdf)
-  ggsave(file.path(OUT, paste0(stem, ".png")), p, width = 6.8, height = 6.2,
+  ggsave(file.path(OUT, paste0(stem, ".png")), p, width = 6.8, height = height,
          dpi = 300, bg = "white")
 }
 
-save_panel(fig_nmf,    "fig3_nmf_heatmap")
-save_panel(fig_desurv, "fig3_desurv_heatmap")
+save_panel(fig_nmf,    "fig3_nmf_heatmap",    height = 6.2)
+save_panel(fig_desurv, "fig3_desurv_heatmap", height = 6.6)
 message("Saved fig3_nmf_heatmap and fig3_desurv_heatmap (6.8x6.2 in, enlarged fonts)")

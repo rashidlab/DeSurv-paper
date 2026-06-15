@@ -102,10 +102,10 @@ DeSurv beats NMF on test C-index (A), but the decisive panel is B: NMF's precisi
 Same data, same rank k=3, different factors. DeSurv's D1 fuses Classical tumor *and* restCAF stroma into one prognostic axis — a tumor–stroma coupling, not a pure tumor signal. Unsupervised NMF instead burns a whole factor (N2) on exocrine/ADEX — normal-pancreas contamination and purity — and splits the rest across N1/N3. Supervision rebuilds what each factor captures; D1 has no clean NMF counterpart.
 :::
 
-## PDAC's highest-variance factors carry the least survival signal
+## PDAC's best-reconstructing factors carry the least survival signal
 
-![](figures/defense/new_3c_variance_explained.png){width="55%"}
+![](figures/defense/new_3c_reconstruction.png){width="55%"}
 
 ::: {.notes}
-This is the slide-4 cartoon made empirical in PDAC. x-axis: cross-sample variance a factor explains; y-axis: its survival contribution (drop in partial log-likelihood when removed). DeSurv's D1 sits top-left — ~1% of variance, yet by far the largest survival contribution. NMF's N1 and N3 sit bottom-right — most of the variance, essentially zero survival contribution. Variance and prognosis are decoupled; an unsupervised, variance-driven choice walks away from the prognostic factor.
+This is the slide-4 thesis made empirical in PDAC. x-axis: each factor's share of reconstruction (normalized Shapley value, partitions and sums to 100%); y-axis: its survival contribution (drop in partial log-likelihood when removed). DeSurv's D1 sits top-left — it carries essentially all the survival signal (Δℓ ≈ 66) at only a modest reconstruction share. The factors that reconstruct PDAC best — DeSurv's D3 and NMF's N1/N3 at the right — contribute almost nothing to survival. Reconstruction and prognosis are decoupled, so an unsupervised, reconstruction-driven choice walks right past the prognostic factor.
 :::

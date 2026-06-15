@@ -324,11 +324,11 @@ Amber M. Young
           display:block!important;
       }</style></aside>
 </section>
-<section id="pdacs-highest-variance-factors-carry-the-least-survival-signal" class="slide level2">
-<h2>PDAC’s highest-variance factors carry the least survival signal</h2>
+<section id="pdacs-best-reconstructing-factors-carry-the-least-survival-signal" class="slide level2">
+<h2>PDAC’s best-reconstructing factors carry the least survival signal</h2>
 
-<img data-src="figures/defense/new_3c_variance_explained.png" style="width:55.0%" class="r-stretch"><aside class="notes">
-<p>This is the slide-4 cartoon made empirical in PDAC. x-axis: cross-sample variance a factor explains; y-axis: its survival contribution (drop in partial log-likelihood when removed). DeSurv’s D1 sits top-left — ~1% of variance, yet by far the largest survival contribution. NMF’s N1 and N3 sit bottom-right — most of the variance, essentially zero survival contribution. Variance and prognosis are decoupled; an unsupervised, variance-driven choice walks away from the prognostic factor.</p>
+<img data-src="figures/defense/new_3c_reconstruction.png" style="width:55.0%" class="r-stretch"><aside class="notes">
+<p>This is the slide-4 thesis made empirical in PDAC. x-axis: each factor’s share of reconstruction (normalized Shapley value, partitions and sums to 100%); y-axis: its survival contribution (drop in partial log-likelihood when removed). DeSurv’s D1 sits top-left — it carries essentially all the survival signal (Δℓ ≈ 66) at only a modest reconstruction share. The factors that reconstruct PDAC best — DeSurv’s D3 and NMF’s N1/N3 at the right — contribute almost nothing to survival. Reconstruction and prognosis are decoupled, so an unsupervised, reconstruction-driven choice walks right past the prognostic factor.</p>
 <style type="text/css">
         span.MJX_Assistive_MathML {
           position:absolute!important;

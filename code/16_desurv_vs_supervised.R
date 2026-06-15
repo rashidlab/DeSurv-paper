@@ -15,8 +15,11 @@
 #    (~0.11) ties the dense supervised methods Cox-PLS/SupPCA; only pure sparse outcome-
 #    selection (sparse Cox, ~0.03) is clearly worse. (An earlier "within->cross reversal"
 #    was a gene-wise-z-scoring artifact, removed by the unified within-sample-rank space.)
-#  - The differentiator therefore is COMPARTMENT RESOLUTION (source-attributable programs,
-#    validated elsewhere by single-cell + spatial), which dense supervised scores lack.
+#  - The differentiator therefore is COMPARTMENT RESOLUTION (source-attributable programs:
+#    D1's loadings span Classical-tumour and restCAF-stromal genes, concordant with virtual/
+#    experimental microdissection and CAF deconvolution), which dense supervised scores lack.
+#    This is a bulk gene-program-level claim; cellular/spatial resolution was not robustly
+#    supported (see code/13c/13d) and is not claimed.
 #
 # Four parts:
 #  (1) PREDICTION PARITY: freeze each method's leading prognostic axis on TCGA+CPTAC,

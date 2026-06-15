@@ -9,8 +9,10 @@
 # program -- while the leading UNSUPERVISED direction (PC1, which DECODER /
 # standard NMF follow) does NOT. This shows D1 is created by supervision, not by
 # DeSurv specifically; it is a method-robustness check, NOT a biology claim
-# (single-cell + spatial carry the biology). It also mirrors the established
-# result that unsupervised DECODER/NMF do not isolate D1.
+# (the coupling is established at the bulk gene-program level; cellular/spatial
+# resolution was not robustly supported and is not claimed -- see notes in
+# code/13c/13d). It also mirrors the established result that unsupervised
+# DECODER/NMF do not isolate D1.
 #
 # Methods: (i) unsupervised PCA [baseline, no survival]; (ii) supervised PCA
 # (Bair-Tibshirani: Cox-screen genes -> PCA); (iii) Cox-PLS (one PLS component

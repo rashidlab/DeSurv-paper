@@ -18,6 +18,7 @@
 suppressPackageStartupMessages({
   library(ggplot2)
   library(ggrepel)
+  library(cowplot)
 })
 
 OUT <- file.path("figures", "defense")
@@ -35,35 +36,80 @@ print(within(df_plot, {
   delta_loglik       <- round(delta_loglik, 2)
 })[, c("method", "factor_label", "variance_explained", "delta_loglik")])
 
-# ── Plot (deck-scale fonts; same visual grammar as the centered-variance deck
-#    figure it replaces, so the slide look is consistent) ──────────────────────
-fig <- ggplot(df_plot, aes(variance_explained, delta_loglik,
-                           label = factor_label, color = method)) +
-  geom_point(size = 5) +
+# ── Broken y-axis: D1's survival contribution (Delta-l ~ 66) dwarfs every other
+#    factor (all < 1.2), collapsing them onto the axis. We split the panel so the
+#    near-zero factors get full resolution (N2 ~ 1.2 and D3 ~ 1.0 separate clearly
+#    from N1/N3/D2 ~ 0) while D1 still reads as dramatically higher. ─────────────
+pal <- c(NMF = "#c0392b", DeSurv = "#2166ac")
+df_plot$method <- factor(df_plot$method, levels = c("DeSurv", "NMF"))
+
+# Split the data by panel so geom_text_repel only labels each panel's own points
+# (clipping alone leaves stray labels for off-screen points).
+df_hi <- df_plot[df_plot$delta_loglik > 10, ]    # D1 only
+df_lo <- df_plot[df_plot$delta_loglik <= 10, ]    # every other factor
+
+x_scale <- scale_x_continuous(labels = scales::percent_format(accuracy = 1),
+                              expand = expansion(mult = c(0.08, 0.12)))
+
+base_layers <- list(
+  geom_point(size = 5),
   geom_text_repel(size = 5.2, fontface = "bold", max.overlaps = Inf,
                   box.padding = 0.7, point.padding = 0.5,
-                  segment.size = 0.3, force = 2, show.legend = FALSE) +
-  scale_color_manual(values = c(NMF = "#c0392b", DeSurv = "#2166ac"),
-                     name = NULL) +
-  scale_x_continuous(labels = scales::percent_format(accuracy = 1),
-                     expand = expansion(mult = c(0.08, 0.12))) +
-  labs(
-    x = "Contribution to reconstruction\n(Shapley share)",
-    y = expression(atop(Delta ~ "partial log-likelihood",
-                        "(full vs. " * italic(k) * "-1 factor model)"))
-  ) +
+                  segment.size = 0.3, force = 2, show.legend = FALSE),
+  scale_color_manual(values = pal, name = NULL, drop = FALSE),
+  x_scale
+)
+
+# Top panel: only the D1 region (zoomed), no x-axis, legend lives here.
+p_top <- ggplot(df_hi, aes(variance_explained, delta_loglik,
+                           label = factor_label, color = method)) +
+  base_layers +
+  coord_cartesian(ylim = c(62, 70)) +
+  scale_y_continuous(breaks = c(65)) +
   theme_classic(base_size = 16) +
   theme(
-    axis.title   = element_text(face = "bold"),
+    axis.title   = element_blank(),
+    axis.text.y  = element_text(color = "black"),
+    axis.text.x  = element_blank(),
+    axis.ticks.x = element_blank(),
+    axis.line.x  = element_blank(),
+    legend.position = "none",
+    plot.margin  = margin(8, 16, 0, 52)
+  )
+
+# Bottom panel: every other factor, full resolution; carries the x-axis.
+p_bot <- ggplot(df_lo, aes(variance_explained, delta_loglik,
+                           label = factor_label, color = method)) +
+  base_layers +
+  coord_cartesian(ylim = c(-0.12, 1.5)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1.0, 1.5)) +
+  labs(x = "Contribution to reconstruction\n(Shapley share)") +
+  theme_classic(base_size = 16) +
+  theme(
+    axis.title.x = element_text(face = "bold"),
+    axis.title.y = element_blank(),
     axis.text    = element_text(color = "black"),
-    legend.position = c(0.5, 0.93),
+    legend.position  = c(0.5, 0.97),
     legend.direction = "horizontal",
     legend.text  = element_text(size = 15, face = "bold"),
-    plot.margin  = margin(12, 16, 10, 12)
+    plot.margin  = margin(0, 16, 10, 52)
   )
+
+stacked <- plot_grid(p_top, p_bot, ncol = 1, rel_heights = c(1, 1.9),
+                     align = "v", axis = "lr")
+
+# Shared rotated y-axis title + broken-axis slash marks at the panel boundary.
+y_title <- expression(atop(Delta ~ "partial log-likelihood",
+                           "(full vs. " * italic(k) * "-1 factor model)"))
+boundary <- 1.9 / 2.9                     # y (NPC) of the top/bottom panel join
+fig <- ggdraw(stacked) +
+  draw_label(y_title, x = 0.022, y = 0.55, angle = 90,
+             fontface = "bold", size = 15, hjust = 0.5) +
+  draw_line(x = c(0.055, 0.095), y = boundary + c(-0.004, 0.014), linewidth = 0.9) +
+  draw_line(x = c(0.055, 0.095), y = boundary + c(0.008, 0.026), linewidth = 0.9)
 
 ggsave(file.path(OUT, "new_3c_reconstruction.pdf"), fig,
        width = 8, height = 6.2, device = cairo_pdf)
 ggsave(file.path(OUT, "new_3c_reconstruction.png"), fig,
        width = 8, height = 6.2, dpi = 300, bg = "white", type = "cairo")
-message("Saved new_3c_reconstruction (8x6.2 in)")
+message("Saved new_3c_reconstruction (8x6.2 in, broken y-axis)")

@@ -389,6 +389,160 @@ Amber M. Young
           overflow: hidden!important;
           display:block!important;
       }</style></aside>
+</section>
+<section id="prognosis-in-pdac-is-tumorstroma-coupling-not-tumor-alone" class="slide level2">
+<h2>Prognosis in PDAC is tumor–stroma coupling, not tumor alone</h2>
+<div class="highlight-box">
+<p>DeSurv’s prognostic axis <strong>D1 fuses Classical tumor with restraining-CAF stroma</strong> into a single factor — a tumor–stroma <em>coupling</em>, recovered <strong>de novo</strong> with no pre-specified signatures.</p>
+</div>
+<div class="columns">
+<div class="column">
+<h4 id="what-d1-captures">What D1 captures</h4>
+<ul>
+<li>Classical (well-differentiated) tumor program</li>
+<li>restCAF stromal program <strong>in the same factor</strong></li>
+<li>High D1 → favorable outcome (pooled HR ≈ 0.76)</li>
+</ul>
+</div><div class="column">
+<h4 id="why-it-matters">Why it matters</h4>
+<ul>
+<li>Prognosis is <strong>not purely tumor-intrinsic</strong></li>
+<li>Consistent with DeCAF and single-cell CAF biology</li>
+<li>Unsupervised NMF splits this signal and misses the coupling</li>
+</ul>
+</div></div>
+<aside class="notes">
+<p>The biology DeSurv surfaces is the headline finding. The single most prognostic axis in PDAC is not a pure tumor state — it pairs the Classical tumor phenotype with a restraining CAF stromal program. We recovered this de novo, without feeding in Moffitt/PurIST/DeCAF signatures. It lines up with the emerging DeCAF and single-cell view that stromal composition co-determines outcome. Unsupervised NMF can’t see it because it splits tumor and stroma across separate variance-driven factors.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="desurv-helps-when-prognosis-hides-in-low-variance-programs" class="slide level2">
+<h2>DeSurv helps when prognosis hides in low-variance programs</h2>
+<div class="columns">
+<div class="column">
+<h4 id="where-the-gain-is-largest">Where the gain is largest</h4>
+<ul>
+<li>Prognostic programs explaining <strong>modest variance</strong> — easily missed unsupervised</li>
+<li>Low-abundance stromal / CAF signals diluted in bulk tissue</li>
+</ul>
+</div><div class="column">
+<h4 id="where-it-doesnt">Where it doesn’t</h4>
+<ul>
+<li><strong>Null signal (β = 0):</strong> BO drives α → 0, DeSurv collapses to NMF</li>
+<li>No hallucinated structure; not a competing classifier</li>
+</ul>
+</div></div>
+<div class="highlight-box-navy">
+<p><strong>The data decide.</strong> Supervision bends the factorization toward prognosis <em>only</em> when prognostic signal is actually present — otherwise you recover ordinary NMF.</p>
+</div>
+<aside class="notes">
+<p>Be honest about scope. DeSurv’s advantage is largest exactly in the regime that motivated it: prognostic programs that explain little variance, so unsupervised methods walk past them. Under the null, where survival carries no signal, Bayesian optimization drives alpha to zero and you get standard NMF back — the method doesn’t manufacture structure. So this is not a replacement for exploratory NMF and not a head-to-head classifier; it’s a targeted tool for when prognosis and variance disagree.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="limitations-point-to-neoadjuvant-and-single-cell-extensions" class="slide level2">
+<h2>Limitations point to neoadjuvant and single-cell extensions</h2>
+<div class="columns">
+<div class="column">
+<h4 id="limitations">Limitations</h4>
+<ul>
+<li>Cox proportional-hazards assumption</li>
+<li>Demonstrated in <strong>PDAC only</strong>, treatment-naive cohorts</li>
+<li>Bayesian-optimization cost grows at scale</li>
+</ul>
+</div><div class="column">
+<h4 id="future-work">Future work</h4>
+<ul>
+<li>Extend to <strong>neoadjuvant / treated</strong> cohorts</li>
+<li>Bridge to <strong>single-cell-annotated</strong> data to sharpen programs</li>
+<li>Apply the framework <strong>beyond PDAC</strong></li>
+</ul>
+</div></div>
+<aside class="notes">
+<p>Limitations, stated plainly. The survival model is Cox proportional-hazards, so non-proportional effects aren’t captured. Everything here is PDAC and treatment-naive cohorts. Bayesian optimization adds compute. The natural next steps follow directly: neoadjuvant and treated cohorts; pairing with single-cell-annotated data to resolve what D1’s programs are at cell-type resolution; and testing the framework in other cancers where prognosis may again hide in low-variance programs.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="survival-supervision-yields-transportable-prognostic-programs" class="slide level2">
+<h2>Survival supervision yields transportable prognostic programs</h2>
+<div class="highlight-box">
+<p>A <strong>survival-supervised gradient on W</strong>, with joint Bayesian-optimization tuning and 1-SE model selection, turns bulk transcriptomes into <strong>prognostic programs that transport</strong> to new cohorts by simple projection. Released as an open-source R package.</p>
+</div>
+<h4 id="take-home">Take-home</h4>
+<ul>
+<li><strong>Reconstruction ≠ prognosis</strong> — supervision recovers the prognostic basis that unsupervised NMF misses</li>
+<li>Validated two non-circular ways: <strong>ground-truth recovery</strong> in simulation and <strong>out-of-sample generalization</strong> across 5 cohorts</li>
+<li>The prognostic axis in PDAC is a <strong>tumor–stroma coupling</strong> (D1), found de novo</li>
+</ul>
+<aside class="notes">
+<p>The one sentence to remember: supervising the gradient on W — the gene programs — while tuning k, alpha, and lambda jointly by cross-validated C-index, produces prognostic programs that carry over to new data by projection alone. Everything rests on the opening claim that reconstruction and prognosis are different objectives, and we backed it both in a controlled simulation and in true external validation. The package is open source so others can apply it.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="thank-you" class="slide level2 center">
+<h2>Thank you</h2>
+<div class="columns">
+<div class="column">
+<h4 id="advisor-committee">Advisor &amp; committee</h4>
+<p>Naim Rashid (advisor)<br>{{COMMITTEE MEMBERS}}</p>
+<h4 id="collaborators">Collaborators</h4>
+<p>Jen Jen Yeh · Naim Rashid lab<br>Yurovsky · Peng · Li</p>
+</div><div class="column">
+<h4 id="data-funding">Data &amp; funding</h4>
+<p>TCGA, CPTAC, and the 5 validation cohorts<br> DOD HT9425241103100121</p>
+</div></div>
+<div class="center muted" style="margin-top: 1em;">
+<p>Questions welcome.</p>
+</div>
+<aside class="notes">
+<p>Thank the committee, the Rashid lab, Jen Jen Yeh and the clinical collaborators, the consortia and cohorts whose data made external validation possible, and DOD funding. Open for questions.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 
 </section>
     </div>

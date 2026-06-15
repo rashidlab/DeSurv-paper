@@ -158,3 +158,124 @@ The real test: does D1 transport? Five external cohorts (Dijk, Moffitt, both PAC
 ::: {.notes}
 Pooled validation KM at a cutpoint chosen by cross-validation on the training data. Matched-rank NMF (left) can't separate risk: HR 1.38, p = 0.122, and it dumps almost everyone into the low-risk group (533 vs 37). DeSurv (click) splits high- vs low-risk cleanly: HR 1.79, log-rank p < 0.001, with a balanced split. Same rank, same projection rule — supervision is what turns the factors into a usable risk score. This survives adjustment for PurIST and DeCAF (HR 1.33, 95% CI 1.13–1.56), so it's independent prognostic value, not a restatement of existing subtypes.
 :::
+
+## Prognosis in PDAC is tumor–stroma coupling, not tumor alone
+
+::: {.highlight-box}
+DeSurv's prognostic axis **D1 fuses Classical tumor with restraining-CAF stroma** into a single factor — a tumor–stroma *coupling*, recovered **de novo** with no pre-specified signatures.
+:::
+
+:::: {.columns}
+
+::: {.column}
+#### What D1 captures
+- Classical (well-differentiated) tumor program
+- restCAF stromal program **in the same factor**
+- High D1 → favorable outcome (pooled HR ≈ 0.76)
+:::
+
+::: {.column}
+#### Why it matters
+- Prognosis is **not purely tumor-intrinsic**
+- Consistent with DeCAF and single-cell CAF biology
+- Unsupervised NMF splits this signal and misses the coupling
+:::
+
+::::
+
+::: {.notes}
+The biology DeSurv surfaces is the headline finding. The single most prognostic axis in PDAC is not a pure tumor state — it pairs the Classical tumor phenotype with a restraining CAF stromal program. We recovered this de novo, without feeding in Moffitt/PurIST/DeCAF signatures. It lines up with the emerging DeCAF and single-cell view that stromal composition co-determines outcome. Unsupervised NMF can't see it because it splits tumor and stroma across separate variance-driven factors.
+:::
+
+## DeSurv helps when prognosis hides in low-variance programs
+
+:::: {.columns}
+
+::: {.column}
+#### Where the gain is largest
+- Prognostic programs explaining **modest variance** — easily missed unsupervised
+- Low-abundance stromal / CAF signals diluted in bulk tissue
+:::
+
+::: {.column}
+#### Where it doesn't
+- **Null signal (β = 0):** BO drives α → 0, DeSurv collapses to NMF
+- No hallucinated structure; not a competing classifier
+:::
+
+::::
+
+::: {.highlight-box-navy}
+**The data decide.** Supervision bends the factorization toward prognosis *only* when prognostic signal is actually present — otherwise you recover ordinary NMF.
+:::
+
+::: {.notes}
+Be honest about scope. DeSurv's advantage is largest exactly in the regime that motivated it: prognostic programs that explain little variance, so unsupervised methods walk past them. Under the null, where survival carries no signal, Bayesian optimization drives alpha to zero and you get standard NMF back — the method doesn't manufacture structure. So this is not a replacement for exploratory NMF and not a head-to-head classifier; it's a targeted tool for when prognosis and variance disagree.
+:::
+
+## Limitations point to neoadjuvant and single-cell extensions
+
+:::: {.columns}
+
+::: {.column}
+#### Limitations
+- Cox proportional-hazards assumption
+- Demonstrated in **PDAC only**, treatment-naive cohorts
+- Bayesian-optimization cost grows at scale
+:::
+
+::: {.column}
+#### Future work
+- Extend to **neoadjuvant / treated** cohorts
+- Bridge to **single-cell-annotated** data to sharpen programs
+- Apply the framework **beyond PDAC**
+:::
+
+::::
+
+::: {.notes}
+Limitations, stated plainly. The survival model is Cox proportional-hazards, so non-proportional effects aren't captured. Everything here is PDAC and treatment-naive cohorts. Bayesian optimization adds compute. The natural next steps follow directly: neoadjuvant and treated cohorts; pairing with single-cell-annotated data to resolve what D1's programs are at cell-type resolution; and testing the framework in other cancers where prognosis may again hide in low-variance programs.
+:::
+
+## Survival supervision yields transportable prognostic programs
+
+::: {.highlight-box}
+A **survival-supervised gradient on W**, with joint Bayesian-optimization tuning and 1-SE model selection, turns bulk transcriptomes into **prognostic programs that transport** to new cohorts by simple projection. Released as an open-source R package.
+:::
+
+#### Take-home
+- **Reconstruction ≠ prognosis** — supervision recovers the prognostic basis that unsupervised NMF misses
+- Validated two non-circular ways: **ground-truth recovery** in simulation and **out-of-sample generalization** across 5 cohorts
+- The prognostic axis in PDAC is a **tumor–stroma coupling** (D1), found de novo
+
+::: {.notes}
+The one sentence to remember: supervising the gradient on W — the gene programs — while tuning k, alpha, and lambda jointly by cross-validated C-index, produces prognostic programs that carry over to new data by projection alone. Everything rests on the opening claim that reconstruction and prognosis are different objectives, and we backed it both in a controlled simulation and in true external validation. The package is open source so others can apply it.
+:::
+
+## Thank you {.center}
+
+:::: {.columns}
+
+::: {.column}
+#### Advisor & committee
+Naim Rashid (advisor)<br>{{COMMITTEE MEMBERS}}
+
+#### Collaborators
+Jen Jen Yeh · Naim Rashid lab<br>Yurovsky · Peng · Li
+:::
+
+::: {.column}
+#### Data & funding
+TCGA, CPTAC, and the 5 validation cohorts<br>
+DOD HT9425241103100121
+:::
+
+::::
+
+::: {.center .muted style="margin-top: 1em;"}
+Questions welcome.
+:::
+
+::: {.notes}
+Thank the committee, the Rashid lab, Jen Jen Yeh and the clinical collaborators, the consortia and cohorts whose data made external validation possible, and DOD funding. Open for questions.
+:::

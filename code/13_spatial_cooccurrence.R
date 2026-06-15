@@ -1,14 +1,14 @@
 #!/usr/bin/env Rscript
 # 13_spatial_cooccurrence.R
 # ---------------------------------------------------------------------------
-# Tier-1 SPATIAL validation of the D1 tumour-stroma coupling (Nature Cancer).
+# SPATIAL validation of the D1 tumour-stroma coupling (Nature Cancer).
 #
-# The within-patient co-occurrence test in single cells (code/12) is direction-
-# ally right but underpowered (6 patients). The decisive, powered form of the
-# coupling claim is SPATIAL ADJACENCY: in real tissue, do Classical-malignant
-# regions sit next to restraining-CAF (restCAF) stroma, while Basal-like regions
-# sit next to promoting-CAF (proCAF) stroma? Spots, not patients, are the unit,
-# so this is well powered (tens of thousands of spots across 7 sections).
+# The coupling is a tissue-architecture phenomenon, validated at spot resolution.
+# SPATIAL ADJACENCY: do Classical-malignant regions sit next to restraining-CAF
+# (restCAF) stroma, while Basal-like regions sit next to promoting-CAF (proCAF)
+# stroma? Spots (not single cells) are the unit -- multicellular, far denser than
+# scRNA, and the key adjacency test uses marker/DeCAF signature calls -- so it is
+# well powered (tens of thousands of spots across 7 sections) and dropout-robust.
 #
 # Data: UNC Visium CytAssist spatial transcriptomics, GSE311783 (now public via
 # Peng et al. Cell Rep Med 2026). Read WITHOUT Seurat -- 10x triplets + Visium
@@ -22,7 +22,7 @@ ROOT  <- "/home/naimrashid/Downloads/DeSurv-paper-clean"
 STDIR <- "/tmp/unc_st"
 setwd(ROOT)
 
-## --- trained fit + top-270 basis (identical to code/11, code/12) -------------
+## --- trained fit + top-270 basis (identical convention to code/11) -------------
 fit <- readRDS(file.path("results","tar_fit_desurv_tcgacptac.rds"))
 W <- fit$W; Wg <- rownames(W)
 source("R/get_top_genes.R")

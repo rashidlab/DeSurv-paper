@@ -30,7 +30,7 @@
       vertical-align: middle;
     }
   </style>
-  <link rel="stylesheet" href="defense_files/libs/revealjs/dist/theme/quarto-15a9bb1d1f247c8535c1baeea373445f.css">
+  <link rel="stylesheet" href="defense_files/libs/revealjs/dist/theme/quarto-e2f0c2e3aebe914b69b7893bd1a87598.css">
   <link href="defense_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="defense_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="defense_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -137,7 +137,7 @@
 Amber M. Young 
 </div>
         <p class="quarto-title-affiliation">
-            Rashid Lab · University of North Carolina at Chapel Hill<br><span style="font-size:0.7em">Advisors: {{ADVISORS}}</span><br><span style="font-size:0.7em">Committee: {{COMMITTEE MEMBERS}}</span>
+            <span class="affil">Department of Biostatistics · UNC Gillings School of Global Public Health</span><span class="affil">Advisor: Naim Rashid</span><span class="contact">Committee: {{COMMITTEE MEMBERS}}</span>
           </p>
     </div>
 </div>
@@ -348,10 +348,10 @@ Amber M. Young
 </section>
 <section id="d1-stays-prognostic-across-five-independent-cohorts" class="slide level2">
 <h2>D1 stays prognostic across five independent cohorts</h2>
-<p><img data-src="figures/defense/fig4_forest_nmf.png" class="absolute" style="top: 100px; left: 30px; width: 560px; "></p>
-<p><img data-src="figures/defense/fig4_forest_desurv.png" class="fragment absolute" style="top: 100px; left: 690px; width: 560px; "></p>
-<p><img data-src="figures/defense/fig4_forest_desurv_box.png" class="fragment absolute" style="top: 100px; left: 690px; width: 560px; "></p>
-<p><img data-src="figures/defense/fig4_forest_legend.png" class="absolute" style="left: 215px; bottom: 8px; width: 850px; "></p>
+<p><img data-src="figures/defense/fig4_forest_nmf.png" class="absolute" style="top: 170px; left: 60px; width: 830px; "></p>
+<p><img data-src="figures/defense/fig4_forest_desurv.png" class="fragment absolute" style="top: 170px; left: 1030px; width: 830px; "></p>
+<p><img data-src="figures/defense/fig4_forest_desurv_box.png" class="fragment absolute" style="top: 170px; left: 1030px; width: 830px; "></p>
+<p><img data-src="figures/defense/fig4_forest_legend.png" class="absolute" style="left: 335px; bottom: 30px; width: 1250px; "></p>
 <aside class="notes">
 <p>The real test: does D1 transport? Five external cohorts (Dijk, Moffitt, both PACA-AU platforms, Puleo), scored purely by projection Z = W̃ᵀX_new — no retraining, no validation survival used in the fit. Standard NMF (left) has no factor with a clean, reproducible signal — the pooled estimates all straddle 1. DeSurv (click) is different: D1 (boxed) is protective and consistent — every cohort’s CI sits at or below 1, pooled HR ≈ 0.76. Supervision didn’t just reorganize the training factors; it produced a program that generalizes.</p>
 <style type="text/css">
@@ -394,7 +394,7 @@ Amber M. Young
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
-
+<p>Survival-guided matrix factorization · DeSurv</p>
 </div>
 </div></div>
 
@@ -572,12 +572,12 @@ Amber M. Young
         // The "normal" size of the presentation, aspect ratio will be preserved
         // when the presentation is scaled to fit different resolutions. Can be
         // specified using percentage units.
-        width: 1280,
+        width: 1920,
 
-        height: 720,
+        height: 1080,
 
         // Factor of the display size that should remain empty around the content
-        margin: 0.1,
+        margin: 6.0e-2,
 
         math: {
           mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js',

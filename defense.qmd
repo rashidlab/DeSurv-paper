@@ -2,16 +2,19 @@
 title: "Survival-guided matrix factorization identifies generalizable prognostic programs in pancreatic cancer"
 subtitle: "PhD Dissertation Defense"
 author: "Amber M. Young"
-institute: "Rashid Lab · University of North Carolina at Chapel Hill<br><span style='font-size:0.7em'>Advisors: {{ADVISORS}}</span><br><span style='font-size:0.7em'>Committee: {{COMMITTEE MEMBERS}}</span>"
+institute: "<span class='affil'>Department of Biostatistics · UNC Gillings School of Global Public Health</span><span class='affil'>Advisor: Naim Rashid</span><span class='contact'>Committee: {{COMMITTEE MEMBERS}}</span>"
 date: "6/26/2026"
 format:
   revealjs:
-    theme: [simple, defense.scss]
-    slide-number: c/t
-    width: 1280
-    height: 720
+    theme: [simple, unc-gillings.css]
+    slide-number: true
+    width: 1920
+    height: 1080
+    margin: 0.06
+    center: false
     fig-align: center
     transition: fade
+    footer: "Survival-guided matrix factorization &middot; DeSurv"
 ---
 
 ## Bulk RNA collapses a cell mixture into one expression vector
@@ -124,13 +127,13 @@ Same data, same rank k=3, different factors. DeSurv's D1 fuses Classical tumor *
 
 ## D1 stays prognostic across five independent cohorts
 
-![](figures/defense/fig4_forest_nmf.png){.absolute top="100" left="30" width="560"}
+![](figures/defense/fig4_forest_nmf.png){.absolute top="170" left="60" width="830"}
 
-![](figures/defense/fig4_forest_desurv.png){.fragment .absolute top="100" left="690" width="560"}
+![](figures/defense/fig4_forest_desurv.png){.fragment .absolute top="170" left="1030" width="830"}
 
-![](figures/defense/fig4_forest_desurv_box.png){.fragment .absolute top="100" left="690" width="560"}
+![](figures/defense/fig4_forest_desurv_box.png){.fragment .absolute top="170" left="1030" width="830"}
 
-![](figures/defense/fig4_forest_legend.png){.absolute bottom="8" left="215" width="850"}
+![](figures/defense/fig4_forest_legend.png){.absolute bottom="30" left="335" width="1250"}
 
 ::: {.notes}
 The real test: does D1 transport? Five external cohorts (Dijk, Moffitt, both PACA-AU platforms, Puleo), scored purely by projection Z = W̃ᵀX_new — no retraining, no validation survival used in the fit. Standard NMF (left) has no factor with a clean, reproducible signal — the pooled estimates all straddle 1. DeSurv (click) is different: D1 (boxed) is protective and consistent — every cohort's CI sits at or below 1, pooled HR ≈ 0.76. Supervision didn't just reorganize the training factors; it produced a program that generalizes.

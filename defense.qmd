@@ -12,7 +12,6 @@ format:
     height: 720
     fig-align: center
     transition: fade
-    footer: "Funded by DOD HT9425241103100121"
 ---
 
 <!-- SLIDE TITLE CONVENTION: every slide title is a short sentence stating the
@@ -124,10 +123,16 @@ Same data, same rank k=3, different factors. DeSurv's D1 fuses Classical tumor *
 
 ## D1 stays prognostic across five independent cohorts
 
-![](figures/defense/fig4_forest.png){width="82%"}
+![](figures/defense/fig4_forest_nmf.png){.absolute top="120" left="30" width="560"}
+
+![](figures/defense/fig4_forest_desurv.png){.fragment .absolute top="120" left="690" width="560"}
+
+![](figures/defense/fig4_forest_desurv_box.png){.fragment .absolute top="120" left="690" width="560"}
+
+![](figures/defense/fig4_forest_legend.png){.absolute bottom="20" left="215" width="850"}
 
 ::: {.notes}
-The real test: does D1 transport? Five external cohorts (Dijk, Moffitt, both PACA-AU platforms, Puleo), scored purely by projection Z = W̃ᵀX_new — no retraining, no validation survival used in the fit. DeSurv's D1 (left) is protective and consistent: every cohort's CI sits at or below 1, pooled HR ≈ 0.76. NMF (right) has no factor with that clean, reproducible signal — the pooled estimates all straddle 1. Supervision didn't just reorganize the training factors; it produced a program that generalizes.
+The real test: does D1 transport? Five external cohorts (Dijk, Moffitt, both PACA-AU platforms, Puleo), scored purely by projection Z = W̃ᵀX_new — no retraining, no validation survival used in the fit. Standard NMF (left) has no factor with a clean, reproducible signal — the pooled estimates all straddle 1. DeSurv (click) is different: D1 (boxed) is protective and consistent — every cohort's CI sits at or below 1, pooled HR ≈ 0.76. Supervision didn't just reorganize the training factors; it produced a program that generalizes.
 :::
 
 ## DeSurv stratifies clinical risk better than matched-rank NMF
@@ -135,17 +140,17 @@ The real test: does D1 transport? Five external cohorts (Dijk, Moffitt, both PAC
 :::: {.columns}
 
 ::: {.column width="50%"}
-![](figures/defense/fig4_km_desurv.png)
+![](figures/defense/fig4_km_nmf.png)
 :::
 
 ::: {.column width="50%"}
 ::: {.fragment}
-![](figures/defense/fig4_km_nmf.png)
+![](figures/defense/fig4_km_desurv.png)
 :::
 :::
 
 ::::
 
 ::: {.notes}
-Pooled validation KM at a cutpoint chosen by cross-validation on the training data. DeSurv's linear predictor splits high- vs low-risk cleanly: HR 1.79, log-rank p < 0.001, with a balanced split. Matched-rank NMF (click) can't: HR 1.38, p = 0.122, and it dumps almost everyone into the low-risk group (533 vs 37). Same rank, same projection rule — supervision is what turns the factors into a usable risk score. This survives adjustment for PurIST and DeCAF (HR 1.33, 95% CI 1.13–1.56), so it's independent prognostic value, not a restatement of existing subtypes.
+Pooled validation KM at a cutpoint chosen by cross-validation on the training data. Matched-rank NMF (left) can't separate risk: HR 1.38, p = 0.122, and it dumps almost everyone into the low-risk group (533 vs 37). DeSurv (click) splits high- vs low-risk cleanly: HR 1.79, log-rank p < 0.001, with a balanced split. Same rank, same projection rule — supervision is what turns the factors into a usable risk score. This survives adjustment for PurIST and DeCAF (HR 1.33, 95% CI 1.13–1.56), so it's independent prognostic value, not a restatement of existing subtypes.
 :::

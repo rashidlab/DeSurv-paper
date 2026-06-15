@@ -84,10 +84,13 @@ desurv_dat$factor_name <- factor(desurv_dat$factor_name, levels = c("D1", "D2", 
 nmf_dat <- all_data[all_data$method == "Standard NMF (N1–N3)", ]
 nmf_dat$factor_name <- factor(nmf_dat$factor_name, levels = c("N1", "N2", "N3"))
 
-make_forest_panel <- function(dat, title, highlight_level) {
+# Standalone single-method panel (no legend — a shared legend strip sits below
+# both on the slide). `box_level` optionally draws a red rectangle around one
+# factor row (the deck reveals this on a later click to spotlight D1).
+make_forest_panel <- function(dat, title, highlight_level, box_level = NULL) {
   hl <- data.frame(factor_name = factor(highlight_level, levels = levels(dat$factor_name)),
                    x = 1)
-  ggplot(dat, aes(x = HR, y = factor_name)) +
+  p <- ggplot(dat, aes(x = HR, y = factor_name)) +
     geom_tile(data = hl, aes(x = x, y = factor_name), width = 100, height = 0.8,
               fill = "steelblue", alpha = 0.08, inherit.aes = FALSE) +
     geom_vline(xintercept = 1, linetype = "dashed", colour = "grey60", linewidth = 0.5) +
@@ -108,32 +111,40 @@ make_forest_panel <- function(dat, title, highlight_level) {
           axis.text.x  = element_text(size = BASE - 1, face = "bold"),
           axis.title.x = element_text(size = BASE),
           plot.margin  = margin(4, 10, 4, 6))
+  if (!is.null(box_level)) {
+    yi <- match(box_level, levels(dat$factor_name))
+    p <- p + annotate("rect", xmin = 0.35, xmax = 3, ymin = yi - 0.45, ymax = yi + 0.45,
+                      colour = "red", fill = NA, linewidth = 1.6)
+  }
+  p
 }
 
+# Shared horizontal cohort legend, saved as its own strip for the slide footer.
 p_leg <- ggplot(all_data, aes(x = HR, y = factor_name,
                               colour = dataset, shape = dataset, size = dataset)) +
   geom_point() +
   scale_colour_manual(values = cohort_cols, name = NULL) +
   scale_shape_manual(values = cohort_shapes, name = NULL) +
   scale_size_manual(values = cohort_sizes, name = NULL) +
-  guides(colour = guide_legend(nrow = 1, override.aes = list(size = 4)),
+  guides(colour = guide_legend(nrow = 1, override.aes = list(size = 4.5)),
          shape  = guide_legend(nrow = 1), size = guide_legend(nrow = 1)) +
   theme_void(base_size = BASE) +
   theme(legend.position = "bottom", legend.text = element_text(size = BASE))
 forest_legend <- gtable::gtable_filter(ggplotGrob(p_leg), "guide-box")
 
-fig_forest <- plot_grid(
-  plot_grid(make_forest_panel(desurv_dat, "DeSurv (D1–D3)", "D1"),
-            make_forest_panel(nmf_dat, "Standard NMF (N1–N3)", "N1"),
-            ncol = 2, align = "hv", axis = "tb"),
-  forest_legend, nrow = 2, rel_heights = c(15, 1.4)
-)
+save_forest <- function(p, stem, w = 5.2, h = 4.8) {
+  ggsave(file.path(OUT, paste0(stem, ".pdf")), p, width = w, height = h, device = cairo_pdf)
+  ggsave(file.path(OUT, paste0(stem, ".png")), p, width = w, height = h, dpi = 300, bg = "white")
+}
 
-ggsave(file.path(OUT, "fig4_forest.pdf"), fig_forest, width = 10, height = 5.4,
-       device = cairo_pdf)
-ggsave(file.path(OUT, "fig4_forest.png"), fig_forest, width = 10, height = 5.4,
-       dpi = 300, bg = "white")
-message("Saved fig4_forest (10x5.4 in, enlarged fonts)")
+save_forest(make_forest_panel(nmf_dat, "Standard NMF (N1–N3)", "N1"),
+            "fig4_forest_nmf")
+save_forest(make_forest_panel(desurv_dat, "DeSurv (D1–D3)", "D1"),
+            "fig4_forest_desurv")
+save_forest(make_forest_panel(desurv_dat, "DeSurv (D1–D3)", "D1", box_level = "D1"),
+            "fig4_forest_desurv_box")
+save_forest(cowplot::ggdraw(forest_legend), "fig4_forest_legend", w = 9, h = 0.55)
+message("Saved fig4_forest_{nmf,desurv,desurv_box,legend}")
 
 # ════════════════════════════════════════════════════════════════════════════
 # Fig 4B/4C — pooled-validation KM curves at the CV-selected log-rank cutpoint
@@ -141,28 +152,40 @@ message("Saved fig4_forest (10x5.4 in, enlarged fonts)")
 km_desurv <- load_precomputed("fig_median_survival_desurv_tcgacptac")
 km_nmf    <- load_precomputed("fig_median_survival_std_desurvk_tcgacptac")
 
-KM <- 17
+KM <- 20
 theme_km <- theme_classic(base_size = KM) +
   theme(plot.title = element_text(face = "bold", size = KM + 2, hjust = 0.5),
         plot.margin = margin(6, 12, 4, 12))
 
+# Matched left/right x-expansion on BOTH the curve and the risk table keeps the
+# panels aligned and insets x=0 so the leftmost at-risk count no longer collides
+# with the y-axis. Bumps every baked-in text layer (in-plot HR annotation; the
+# at-risk numbers) so they read at slide scale.
+x_common <- scale_x_continuous(breaks = seq(0, 150, 25),
+                               expand = expansion(mult = c(0.10, 0.03)))
+bump_text <- function(gg, sz) {
+  for (i in seq_along(gg$layers))
+    if (inherits(gg$layers[[i]]$geom, "GeomText"))
+      gg$layers[[i]]$aes_params$size <- sz
+  gg
+}
+
 stack_surv <- function(surv_obj, title) {
-  p <- surv_obj$plot + theme_km +
+  p <- bump_text(surv_obj$plot, 6) + theme_km + x_common +
     theme(legend.position = "none", axis.title.x = element_blank(),
           axis.title.y = element_text(size = KM),
           axis.text    = element_text(size = KM),
           plot.margin  = margin(4, 12, 0, 12)) +
     labs(title = title)
-  t <- surv_obj$table + theme_km +
+  t <- bump_text(surv_obj$table, 6) + theme_km + x_common +
     theme(legend.position = "none", axis.title.y = element_blank(),
-          axis.text    = element_text(size = KM),
+          axis.text    = element_text(size = KM - 3),
           text         = element_text(size = KM),
           axis.title.x = element_text(size = KM),
           plot.title   = element_text(size = KM),
           plot.margin  = margin(4, 12, 4, 12)) +
     labs(x = "Time (months)")
-  t$layers[[1]]$aes_params$size <- KM / ggplot2::.pt
-  plot_grid(p, t, ncol = 1, rel_heights = c(2.5, 1.2), align = "v", axis = "lr")
+  plot_grid(p, t, ncol = 1, rel_heights = c(2.2, 1.55), align = "v", axis = "lr")
 }
 
 km_legend_plot <- ggplot(
@@ -182,9 +205,9 @@ km_legend_grob <- gtable::gtable_filter(ggplotGrob(km_legend_plot), "guide-box")
 save_km <- function(surv_obj, title, stem) {
   panel <- plot_grid(stack_surv(surv_obj, title), ggdraw(km_legend_grob),
                      ncol = 1, rel_heights = c(10, 1))
-  ggsave(file.path(OUT, paste0(stem, ".pdf")), panel, width = 5.2, height = 5.6,
+  ggsave(file.path(OUT, paste0(stem, ".pdf")), panel, width = 5.4, height = 6.0,
          device = cairo_pdf)
-  ggsave(file.path(OUT, paste0(stem, ".png")), panel, width = 5.2, height = 5.6,
+  ggsave(file.path(OUT, paste0(stem, ".png")), panel, width = 5.4, height = 6.0,
          dpi = 300, bg = "white")
 }
 

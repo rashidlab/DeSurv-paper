@@ -52,8 +52,8 @@ x_scale <- scale_x_continuous(labels = scales::percent_format(accuracy = 1),
                               expand = expansion(mult = c(0.08, 0.12)))
 
 base_layers <- list(
-  geom_point(size = 5),
-  geom_text_repel(size = 5.2, fontface = "bold", max.overlaps = Inf,
+  geom_point(size = 6.5),
+  geom_text_repel(size = 7, fontface = "bold", max.overlaps = Inf,
                   box.padding = 0.7, point.padding = 0.5,
                   segment.size = 0.3, force = 2, show.legend = FALSE),
   scale_color_manual(values = pal, name = NULL, drop = FALSE),
@@ -66,7 +66,7 @@ p_top <- ggplot(df_hi, aes(variance_explained, delta_loglik,
   base_layers +
   coord_cartesian(ylim = c(62, 70)) +
   scale_y_continuous(breaks = c(65)) +
-  theme_classic(base_size = 16) +
+  theme_classic(base_size = 21) +
   theme(
     axis.title   = element_blank(),
     axis.text.y  = element_text(color = "black"),
@@ -74,7 +74,7 @@ p_top <- ggplot(df_hi, aes(variance_explained, delta_loglik,
     axis.ticks.x = element_blank(),
     axis.line.x  = element_blank(),
     legend.position = "none",
-    plot.margin  = margin(8, 16, 0, 52)
+    plot.margin  = margin(8, 16, 0, 70)
   )
 
 # Bottom panel: every other factor, full resolution; carries the x-axis.
@@ -84,32 +84,33 @@ p_bot <- ggplot(df_lo, aes(variance_explained, delta_loglik,
   coord_cartesian(ylim = c(-0.12, 1.5)) +
   scale_y_continuous(breaks = c(0, 0.5, 1.0, 1.5)) +
   labs(x = "Contribution to reconstruction\n(Shapley share)") +
-  theme_classic(base_size = 16) +
+  theme_classic(base_size = 21) +
   theme(
     axis.title.x = element_text(face = "bold"),
     axis.title.y = element_blank(),
     axis.text    = element_text(color = "black"),
     legend.position = "none",
-    plot.margin  = margin(0, 16, 10, 64)
+    plot.margin  = margin(0, 16, 10, 70)
   )
 
 stacked <- plot_grid(p_top, p_bot, ncol = 1, rel_heights = c(1, 1.9),
                      align = "v", axis = "lr")
 
-# Shared rotated y-axis title + broken-axis slash marks at the panel boundary.
+# Shared rotated y-axis title + broken-axis slash marks straddling the y-axis line.
 y_title <- expression(atop(Delta ~ "partial log-likelihood",
                            "(full vs. " * italic(k) * "-1 factor model)"))
 boundary <- 1.9 / 2.9                     # y (NPC) of the top/bottom panel join
+brk_x <- c(0.118, 0.158)                  # straddles the y-axis line
 body <- ggdraw(stacked) +
   draw_label(y_title, x = 0.045, y = 0.55, angle = 90,
-             fontface = "bold", size = 14, hjust = 0.5) +
-  draw_line(x = c(0.075, 0.115), y = boundary + c(-0.004, 0.014), linewidth = 0.9) +
-  draw_line(x = c(0.075, 0.115), y = boundary + c(0.008, 0.026), linewidth = 0.9)
+             fontface = "bold", size = 18, hjust = 0.5) +
+  draw_line(x = brk_x, y = boundary + c(-0.004, 0.016), linewidth = 1.1) +
+  draw_line(x = brk_x, y = boundary + c(0.010, 0.030), linewidth = 1.1)
 
 # Shared horizontal legend, placed below the plot.
 legend_row <- get_legend(
   p_bot + theme(legend.position = "bottom", legend.direction = "horizontal",
-                legend.text = element_text(size = 15, face = "bold"))
+                legend.text = element_text(size = 18, face = "bold"))
 )
 fig <- plot_grid(body, legend_row, ncol = 1, rel_heights = c(1, 0.08))
 

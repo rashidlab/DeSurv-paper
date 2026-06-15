@@ -55,7 +55,7 @@ base_layers <- list(
   geom_point(size = 6.5),
   geom_text_repel(size = 7, fontface = "bold", max.overlaps = Inf,
                   box.padding = 0.7, point.padding = 0.5,
-                  segment.size = 0.3, force = 2, show.legend = FALSE),
+                  min.segment.length = Inf, force = 2, show.legend = FALSE),
   scale_color_manual(values = pal, name = NULL, drop = FALSE),
   x_scale
 )
@@ -100,7 +100,7 @@ stacked <- plot_grid(p_top, p_bot, ncol = 1, rel_heights = c(1, 1.9),
 y_title <- expression(atop(Delta ~ "partial log-likelihood",
                            "(full vs. " * italic(k) * "-1 factor model)"))
 boundary <- 1.9 / 2.9                     # y (NPC) of the top/bottom panel join
-brk_x <- c(0.118, 0.158)                  # straddles the y-axis line
+brk_x <- c(0.160, 0.196)                  # straddles the y-axis line (NPC x ~ 0.177)
 body <- ggdraw(stacked) +
   draw_label(y_title, x = 0.045, y = 0.55, angle = 90,
              fontface = "bold", size = 18, hjust = 0.5) +

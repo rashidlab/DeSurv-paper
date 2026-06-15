@@ -1238,8 +1238,12 @@ cindex_wide <- fmt_cindex(val_cindex_desurv_tcgacptac, "DeSurv (K=3)") %>%
   dplyr::rename(Cohort = dataset) %>%
   dplyr::mutate(Cohort = gsub("_", "\\_", Cohort, fixed = TRUE))
 
+# Explicit \label is the canonical referenced name (main paper + SI \ref it);
+# push knitr's auto chunk-label to a throwaway name so it neither collides with
+# the explicit one nor is silently relied upon in its place.
+knitr::opts_current$set(label = "tab-cindex-comparison-auto")
 kable(cindex_wide, format = "latex", booktabs = TRUE, linesep = "", escape = FALSE,
-      caption = "External validation C-index by method and cohort. DeSurv at BO-selected rank ($k = 3$) is compared with standard NMF at matched rank ($k = 3$), elbow-selected rank ($k = 5$), and BO-selected rank ($k = 7$, $\\alpha = 0$). Higher values indicate better discrimination.") |>
+      caption = "External validation C-index by method and cohort. DeSurv at BO-selected rank ($k = 3$) is compared with standard NMF at matched rank ($k = 3$), elbow-selected rank ($k = 5$), and BO-selected rank ($k = 7$, $\\alpha = 0$). Higher values indicate better discrimination. \\label{tab:tab-cindex-comparison}") |>
   kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
@@ -1298,9 +1302,11 @@ tbl <- dplyr::bind_rows(rows)
 colnames(tbl) <- c("Cohort", "$n$", "events",
                     "DeSurv ($k = 3$) BIC", "NMF ($k = 7$) BIC", "$\\Delta$ BIC")
 
+# Explicit \label is the canonical referenced name; auto chunk-label pushed aside.
+knitr::opts_current$set(label = "tab-bic-percohort-auto")
 kable(tbl, format = "latex", booktabs = TRUE, linesep = "", escape = FALSE,
       align = c("l","r","r","r","r","r"),
-      caption = "Per-cohort Bayesian Information Criterion (BIC) for Cox proportional hazards models using individual factor scores as predictors of overall survival in each external validation cohort. $\\beta$ coefficients are re-fit on each validation cohort separately. DeSurv uses three factor scores (F1, F2, F3); NMF at BO-selected $k = 7$ uses seven (F1--F7). BIC penalises complexity as $k \\log n_{\\text{events}}$. Positive $\\Delta$BIC (NMF $-$ DeSurv) indicates DeSurv's parsimonious 3-factor decomposition is preferred. DeSurv is BIC-preferred in three of five validation cohorts; the remaining two are essentially tied.") |>
+      caption = "Per-cohort Bayesian Information Criterion (BIC) for Cox proportional hazards models using individual factor scores as predictors of overall survival in each external validation cohort. $\\beta$ coefficients are re-fit on each validation cohort separately. DeSurv uses three factor scores (F1, F2, F3); NMF at BO-selected $k = 7$ uses seven (F1--F7). BIC penalises complexity as $k \\log n_{\\text{events}}$. Positive $\\Delta$BIC (NMF $-$ DeSurv) indicates DeSurv's parsimonious 3-factor decomposition is preferred. DeSurv is BIC-preferred in three of five validation cohorts; the remaining two are essentially tied. \\label{tab:tab-bic-percohort}") |>
   kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 

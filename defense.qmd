@@ -123,13 +123,13 @@ Same data, same rank k=3, different factors. DeSurv's D1 fuses Classical tumor *
 
 ## D1 stays prognostic across five independent cohorts
 
-![](figures/defense/fig4_forest_nmf.png){.absolute top="120" left="30" width="560"}
+![](figures/defense/fig4_forest_nmf.png){.absolute top="100" left="30" width="560"}
 
-![](figures/defense/fig4_forest_desurv.png){.fragment .absolute top="120" left="690" width="560"}
+![](figures/defense/fig4_forest_desurv.png){.fragment .absolute top="100" left="690" width="560"}
 
-![](figures/defense/fig4_forest_desurv_box.png){.fragment .absolute top="120" left="690" width="560"}
+![](figures/defense/fig4_forest_desurv_box.png){.fragment .absolute top="100" left="690" width="560"}
 
-![](figures/defense/fig4_forest_legend.png){.absolute bottom="20" left="215" width="850"}
+![](figures/defense/fig4_forest_legend.png){.absolute bottom="8" left="215" width="850"}
 
 ::: {.notes}
 The real test: does D1 transport? Five external cohorts (Dijk, Moffitt, both PACA-AU platforms, Puleo), scored purely by projection Z = W̃ᵀX_new — no retraining, no validation survival used in the fit. Standard NMF (left) has no factor with a clean, reproducible signal — the pooled estimates all straddle 1. DeSurv (click) is different: D1 (boxed) is protective and consistent — every cohort's CI sits at or below 1, pooled HR ≈ 0.76. Supervision didn't just reorganize the training factors; it produced a program that generalizes.

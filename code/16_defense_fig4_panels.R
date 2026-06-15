@@ -110,7 +110,7 @@ make_forest_panel <- function(dat, title, highlight_level, box_level = NULL) {
           axis.text.y  = element_text(size = BASE, face = "bold"),
           axis.text.x  = element_text(size = BASE - 1, face = "bold"),
           axis.title.x = element_text(size = BASE),
-          plot.margin  = margin(4, 10, 4, 6))
+          plot.margin  = margin(4, 10, 12, 6))
   if (!is.null(box_level)) {
     yi <- match(box_level, levels(dat$factor_name))
     p <- p + annotate("rect", xmin = 0.35, xmax = 3, ymin = yi - 0.45, ymax = yi + 0.45,
@@ -171,7 +171,13 @@ bump_text <- function(gg, sz) {
 }
 
 stack_surv <- function(surv_obj, title) {
-  p <- bump_text(surv_obj$plot, 6) + theme_km + x_common +
+  # The baked-in HR annotation sits at y=0.85; on the shorter panel its top line
+  # crowds the plot border, so drop it a little.
+  pp <- surv_obj$plot
+  for (i in seq_along(pp$layers))
+    if (inherits(pp$layers[[i]]$geom, "GeomText") && !is.null(pp$layers[[i]]$data$y))
+      pp$layers[[i]]$data$y <- 0.72
+  p <- bump_text(pp, 6) + theme_km + x_common +
     theme(legend.position = "none", axis.title.x = element_blank(),
           axis.title.y = element_text(size = KM),
           axis.text    = element_text(size = KM),
@@ -185,7 +191,7 @@ stack_surv <- function(surv_obj, title) {
           plot.title   = element_text(size = KM),
           plot.margin  = margin(4, 12, 4, 12)) +
     labs(x = "Time (months)")
-  plot_grid(p, t, ncol = 1, rel_heights = c(2.2, 1.55), align = "v", axis = "lr")
+  plot_grid(p, t, ncol = 1, rel_heights = c(2.1, 1.6), align = "v", axis = "lr")
 }
 
 km_legend_plot <- ggplot(
@@ -205,9 +211,11 @@ km_legend_grob <- gtable::gtable_filter(ggplotGrob(km_legend_plot), "guide-box")
 save_km <- function(surv_obj, title, stem) {
   panel <- plot_grid(stack_surv(surv_obj, title), ggdraw(km_legend_grob),
                      ncol = 1, rel_heights = c(10, 1))
-  ggsave(file.path(OUT, paste0(stem, ".pdf")), panel, width = 5.4, height = 6.0,
+  # Landscape-ish (aspect < 1) so each panel fills a half-column without its
+  # bottom running off the slide.
+  ggsave(file.path(OUT, paste0(stem, ".pdf")), panel, width = 5.8, height = 5.2,
          device = cairo_pdf)
-  ggsave(file.path(OUT, paste0(stem, ".png")), panel, width = 5.4, height = 6.0,
+  ggsave(file.path(OUT, paste0(stem, ".png")), panel, width = 5.8, height = 5.2,
          dpi = 300, bg = "white")
 }
 

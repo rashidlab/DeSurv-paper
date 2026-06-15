@@ -89,10 +89,8 @@ p_bot <- ggplot(df_lo, aes(variance_explained, delta_loglik,
     axis.title.x = element_text(face = "bold"),
     axis.title.y = element_blank(),
     axis.text    = element_text(color = "black"),
-    legend.position  = c(0.5, 0.97),
-    legend.direction = "horizontal",
-    legend.text  = element_text(size = 15, face = "bold"),
-    plot.margin  = margin(0, 16, 10, 52)
+    legend.position = "none",
+    plot.margin  = margin(0, 16, 10, 64)
   )
 
 stacked <- plot_grid(p_top, p_bot, ncol = 1, rel_heights = c(1, 1.9),
@@ -102,11 +100,18 @@ stacked <- plot_grid(p_top, p_bot, ncol = 1, rel_heights = c(1, 1.9),
 y_title <- expression(atop(Delta ~ "partial log-likelihood",
                            "(full vs. " * italic(k) * "-1 factor model)"))
 boundary <- 1.9 / 2.9                     # y (NPC) of the top/bottom panel join
-fig <- ggdraw(stacked) +
-  draw_label(y_title, x = 0.022, y = 0.55, angle = 90,
-             fontface = "bold", size = 15, hjust = 0.5) +
-  draw_line(x = c(0.055, 0.095), y = boundary + c(-0.004, 0.014), linewidth = 0.9) +
-  draw_line(x = c(0.055, 0.095), y = boundary + c(0.008, 0.026), linewidth = 0.9)
+body <- ggdraw(stacked) +
+  draw_label(y_title, x = 0.045, y = 0.55, angle = 90,
+             fontface = "bold", size = 14, hjust = 0.5) +
+  draw_line(x = c(0.075, 0.115), y = boundary + c(-0.004, 0.014), linewidth = 0.9) +
+  draw_line(x = c(0.075, 0.115), y = boundary + c(0.008, 0.026), linewidth = 0.9)
+
+# Shared horizontal legend, placed below the plot.
+legend_row <- get_legend(
+  p_bot + theme(legend.position = "bottom", legend.direction = "horizontal",
+                legend.text = element_text(size = 15, face = "bold"))
+)
+fig <- plot_grid(body, legend_row, ncol = 1, rel_heights = c(1, 0.08))
 
 ggsave(file.path(OUT, "new_3c_reconstruction.pdf"), fig,
        width = 8, height = 6.2, device = cairo_pdf)

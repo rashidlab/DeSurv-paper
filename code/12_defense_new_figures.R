@@ -322,18 +322,19 @@ fig_C <- function() {
 # Figure D — supervision enters W, not H  (Slide 7)
 # ════════════════════════════════════════════════════════════════════════════
 fig_D <- function() {
-  box <- function(xc, yc, w, h, fill, label, sub = NULL, lab_size = 6) {
+  box <- function(xc, yc, w, h, fill, label, sub = NULL, lab_size = 6,
+                  sub_size = 4.4) {
     list(
       geom_rect(data = data.frame(xmin = xc - w / 2, xmax = xc + w / 2,
                                   ymin = yc - h / 2, ymax = yc + h / 2),
                 aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
                 fill = fill, color = "grey20", linewidth = 0.5, alpha = 0.9,
                 inherit.aes = FALSE),
-      annotate("text", x = xc, y = yc + ifelse(is.null(sub), 0, 0.18),
+      annotate("text", x = xc, y = yc + ifelse(is.null(sub), 0, 0.24),
                label = label, fontface = "bold", size = lab_size, color = "white",
                lineheight = 0.9),
-      if (!is.null(sub)) annotate("text", x = xc, y = yc - 0.28, label = sub,
-                                  size = 3.2, color = "white") else NULL
+      if (!is.null(sub)) annotate("text", x = xc, y = yc - 0.36, label = sub,
+                                  size = sub_size, color = "white") else NULL
     )
   }
   seg <- function(x, xend, y, yend, color, lwd = 1.1, lty = 1) {
@@ -343,39 +344,30 @@ fig_D <- function() {
   }
 
   ggplot() +
-    # Top row: X ~ W H  (W bottom edge at y = 7.3, H bottom edge at y = 7.5)
-    box(2.0, 8, 1.6, 1.4, PAL$X, "X", "expression") +
-    annotate("text", x = 3.15, y = 8, label = "≈", size = 11) +
-    box(4.3, 8, 1.0, 1.4, PAL$W, "W", "programs") +
-    annotate("text", x = 5.2, y = 8, label = "×", size = 9) +
-    box(6.5, 8, 1.7, 1.0, PAL$H, "H", "loadings") +
-    # Reconstruction loss node (acts on both W and H)
-    box(4.7, 5.2, 4.0, 1.1, PAL$recon,
-        "Reconstruction loss\n||X − WH||²", lab_size = 4.4) +
-    seg(4.3, 4.3, 5.75, 7.30, PAL$recon) +        # recon -> W (vertical)
-    seg(5.7, 6.5, 5.75, 7.50, PAL$recon) +        # recon -> H
-    annotate("text", x = 8.4, y = 5.2, label = "acts on\nboth W and H",
-             size = 3.4, color = PAL$recon, fontface = "italic", lineheight = 0.9) +
-    # Survival / Cox node (acts on W only)
-    box(2.3, 2.4, 3.2, 1.1, PAL$cox,
-        "Cox survival loss\nZ = W'X", lab_size = 4.4) +
-    seg(2.9, 3.95, 2.95, 7.30, PAL$cox, lwd = 1.6) +   # cox -> W (bold red)
-    annotate("text", x = 2.55, y = 5.2, label = "survival gradient\nacts on W only",
-             size = 3.5, color = PAL$cox, fontface = "bold", angle = 70,
-             lineheight = 0.9) +
-    # crossed-out (suppressed) gradient to H
-    seg(3.2, 5.9, 2.95, 7.50, "grey60", lwd = 0.9, lty = "dashed") +
-    annotate("text", x = 4.7, y = 4.7, label = "X", size = 7, fontface = "bold",
-             color = "grey55") +
-    annotate("text", x = 7.3, y = 3.5,
-             label = "H keeps its\nmixture-coefficient\ninterpretation",
-             size = 3.4, color = "grey35", fontface = "italic", lineheight = 0.9) +
-    # portability note
-    annotate("text", x = 5.0, y = 0.9,
-             label = "Programs W fixed at training → new samples scored by projection   Z_new = (W*)' X_new",
-             size = 3.6, fontface = "italic", color = "grey20") +
-    coord_equal(xlim = c(0.2, 10), ylim = c(0.3, 9)) +
-    theme_void()
+    # Top row: X ~ W H  (boxes widened so the larger subtitles fit)
+    # Top row: all three boxes top-aligned at y = 8.9; X and W made taller (h=1.8),
+    # H shorter (h=1.1) so its bottom hangs higher. × sits at H's vertical middle.
+    box(2.0, 8.0,  2.0, 1.8, PAL$X, "X", "expression", lab_size = 9, sub_size = 5) +
+    annotate("text", x = 3.25, y = 8.0,  label = "≈", size = 12) +
+    box(4.4, 8.0,  1.4, 1.8, PAL$W, "W", "programs", lab_size = 9, sub_size = 5) +
+    annotate("text", x = 5.35, y = 8.35, label = "×", size = 10) +
+    box(6.7, 8.35, 2.0, 1.1, PAL$H, "H", "loadings", lab_size = 9, sub_size = 5) +
+    # Reconstruction loss node (right) — in line with the Cox node
+    box(6.6, 5.2, 2.8, 1.1, PAL$recon,
+        "Reconstruction loss\n||X − WH||²", lab_size = 5.6) +
+    seg(5.7, 4.7, 5.75, 7.10, PAL$recon) +        # recon -> W
+    seg(6.9, 6.85, 5.75, 7.80, PAL$recon) +       # recon -> H
+    annotate("text", x = 6.6, y = 4.15, label = "acts on\nboth W and H",
+             size = 4.9, color = PAL$recon, fontface = "bold", lineheight = 0.9) +
+    # Survival / Cox node (left, acts on W only) — same level as reconstruction box
+    box(2.4, 5.2, 3.0, 1.1, PAL$cox,
+        "Cox survival loss\nZ = W'X", lab_size = 5.6) +
+    seg(3.4, 4.15, 5.75, 7.10, PAL$cox, lwd = 1.7) +   # cox -> W (bold red)
+    annotate("text", x = 2.4, y = 4.15, label = "survival gradient\nacts on W only",
+             size = 4.9, color = PAL$cox, fontface = "bold", lineheight = 0.9) +
+    coord_equal(xlim = c(0.7, 8.2), ylim = c(3.6, 9.0), clip = "off") +
+    theme_void() +
+    theme(plot.margin = margin(2, 2, 2, 2))
 }
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -384,10 +376,12 @@ fig_D <- function() {
 fig_E <- function() {
   src <- file.path("R", "simulation_functions", "simulate_W.R")
   set.seed(7)
+  # G chosen so the noise block is small (noise = G - K*markers - B_size = 36),
+  # keeping the figure from being mostly empty white rows at the bottom.
   if (file.exists(src)) {
     source(src)
     sim <- simulate_W_marker_background(
-      G = 240, K = 3, markers_per_factor = 24, B_size = 72,
+      G = 180, K = 3, markers_per_factor = 24, B_size = 72,
       normalize_cols = TRUE, seed = 7)
     W <- sim$W
     grp <- rep("Noise genes", nrow(W))
@@ -397,7 +391,7 @@ fig_E <- function() {
     grp[sim$background] <- "Background"
   } else {
     # Fallback construction if the sim helper is unavailable
-    G <- 240; K <- 3; mk <- 24; B <- 72
+    G <- 180; K <- 3; mk <- 24; B <- 72
     W <- matrix(rgamma(G * K, 1, 20), G, K)
     grp <- rep("Noise genes", G)
     idx <- 1
@@ -420,43 +414,55 @@ fig_E <- function() {
 
   hm <- ggplot(d, aes(factor, gene, fill = loading)) +
     geom_raster() +
-    scale_fill_gradient(low = "#ffffff", high = PAL$W, name = "loading") +
+    # sqrt-scaled fill lifts the very-low-loading noise genes into a visible tint;
+    # legend shown qualitatively (low -> high) because a sqrt axis would otherwise
+    # place numeric ticks at uneven positions, and exact loadings aren't the point
+    scale_fill_gradient(low = "#ffffff", high = PAL$W, name = "Loading",
+                        trans = "sqrt", breaks = range(d$loading),
+                        labels = c("low", "high")) +
     scale_x_continuous(breaks = 1:3, labels = c("F1", "F2", "F3"),
                        position = "top", expand = c(0, 0)) +
     scale_y_reverse(expand = c(0, 0)) +
     labs(title = "Ground-truth W (simulation)") +
-    theme_minimal(base_size = 12) +
-    theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 13),
+    theme_minimal(base_size = 14) +
+    theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 17),
           axis.title = element_blank(), axis.text.y = element_blank(),
-          axis.text.x = element_text(face = "bold", size = 12),
+          axis.text.x = element_text(face = "bold", size = 16),
           panel.grid = element_blank(),
-          legend.position = "left")
+          legend.position = "left",
+          legend.title = element_text(size = 14, margin = margin(b = 12)),
+          legend.text = element_text(size = 12))
 
-  # side labels for gene groups + survival arrow spanning the F1-marker block
-  f1 <- segs[segs$grp == "F1 markers", ]
-  f1_lo <- starts[rle$values == "F1 markers"]
-  f1_hi <- ends[rle$values == "F1 markers"]
-  side <- ggplot(segs) +
-    geom_text(aes(x = 0.1, y = ymid, label = grp), hjust = 0, size = 3.7) +
-    geom_segment(data = f1,
-                 aes(x = 1.65, xend = 1.65, y = f1_lo, yend = f1_hi),
-                 arrow = arrow(length = unit(0.18, "cm"), ends = "both"),
-                 color = PAL$cox, linewidth = 1.1) +
-    annotate("text", x = 1.8, y = f1$ymid,
-             label = "drives\nsurvival\n(β1 = 2)", color = PAL$cox,
-             fontface = "bold", size = 3.4, hjust = 0, lineheight = 0.9) +
-    scale_y_reverse(limits = c(nrow(Wo), 1)) +
-    coord_cartesian(xlim = c(0, 2.6), clip = "off") +
+  # side panel: group labels flush against the heatmap; the F1-marker block gets a
+  # survival span-arrow hugging the heatmap edge + a red "drives survival" label.
+  f1_lo  <- starts[rle$values == "F1 markers"]
+  f1_hi  <- ends[rle$values == "F1 markers"]
+  f1_mid <- segs$ymid[segs$grp == "F1 markers"]
+  non_f1 <- segs[segs$grp != "F1 markers", ]
+
+  side <- ggplot() +
+    # double-headed survival arrow spanning the F1-marker rows, right at the edge
+    annotate("segment", x = 0.12, xend = 0.12, y = f1_lo - 0.5, yend = f1_hi + 0.5,
+             arrow = arrow(length = unit(0.2, "cm"), ends = "both", type = "closed"),
+             color = PAL$cox, linewidth = 1.5) +
+    annotate("text", x = 0.3, y = f1_mid,
+             label = "F1 markers\n(drive survival, β1 = 2)",
+             color = PAL$cox, fontface = "bold", size = 4.6, hjust = 0,
+             lineheight = 0.9) +
+    geom_text(data = non_f1, aes(x = 0.3, y = ymid, label = grp),
+              hjust = 0, size = 4.6, color = "grey15") +
+    scale_y_reverse(limits = c(nrow(Wo) + 0.5, 0.5), expand = c(0, 0)) +
+    coord_cartesian(xlim = c(0, 2.7), clip = "off") +
     theme_void()
 
-  plot_grid(hm, side, nrow = 1, rel_widths = c(1, 0.62))
+  plot_grid(hm, side, nrow = 1, rel_widths = c(1, 0.62), align = "h", axis = "tb")
 }
 
 # ════════════════════════════════════════════════════════════════════════════
 # Figure F — CONSORT-style cohort flow  (Slide 14 / backup B1)
 # ════════════════════════════════════════════════════════════════════════════
 fig_F <- function() {
-  nodebox <- function(xc, yc, w, h, fill, label, size = 3.8) {
+  nodebox <- function(xc, yc, w, h, fill, label, size = 5) {
     list(
       geom_rect(data = data.frame(a = xc - w / 2, b = xc + w / 2,
                                   c = yc - h / 2, d = yc + h / 2),
@@ -465,50 +471,66 @@ fig_F <- function() {
       annotate("text", x = xc, y = yc, label = label, size = size, lineheight = 0.95)
     )
   }
-  down <- function(x, y0, y1) annotate("segment", x = x, xend = x, y = y0, yend = y1,
-    arrow = arrow(length = unit(0.22, "cm"), type = "closed"), linewidth = 0.8)
+  # orthogonal arrow with a head that lands on the target box edge
+  arr <- function(x0, y0, x1, y1, lwd = 0.9)
+    annotate("segment", x = x0, xend = x1, y = y0, yend = y1,
+             arrow = arrow(length = unit(0.26, "cm"), type = "closed"), linewidth = lwd)
+  # plain (headless) connector segment
+  ln <- function(x0, y0, x1, y1, lwd = 0.9)
+    annotate("segment", x = x0, xend = x1, y = y0, yend = y1, linewidth = lwd, colour = "grey25")
 
   train_fill <- "#dbe9f6"; val_fill <- "#e8f4e1"; excl_fill <- "#f3e3e3"; ana_fill <- "#fbf3d6"
+  xT <- 2.8; xV <- 8.5; xS <- (xT + xV) / 2   # training / validation / shared columns
 
   ggplot() +
-    annotate("text", x = 2.5, y = 9.6, label = "Training", fontface = "bold", size = 5) +
-    annotate("text", x = 7.5, y = 9.6, label = "External validation", fontface = "bold", size = 5) +
-    # training column
-    nodebox(2.5, 8.7, 4.2, 0.9, train_fill,
-            "TCGA-PAAD (n=181) + CPTAC-3 (n=140)\n321 pooled samples") +
-    down(2.5, 8.25, 7.55) +
-    nodebox(4.7, 7.3, 2.0, 0.8, excl_fill, "48 excluded\n(missing surv./QC)", size = 3.2) +
-    nodebox(2.5, 6.4, 4.2, 0.9, ana_fill, "273 analytic samples\n139 events  ·  EPV = 46") +
-    # validation column
-    nodebox(7.5, 8.7, 4.4, 0.9, val_fill,
+    annotate("text", x = xT, y = 10.2, label = "Training", fontface = "bold", size = 6.5) +
+    annotate("text", x = xV, y = 10.2, label = "External validation", fontface = "bold", size = 6.5) +
+    # top pooled boxes (bottom edge at 8.7)
+    nodebox(xT, 9.2, 5.2, 1.0, train_fill,
+            "TCGA-PAAD (n=181) + CPTAC (n=140)\n321 pooled samples") +
+    nodebox(xV, 9.2, 5.2, 1.0, val_fill,
             "5 cohorts: Dijk, Moffitt, PACA-AU\n(array+seq), Puleo · 979 pooled") +
-    down(7.5, 8.25, 7.55) +
-    nodebox(9.6, 7.3, 2.0, 0.8, excl_fill,
-            "363 excluded\n(non-PDAC/QC)", size = 3.2) +
-    nodebox(7.5, 6.4, 4.4, 0.9, ana_fill, "616 analytic samples\n414 events") +
-    # exclusion connectors
-    annotate("segment", x = 2.5, xend = 3.7, y = 7.3, yend = 7.3, linewidth = 0.5, color = "grey45") +
-    annotate("segment", x = 7.5, xend = 8.6, y = 7.3, yend = 7.3, linewidth = 0.5, color = "grey45") +
-    # per-cohort detail (offset right of the converging arrow)
-    annotate("text", x = 7.7, y = 5.2,
-             label = "Dijk 90 (81 ev) · Moffitt 123 (83)\nPACA array 63 (38) · PACA seq 52 (31)\nPuleo 288 (181)",
-             size = 2.9, color = "grey30", lineheight = 0.95) +
-    # arrows converge into the shared downstream box
-    down(2.5, 5.95, 4.5) +
-    annotate("segment", x = 7.5, xend = 6.0, y = 5.95, yend = 4.5,
-             arrow = arrow(length = unit(0.22, "cm"), type = "closed"), linewidth = 0.8) +
-    nodebox(4.5, 4.0, 6.8, 0.9, "#eceaf4",
-            "1,970 shared genes  ·  within-sample rank transform  ·  n_top = 270") +
-    coord_cartesian(xlim = c(-0.2, 10.8), ylim = c(3.3, 10)) +
+    # analytic boxes (top edge 7.1, bottom edge 6.1)
+    nodebox(xT, 6.6, 5.2, 1.0, ana_fill, "273 analytic samples\n139 events") +
+    nodebox(xV, 6.6, 5.2, 1.0, ana_fill, "616 analytic samples\n414 events") +
+    # exclusion boxes (to the right of each column)
+    nodebox(5.6, 7.95, 2.6, 0.9, excl_fill, "48 excluded\n(missing surv./QC)", size = 4.3) +
+    nodebox(11.3, 7.95, 2.6, 0.9, excl_fill, "363 excluded\n(non-PDAC/QC)", size = 4.3) +
+    # pooled -> analytic: vertical arrows, heads touching analytic box tops (7.1)
+    arr(xT, 8.7, xT, 7.1) +
+    arr(xV, 8.7, xV, 7.1) +
+    # exclusion branches: horizontal arrows, heads touching exclusion box left edges
+    arr(xT, 7.95, 4.3, 7.95) +
+    arr(xV, 7.95, 10.0, 7.95) +
+    # merge: down lines from analytic bottoms (6.1) to a horizontal bus (5.2),
+    # then a single vertical arrow into the shared box top (4.6) — no diagonals
+    ln(xT, 6.1, xT, 5.2) +
+    ln(xV, 6.1, xV, 5.2) +
+    ln(xT, 5.2, xV, 5.2) +
+    arr(xS, 5.2, xS, 4.6) +
+    # shared downstream box (top edge 4.6)
+    nodebox(xS, 4.1, 7.8, 1.0, "#eceaf4",
+            "1,970 shared genes  ·  within-sample rank transform",
+            size = 4.7) +
+    # per-cohort detail, left-aligned to the right of the validation merge line,
+    # anchored just below the analytic box so it stays clear of the shared box
+    annotate("text", x = 8.9, y = 6.0, hjust = 0, vjust = 1, size = 4.6,
+             color = "grey30", lineheight = 1.05,
+             label = paste("Dijk 90 (81 events)", "Moffitt 123 (83)",
+                           "PACA-AU array 63 (38)", "PACA-AU seq 52 (31)",
+                           "Puleo 288 (181)", sep = "\n")) +
+    coord_cartesian(xlim = c(0, 12.9), ylim = c(3.3, 10.6)) +
     theme_void()
 }
 
 # ── Render all ──────────────────────────────────────────────────────────────
 save_fig(fig_A(), "new_A_bulk_mixture",        width = 12,  height = 7.6)
 save_fig(fig_B(), "new_B_nmf_decomposition",   width = 12,  height = 6.5)
-save_fig(fig_C(), "new_C_reconstruction_vs_prognosis", width = 12.5, height = 9.5)
-save_fig(fig_D(), "new_D_supervise_W_not_H",   width = 8.5, height = 6.5)
+# NOTE: Figure C is now generated by code/14_defense_figC.R (matrix -> multiple
+# good-reconstruction solutions -> varying-moderate KM curves). Do not re-render
+# it here, or it will clobber that version.
+save_fig(fig_D(), "new_D_supervise_W_not_H",   width = 8.5, height = 6.1)
 save_fig(fig_E(), "new_E_sim_ground_truth",    width = 7.5, height = 6)
-save_fig(fig_F(), "new_F_cohort_flow",         width = 9,   height = 6)
+save_fig(fig_F(), "new_F_cohort_flow",         width = 11,  height = 7.5)
 
 message("=== Defense figures written to ", OUT, " ===")

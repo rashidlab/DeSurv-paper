@@ -1,0 +1,28 @@
+/*-- scss:rules --*/
+
+// Long paper title overflows at the theme's default h1 size — scale it down.
+#title-slide .title {
+  font-size: 1.35em;
+  line-height: 1.15;
+  margin-bottom: 0.4em;
+}
+#title-slide .subtitle {
+  font-size: 0.9em;
+}
+#title-slide .author,
+#title-slide .institute,
+#title-slide .date {
+  font-size: 0.75em;
+}
+
+// Slide titles are full sentences — scale h2 down slightly so they fit on one line.
+.reveal .slides section h2 {
+  font-size: 0.95em;
+}
+
+// Shrink body text so it sits comfortably below the sentence-style titles.
+.reveal .slides section p,
+.reveal .slides section li,
+.reveal .slides section blockquote {
+  font-size: 0.85em;
+}

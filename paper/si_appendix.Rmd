@@ -8,6 +8,8 @@ header-includes:
 - \usepackage{multirow}
 - \usepackage{float}
 - \usepackage{graphicx}
+- \usepackage{xr-hyper}
+- \externaldocument{paper}
 - \usepackage{amsmath}
 - \usepackage{amsfonts}
 - \usepackage{amssymb}
@@ -1123,7 +1125,7 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 # Simulation results under null and mixed scenarios
 
-To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the primary scenario (main text Fig. 4), prognostic programs explained low variance relative to outcome-neutral background signals, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, survival depended on 300 genes per lethal factor, of which 50% were factor-specific markers and 50% were background genes with loadings shared across all factors. All scenarios used $G = 3{,}000$ genes, $N = 200$ samples, $K = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Materials and Methods). Performance was evaluated using cross-validated concordance index (C-index), precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
+To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the primary scenario (main text Fig.~\ref{fig:sim}), prognostic programs explained low variance relative to outcome-neutral background signals, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, survival depended on 300 genes per lethal factor, of which 50% were factor-specific markers and 50% were background genes with loadings shared across all factors. All scenarios used $G = 3{,}000$ genes, $N = 200$ samples, $K = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Materials and Methods). Performance was evaluated using cross-validated concordance index (C-index), precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
 
 Under the null scenario (Fig. \ref{fig:sim-null-mixed}A--B), DeSurv showed no advantage over unsupervised NMF ($\alpha = 0$). Both methods yielded C-index values near 0.5, consistent with the absence of survival signal. The distribution of selected ranks was concentrated at low values for both methods, with NMF more strongly favoring $k = 2$. These results confirm that DeSurv does not hallucinate prognostic structure when none exists: Bayesian optimization selected low values of the supervision parameter $\alpha$, effectively recovering standard NMF as a special case. This specificity control is important because it establishes that the advantages observed in the primary scenario reflect genuine signal recovery rather than overfitting to noise in the survival labels.
 
@@ -1158,7 +1160,7 @@ cowplot::ggdraw() + cowplot::draw_image(img)
 
 Standard unsupervised rank selection criteria (reconstruction residuals, cophenetic correlation coefficient, and mean silhouette width) yielded inconsistent guidance for selecting the factorization rank $k$ in the PDAC training cohort (TCGA + CPTAC). Reconstruction residuals decreased smoothly without a clear elbow (Fig. \ref{fig:nmf-diagnostics}A). Cophenetic correlation fluctuated without a distinct transition point (Fig. \ref{fig:nmf-diagnostics}B). Mean silhouette width favored very low ranks that conflicted with other criteria (Fig. \ref{fig:nmf-diagnostics}C). These contradictions motivated the survival-supervised rank selection approach described in the main text.
 
-```{r fig-nmf-diagnostics, fig.width = 6, fig.height = 3.5, fig.cap = "Standard unsupervised NMF rank selection heuristics for the PDAC training cohort (TCGA + CPTAC). (A) Reconstruction residuals as a function of factorization rank $k$. (B) Cophenetic correlation coefficient as a function of $k$. (C) Mean silhouette width across multiple distance metrics as a function of $k$. These criteria yield inconsistent guidance, motivating the survival-supervised model selection approach (main text Fig. 4D). \\label{fig:nmf-diagnostics}", fig.env='figure*', fig.pos='t', out.height= "3.5in", out.width='\\textwidth'}
+```{r fig-nmf-diagnostics, fig.width = 6, fig.height = 3.5, fig.cap = "Standard unsupervised NMF rank selection heuristics for the PDAC training cohort (TCGA + CPTAC). (A) Reconstruction residuals as a function of factorization rank $k$. (B) Cophenetic correlation coefficient as a function of $k$. (C) Mean silhouette width across multiple distance metrics as a function of $k$. These criteria yield inconsistent guidance, motivating the survival-supervised model selection approach (main text Fig.~\\ref{fig:sim}D). \\label{fig:nmf-diagnostics}", fig.env='figure*', fig.pos='t', out.height= "3.5in", out.width='\\textwidth'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_nmf_diagnostics_tcgacptac.pdf", density = 300))
 ```
@@ -1237,7 +1239,7 @@ cindex_wide <- fmt_cindex(val_cindex_desurv_tcgacptac, "DeSurv (K=3)") %>%
   dplyr::mutate(Cohort = gsub("_", "\\_", Cohort, fixed = TRUE))
 
 kable(cindex_wide, format = "latex", booktabs = TRUE, linesep = "", escape = FALSE,
-      caption = "External validation C-index by method and cohort. DeSurv at BO-selected rank ($k = 3$) is compared with standard NMF at matched rank ($k = 3$), elbow-selected rank ($k = 5$), and BO-selected rank ($k = 7$, $\\alpha = 0$). Higher values indicate better discrimination. \\label{tab:tab-cindex-comparison}") |>
+      caption = "External validation C-index by method and cohort. DeSurv at BO-selected rank ($k = 3$) is compared with standard NMF at matched rank ($k = 3$), elbow-selected rank ($k = 5$), and BO-selected rank ($k = 7$, $\\alpha = 0$). Higher values indicate better discrimination.") |>
   kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
@@ -1298,7 +1300,7 @@ colnames(tbl) <- c("Cohort", "$n$", "events",
 
 kable(tbl, format = "latex", booktabs = TRUE, linesep = "", escape = FALSE,
       align = c("l","r","r","r","r","r"),
-      caption = "Per-cohort Bayesian Information Criterion (BIC) for Cox proportional hazards models using individual factor scores as predictors of overall survival in each external validation cohort. $\\beta$ coefficients are re-fit on each validation cohort separately. DeSurv uses three factor scores (F1, F2, F3); NMF at BO-selected $k = 7$ uses seven (F1--F7). BIC penalises complexity as $k \\log n_{\\text{events}}$. Positive $\\Delta$BIC (NMF $-$ DeSurv) indicates DeSurv's parsimonious 3-factor decomposition is preferred. DeSurv is BIC-preferred in three of five validation cohorts; the remaining two are essentially tied. \\label{tab:tab-bic-percohort}") |>
+      caption = "Per-cohort Bayesian Information Criterion (BIC) for Cox proportional hazards models using individual factor scores as predictors of overall survival in each external validation cohort. $\\beta$ coefficients are re-fit on each validation cohort separately. DeSurv uses three factor scores (F1, F2, F3); NMF at BO-selected $k = 7$ uses seven (F1--F7). BIC penalises complexity as $k \\log n_{\\text{events}}$. Positive $\\Delta$BIC (NMF $-$ DeSurv) indicates DeSurv's parsimonious 3-factor decomposition is preferred. DeSurv is BIC-preferred in three of five validation cohorts; the remaining two are essentially tied.") |>
   kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
@@ -1344,6 +1346,10 @@ factor_captions <- c(
 
 for (i in seq_along(factor_labels)) {
   tbl <- build_factor_table(desurv_genes, factor_labels[i])
+  # Make knitr's auto-generated table label unique per iteration so the three
+  # loop tables don't all collide on tab:tab-gene-list-270 (multiply-defined).
+  # The referenced per-factor labels (tab:gene-list-270-D<i>) are set in the caption.
+  knitr::opts_current$set(label = paste0("tab-gene-list-270-", factor_labels[i]))
   cat("")
   kable(tbl, format = "latex", booktabs = TRUE, linesep = "",
         col.names = c("1--45", "46--90", "91--135", "136--180", "181--225", "226--270"),

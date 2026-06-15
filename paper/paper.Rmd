@@ -38,6 +38,8 @@ header-includes:
   - \usepackage{booktabs}
   - \usepackage{float}
   - \usepackage{graphicx}
+  - \usepackage{xr-hyper}
+  - \externaldocument{si_appendix}
   - \usepackage{amsmath}
   - \usepackage{amsfonts}
   - \usepackage{amssymb}

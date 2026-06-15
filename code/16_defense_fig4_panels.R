@@ -209,8 +209,10 @@ km_legend_plot <- ggplot(
 km_legend_grob <- gtable::gtable_filter(ggplotGrob(km_legend_plot), "guide-box")
 
 save_km <- function(surv_obj, title, stem) {
-  panel <- plot_grid(stack_surv(surv_obj, title), ggdraw(km_legend_grob),
-                     ncol = 1, rel_heights = c(10, 1))
+  # Trailing NULL row adds bottom whitespace so the legend's descenders aren't
+  # clipped at the image edge.
+  panel <- plot_grid(stack_surv(surv_obj, title), ggdraw(km_legend_grob), NULL,
+                     ncol = 1, rel_heights = c(10, 1, 0.3))
   # Landscape-ish (aspect < 1) so each panel fills a half-column without its
   # bottom running off the slide.
   ggsave(file.path(OUT, paste0(stem, ".pdf")), panel, width = 5.8, height = 5.2,

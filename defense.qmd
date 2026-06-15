@@ -14,11 +14,12 @@ format:
     transition: fade
 ---
 
+## Bulk RNA collapses a cell mixture into one expression vector
+
 <!-- SLIDE TITLE CONVENTION: every slide title is a short sentence stating the
      point of the slide (the takeaway), not a topic label. Apply this to all
-     current and future slides. -->
-
-## Bulk RNA collapses a cell mixture into one expression vector
+     current and future slides. Note: keep this comment inside a slide (after a
+     heading); placed before the first heading it renders as a blank slide. -->
 
 ![](figures/defense/new_A_bulk_mixture.png){width="90%"}
 

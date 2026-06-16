@@ -560,6 +560,169 @@ Amber M. Young
           overflow: hidden!important;
           display:block!important;
       }</style></aside>
+</section>
+<section id="backup-slides" class="slide level2 center" data-background-color="#13294B">
+<h2>Backup slides</h2>
+<!-- Not presented linearly — each backs a specific anticipated question. -->
+</section>
+<section id="backup-the-full-desurv-objective" class="slide level2">
+<h2>Backup · The full DeSurv objective</h2>
+<p><span class="math display">\[\mathcal{L}(W,H,\beta) = (1-\alpha)\underbrace{\Big[\tfrac{1}{2np}\lVert X-WH\rVert_F^2 + \tfrac{\lambda_H}{2nk}\lVert H\rVert_F^2\Big]}_{\text{reconstruction}} \;-\; \alpha\underbrace{\Big[\tfrac{2}{n_e}\,\ell(W,\beta) - \lambda\big(\xi\lVert\beta\rVert_1 + \tfrac{1-\xi}{2}\lVert\beta\rVert_2^2\big)\Big]}_{\text{Cox survival}}\]</span></p>
+<ul>
+<li>Cox model runs on factor scores <span class="math inline">\(Z = W^\top X\)</span>; <span class="math inline">\(\ell\)</span> is the Cox log-partial likelihood</li>
+<li><span class="math inline">\(\alpha \in [0,1)\)</span> balances the two losses — <strong><span class="math inline">\(\alpha = 0\)</span> recovers standard NMF</strong></li>
+<li><span class="math inline">\(\lambda_H,\lambda \ge 0\)</span> regularize <span class="math inline">\(H\)</span> and <span class="math inline">\(\beta\)</span>; <span class="math inline">\(\xi \in [0,1]\)</span> sets the elastic-net mix</li>
+</ul>
+</section>
+<section id="backup-block-coordinate-descent-updates" class="slide level2">
+<h2>Backup · Block-coordinate descent updates</h2>
+<p>Cycle three blocks to a stationary point (SI Algorithm S1):</p>
+<ul>
+<li><strong>H</strong> — multiplicative, convex QP, nonincreasing: <span class="math display">\[H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \varepsilon},\ \varepsilon\Big)\]</span></li>
+<li><strong>W</strong> — hybrid multiplicative with gradient-balancing factor <span class="math inline">\(\zeta\)</span> (clipped), <strong>backtracking line search</strong>, then column normalization (preserves <span class="math inline">\(WH\)</span> and <span class="math inline">\(W\beta\)</span>)</li>
+<li><strong>β</strong> — elastic-net Coxnet, cyclic coordinate descent (closed-form soft-thresholding)</li>
+</ul>
+</section>
+<section id="backup-convergence-to-a-stationary-point" class="slide level2">
+<h2>Backup · Convergence to a stationary point</h2>
+<div class="columns">
+<div class="column" style="width:58%;">
+<p><img data-src="figures/defense/bk_converge.png" width="820"></p>
+</div><div class="column" style="width:42%;">
+<ul>
+<li>Objective is <strong>monotone nonincreasing</strong> → finite limit; every limit point is a <strong>stationary (KKT) point</strong> (SI Thm 1)</li>
+<li>5 multistart trajectories converge within ~5,000 iterations</li>
+<li><strong>Caveat:</strong> the Coxnet β-step uses an approximate Hessian, so the proof is for an idealized update — empirically stable</li>
+</ul>
+</div></div>
+</section>
+<section id="backup-why-supervision-enters-w-not-h" class="slide level2">
+<h2>Backup · Why supervision enters W, not H</h2>
+<div class="columns">
+<div class="column" style="width:52%;">
+<p><img data-src="figures/defense/new_D_supervise_W_not_H.png" width="780"></p>
+</div><div class="column" style="width:48%;">
+<ul>
+<li>NMF is non-identifiable: <span class="math inline">\((W,H)\to(WR,R^{-1}H)\)</span> preserves reconstruction</li>
+<li>Supervising <strong>H</strong> could lower Cox loss by reshuffling patient loadings while leaving programs <span class="math inline">\(W\)</span> ~unchanged</li>
+<li>Supervising <strong>W</strong> makes programs gene-level → new samples embed by projection <span class="math inline">\(Z_{\text{new}} = X_{\text{new}}^\top \tilde W\)</span> (no per-sample refit)</li>
+</ul>
+</div></div>
+</section>
+<section id="backup-hyperparameters-via-bayesian-optimization" class="slide level2">
+<h2>Backup · Hyperparameters via Bayesian optimization</h2>
+<div class="columns">
+<div class="column" style="width:58%;">
+<p><img data-src="figures/defense/bk_bo_heat.png" width="840"></p>
+</div><div class="column" style="width:42%;">
+<ul>
+<li>GP surrogate (Matérn + ARD), Expected-Improvement acquisition over <span class="math inline">\(k,\alpha,\lambda,\xi,n_{\text{top}}\)</span></li>
+<li>Objective = <strong>nested-CV mean C-index</strong> (Algorithm S2); no validation survival used</li>
+<li>Final <span class="math inline">\(k\)</span> by the <strong>1-SE rule</strong> → <span class="math inline">\(k=3\)</span>; C-index plateau spans <span class="math inline">\(k=3\)</span>–<span class="math inline">\(12\)</span></li>
+</ul>
+</div></div>
+</section>
+<section id="backup-null-and-mixed-simulation-scenarios" class="slide level2">
+<h2>Backup · Null and mixed simulation scenarios</h2>
+<div class="columns">
+<div class="column" style="width:44%;">
+<p><img data-src="figures/defense/bk_null_mixed.png" width="640"></p>
+</div><div class="column" style="width:56%;">
+<ul>
+<li><strong>Null (<span class="math inline">\(\beta=0\)</span>):</strong> both methods C-index ≈ 0.5; BO drives <span class="math inline">\(\alpha\to0\)</span> — DeSurv does <strong>not</strong> hallucinate structure</li>
+<li><strong>Mixed (survival on markers + background):</strong> marker-only precision strongly favors DeSurv; matched factor gets larger <span class="math inline">\(|\beta|\)</span></li>
+<li>Dose–response: advantage greatest (primary) → moderate (mixed) → absent (null)</li>
+</ul>
+</div></div>
+</section>
+<section id="backup-nmf-rank-selection-heuristics-disagree" class="slide level2">
+<h2>Backup · NMF rank-selection heuristics disagree</h2>
+<div class="columns">
+<div class="column" style="width:60%;">
+<p><img data-src="figures/defense/bk_nmf_diag.png" width="850"></p>
+</div><div class="column" style="width:40%;">
+<ul>
+<li>Reconstruction residuals decrease smoothly — <strong>no elbow</strong></li>
+<li>Cophenetic correlation fluctuates — <strong>no clear transition</strong></li>
+<li>Silhouette favors very low <span class="math inline">\(k\)</span></li>
+<li>The three criteria <strong>disagree</strong> on the same data → motivates survival-supervised selection</li>
+</ul>
+</div></div>
+</section>
+<section id="backup-c-index-across-factorization-rank" class="slide level2">
+<h2>Backup · C-index across factorization rank</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><img data-src="figures/defense/bk_cindex_by_k.png" width="720"></p>
+</div><div class="column" style="width:50%;">
+<ul>
+<li>Selected operating point: <span class="math inline">\(n_{\text{top}}=270\)</span>, <span class="math inline">\(\alpha=0.349\)</span>, <span class="math inline">\(\lambda=0.056\)</span></li>
+<li>DeSurv &gt; NMF at <strong>every</strong> <span class="math inline">\(k\)</span> in training</li>
+<li>DeSurv <span class="math inline">\(k=3\)</span> ≈ NMF <span class="math inline">\(k=7\)</span> in external validation → supervision concentrates prognostic info into fewer factors</li>
+</ul>
+</div></div>
+</section>
+<section id="backup-nmf-at-its-own-ranks-k-5-7" class="slide level2">
+<h2>Backup · NMF at its own ranks (k = 5, 7)</h2>
+<div class="columns">
+<div class="column" style="width:52%;">
+<p><img data-src="figures/defense/bk_nmf_k7.png" width="780"></p>
+</div><div class="column" style="width:48%;">
+<ul>
+<li>Elbow → <span class="math inline">\(k=5\)</span>; BO with <span class="math inline">\(\alpha=0\)</span> → <span class="math inline">\(k=7\)</span></li>
+<li><span class="math inline">\(k=5\)</span>: re-derives the <span class="math inline">\(k=3\)</span> core + Exocrine-like and restCAF <strong>variance</strong> factors (no new prognostic content)</li>
+<li><span class="math inline">\(k=7\)</span>: more fragmentation, no new coherent program — matches DeSurv C-index but needs <strong>&gt;2× factors</strong></li>
+</ul>
+</div></div>
+</section>
+<section id="backup-risk-cutpoint-selection-per-cohort-km" class="slide level2">
+<h2>Backup · Risk cutpoint selection &amp; per-cohort KM</h2>
+<div class="columns">
+<div class="column" style="width:42%;">
+<p><img data-src="figures/defense/bk_cutpoint_km.png" width="660"></p>
+</div><div class="column" style="width:58%;">
+<ul>
+<li>Cutpoint chosen by CV on TCGA+CPTAC: grid <span class="math inline">\(z\in\{-2,\dots,2\}\)</span>, maximize mean <span class="math inline">\(|\text{log-rank }z|\)</span></li>
+<li>Applied to validation by standardizing with <strong>training</strong> mean/SD</li>
+<li>Consistent high-risk separation across Dijk, Moffitt, PACA-AU (array+seq), Puleo</li>
+</ul>
+</div></div>
+</section>
+<section id="backup-risk-group-subtype-composition" class="slide level2">
+<h2>Backup · Risk-group subtype composition</h2>
+<div class="columns">
+<div class="column" style="width:40%;">
+<p><img data-src="figures/defense/bk_subtype_overlap.png" width="620"></p>
+</div><div class="column" style="width:60%;">
+<ul>
+<li>DeSurv high-risk group enriched for <strong>both</strong> Basal-like (PurIST) <strong>and</strong> proCAF (DeCAF)</li>
+<li>NMF <span class="math inline">\(k=3\)</span> group: Basal-like enrichment but <strong>no</strong> significant proCAF — misses the tumor–stroma coupling</li>
+<li>Adjusted for PurIST + DeCAF, DeSurv LP retains <strong>HR = 1.33</strong> (95% CI 1.13–1.56, <span class="math inline">\(P&lt;0.001\)</span>)</li>
+</ul>
+</div></div>
+</section>
+<section id="backup-variance-and-survival-contribution-metrics" class="slide level2">
+<h2>Backup · Variance and survival contribution metrics</h2>
+<ul>
+<li><strong>Reconstruction Shapley share</strong> — per-factor contribution to the model’s reconstruction; partitions and sums to 100% (main-text Fig 3C x-axis)</li>
+<li><strong>Conditional variance</strong> (semi-partial <span class="math inline">\(R^2\)</span>): <span class="math inline">\(\;V_j = (\mathrm{RSS}_{-j} - \mathrm{RSS}_{\text{full}})/\lVert X\rVert_F^2\)</span></li>
+<li><strong>Survival contribution</strong> (Type III): <span class="math inline">\(\;\Delta\ell_j = \ell(\text{full}) - \ell(\text{drop factor } j)\)</span> at the MPLE</li>
+<li><strong>Factor specificity</strong> of top genes: <span class="math inline">\(\;s_{ij} = W^*_{ij} - \max_{j'\neq j} W^*_{ij'}\)</span>, with <span class="math inline">\(W^*\)</span> column-max scaled</li>
+</ul>
+</section>
+<section id="backup-factor-gene-lists-top-of-each-program" class="slide level2">
+<h2>Backup · Factor gene lists (top of each program)</h2>
+<p>270 genes per factor (BO-selected <span class="math inline">\(n_{\text{top}}\)</span>); top entries by contrast score:</p>
+<div class="columns">
+<div class="column">
+<h4 id="d1-classical-restcaf">D1 · Classical + restCAF</h4>
+<p>DMBT1, IGFBP2, S100A4, KRT23, LIF, IFI6, PDLIM3, CLDN18 …</p>
+</div><div class="column">
+<h4 id="d2-procaf">D2 · proCAF</h4>
+<p>UHMK1, DDR2, INHBA, DYNC2H1, ZDHHC20, ITPR2, HMCN1, LAMA2 …</p>
+</div></div>
+<h4 id="d3-basal-like-proliferation">D3 · Basal-like + proliferation</h4>
+<p>HSPB1, KRT7, MSLN, RPSAP58, S100P, RPS16, IL32, SH3BGRL3 …</p>
 
 </section>
     </div>

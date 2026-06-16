@@ -287,3 +287,197 @@ Questions welcome.
 ::: {.notes}
 Thank the committee, the Rashid lab, Jen Jen Yeh and the clinical collaborators, the consortia and cohorts whose data made external validation possible, and DOD funding. Open for questions.
 :::
+
+## Backup slides {background-color="#13294B" .center}
+
+<!-- Not presented linearly — each backs a specific anticipated question. -->
+
+## Backup · The full DeSurv objective
+
+$$\mathcal{L}(W,H,\beta) = (1-\alpha)\underbrace{\Big[\tfrac{1}{2np}\lVert X-WH\rVert_F^2 + \tfrac{\lambda_H}{2nk}\lVert H\rVert_F^2\Big]}_{\text{reconstruction}} \;-\; \alpha\underbrace{\Big[\tfrac{2}{n_e}\,\ell(W,\beta) - \lambda\big(\xi\lVert\beta\rVert_1 + \tfrac{1-\xi}{2}\lVert\beta\rVert_2^2\big)\Big]}_{\text{Cox survival}}$$
+
+- Cox model runs on factor scores $Z = W^\top X$; $\ell$ is the Cox log-partial likelihood
+- $\alpha \in [0,1)$ balances the two losses — **$\alpha = 0$ recovers standard NMF**
+- $\lambda_H,\lambda \ge 0$ regularize $H$ and $\beta$; $\xi \in [0,1]$ sets the elastic-net mix
+
+## Backup · Block-coordinate descent updates
+
+Cycle three blocks to a stationary point (SI Algorithm S1):
+
+- **H** — multiplicative, convex QP, nonincreasing:
+$$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \varepsilon},\ \varepsilon\Big)$$
+- **W** — hybrid multiplicative with gradient-balancing factor $\zeta$ (clipped), **backtracking line search**, then column normalization (preserves $WH$ and $W\beta$)
+- **β** — elastic-net Coxnet, cyclic coordinate descent (closed-form soft-thresholding)
+
+## Backup · Convergence to a stationary point
+
+:::: {.columns}
+
+::: {.column width="58%"}
+![](figures/defense/bk_converge.png){width="820"}
+:::
+
+::: {.column width="42%"}
+- Objective is **monotone nonincreasing** → finite limit; every limit point is a **stationary (KKT) point** (SI Thm 1)
+- 5 multistart trajectories converge within ~5,000 iterations
+- **Caveat:** the Coxnet β-step uses an approximate Hessian, so the proof is for an idealized update — empirically stable
+:::
+
+::::
+
+## Backup · Why supervision enters W, not H
+
+:::: {.columns}
+
+::: {.column width="52%"}
+![](figures/defense/new_D_supervise_W_not_H.png){width="780"}
+:::
+
+::: {.column width="48%"}
+- NMF is non-identifiable: $(W,H)\to(WR,R^{-1}H)$ preserves reconstruction
+- Supervising **H** could lower Cox loss by reshuffling patient loadings while leaving programs $W$ ~unchanged
+- Supervising **W** makes programs gene-level → new samples embed by projection $Z_{\text{new}} = X_{\text{new}}^\top \tilde W$ (no per-sample refit)
+:::
+
+::::
+
+## Backup · Hyperparameters via Bayesian optimization
+
+:::: {.columns}
+
+::: {.column width="58%"}
+![](figures/defense/bk_bo_heat.png){width="840"}
+:::
+
+::: {.column width="42%"}
+- GP surrogate (Matérn + ARD), Expected-Improvement acquisition over $k,\alpha,\lambda,\xi,n_{\text{top}}$
+- Objective = **nested-CV mean C-index** (Algorithm S2); no validation survival used
+- Final $k$ by the **1-SE rule** → $k=3$; C-index plateau spans $k=3$–$12$
+:::
+
+::::
+
+## Backup · Null and mixed simulation scenarios
+
+:::: {.columns}
+
+::: {.column width="44%"}
+![](figures/defense/bk_null_mixed.png){width="640"}
+:::
+
+::: {.column width="56%"}
+- **Null ($\beta=0$):** both methods C-index ≈ 0.5; BO drives $\alpha\to0$ — DeSurv does **not** hallucinate structure
+- **Mixed (survival on markers + background):** marker-only precision strongly favors DeSurv; matched factor gets larger $|\beta|$
+- Dose–response: advantage greatest (primary) → moderate (mixed) → absent (null)
+:::
+
+::::
+
+## Backup · NMF rank-selection heuristics disagree
+
+:::: {.columns}
+
+::: {.column width="60%"}
+![](figures/defense/bk_nmf_diag.png){width="850"}
+:::
+
+::: {.column width="40%"}
+- Reconstruction residuals decrease smoothly — **no elbow**
+- Cophenetic correlation fluctuates — **no clear transition**
+- Silhouette favors very low $k$
+- The three criteria **disagree** on the same data → motivates survival-supervised selection
+:::
+
+::::
+
+## Backup · C-index across factorization rank
+
+:::: {.columns}
+
+::: {.column width="50%"}
+![](figures/defense/bk_cindex_by_k.png){width="720"}
+:::
+
+::: {.column width="50%"}
+- Selected operating point: $n_{\text{top}}=270$, $\alpha=0.349$, $\lambda=0.056$
+- DeSurv > NMF at **every** $k$ in training
+- DeSurv $k=3$ ≈ NMF $k=7$ in external validation → supervision concentrates prognostic info into fewer factors
+:::
+
+::::
+
+## Backup · NMF at its own ranks (k = 5, 7)
+
+:::: {.columns}
+
+::: {.column width="52%"}
+![](figures/defense/bk_nmf_k7.png){width="780"}
+:::
+
+::: {.column width="48%"}
+- Elbow → $k=5$; BO with $\alpha=0$ → $k=7$
+- $k=5$: re-derives the $k=3$ core + Exocrine-like and restCAF **variance** factors (no new prognostic content)
+- $k=7$: more fragmentation, no new coherent program — matches DeSurv C-index but needs **>2× factors**
+:::
+
+::::
+
+## Backup · Risk cutpoint selection & per-cohort KM
+
+:::: {.columns}
+
+::: {.column width="42%"}
+![](figures/defense/bk_cutpoint_km.png){width="660"}
+:::
+
+::: {.column width="58%"}
+- Cutpoint chosen by CV on TCGA+CPTAC: grid $z\in\{-2,\dots,2\}$, maximize mean $|\text{log-rank }z|$
+- Applied to validation by standardizing with **training** mean/SD
+- Consistent high-risk separation across Dijk, Moffitt, PACA-AU (array+seq), Puleo
+:::
+
+::::
+
+## Backup · Risk-group subtype composition
+
+:::: {.columns}
+
+::: {.column width="40%"}
+![](figures/defense/bk_subtype_overlap.png){width="620"}
+:::
+
+::: {.column width="60%"}
+- DeSurv high-risk group enriched for **both** Basal-like (PurIST) **and** proCAF (DeCAF)
+- NMF $k=3$ group: Basal-like enrichment but **no** significant proCAF — misses the tumor–stroma coupling
+- Adjusted for PurIST + DeCAF, DeSurv LP retains **HR = 1.33** (95% CI 1.13–1.56, $P<0.001$)
+:::
+
+::::
+
+## Backup · Variance and survival contribution metrics
+
+- **Reconstruction Shapley share** — per-factor contribution to the model's reconstruction; partitions and sums to 100% (main-text Fig 3C x-axis)
+- **Conditional variance** (semi-partial $R^2$): $\;V_j = (\mathrm{RSS}_{-j} - \mathrm{RSS}_{\text{full}})/\lVert X\rVert_F^2$
+- **Survival contribution** (Type III): $\;\Delta\ell_j = \ell(\text{full}) - \ell(\text{drop factor } j)$ at the MPLE
+- **Factor specificity** of top genes: $\;s_{ij} = W^*_{ij} - \max_{j'\neq j} W^*_{ij'}$, with $W^*$ column-max scaled
+
+## Backup · Factor gene lists (top of each program)
+
+270 genes per factor (BO-selected $n_{\text{top}}$); top entries by contrast score:
+
+:::: {.columns}
+
+::: {.column}
+#### D1 · Classical + restCAF
+DMBT1, IGFBP2, S100A4, KRT23, LIF, IFI6, PDLIM3, CLDN18 …
+:::
+
+::: {.column}
+#### D2 · proCAF
+UHMK1, DDR2, INHBA, DYNC2H1, ZDHHC20, ITPR2, HMCN1, LAMA2 …
+:::
+
+::::
+
+#### D3 · Basal-like + proliferation
+HSPB1, KRT7, MSLN, RPSAP58, S100P, RPS16, IL32, SH3BGRL3 …

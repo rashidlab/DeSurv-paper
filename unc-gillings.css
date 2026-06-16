@@ -662,3 +662,16 @@ code.sourceCode {
   right: 0 !important;
 }
 .reveal .slide-number a { color: #fff !important; }
+
+/* ==========================================================================
+   Math sizing — enlarge MathJax so equations read at slide scale (mainly the
+   backup objective / algorithm / definition slides).
+   ========================================================================== */
+.reveal mjx-container[display="true"] {
+  font-size: 1.5em !important;
+  margin: 0.7em 0 !important;
+}
+.reveal section p mjx-container,
+.reveal section li mjx-container {
+  font-size: 1.15em;
+}

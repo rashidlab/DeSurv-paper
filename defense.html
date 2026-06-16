@@ -30,7 +30,7 @@
       vertical-align: middle;
     }
   </style>
-  <link rel="stylesheet" href="defense_files/libs/revealjs/dist/theme/quarto-e2f0c2e3aebe914b69b7893bd1a87598.css">
+  <link rel="stylesheet" href="defense_files/libs/revealjs/dist/theme/quarto-ae1cf5e188190156f6ca5c66046165e7.css">
   <link href="defense_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="defense_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="defense_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -586,35 +586,35 @@ Amber M. Young
 <section id="backup-convergence-to-a-stationary-point" class="slide level2">
 <h2>Backup · Convergence to a stationary point</h2>
 <div class="columns">
-<div class="column" style="width:58%;">
-<p><img data-src="figures/defense/bk_converge.png" width="820"></p>
-</div><div class="column" style="width:42%;">
+<div class="column" style="width:64%;">
+<p><img data-src="figures/defense/bk_converge.png" style="width:100.0%"></p>
+</div><div class="column" style="width:36%;">
 <ul>
 <li>Objective is <strong>monotone nonincreasing</strong> → finite limit; every limit point is a <strong>stationary (KKT) point</strong> (SI Thm 1)</li>
 <li>5 multistart trajectories converge within ~5,000 iterations</li>
-<li><strong>Caveat:</strong> the Coxnet β-step uses an approximate Hessian, so the proof is for an idealized update — empirically stable</li>
+<li><strong>Caveat:</strong> the Coxnet β-step uses an approximate Hessian — proof is for an idealized update, empirically stable</li>
 </ul>
 </div></div>
 </section>
 <section id="backup-why-supervision-enters-w-not-h" class="slide level2">
 <h2>Backup · Why supervision enters W, not H</h2>
 <div class="columns">
-<div class="column" style="width:52%;">
-<p><img data-src="figures/defense/new_D_supervise_W_not_H.png" width="780"></p>
-</div><div class="column" style="width:48%;">
+<div class="column" style="width:60%;">
+<p><img data-src="figures/defense/new_D_supervise_W_not_H.png" style="width:100.0%"></p>
+</div><div class="column" style="width:40%;">
 <ul>
 <li>NMF is non-identifiable: <span class="math inline">\((W,H)\to(WR,R^{-1}H)\)</span> preserves reconstruction</li>
-<li>Supervising <strong>H</strong> could lower Cox loss by reshuffling patient loadings while leaving programs <span class="math inline">\(W\)</span> ~unchanged</li>
-<li>Supervising <strong>W</strong> makes programs gene-level → new samples embed by projection <span class="math inline">\(Z_{\text{new}} = X_{\text{new}}^\top \tilde W\)</span> (no per-sample refit)</li>
+<li>Supervising <strong>H</strong> could lower Cox loss by reshuffling loadings while leaving programs <span class="math inline">\(W\)</span> ~unchanged</li>
+<li>Supervising <strong>W</strong> makes programs gene-level → new samples embed by projection <span class="math inline">\(Z_{\text{new}} = X_{\text{new}}^\top \tilde W\)</span></li>
 </ul>
 </div></div>
 </section>
 <section id="backup-hyperparameters-via-bayesian-optimization" class="slide level2">
 <h2>Backup · Hyperparameters via Bayesian optimization</h2>
 <div class="columns">
-<div class="column" style="width:58%;">
-<p><img data-src="figures/defense/bk_bo_heat.png" width="840"></p>
-</div><div class="column" style="width:42%;">
+<div class="column" style="width:62%;">
+<p><img data-src="figures/defense/bk_bo_heat.png" style="width:100.0%"></p>
+</div><div class="column" style="width:38%;">
 <ul>
 <li>GP surrogate (Matérn + ARD), Expected-Improvement acquisition over <span class="math inline">\(k,\alpha,\lambda,\xi,n_{\text{top}}\)</span></li>
 <li>Objective = <strong>nested-CV mean C-index</strong> (Algorithm S2); no validation survival used</li>
@@ -625,9 +625,9 @@ Amber M. Young
 <section id="backup-null-and-mixed-simulation-scenarios" class="slide level2">
 <h2>Backup · Null and mixed simulation scenarios</h2>
 <div class="columns">
-<div class="column" style="width:44%;">
-<p><img data-src="figures/defense/bk_null_mixed.png" width="640"></p>
-</div><div class="column" style="width:56%;">
+<div class="column" style="width:42%;">
+<p><img data-src="figures/defense/bk_null_mixed.png" style="width:100.0%"></p>
+</div><div class="column" style="width:58%;">
 <ul>
 <li><strong>Null (<span class="math inline">\(\beta=0\)</span>):</strong> both methods C-index ≈ 0.5; BO drives <span class="math inline">\(\alpha\to0\)</span> — DeSurv does <strong>not</strong> hallucinate structure</li>
 <li><strong>Mixed (survival on markers + background):</strong> marker-only precision strongly favors DeSurv; matched factor gets larger <span class="math inline">\(|\beta|\)</span></li>
@@ -638,36 +638,36 @@ Amber M. Young
 <section id="backup-nmf-rank-selection-heuristics-disagree" class="slide level2">
 <h2>Backup · NMF rank-selection heuristics disagree</h2>
 <div class="columns">
-<div class="column" style="width:60%;">
-<p><img data-src="figures/defense/bk_nmf_diag.png" width="850"></p>
-</div><div class="column" style="width:40%;">
+<div class="column" style="width:64%;">
+<p><img data-src="figures/defense/bk_nmf_diag.png" style="width:100.0%"></p>
+</div><div class="column" style="width:36%;">
 <ul>
 <li>Reconstruction residuals decrease smoothly — <strong>no elbow</strong></li>
 <li>Cophenetic correlation fluctuates — <strong>no clear transition</strong></li>
 <li>Silhouette favors very low <span class="math inline">\(k\)</span></li>
-<li>The three criteria <strong>disagree</strong> on the same data → motivates survival-supervised selection</li>
+<li>The three criteria <strong>disagree</strong> → motivates survival-supervised selection</li>
 </ul>
 </div></div>
 </section>
 <section id="backup-c-index-across-factorization-rank" class="slide level2">
 <h2>Backup · C-index across factorization rank</h2>
 <div class="columns">
-<div class="column" style="width:50%;">
-<p><img data-src="figures/defense/bk_cindex_by_k.png" width="720"></p>
-</div><div class="column" style="width:50%;">
+<div class="column" style="width:66%;">
+<p><img data-src="figures/defense/bk_cindex_by_k.png" style="width:100.0%"></p>
+</div><div class="column" style="width:34%;">
 <ul>
-<li>Selected operating point: <span class="math inline">\(n_{\text{top}}=270\)</span>, <span class="math inline">\(\alpha=0.349\)</span>, <span class="math inline">\(\lambda=0.056\)</span></li>
-<li>DeSurv &gt; NMF at <strong>every</strong> <span class="math inline">\(k\)</span> in training</li>
-<li>DeSurv <span class="math inline">\(k=3\)</span> ≈ NMF <span class="math inline">\(k=7\)</span> in external validation → supervision concentrates prognostic info into fewer factors</li>
+<li>Shown: <span class="math inline">\(n_{\text{top}}=\text{ALL}\)</span>; <span class="math inline">\(\lambda=0.349\)</span>, <span class="math inline">\(\xi=0.056\)</span> (<span class="math inline">\(\alpha\)</span> selected per <span class="math inline">\(k\)</span>)</li>
+<li>DeSurv &gt; NMF at <strong>nearly every</strong> <span class="math inline">\(k\)</span> in training</li>
+<li>DeSurv <span class="math inline">\(k=3\)</span> ≈ NMF <span class="math inline">\(k=7\)</span> in validation → fewer factors carry the prognostic signal</li>
 </ul>
 </div></div>
 </section>
 <section id="backup-nmf-at-its-own-ranks-k-5-7" class="slide level2">
 <h2>Backup · NMF at its own ranks (k = 5, 7)</h2>
 <div class="columns">
-<div class="column" style="width:52%;">
-<p><img data-src="figures/defense/bk_nmf_k7.png" width="780"></p>
-</div><div class="column" style="width:48%;">
+<div class="column" style="width:54%;">
+<p><img data-src="figures/defense/bk_nmf_k7.png" style="width:100.0%"></p>
+</div><div class="column" style="width:46%;">
 <ul>
 <li>Elbow → <span class="math inline">\(k=5\)</span>; BO with <span class="math inline">\(\alpha=0\)</span> → <span class="math inline">\(k=7\)</span></li>
 <li><span class="math inline">\(k=5\)</span>: re-derives the <span class="math inline">\(k=3\)</span> core + Exocrine-like and restCAF <strong>variance</strong> factors (no new prognostic content)</li>
@@ -678,9 +678,9 @@ Amber M. Young
 <section id="backup-risk-cutpoint-selection-per-cohort-km" class="slide level2">
 <h2>Backup · Risk cutpoint selection &amp; per-cohort KM</h2>
 <div class="columns">
-<div class="column" style="width:42%;">
-<p><img data-src="figures/defense/bk_cutpoint_km.png" width="660"></p>
-</div><div class="column" style="width:58%;">
+<div class="column" style="width:40%;">
+<p><img data-src="figures/defense/bk_cutpoint_km.png" style="width:100.0%"></p>
+</div><div class="column" style="width:60%;">
 <ul>
 <li>Cutpoint chosen by CV on TCGA+CPTAC: grid <span class="math inline">\(z\in\{-2,\dots,2\}\)</span>, maximize mean <span class="math inline">\(|\text{log-rank }z|\)</span></li>
 <li>Applied to validation by standardizing with <strong>training</strong> mean/SD</li>
@@ -691,9 +691,9 @@ Amber M. Young
 <section id="backup-risk-group-subtype-composition" class="slide level2">
 <h2>Backup · Risk-group subtype composition</h2>
 <div class="columns">
-<div class="column" style="width:40%;">
-<p><img data-src="figures/defense/bk_subtype_overlap.png" width="620"></p>
-</div><div class="column" style="width:60%;">
+<div class="column" style="width:36%;">
+<p><img data-src="figures/defense/bk_subtype_overlap.png" style="width:100.0%"></p>
+</div><div class="column" style="width:64%;">
 <ul>
 <li>DeSurv high-risk group enriched for <strong>both</strong> Basal-like (PurIST) <strong>and</strong> proCAF (DeCAF)</li>
 <li>NMF <span class="math inline">\(k=3\)</span> group: Basal-like enrichment but <strong>no</strong> significant proCAF — misses the tumor–stroma coupling</li>

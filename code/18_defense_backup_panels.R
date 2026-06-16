@@ -28,12 +28,40 @@ ggsave(file.path(OUT, "bk_bo_heat.png"), p_bo, width = 8, height = 5.6,
        dpi = 300, bg = "white")
 message("Saved bk_bo_heat.png")
 
+# ── 1b. C-index vs rank, panel B only (n_top = ALL) for B9 ──────────────────
+# Rebuilt from the CV-grid CSVs (not the SI PDF) so the lambda/xi symbols render
+# and the fonts are slide-scale. The deck shows only this n_top = ALL panel.
+suppressPackageStartupMessages({library(dplyr); library(cowplot)})
+source("R/cv_grid_helpers.R")
+cvdir <- file.path("results", "cv_grid")
+if (file.exists(file.path(cvdir, "cv_grid_summary.csv"))) {
+  cfgB <- data.frame(ntop = NA_integer_, lambda = 0.349, nu = 0.056,
+                     label = "ntopALL", stringsAsFactors = FALSE)
+  pl <- plot_cindex_by_k(
+    cv_grid_summary     = read.csv(file.path(cvdir, "cv_grid_summary.csv")),
+    cv_grid_best_alpha  = read.csv(file.path(cvdir, "cv_grid_best_alpha.csv")),
+    cv_grid_val_summary = read.csv(file.path(cvdir, "cv_grid_val_summary.csv")),
+    configs             = cfgB)
+  pB <- pl[[1]] + theme_classic(base_size = 20) +
+    theme(legend.position = "bottom",
+          legend.text  = element_text(size = 19),
+          plot.subtitle = element_text(size = 19),
+          strip.text   = element_text(size = 19, face = "bold"),
+          axis.title   = element_text(size = 20),
+          axis.text    = element_text(size = 15, color = "black")) +
+    geom_line(linewidth = 1) + geom_point(size = 3)
+  ggsave(file.path(OUT, "bk_cindex_by_k.png"), pB, width = 11, height = 5,
+         dpi = 300, bg = "white")
+  message("Saved bk_cindex_by_k.png (panel B / n_top=ALL, enlarged)")
+} else {
+  warning("cv_grid CSVs not found — skipping bk_cindex_by_k")
+}
+
 # ── 2. Rasterize SI figure PDFs (figures/*.pdf) -> figures/defense/bk_*.png ──
 pdf_map <- c(
   si_fig_converge_tcgacptac      = "bk_converge",      # B4
   si_fig_sim_null_mixed_tcgacptac = "bk_null_mixed",   # B7
   si_fig_nmf_diagnostics_tcgacptac = "bk_nmf_diag",    # B8
-  cv_cindex_by_k_primary         = "bk_cindex_by_k",   # B9
   si_fig_nmf_k7_heatmap_tcgacptac = "bk_nmf_k7",       # B10
   si_fig_cutpoint_km_tcgacptac   = "bk_cutpoint_km",   # B11
   si_fig_subtype_overlap_tcgacptac = "bk_subtype_overlap" # B12

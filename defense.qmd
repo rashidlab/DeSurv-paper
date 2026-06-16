@@ -313,14 +313,14 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="58%"}
-![](figures/defense/bk_converge.png){width="820"}
+::: {.column width="64%"}
+![](figures/defense/bk_converge.png){width="100%"}
 :::
 
-::: {.column width="42%"}
+::: {.column width="36%"}
 - Objective is **monotone nonincreasing** → finite limit; every limit point is a **stationary (KKT) point** (SI Thm 1)
 - 5 multistart trajectories converge within ~5,000 iterations
-- **Caveat:** the Coxnet β-step uses an approximate Hessian, so the proof is for an idealized update — empirically stable
+- **Caveat:** the Coxnet β-step uses an approximate Hessian — proof is for an idealized update, empirically stable
 :::
 
 ::::
@@ -329,14 +329,14 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="52%"}
-![](figures/defense/new_D_supervise_W_not_H.png){width="780"}
+::: {.column width="60%"}
+![](figures/defense/new_D_supervise_W_not_H.png){width="100%"}
 :::
 
-::: {.column width="48%"}
+::: {.column width="40%"}
 - NMF is non-identifiable: $(W,H)\to(WR,R^{-1}H)$ preserves reconstruction
-- Supervising **H** could lower Cox loss by reshuffling patient loadings while leaving programs $W$ ~unchanged
-- Supervising **W** makes programs gene-level → new samples embed by projection $Z_{\text{new}} = X_{\text{new}}^\top \tilde W$ (no per-sample refit)
+- Supervising **H** could lower Cox loss by reshuffling loadings while leaving programs $W$ ~unchanged
+- Supervising **W** makes programs gene-level → new samples embed by projection $Z_{\text{new}} = X_{\text{new}}^\top \tilde W$
 :::
 
 ::::
@@ -345,11 +345,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="58%"}
-![](figures/defense/bk_bo_heat.png){width="840"}
+::: {.column width="62%"}
+![](figures/defense/bk_bo_heat.png){width="100%"}
 :::
 
-::: {.column width="42%"}
+::: {.column width="38%"}
 - GP surrogate (Matérn + ARD), Expected-Improvement acquisition over $k,\alpha,\lambda,\xi,n_{\text{top}}$
 - Objective = **nested-CV mean C-index** (Algorithm S2); no validation survival used
 - Final $k$ by the **1-SE rule** → $k=3$; C-index plateau spans $k=3$–$12$
@@ -361,11 +361,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="44%"}
-![](figures/defense/bk_null_mixed.png){width="640"}
+::: {.column width="42%"}
+![](figures/defense/bk_null_mixed.png){width="100%"}
 :::
 
-::: {.column width="56%"}
+::: {.column width="58%"}
 - **Null ($\beta=0$):** both methods C-index ≈ 0.5; BO drives $\alpha\to0$ — DeSurv does **not** hallucinate structure
 - **Mixed (survival on markers + background):** marker-only precision strongly favors DeSurv; matched factor gets larger $|\beta|$
 - Dose–response: advantage greatest (primary) → moderate (mixed) → absent (null)
@@ -377,15 +377,15 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="60%"}
-![](figures/defense/bk_nmf_diag.png){width="850"}
+::: {.column width="64%"}
+![](figures/defense/bk_nmf_diag.png){width="100%"}
 :::
 
-::: {.column width="40%"}
+::: {.column width="36%"}
 - Reconstruction residuals decrease smoothly — **no elbow**
 - Cophenetic correlation fluctuates — **no clear transition**
 - Silhouette favors very low $k$
-- The three criteria **disagree** on the same data → motivates survival-supervised selection
+- The three criteria **disagree** → motivates survival-supervised selection
 :::
 
 ::::
@@ -394,14 +394,14 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="50%"}
-![](figures/defense/bk_cindex_by_k.png){width="720"}
+::: {.column width="66%"}
+![](figures/defense/bk_cindex_by_k.png){width="100%"}
 :::
 
-::: {.column width="50%"}
-- Selected operating point: $n_{\text{top}}=270$, $\alpha=0.349$, $\lambda=0.056$
-- DeSurv > NMF at **every** $k$ in training
-- DeSurv $k=3$ ≈ NMF $k=7$ in external validation → supervision concentrates prognostic info into fewer factors
+::: {.column width="34%"}
+- Shown: $n_{\text{top}}=\text{ALL}$; $\lambda=0.349$, $\xi=0.056$ ($\alpha$ selected per $k$)
+- DeSurv > NMF at **nearly every** $k$ in training
+- DeSurv $k=3$ ≈ NMF $k=7$ in validation → fewer factors carry the prognostic signal
 :::
 
 ::::
@@ -410,11 +410,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="52%"}
-![](figures/defense/bk_nmf_k7.png){width="780"}
+::: {.column width="54%"}
+![](figures/defense/bk_nmf_k7.png){width="100%"}
 :::
 
-::: {.column width="48%"}
+::: {.column width="46%"}
 - Elbow → $k=5$; BO with $\alpha=0$ → $k=7$
 - $k=5$: re-derives the $k=3$ core + Exocrine-like and restCAF **variance** factors (no new prognostic content)
 - $k=7$: more fragmentation, no new coherent program — matches DeSurv C-index but needs **>2× factors**
@@ -426,11 +426,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="42%"}
-![](figures/defense/bk_cutpoint_km.png){width="660"}
+::: {.column width="40%"}
+![](figures/defense/bk_cutpoint_km.png){width="100%"}
 :::
 
-::: {.column width="58%"}
+::: {.column width="60%"}
 - Cutpoint chosen by CV on TCGA+CPTAC: grid $z\in\{-2,\dots,2\}$, maximize mean $|\text{log-rank }z|$
 - Applied to validation by standardizing with **training** mean/SD
 - Consistent high-risk separation across Dijk, Moffitt, PACA-AU (array+seq), Puleo
@@ -442,11 +442,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="40%"}
-![](figures/defense/bk_subtype_overlap.png){width="620"}
+::: {.column width="36%"}
+![](figures/defense/bk_subtype_overlap.png){width="100%"}
 :::
 
-::: {.column width="60%"}
+::: {.column width="64%"}
 - DeSurv high-risk group enriched for **both** Basal-like (PurIST) **and** proCAF (DeCAF)
 - NMF $k=3$ group: Basal-like enrichment but **no** significant proCAF — misses the tumor–stroma coupling
 - Adjusted for PurIST + DeCAF, DeSurv LP retains **HR = 1.33** (95% CI 1.13–1.56, $P<0.001$)

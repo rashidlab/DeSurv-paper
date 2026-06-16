@@ -305,6 +305,23 @@ Amber M. Young
           display:block!important;
       }</style></aside>
 </section>
+<section id="training-and-validation-cohorts-are-held-fully-apart" class="slide level2">
+<h2>Training and validation cohorts are held fully apart</h2>
+
+<img data-src="figures/defense/new_F_cohort_flow.png" style="width:64.0%" class="r-stretch"><aside class="notes">
+<p>Before the PDAC results, the data. Training pools TCGA-PAAD and CPTAC-3 (RNA-seq): 321 samples → 48 excluded for missing survival or QC → 273 analytic, 139 events. Validation is five fully independent cohorts — Dijk, Moffitt, PACA-AU array and RNA-seq, and Puleo — 979 pooled → 616 analytic PDAC, 414 events. Genes: per-cohort top-3,000 by mean- and variance-rank, intersected to 1,970 shared genes, then a within-sample rank transform that keeps everything nonnegative for NMF. n_top = 270 chosen by BO. Two things to take away: events per variable is 139/3 ≈ 46, far above the rule-of-thumb 10, so the training fit isn’t overfit; and no validation survival ever enters the fit — external cohorts are scored purely by projection. That’s what makes the generalization claims clean.</p>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
 <section id="desurv-concentrates-survival-signal-into-one-factor" class="slide level2">
 <h2>DeSurv concentrates survival signal into one factor</h2>
 

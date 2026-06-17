@@ -361,11 +361,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="42%"}
+::: {.column width="62%"}
 ![](figures/defense/bk_null_mixed.png){width="100%"}
 :::
 
-::: {.column width="58%"}
+::: {.column width="38%"}
 - **Null ($\beta=0$):** both methods C-index ≈ 0.5; BO drives $\alpha\to0$ — DeSurv does **not** hallucinate structure
 - **Mixed (survival on markers + background):** marker-only precision strongly favors DeSurv; matched factor gets larger $|\beta|$
 - Dose–response: advantage greatest (primary) → moderate (mixed) → absent (null)
@@ -377,11 +377,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="64%"}
+::: {.column width="68%"}
 ![](figures/defense/bk_nmf_diag.png){width="100%"}
 :::
 
-::: {.column width="36%"}
+::: {.column width="32%"}
 - Reconstruction residuals decrease smoothly — **no elbow**
 - Cophenetic correlation fluctuates — **no clear transition**
 - Silhouette favors very low $k$
@@ -410,11 +410,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="54%"}
+::: {.column width="46%"}
 ![](figures/defense/bk_nmf_k7.png){width="100%"}
 :::
 
-::: {.column width="46%"}
+::: {.column width="54%"}
 - Elbow → $k=5$; BO with $\alpha=0$ → $k=7$
 - $k=5$: re-derives the $k=3$ core + Exocrine-like and restCAF **variance** factors (no new prognostic content)
 - $k=7$: more fragmentation, no new coherent program — matches DeSurv C-index but needs **>2× factors**
@@ -422,18 +422,18 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 ::::
 
-## Backup · Risk cutpoint selection & per-cohort KM
+## Backup · Log-rank cutpoint selection
 
 :::: {.columns}
 
-::: {.column width="40%"}
-![](figures/defense/bk_cutpoint_km.png){width="100%"}
+::: {.column width="54%"}
+![](figures/defense/bk_cutpoint_curve.png){width="100%"}
 :::
 
-::: {.column width="60%"}
-- Cutpoint chosen by CV on TCGA+CPTAC: grid $z\in\{-2,\dots,2\}$, maximize mean $|\text{log-rank }z|$
+::: {.column width="46%"}
+- Cutpoint chosen by CV on TCGA+CPTAC: grid $z\in\{-2,\dots,2\}$, maximize mean $|\text{log-rank }z|$ (dashed = selected $z$)
 - Applied to validation by standardizing with **training** mean/SD
-- Consistent high-risk separation across Dijk, Moffitt, PACA-AU (array+seq), Puleo
+- Yields consistent high-risk separation across all five external cohorts (Dijk, Moffitt, PACA-AU array+seq, Puleo)
 :::
 
 ::::
@@ -442,11 +442,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="36%"}
+::: {.column width="56%"}
 ![](figures/defense/bk_subtype_overlap.png){width="100%"}
 :::
 
-::: {.column width="64%"}
+::: {.column width="44%"}
 - DeSurv high-risk group enriched for **both** Basal-like (PurIST) **and** proCAF (DeCAF)
 - NMF $k=3$ group: Basal-like enrichment but **no** significant proCAF — misses the tumor–stroma coupling
 - Adjusted for PurIST + DeCAF, DeSurv LP retains **HR = 1.33** (95% CI 1.13–1.56, $P<0.001$)

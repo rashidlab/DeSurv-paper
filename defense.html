@@ -30,7 +30,7 @@
       vertical-align: middle;
     }
   </style>
-  <link rel="stylesheet" href="defense_files/libs/revealjs/dist/theme/quarto-ae1cf5e188190156f6ca5c66046165e7.css">
+  <link rel="stylesheet" href="defense_files/libs/revealjs/dist/theme/quarto-3aeba157a1b6e4e654436f88b6218f2b.css">
   <link href="defense_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="defense_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="defense_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -625,9 +625,9 @@ Amber M. Young
 <section id="backup-null-and-mixed-simulation-scenarios" class="slide level2">
 <h2>Backup · Null and mixed simulation scenarios</h2>
 <div class="columns">
-<div class="column" style="width:42%;">
+<div class="column" style="width:62%;">
 <p><img data-src="figures/defense/bk_null_mixed.png" style="width:100.0%"></p>
-</div><div class="column" style="width:58%;">
+</div><div class="column" style="width:38%;">
 <ul>
 <li><strong>Null (<span class="math inline">\(\beta=0\)</span>):</strong> both methods C-index ≈ 0.5; BO drives <span class="math inline">\(\alpha\to0\)</span> — DeSurv does <strong>not</strong> hallucinate structure</li>
 <li><strong>Mixed (survival on markers + background):</strong> marker-only precision strongly favors DeSurv; matched factor gets larger <span class="math inline">\(|\beta|\)</span></li>
@@ -638,9 +638,9 @@ Amber M. Young
 <section id="backup-nmf-rank-selection-heuristics-disagree" class="slide level2">
 <h2>Backup · NMF rank-selection heuristics disagree</h2>
 <div class="columns">
-<div class="column" style="width:64%;">
+<div class="column" style="width:68%;">
 <p><img data-src="figures/defense/bk_nmf_diag.png" style="width:100.0%"></p>
-</div><div class="column" style="width:36%;">
+</div><div class="column" style="width:32%;">
 <ul>
 <li>Reconstruction residuals decrease smoothly — <strong>no elbow</strong></li>
 <li>Cophenetic correlation fluctuates — <strong>no clear transition</strong></li>
@@ -665,9 +665,9 @@ Amber M. Young
 <section id="backup-nmf-at-its-own-ranks-k-5-7" class="slide level2">
 <h2>Backup · NMF at its own ranks (k = 5, 7)</h2>
 <div class="columns">
-<div class="column" style="width:54%;">
+<div class="column" style="width:46%;">
 <p><img data-src="figures/defense/bk_nmf_k7.png" style="width:100.0%"></p>
-</div><div class="column" style="width:46%;">
+</div><div class="column" style="width:54%;">
 <ul>
 <li>Elbow → <span class="math inline">\(k=5\)</span>; BO with <span class="math inline">\(\alpha=0\)</span> → <span class="math inline">\(k=7\)</span></li>
 <li><span class="math inline">\(k=5\)</span>: re-derives the <span class="math inline">\(k=3\)</span> core + Exocrine-like and restCAF <strong>variance</strong> factors (no new prognostic content)</li>
@@ -675,25 +675,25 @@ Amber M. Young
 </ul>
 </div></div>
 </section>
-<section id="backup-risk-cutpoint-selection-per-cohort-km" class="slide level2">
-<h2>Backup · Risk cutpoint selection &amp; per-cohort KM</h2>
+<section id="backup-log-rank-cutpoint-selection" class="slide level2">
+<h2>Backup · Log-rank cutpoint selection</h2>
 <div class="columns">
-<div class="column" style="width:40%;">
-<p><img data-src="figures/defense/bk_cutpoint_km.png" style="width:100.0%"></p>
-</div><div class="column" style="width:60%;">
+<div class="column" style="width:54%;">
+<p><img data-src="figures/defense/bk_cutpoint_curve.png" style="width:100.0%"></p>
+</div><div class="column" style="width:46%;">
 <ul>
-<li>Cutpoint chosen by CV on TCGA+CPTAC: grid <span class="math inline">\(z\in\{-2,\dots,2\}\)</span>, maximize mean <span class="math inline">\(|\text{log-rank }z|\)</span></li>
+<li>Cutpoint chosen by CV on TCGA+CPTAC: grid <span class="math inline">\(z\in\{-2,\dots,2\}\)</span>, maximize mean <span class="math inline">\(|\text{log-rank }z|\)</span> (dashed = selected <span class="math inline">\(z\)</span>)</li>
 <li>Applied to validation by standardizing with <strong>training</strong> mean/SD</li>
-<li>Consistent high-risk separation across Dijk, Moffitt, PACA-AU (array+seq), Puleo</li>
+<li>Yields consistent high-risk separation across all five external cohorts (Dijk, Moffitt, PACA-AU array+seq, Puleo)</li>
 </ul>
 </div></div>
 </section>
 <section id="backup-risk-group-subtype-composition" class="slide level2">
 <h2>Backup · Risk-group subtype composition</h2>
 <div class="columns">
-<div class="column" style="width:36%;">
+<div class="column" style="width:56%;">
 <p><img data-src="figures/defense/bk_subtype_overlap.png" style="width:100.0%"></p>
-</div><div class="column" style="width:64%;">
+</div><div class="column" style="width:44%;">
 <ul>
 <li>DeSurv high-risk group enriched for <strong>both</strong> Basal-like (PurIST) <strong>and</strong> proCAF (DeCAF)</li>
 <li>NMF <span class="math inline">\(k=3\)</span> group: Basal-like enrichment but <strong>no</strong> significant proCAF — misses the tumor–stroma coupling</li>

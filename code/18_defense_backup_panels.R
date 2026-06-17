@@ -58,13 +58,11 @@ if (file.exists(file.path(cvdir, "cv_grid_summary.csv"))) {
 }
 
 # ── 2. Rasterize SI figure PDFs (figures/*.pdf) -> figures/defense/bk_*.png ──
+# Only the convergence figure is still sourced from its SI PDF; the other dense
+# backups (B7/B8/B10/B11/B12) are rebuilt from source with large fonts in
+# code/19_defense_backup_figs.R.
 pdf_map <- c(
-  si_fig_converge_tcgacptac      = "bk_converge",      # B4
-  si_fig_sim_null_mixed_tcgacptac = "bk_null_mixed",   # B7
-  si_fig_nmf_diagnostics_tcgacptac = "bk_nmf_diag",    # B8
-  si_fig_nmf_k7_heatmap_tcgacptac = "bk_nmf_k7",       # B10
-  si_fig_cutpoint_km_tcgacptac   = "bk_cutpoint_km",   # B11
-  si_fig_subtype_overlap_tcgacptac = "bk_subtype_overlap" # B12
+  si_fig_converge_tcgacptac = "bk_converge"  # B4
 )
 if (nzchar(Sys.which("pdftoppm"))) {
   for (src in names(pdf_map)) {

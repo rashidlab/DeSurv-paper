@@ -47,10 +47,10 @@ scenario_ids <- sapply(sim_figs, function(x) x$scenario_id)
 analysis_ids <- sapply(sim_figs, function(x) x$analysis_id)
 nullp  <- sim_figs[[which(scenario_ids == "R00_null" & analysis_ids == "bo_tune_ntop")]]
 mixedp <- sim_figs[[which(scenario_ids == "R_mixed"  & analysis_ids == "bo_tune_ntop")]]
+# All panels drop their own legend; one shared Method legend sits below the grid.
 ftheme <- function(p) if (inherits(p, "ggplot"))
   p + theme_classic(base_size = 18) +
-    theme(plot.title = element_text(size = 18), legend.position = "bottom",
-          legend.text = element_text(size = 16)) else p
+    theme(plot.title = element_text(size = 18), legend.position = "none") else p
 nz <- function(x, y) if (!is.null(x)) x else y
 mixed_prec <- nz(mixedp$precision_breakdown, mixedp$precision_box)
 panels <- list(
@@ -61,11 +61,15 @@ panels <- list(
   ftheme(nz(mixedp$matched_beta_box, mixedp$k_hist)) + labs(title = "Mixed: matched |β|"),
   ftheme(mixedp$k_hist)     + labs(title = "Mixed: selected k")
 )
-# Taller 2x3 layout; keep intrinsic width < 1920 px (9 in x 200 dpi = 1800 px)
-# so reveal does not mis-scale the slide while the lazy-loaded image is unsized.
+shared_leg <- get_legend(
+  nullp$cindex_box + theme_classic(base_size = 18) +
+    theme(legend.position = "bottom", legend.title = element_text(size = 18),
+          legend.text = element_text(size = 18)))
+grid6 <- plot_grid(plotlist = panels, ncol = 3, labels = LETTERS[1:6], label_size = 22)
+# Taller 2x3 + one shared legend; intrinsic width < 1920 px (10 in x 180 dpi).
 ggsave(file.path(OUT, "bk_null_mixed.png"),
-       plot_grid(plotlist = panels, ncol = 3, labels = LETTERS[1:6], label_size = 22),
-       width = 9, height = 6, dpi = 200, bg = "white")
+       plot_grid(grid6, shared_leg, ncol = 1, rel_heights = c(1, 0.07)),
+       width = 10, height = 6.8, dpi = 180, bg = "white")
 message("Saved bk_null_mixed.png")
 
 # ── B10: NMF (alpha=0) k=7 gene-overlap heatmap, enlarged fonts ─────────────
@@ -156,7 +160,7 @@ nmf_row <- plot_grid(row_lab("NMF k=3"),
                      ncol = 3, rel_widths = c(0.08, 1, 1))
 ggsave(file.path(OUT, "bk_subtype_overlap.png"),
        plot_grid(desurv_row, nmf_row, ncol = 1),
-       width = 11, height = 8.8, dpi = 165, bg = "white")  # 1815 px wide, taller
+       width = 11, height = 9.6, dpi = 165, bg = "white")  # 1815 px wide, taller still
 message("Saved bk_subtype_overlap.png")
 
 # ── B11: Log-rank cutpoint-selection curve, enlarged ────────────────────────

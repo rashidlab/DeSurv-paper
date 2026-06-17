@@ -681,5 +681,5 @@ code.sourceCode {
    whose height isn't known when the scale is computed). object-fit: contain
    (set above) keeps the aspect ratio. */
 .reveal .slides section img {
-  max-height: 78vh;
+  max-height: 86vh;
 }

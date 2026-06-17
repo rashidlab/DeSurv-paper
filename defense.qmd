@@ -361,11 +361,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="62%"}
+::: {.column width="66%"}
 ![](figures/defense/bk_null_mixed.png){width="100%"}
 :::
 
-::: {.column width="38%"}
+::: {.column width="34%"}
 - **Null ($\beta=0$):** both methods C-index ≈ 0.5; BO drives $\alpha\to0$ — DeSurv does **not** hallucinate structure
 - **Mixed (survival on markers + background):** marker-only precision strongly favors DeSurv; matched factor gets larger $|\beta|$
 - Dose–response: advantage greatest (primary) → moderate (mixed) → absent (null)
@@ -400,11 +400,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="52%"}
+::: {.column width="56%"}
 ![](figures/defense/bk_nmf_k7.png){width="100%"}
 :::
 
-::: {.column width="48%"}
+::: {.column width="44%"}
 - Elbow → $k=5$; BO with $\alpha=0$ → $k=7$
 - $k=5$: re-derives the $k=3$ core + Exocrine-like and restCAF **variance** factors (no new prognostic content)
 - $k=7$: more fragmentation, no new coherent program — matches DeSurv C-index but needs **>2× factors**

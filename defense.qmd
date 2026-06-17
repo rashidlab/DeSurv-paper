@@ -375,20 +375,10 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 ## Backup · NMF rank-selection heuristics disagree
 
-:::: {.columns}
+![](figures/defense/bk_nmf_diag.png){width="84%"}
 
-::: {.column width="68%"}
-![](figures/defense/bk_nmf_diag.png){width="100%"}
-:::
-
-::: {.column width="32%"}
-- Reconstruction residuals decrease smoothly — **no elbow**
-- Cophenetic correlation fluctuates — **no clear transition**
-- Silhouette favors very low $k$
-- The three criteria **disagree** → motivates survival-supervised selection
-:::
-
-::::
+- Residuals decrease smoothly (**no elbow**); cophenetic correlation fluctuates (**no clear transition**); silhouette favors very low $k$
+- The three criteria **disagree** on the same data → motivates survival-supervised selection
 
 ## Backup · C-index across factorization rank
 
@@ -410,11 +400,11 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 :::: {.columns}
 
-::: {.column width="46%"}
+::: {.column width="52%"}
 ![](figures/defense/bk_nmf_k7.png){width="100%"}
 :::
 
-::: {.column width="54%"}
+::: {.column width="48%"}
 - Elbow → $k=5$; BO with $\alpha=0$ → $k=7$
 - $k=5$: re-derives the $k=3$ core + Exocrine-like and restCAF **variance** factors (no new prognostic content)
 - $k=7$: more fragmentation, no new coherent program — matches DeSurv C-index but needs **>2× factors**

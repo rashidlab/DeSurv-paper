@@ -38,7 +38,7 @@ diag_row <- plot_grid(strip(fig_res), strip(fig_coph), strip(fig_sil),
                       ncol = 3, labels = c("A", "B", "C"), label_size = 24)
 ggsave(file.path(OUT, "bk_nmf_diag.png"),
        plot_grid(diag_row, leg, ncol = 1, rel_heights = c(1, 0.12)),
-       width = 13, height = 4.2, dpi = 300, bg = "white")
+       width = 12, height = 4.7, dpi = 150, bg = "white")  # 1800 px wide
 message("Saved bk_nmf_diag.png")
 
 # ── B7: Null + mixed simulation panels (2x3 landscape, enlarged) ────────────
@@ -61,11 +61,11 @@ panels <- list(
   ftheme(nz(mixedp$matched_beta_box, mixedp$k_hist)) + labs(title = "Mixed: matched |β|"),
   ftheme(mixedp$k_hist)     + labs(title = "Mixed: selected k")
 )
-# Keep intrinsic width < 1920 px (9.5 in x 200 dpi = 1900 px) so reveal does not
-# mis-scale the slide while the lazy-loaded image is still unsized.
+# Taller 2x3 layout; keep intrinsic width < 1920 px (9 in x 200 dpi = 1800 px)
+# so reveal does not mis-scale the slide while the lazy-loaded image is unsized.
 ggsave(file.path(OUT, "bk_null_mixed.png"),
        plot_grid(plotlist = panels, ncol = 3, labels = LETTERS[1:6], label_size = 22),
-       width = 9.5, height = 4.9, dpi = 200, bg = "white")
+       width = 9, height = 6, dpi = 200, bg = "white")
 message("Saved bk_null_mixed.png")
 
 # ── B10: NMF (alpha=0) k=7 gene-overlap heatmap, enlarged fonts ─────────────
@@ -156,7 +156,7 @@ nmf_row <- plot_grid(row_lab("NMF k=3"),
                      ncol = 3, rel_widths = c(0.08, 1, 1))
 ggsave(file.path(OUT, "bk_subtype_overlap.png"),
        plot_grid(desurv_row, nmf_row, ncol = 1),
-       width = 12, height = 8.5, dpi = 300, bg = "white")
+       width = 11, height = 8.8, dpi = 165, bg = "white")  # 1815 px wide, taller
 message("Saved bk_subtype_overlap.png")
 
 # ── B11: Log-rank cutpoint-selection curve, enlarged ────────────────────────

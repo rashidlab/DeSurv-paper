@@ -637,17 +637,11 @@ Amber M. Young
 </section>
 <section id="backup-nmf-rank-selection-heuristics-disagree" class="slide level2">
 <h2>Backup · NMF rank-selection heuristics disagree</h2>
-<div class="columns">
-<div class="column" style="width:68%;">
-<p><img data-src="figures/defense/bk_nmf_diag.png" style="width:100.0%"></p>
-</div><div class="column" style="width:32%;">
-<ul>
-<li>Reconstruction residuals decrease smoothly — <strong>no elbow</strong></li>
-<li>Cophenetic correlation fluctuates — <strong>no clear transition</strong></li>
-<li>Silhouette favors very low <span class="math inline">\(k\)</span></li>
-<li>The three criteria <strong>disagree</strong> → motivates survival-supervised selection</li>
+
+<img data-src="figures/defense/bk_nmf_diag.png" style="width:84.0%" class="r-stretch"><ul>
+<li>Residuals decrease smoothly (<strong>no elbow</strong>); cophenetic correlation fluctuates (<strong>no clear transition</strong>); silhouette favors very low <span class="math inline">\(k\)</span></li>
+<li>The three criteria <strong>disagree</strong> on the same data → motivates survival-supervised selection</li>
 </ul>
-</div></div>
 </section>
 <section id="backup-c-index-across-factorization-rank" class="slide level2">
 <h2>Backup · C-index across factorization rank</h2>
@@ -665,9 +659,9 @@ Amber M. Young
 <section id="backup-nmf-at-its-own-ranks-k-5-7" class="slide level2">
 <h2>Backup · NMF at its own ranks (k = 5, 7)</h2>
 <div class="columns">
-<div class="column" style="width:46%;">
+<div class="column" style="width:52%;">
 <p><img data-src="figures/defense/bk_nmf_k7.png" style="width:100.0%"></p>
-</div><div class="column" style="width:54%;">
+</div><div class="column" style="width:48%;">
 <ul>
 <li>Elbow → <span class="math inline">\(k=5\)</span>; BO with <span class="math inline">\(\alpha=0\)</span> → <span class="math inline">\(k=7\)</span></li>
 <li><span class="math inline">\(k=5\)</span>: re-derives the <span class="math inline">\(k=3\)</span> core + Exocrine-like and restCAF <strong>variance</strong> factors (no new prognostic content)</li>

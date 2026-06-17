@@ -88,6 +88,20 @@ ggsave(file.path(OUT, "bk_nmf_k7.png"),
        width = 7.5, height = 6.6, dpi = 240, bg = "white")  # 1800 px wide
 message("Saved bk_nmf_k7.png")
 
+# ── k=5 (elbow) gene-overlap heatmaps, NMF and DeSurv, enlarged fonts ────────
+save_k5 <- function(fit, title, stem) {
+  tops <- get_top_genes(W = fit$W, ntop = ntop_v)
+  h <- make_gene_overlap_heatmap(fit, tops$top_genes, top_genes, title = title,
+                                 fontsize_row = 12, fontsize = 16, legend_fontsize = 12)
+  ggsave(file.path(OUT, paste0(stem, ".png")),
+         plot_grid(h$plot + theme(plot.margin = margin(8, 2, 2, 2)),
+                   ggdraw(h$legend), ncol = 2, rel_widths = c(4, 0.6)),
+         width = 7.5, height = 6.6, dpi = 240, bg = "white")  # 1800 px wide
+  message("Saved ", stem, ".png")
+}
+save_k5(load_precomputed("fit_std_elbowk_tcgacptac"),     "NMF, k = 5",    "bk_nmf_k5")
+save_k5(load_precomputed("tar_fit_desurv_elbowk_tcgacptac"), "DeSurv, k = 5", "bk_desurv_k5")
+
 # ── Shared setup for subtype + cutpoint (merged validation, lp stats) ───────
 data_val <- load_precomputed("data_val_filtered_tcgacptac")
 val_named <- data_val

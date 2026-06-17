@@ -412,6 +412,24 @@ $$H \leftarrow \max\!\Big(H \odot \frac{W^\top X}{W^\top W H + \lambda_H H + \va
 
 ::::
 
+## Backup · Gene-program overlap at k = 5
+
+:::: {.columns}
+
+::: {.column width="50%"}
+![](figures/defense/bk_nmf_k5.png){width="100%"}
+:::
+
+::: {.column width="50%"}
+![](figures/defense/bk_desurv_k5.png){width="100%"}
+:::
+
+::::
+
+::: {.notes}
+At the elbow rank k=5, both factorizations are scored against the published signature panels. NMF (left) spends its extra factors on variance structure — an Exocrine-like factor and a restCAF/stroma factor — without adding a coherent new prognostic program. DeSurv (right) keeps the Classical+restCAF, proCAF, and Basal-like axes and the two added factors again capture variance, not new survival signal. So moving from k=3 to k=5 re-derives the same core programs rather than revealing anything the k=3 model missed.
+:::
+
 ## Backup · Log-rank cutpoint selection
 
 :::: {.columns}

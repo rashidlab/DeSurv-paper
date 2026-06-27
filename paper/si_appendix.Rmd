@@ -803,7 +803,7 @@ is refit at the selected parameters using the consensus-based initialization
 described above, and the BO-chosen $n_{\text{top}}$ (when tuned) is used to
 truncate each program for downstream analysis.
 
-The parameter $n_{\text{top}}$ controls which genes enter the survival linear predictor. After factorization, each sample's score for factor $j$ is computed as $\widetilde{W}_j^\top x$, where $\widetilde{W}_j$ retains only the $n_{\text{top}}$ genes with the largest factor-specificity scores $s_{ij}$ (SI Appendix, Section~\ref{sec:gene-program-correlation}); genes outside this set still shape the factorization but do not enter the linear predictor. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. When $\alpha = 0$ (no survival supervision), gene selection and survival outcomes are decoupled, so varying $n_{\text{top}}$ has negligible effect on precision in the null simulation.
+The parameter $n_{\text{top}}$ controls which genes enter the survival linear predictor. After factorization, each sample's score for factor $j$ is computed as $\widetilde{W}_j^\top x$, where $\widetilde{W}_j$ retains only the $n_{\text{top}}$ genes with the largest factor-specificity scores $s_{ij}$ (SI Appendix, Section \ref{sec:gene-program-correlation}); genes outside this set still shape the factorization but do not enter the linear predictor. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. When $\alpha = 0$ (no survival supervision), gene selection and survival outcomes are decoupled, so varying $n_{\text{top}}$ has negligible effect on precision in the null simulation.
 
 \section{PDAC Datasets}
 
@@ -989,7 +989,7 @@ The correlation heatmap summarizes pairwise similarity; to make a direction-awar
 statement of how much of each factor is reconstructable from the \emph{other}
 method's basis, we regressed each factor's gene-loading vector onto the full set
 of the other method's loading vectors and report the ordinary least-squares
-$R^2$ (Table~\ref{tab:projection-r2}). A high $R^2$ means the factor is inherited
+$R^2$ (Table \ref{tab:projection-r2}). A high $R^2$ means the factor is inherited
 (reconstructable from the other basis); a low $R^2$ means it is novel.
 
 ```{r tab-projection-r2, echo=FALSE, results='asis'}
@@ -1038,7 +1038,7 @@ knitr::kable(.or, format = "latex", escape = FALSE, booktabs = TRUE,
 ```
 
 DeSurv gives up only about $1.5$ percentage points of reconstruction $R^2$
-relative to unsupervised NMF (Table~\ref{tab:overall-r2}) --- very little
+relative to unsupervised NMF (Table \ref{tab:overall-r2}) --- very little
 reconstruction fidelity is sacrificed in exchange for the prognostic
 reorganization documented above.
 
@@ -1064,13 +1064,13 @@ for supervised PCA, $`r sprintf("%.2f", .srcor("Cox-PLS"))`$ for Cox-PLS, and
 $`r sprintf("%.2f", .srcor("Sparse Cox"))`$ for sparse Cox; mean
 $`r sprintf("%.2f", .sr$sup_mean_score_cor)`$), and each aligned specifically with
 D1 rather than the stromal D2 or Basal-like D3 programs
-(Fig.~\ref{fig:suprec}). By contrast, the leading \emph{unsupervised} direction
+(Fig. \ref{fig:suprec}). By contrast, the leading \emph{unsupervised} direction
 (the first principal component, which dominant-variance methods such as standard
 NMF and DECODER follow) was nearly orthogonal to D1
 ($|r| = `r sprintf("%.2f", .srcor("Unsupervised PCA"))`$) and instead tracked the
 high-variance D2/D3 stroma--Basal axis. The coupling is thus a property of
 survival supervision shared across methods --- consistent with its being
-unreconstructable from the unsupervised NMF basis (Table~\ref{tab:projection-r2})
+unreconstructable from the unsupervised NMF basis (Table \ref{tab:projection-r2})
 and with standard NMF's failure to enrich for the proCAF stroma at matched rank
 --- and not an idiosyncrasy of the DeSurv algorithm.
 
@@ -1125,7 +1125,7 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 # Simulation results under null and mixed scenarios
 
-To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the primary scenario (main text Fig.~\ref{fig:sim}), prognostic programs explained low variance relative to outcome-neutral background signals, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, survival depended on 300 genes per lethal factor, of which 50% were factor-specific markers and 50% were background genes with loadings shared across all factors. All scenarios used $G = 3{,}000$ genes, $N = 200$ samples, $K = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Materials and Methods). Performance was evaluated using cross-validated concordance index (C-index), precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
+To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the primary scenario (main text Fig. \ref{fig:sim}), prognostic programs explained low variance relative to outcome-neutral background signals, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, survival depended on 300 genes per lethal factor, of which 50% were factor-specific markers and 50% were background genes with loadings shared across all factors. All scenarios used $G = 3{,}000$ genes, $N = 200$ samples, $K = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Materials and Methods). Performance was evaluated using cross-validated concordance index (C-index), precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
 
 Under the null scenario (Fig. \ref{fig:sim-null-mixed}A--B), DeSurv showed no advantage over unsupervised NMF ($\alpha = 0$). Both methods yielded C-index values near 0.5, consistent with the absence of survival signal. The distribution of selected ranks was concentrated at low values for both methods, with NMF more strongly favoring $k = 2$. These results confirm that DeSurv does not hallucinate prognostic structure when none exists: Bayesian optimization selected low values of the supervision parameter $\alpha$, effectively recovering standard NMF as a special case. This specificity control is important because it establishes that the advantages observed in the primary scenario reflect genuine signal recovery rather than overfitting to noise in the survival labels.
 
@@ -1385,7 +1385,7 @@ load_result("treated_cohort_stats")
 .prev <- function(coh) .tcs$prevalence[.tcs$prevalence$cohort==coh, ]
 ```
 
-The primary analysis evaluated DeSurv in treatment-naive resected primary PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the trained programs retain prognostic value in treated PDAC, and specifically whether they remain prognostic after adjustment for the established PurIST (tumor-intrinsic) and DeCAF (stromal) molecular classifiers --- the same dual adjustment applied to the treatment-naive validation cohorts in the main paper (Table~\ref{tab:hr-adjusted}). We used three bulk-tissue treated cohorts spanning two disease settings: the two metastatic gemcitabine-backbone trials Rash ($n = `r .prev("Rash")$n`$, gemcitabine + erlotinib) and Accept ($n = `r .prev("Accept")$n`$, gemcitabine $\pm$ afatinib) --- together the RASH-ACCEPT series ($n = `r .prev("Rash")$n + .prev("Accept")$n`$, bulk RNA-seq, first-line chemotherapy) --- and Linehan ($n = `r .prev("Linehan")$n`$ borderline-resectable / locally advanced PDAC, bulk biopsy; FOLFIRINOX $\pm$ the CCR2 inhibitor PF-04136309). All are bulk tissue, so PurIST and DeCAF are both computable and the full dual adjustment is valid --- unlike microdissected cohorts, where the stromal classifier cannot be applied. Because the cohorts differ in stage and regimen, they are analysed per cohort rather than pooled (below).
+The primary analysis evaluated DeSurv in treatment-naive resected primary PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the trained programs retain prognostic value in treated PDAC, and specifically whether they remain prognostic after adjustment for the established PurIST (tumor-intrinsic) and DeCAF (stromal) molecular classifiers --- the same dual adjustment applied to the treatment-naive validation cohorts in the main paper (Table \ref{tab:hr-adjusted}). We used three bulk-tissue treated cohorts spanning two disease settings: the two metastatic gemcitabine-backbone trials Rash ($n = `r .prev("Rash")$n`$, gemcitabine + erlotinib) and Accept ($n = `r .prev("Accept")$n`$, gemcitabine $\pm$ afatinib) --- together the RASH-ACCEPT series ($n = `r .prev("Rash")$n + .prev("Accept")$n`$, bulk RNA-seq, first-line chemotherapy) --- and Linehan ($n = `r .prev("Linehan")$n`$ borderline-resectable / locally advanced PDAC, bulk biopsy; FOLFIRINOX $\pm$ the CCR2 inhibitor PF-04136309). All are bulk tissue, so PurIST and DeCAF are both computable and the full dual adjustment is valid --- unlike microdissected cohorts, where the stromal classifier cannot be applied. Because the cohorts differ in stage and regimen, they are analysed per cohort rather than pooled (below).
 
 \subsection{Per-cohort overall survival (no pooling)}
 
@@ -1409,7 +1409,7 @@ The proCAF stromal program $D_2$ was protective in all three cohorts (marginal a
 
 \subsection{The basal--classical axis is setting-dependent (classifier triangulation)}
 
-That $D_1$ attenuates in metastatic disease reflects the basal--classical prognostic axis itself rather than $D_1$ specifically: every established basal--classical classifier shows the same pattern (Table~\ref{tab:axis}). In the less-advanced Linehan cohort the axis is strongly prognostic (PurIST Classical-vs-Basal HR `r sub(",.*","",.ax("Linehan","PurIST"))`), whereas in the metastatic cohorts PurIST, Moffitt, and Bailey are all non-significant. Basal-like prevalence in the metastatic cohorts is the expected 16--22\% (not range-restricted; the Linehan estimate rests on only six Basal-like cases and is correspondingly imprecise), and the same axis is prognostic at $P<10^{-8}$ in equally-prevalent treatment-naive validation cohorts (main text), indicating a genuine stage-dependent attenuation rather than reduced power.
+That $D_1$ attenuates in metastatic disease reflects the basal--classical prognostic axis itself rather than $D_1$ specifically: every established basal--classical classifier shows the same pattern (Table \ref{tab:axis}). In the less-advanced Linehan cohort the axis is strongly prognostic (PurIST Classical-vs-Basal HR `r sub(",.*","",.ax("Linehan","PurIST"))`), whereas in the metastatic cohorts PurIST, Moffitt, and Bailey are all non-significant. Basal-like prevalence in the metastatic cohorts is the expected 16--22\% (not range-restricted; the Linehan estimate rests on only six Basal-like cases and is correspondingly imprecise), and the same axis is prognostic at $P<10^{-8}$ in equally-prevalent treatment-naive validation cohorts (main text), indicating a genuine stage-dependent attenuation rather than reduced power.
 
 \begin{table}[H]
 \centering
@@ -1431,7 +1431,7 @@ In the metastatic RASH-ACCEPT cohort, $D_2$ was also associated with longer prog
 
 \subsection{D2 molecular sub-components (exploratory)}
 
-Partitioning $D_2$'s projection additively into gene-group contributions and testing each against overall survival (cohort-stratified; sub-scores are correlated, so the joint attribution is interpreted cautiously) localised the protective association mainly to the program's neural-reactive/axon-guidance content (Table~\ref{tab:decomp}): the neural-reactive component is protective both alone and in the joint model that controls for collinearity, whereas the extracellular-matrix-core component is protective alone but absorbed jointly, and the CD163$^+$ macrophage component is non-protective alone and, after joint adjustment, significantly adverse (`r {m<-.tcs$decomp[.tcs$decomp$component=="Macrophage" & .tcs$decomp$model=="joint",]; sprintf("HR %.2f, $P = %.3f$", m$hr, m$p)}`), consistent with reports that cancer-associated-fibroblast--driven macrophage reprogramming is tumour-promoting [@hussain2024cafmacrophage; @raymant2024macrophagefibroblast].
+Partitioning $D_2$'s projection additively into gene-group contributions and testing each against overall survival (cohort-stratified; sub-scores are correlated, so the joint attribution is interpreted cautiously) localised the protective association mainly to the program's neural-reactive/axon-guidance content (Table \ref{tab:decomp}): the neural-reactive component is protective both alone and in the joint model that controls for collinearity, whereas the extracellular-matrix-core component is protective alone but absorbed jointly, and the CD163$^+$ macrophage component is non-protective alone and, after joint adjustment, significantly adverse (`r {m<-.tcs$decomp[.tcs$decomp$component=="Macrophage" & .tcs$decomp$model=="joint",]; sprintf("HR %.2f, $P = %.3f$", m$hr, m$p)}`), consistent with reports that cancer-associated-fibroblast--driven macrophage reprogramming is tumour-promoting [@hussain2024cafmacrophage; @raymant2024macrophagefibroblast].
 
 ```{r treated-decomp, echo=FALSE, results='asis'}
 dc <- .tcs$decomp

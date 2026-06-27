@@ -56,7 +56,7 @@ Let $X \in \mathbb{R}_{\ge 0}^{p \times n}$ denote the nonnegative gene
 expression matrix with $p$ genes and $n$ subjects. DeSurv approximates
 $X \approx WH$ with $W \in \mathbb{R}_{\ge 0}^{p \times k}$ and
 $H \in \mathbb{R}_{\ge 0}^{k \times n}$, and links the shared program matrix
-$W$ to survival via an elastic-net–penalized Cox model.
+$W$ to survival via an elastic-net–penalized Cox model. Supervision is placed on the program matrix $W$, the basis that transfers to new cohorts, whereas the sample loadings $H$ serve only to reconstruct the training expression matrix; new samples are therefore scored by projection onto the learned programs, $Z = W^\top X$, rather than by re-estimating loadings.
 
 Let $y \in \mathbb{R}^n_{> 0}$ be the observed survival times,
 $\delta \in \{0,1\}^n$ the event indicators, and
@@ -86,19 +86,16 @@ likelihood $\ell(W,\beta)$ is
   \right)
 \right].
 \end{equation}
+The inner sum runs over the risk set $\{j : y_j \ge y_i\}$ of subjects still at risk at the observed time $y_i$; tied event times are handled by the Breslow approximation in the \texttt{glmnet} Coxnet routine used for the $\beta$ update (below).
 Hyperparameters satisfy $\alpha \in [0,1)$,
 $\lambda_H \ge 0$, $\lambda \ge 0$, and $\xi \in [0,1]$.
-The constants $1/(2np)$, $2/n_{\text{event}}$, and $1/(2nk)$ are chosen
-for numerical convenience and do not affect the minimizer.
+The constants $1/(2np)$, $2/n_{\text{event}}$, and $1/(2nk)$ place the reconstruction, loadings-penalty, and survival terms on comparable numerical scales for stable optimization.
 
 
 \section{Optimization Algorithm}
 
 \subsection{Block coordinate descent scheme}
-Algorithm \ref{alg:desurv} summarizes the block coordinate descent (BCD)
-scheme used to minimize $\mathcal{L}(W,H,\beta)$. At each outer iteration,
-we update $H$, then $W$, then $\beta$ while holding the other blocks
-fixed.
+Optimization proceeds by block coordinate descent (BCD; Algorithm \ref{alg:desurv}), which at each outer iteration updates $H$, then $W$, then $\beta$ while holding the other blocks fixed.
 
 \begin{algorithm}[htbp]
 \caption{DeSurv block coordinate descent}
@@ -1125,9 +1122,9 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 # Simulation results under null and mixed scenarios
 
-To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the primary scenario (main text Fig. \ref{fig:sim}), prognostic programs explained low variance relative to outcome-neutral background signals, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, survival depended on 300 genes per lethal factor, of which 50% were factor-specific markers and 50% were background genes with loadings shared across all factors. All scenarios used $G = 3{,}000$ genes, $N = 200$ samples, $K = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Materials and Methods). Performance was evaluated using cross-validated concordance index (C-index), precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
+To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the prognostic scenario (main text Fig. \ref{fig:sim}), prognostic programs explained low variance relative to outcome-neutral background signals, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, survival depended on 300 genes per lethal factor, of which 50% were factor-specific markers and 50% were background genes with loadings shared across all factors. All scenarios used $G = 3{,}000$ genes, $N = 200$ samples, $K = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Materials and Methods). Performance was evaluated using cross-validated concordance index (C-index), precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
 
-Under the null scenario (Fig. \ref{fig:sim-null-mixed}A--B), DeSurv showed no advantage over unsupervised NMF ($\alpha = 0$). Both methods yielded C-index values near 0.5, consistent with the absence of survival signal. The distribution of selected ranks was concentrated at low values for both methods, with NMF more strongly favoring $k = 2$. These results confirm that DeSurv does not hallucinate prognostic structure when none exists: Bayesian optimization selected low values of the supervision parameter $\alpha$, effectively recovering standard NMF as a special case. This specificity control is important because it establishes that the advantages observed in the primary scenario reflect genuine signal recovery rather than overfitting to noise in the survival labels.
+Under the null scenario (Fig. \ref{fig:sim-null-mixed}A--B), DeSurv showed no advantage over unsupervised NMF ($\alpha = 0$). Both methods yielded C-index values near 0.5, consistent with the absence of survival signal. The distribution of selected ranks was concentrated at low values for both methods, with NMF more strongly favoring $k = 2$. These results confirm that DeSurv does not hallucinate prognostic structure when none exists: Bayesian optimization selected low values of the supervision parameter $\alpha$, effectively recovering standard NMF as a special case. This specificity control is important because it establishes that the advantages observed in the prognostic scenario reflect genuine signal recovery rather than overfitting to noise in the survival labels.
 
 Under the mixed scenario (Fig. \ref{fig:sim-null-mixed}C--F), four mechanistic observations characterize DeSurv's advantage. First, when precision is evaluated against the factor-specific marker genes alone (150 genes; Fig. \ref{fig:sim-null-mixed}D left), DeSurv substantially outperforms NMF---matching or exceeding primary-scenario levels---even though overall survival-gene precision (300-gene survival set including background genes; Fig. \ref{fig:sim-null-mixed}D right) is more modestly improved. This dissociation reveals that background-gene recovery is similar between methods, and DeSurv's edge comes specifically from concentrating marker programs. Second, the learned factor most aligned with the true marker program receives a substantially larger Cox coefficient ($|\beta|$) under DeSurv than under NMF (Fig. \ref{fig:sim-null-mixed}E), confirming that survival supervision preferentially amplifies the marker-specific signal. Third, C-index values are modestly higher for DeSurv (Fig. \ref{fig:sim-null-mixed}C), consistent with the moderate overall improvement when background-gene dilution attenuates the survival signal. Together, these results demonstrate that DeSurv's advantage in the mixed scenario is mechanistic: the method specifically recovers marker programs and assigns them elevated survival weights, rather than incidental capture of background-gene prognosis.
 

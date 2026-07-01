@@ -1122,8 +1122,8 @@ performance evaluation.
 ```{r clinical-adj, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 load_result("desurv_clinical_adjustment")
 .ca  <- desurv_clinical_adjustment
-.caf <- function(m) if (is.null(m)) "---" else sprintf("%.2f (%.2f--%.2f), %s ($n$=%d)", m$hr, m$lo, m$hi,
-  if (m$p < 0.001) "$<0.001$" else paste0("$", sprintf("%.3f", m$p), "$"), m$n)
+.caf <- function(m) if (is.null(m)) "---" else sprintf("%.2f (%.2f--%.2f), %s ($n$=%d, %d ev)", m$hr, m$lo, m$hi,
+  if (m$p < 0.001) "$<0.001$" else paste0("$", sprintf("%.3f", m$p), "$"), m$n, m$events)
 .ord  <- c("PACA_AU_array","PACA_AU_seq","Puleo_array","Dijk","Moffitt_GEO_array","TCGA_PAAD","CPTAC")
 .disp <- c(PACA_AU_array="PACA-AU array", PACA_AU_seq="PACA-AU RNA-seq", Puleo_array="Puleo",
            Dijk="Dijk", Moffitt_GEO_array="Moffitt", TCGA_PAAD="TCGA (train)", CPTAC="CPTAC (train)")

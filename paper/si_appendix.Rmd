@@ -1472,7 +1472,7 @@ cat("\\begin{table}[H]\\centering\n",
 
 \subsection{Orthogonal validation of program identity}
 
-Independently of survival, the $D_1$ program score correlated with protein-level GATA6 in-situ hybridisation in the COMPASS cohort (Spearman $\rho = `r sprintf("%.2f", .tcs$gata6$rho)`$, `r .pfmt(.tcs$gata6$p)`, $n = `r .tcs$gata6$n`$), validating the Classical/GATA6 identity of $D_1$ beyond the signature-level correlations in the main-text factor--signature heatmap.
+Independently of survival, the $D_1$ program score correlated with GATA6 RNA in situ hybridization in the COMPASS cohort (Spearman $\rho = `r sprintf("%.2f", .tcs$gata6$rho)`$, `r .pfmt(.tcs$gata6$p)`, $n = `r .tcs$gata6$n`$), validating the Classical/GATA6 identity of $D_1$ beyond the signature-level correlations in the main-text factor--signature heatmap.
 
 \subsection{Robustness to projection convention}
 

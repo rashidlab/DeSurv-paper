@@ -1,5 +1,5 @@
 ---
-title: "Tumor--stroma coupling identifies a reproducible prognostic program in pancreatic cancer"
+title: "Survival-supervised deconvolution identifies a reproducible tumor--stroma prognostic axis in pancreatic cancer"
 
 abstract: |
   Pancreatic ductal adenocarcinoma (PDAC) outcomes reflect coordinated tumor-intrinsic and stromal states, but bulk transcriptomic methods typically decompose these compartments without survival supervision. We developed DeSurv, a survival-supervised matrix factorization framework that jointly learns gene programs and survival associations. In TCGA and CPTAC PDAC, DeSurv identified a compact three-program structure organized along a co-varying tumor--stroma axis (here, cross-sample covariation of tumor-cell and stromal gene programs rather than single-cell co-expression or spatial adjacency), with Classical tumor/restCAF-like stroma at one pole and Basal-like tumor/proCAF-like stroma at the high-risk pole. Across five external cohorts, each standard-deviation shift toward this pole was associated with a pooled hazard ratio of 1.50 (95% CI, 1.31--1.72) and remained prognostic after adjustment for PurIST and DeCAF; dichotomized high-risk patients had a hazard ratio of 1.79 (95% CI, 1.41--2.28). Projected without retraining into treated cohorts, the proCAF-like stromal program showed a consistently protective direction, reaching significance in the least-advanced cohort, consistent with therapy-associated remodeling. Together, these results identify tumor--stroma coupling as a reproducible prognostic program in PDAC.
@@ -146,7 +146,7 @@ Conceptualization: A.M.Y., N.U.R. Methodology: A.M.Y., A.Y., D.L., N.U.R. Softwa
 
 # Competing Interests {.unnumbered}
 
-N.U.R. and J.J.Y. are named as inventors on US patents US20220127676A1 and US20250066856A1, which relate to pancreatic cancer subtype classification (establishment of Basal and Classical subtypes and their prediction) derived from prior work and were not used directly in this study. The other authors declare no competing interests.
+N.U.R. and J.J.Y. are named as inventors on US patents US20220127676A1 and US20250066856A1, which relate to pancreatic cancer subtype classification. The PurIST and DeCAF classifiers were used only as published, independently derived comparators for covariate adjustment, applied with their released implementations so that all subtype assignments are objective and reproducible from the deposited code; they are not components of DeSurv. The other authors declare no competing interests.
 
 # References
 

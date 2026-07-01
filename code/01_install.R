@@ -38,7 +38,8 @@ if (!requireNamespace("remotes", quietly = TRUE)) install.packages("remotes", re
 
 # Check other key dependencies
 pkgs <- c("survival", "NMF", "ggplot2", "cowplot", "dplyr", "survminer",
-           "pheatmap", "ComplexHeatmap", "DiceKriging", "lhs")
+           "pheatmap", "ComplexHeatmap", "DiceKriging", "lhs",
+           "glmnet", "riskRegression", "prodlim")
 missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
 if (length(missing)) {
   message("Installing missing packages: ", paste(missing, collapse = ", "))

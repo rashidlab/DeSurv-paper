@@ -1075,6 +1075,33 @@ and with standard NMF's failure to enrich for the proCAF stroma at matched rank
 knitr::include_graphics(file.path("..", "figures", "fig_supervised_recovery.pdf"), error = FALSE)
 ```
 
+```{r brier-stats, echo=FALSE, message=FALSE, warning=FALSE}
+load_result("desurv_brier_stats")
+.br <- desurv_brier_stats; .brp <- .br$pooled; .bripa <- range(.br$per_cohort$ipa)
+```
+
+\subsection*{Proper-scoring sensitivity of the external validation}
+
+The main-text external validation reports discrimination with Harrell's C-index
+under a Cox proportional-hazards model. Because Harrell's C can be optimistic when
+hazards are non-proportional [@birolo2025beyondcox; @hao2021dnnsurv], we additionally
+evaluated the frozen DeSurv linear predictor with a proper score, the integrated
+Brier score (IBS), in each validation cohort, recalibrating only the scalar slope
+within each cohort and scoring over that cohort's follow-up. For a single
+time-invariant risk score under proportional hazards the monotone score-to-survival
+map preserves the concordance ordering, so Antolini's time-dependent concordance
+coincides with Harrell's C; the additive quantity is therefore the proper score, not
+a second concordance. Across the `r nrow(.br$per_cohort)` cohorts the DeSurv predictor achieved an
+event-weighted integrated Brier score of `r sprintf("%.3f", .brp["ibs"])` versus
+`r sprintf("%.3f", .brp["ibs_null"])` for a Kaplan--Meier reference, an index of
+prediction accuracy (IPA $= 1 - \mathrm{IBS}/\mathrm{IBS}_{\text{null}}$) of
+`r sprintf("%.1f", 100*.brp["ipa"])`\% (per-cohort range
+`r sprintf("%.1f", 100*.bripa[1])`--`r sprintf("%.1f", 100*.bripa[2])`\%). This
+modest proper-score improvement over the null is consistent with the moderate
+discrimination (C $= `r sprintf("%.2f", .brp["cindex"])`$) and with DeSurv's
+contribution being source-attributable decomposition rather than higher predictive
+accuracy.
+
 \clearpage
 
 \newpage

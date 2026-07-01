@@ -75,14 +75,16 @@ all:
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/15_supervised_recovery.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/16_desurv_vs_supervised.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/17_brier_metrics.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/18_clinical_adjustment.R
 	DESURV_RECOMPUTE=FALSE $(RSCRIPT) code/10_render_paper.R
 	@echo "=== Full pipeline complete ==="
 
-# NOTE: code/14, code/15, code/16 and code/17 are derived-stats (+ figure) producers
-# that use only in-repo results, so they run as part of `make all` (each writes its
+# NOTE: code/14 through code/18 are derived-stats (+ figure) producers that use only
+# in-repo results/data, so they run as part of `make all` (each writes its
 # results/<name>.rds and, where applicable, figures/<name>.pdf). code/16 additionally
 # needs the DeSurv package (installed by code/01) and the cached cv_grid; code/17
-# (proper-scoring Brier metrics) needs riskRegression/prodlim (installed by code/01). code/11 (treated
+# (proper-scoring Brier metrics) needs riskRegression/prodlim (installed by code/01);
+# code/18 (clinical/purity adjustment) joins clinical covariates from data/original/*.rds. code/11 (treated
 # cohorts) and code/13 (UNC Visium spatial) are run OUT OF BAND because they require
 # external/restricted data not shipped in this repo (response_master_canonical.rds;
 # GEO GSE311783). Their committed results/*.rds and figures/*.pdf are the

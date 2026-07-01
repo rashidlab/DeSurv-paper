@@ -1117,6 +1117,28 @@ Validation-cohort expression enters only at scoring, a fixed-basis projection
 validation-cohort survival outcomes were used only for the final, out-of-sample
 performance evaluation.
 
+\subsection*{Adjustment for clinical covariates and tumor purity}
+
+```{r clinical-adj, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+load_result("desurv_clinical_adjustment")
+.ca  <- desurv_clinical_adjustment
+.caf <- function(m) if (is.null(m)) "---" else sprintf("%.2f (%.2f--%.2f), %s", m$hr, m$lo, m$hi,
+  if (m$p < 0.001) "$<0.001$" else paste0("$", sprintf("%.3f", m$p), "$"))
+.ord  <- c("PACA_AU_array","PACA_AU_seq","Puleo_array","Dijk","Moffitt_GEO_array","TCGA_PAAD","CPTAC")
+.disp <- c(PACA_AU_array="PACA-AU array", PACA_AU_seq="PACA-AU RNA-seq", Puleo_array="Puleo",
+           Dijk="Dijk", Moffitt_GEO_array="Moffitt", TCGA_PAAD="TCGA (train)", CPTAC="CPTAC (train)")
+.carows <- lapply(.ord, function(k){ r <- .ca[[k]]
+  covs <- if (!is.null(r$clinical_adjusted)) paste(r$clinical_adjusted$covars, collapse=", ") else "---"
+  data.frame(Cohort=.disp[[k]], Covariates=covs,
+             `n (events)`=sprintf("%d (%d)", r$unadjusted$n, r$unadjusted$events),
+             Unadjusted=.caf(r$unadjusted), `Clinical-adjusted`=.caf(r$clinical_adjusted),
+             `Purity-adjusted`=.caf(r$purity_adjusted), check.names=FALSE, stringsAsFactors=FALSE) })
+.catab <- do.call(rbind, .carows)
+knitr::kable(.catab, format="latex", escape=FALSE, booktabs=TRUE,
+  caption="Adjusted hazard ratios (per SD of the DeSurv linear predictor) for overall survival, before and after adjustment for standard clinical covariates and, where annotated, tumor purity, fitted separately in each cohort. The Covariates column lists the clinical variables entered (stage, grade, age, sex, nodal status, or resection margin, as available). The DeSurv score remains independently prognostic after clinical adjustment in the fully-annotated external PACA-AU cohorts and both training cohorts, and after purity adjustment, arguing against a purity- or composition-driven artifact; the smaller Dijk and Moffitt cohorts were individually underpowered (non-significant even unadjusted). Training-cohort (TCGA, CPTAC) hazard ratios are in-sample. \\label{tab:clinical-adjustment}") |>
+  kableExtra::kable_styling(latex_options=c("HOLD_position","scale_down"), font_size=8)
+```
+
 \clearpage
 
 \newpage

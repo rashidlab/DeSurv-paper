@@ -56,7 +56,8 @@ ord_stage <- function(x) { x <- toupper(trimws(as.character(x)))
 ord_grade <- function(x) { x <- tolower(trimws(as.character(x)))
   ifelse(grepl("^1|well", x), 1L, ifelse(grepl("^2|moder", x), 2L,
     ifelse(grepl("^3|poor", x), 3L, ifelse(grepl("^4|undiff", x), 3L, NA_integer_)))) }
-bin_sex    <- function(x) factor(ifelse(grepl("^m", tolower(trimws(as.character(x)))), "M", "F"))
+bin_sex    <- function(x) { x <- tolower(trimws(as.character(x)))
+  factor(ifelse(grepl("^m", x), "M", ifelse(grepl("^f", x), "F", NA_character_)), levels = c("F","M")) }
 node_pos   <- function(x) { x <- toupper(trimws(as.character(x)))
   ifelse(grepl("N0", x), 0L, ifelse(grepl("N1|N2|N3", x), 1L, NA_integer_)) }
 margin_pos <- function(x) { x <- tolower(trimws(as.character(x)))

@@ -48,6 +48,10 @@ for (e in val) {
   last <- function(v) v[length(v)]
   ibs_mod  <- last(ib$IBS[ib$model == "DeSurv"])
   ibs_null <- last(ib$IBS[ib$model == "Null model"])
+  if (length(ibs_mod) != 1 || !is.finite(ibs_mod) ||
+      length(ibs_null) != 1 || !is.finite(ibs_null))
+    stop("riskRegression::Score model/null row labels not matched (got model='",
+         paste(unique(ib$model), collapse="', '"), "'); check names for this version.")
   c0 <- survival::concordance(Surv(time, event) ~ rz, data = df)$concordance
   cidx <- ifelse(c0 < 0.5, 1 - c0, c0)                     # discrimination (sign-robust)
   rows[[e$dataset]] <- data.frame(

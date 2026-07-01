@@ -1111,8 +1111,10 @@ subtype calls were fixed before the DeSurv analysis (loaded as precomputed per-c
 annotations) and enter only as covariates in the adjusted Cox models, not as inputs to
 DeSurv. All rank and hyperparameter selection (including the one-standard-error rule) was
 performed by nested cross-validation entirely within the TCGA and CPTAC training data;
-no external validation cohort contributed to training, scoring, cutpoint selection, or
-tuning. Validation-cohort survival outcomes were used only for the final, out-of-sample
+no external validation cohort was used for training, cutpoint selection, or tuning.
+Validation-cohort expression enters only at scoring, a fixed-basis projection
+($Z = \widetilde{W}^\top X_{\text{new}}$) that uses no validation outcome, and
+validation-cohort survival outcomes were used only for the final, out-of-sample
 performance evaluation.
 
 \clearpage

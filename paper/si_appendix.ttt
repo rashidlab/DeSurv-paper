@@ -69,7 +69,30 @@ DeSurv ($k = 3$) & 0.938 & 0.062\\
  
 \begin{table}[H]
 \centering
-\caption{\label{tab:tab-cindex-comparison}External validation C-index by method and cohort. DeSurv at BO-selected rank ($k = 3$) is compared with standard NMF at matched rank ($k = 3$), elbow-selected rank ($k = 5$), and BO-selected rank ($k = 7$, $\alpha = 0$). Higher values indicate better discrimination. \label{tab:tab-cindex-comparison}}
+\caption{\label{tab:clinical-adj}Adjusted hazard ratios (per SD of the DeSurv linear predictor) for overall survival, before and after adjustment for standard clinical covariates and, where annotated, tumor purity, fitted separately in each cohort. The Covariates column lists the clinical variables entered (stage, grade, age, sex, nodal status, or resection margin, as available). The DeSurv score remains independently prognostic after clinical adjustment in the fully-annotated external PACA-AU cohorts and both training cohorts, and after purity adjustment, arguing against a purity- or composition-driven artifact; the smaller Dijk and Moffitt cohorts were individually underpowered (non-significant even unadjusted). Training-cohort (TCGA, CPTAC) hazard ratios are in-sample. \label{tab:clinical-adjustment}}
+\centering
+\resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
+\fontsize{8}{10}\selectfont
+\begin{tabular}[t]{lllll}
+\toprule
+Cohort & Covariates & Unadjusted & Clinical-adjusted & Purity-adjusted\\
+\midrule
+PACA-AU array & stage, grade, age, sex & 1.49 (1.10--2.00), $0.009$ ($n$=63, 38 ev) & 1.73 (1.12--2.66), $0.013$ ($n$=62, 37 ev) & 1.50 (1.11--2.04), $0.009$ ($n$=63, 38 ev)\\
+PACA-AU RNA-seq & stage, grade, age, sex & 1.73 (1.21--2.48), $0.003$ ($n$=52, 31 ev) & 1.75 (1.04--2.94), $0.034$ ($n$=51, 30 ev) & 1.73 (1.21--2.47), $0.003$ ($n$=52, 31 ev)\\
+Puleo & sex, margin & 1.35 (1.17--1.57), $<0.001$ ($n$=288, 181 ev) & 1.31 (1.13--1.52), $<0.001$ ($n$=284, 177 ev) & ---\\
+Dijk & grade, age, sex, nodal & 1.20 (0.96--1.49), $0.105$ ($n$=90, 81 ev) & 1.13 (0.90--1.41), $0.309$ ($n$=85, 77 ev) & ---\\
+Moffitt & sex, margin & 1.21 (1.00--1.48), $0.055$ ($n$=123, 83 ev) & 1.18 (0.94--1.49), $0.152$ ($n$=98, 67 ev) & 0.97 (0.59--1.60), $0.904$ ($n$=29, 18 ev)\\
+\addlinespace
+TCGA (train) & stage, grade, age, sex, nodal & 3.50 (2.63--4.66), $<0.001$ ($n$=144, 75 ev) & 3.32 (2.40--4.59), $<0.001$ ($n$=142, 74 ev) & 3.60 (2.68--4.84), $<0.001$ ($n$=143, 74 ev)\\
+CPTAC (train) & stage, age, sex, nodal & 3.72 (2.73--5.08), $<0.001$ ($n$=129, 64 ev) & 3.59 (2.59--4.97), $<0.001$ ($n$=123, 61 ev) & ---\\
+\bottomrule
+\end{tabular}}
+\end{table}
+\efloatseparator
+ 
+\begin{table}[H]
+\centering
+\caption{\label{tab:tab-cindex-comparison-auto}External validation C-index by method and cohort. DeSurv at BO-selected rank ($k = 3$) is compared with standard NMF at matched rank ($k = 3$), elbow-selected rank ($k = 5$), and BO-selected rank ($k = 7$, $\alpha = 0$). Higher values indicate better discrimination. \label{tab:tab-cindex-comparison}}
 \centering
 \fontsize{9}{11}\selectfont
 \begin{tabular}[t]{lrrrr}
@@ -88,7 +111,7 @@ Puleo\_array & 0.636 & 0.534 & 0.642 & 0.651\\
  
 \begin{table}[H]
 \centering
-\caption{\label{tab:tab-bic-percohort}Per-cohort Bayesian Information Criterion (BIC) for Cox proportional hazards models using individual factor scores as predictors of overall survival in each external validation cohort. $\beta$ coefficients are re-fit on each validation cohort separately. DeSurv uses three factor scores (F1, F2, F3); NMF at BO-selected $k = 7$ uses seven (F1--F7). BIC penalises complexity as $k \log n_{\text{events}}$. Positive $\Delta$BIC (NMF $-$ DeSurv) indicates DeSurv's parsimonious 3-factor decomposition is preferred. DeSurv is BIC-preferred in three of five validation cohorts; the remaining two are essentially tied. \label{tab:tab-bic-percohort}}
+\caption{\label{tab:tab-bic-percohort-auto}Per-cohort Bayesian Information Criterion (BIC) for Cox proportional hazards models using individual factor scores as predictors of overall survival in each external validation cohort. $\beta$ coefficients are re-fit on each validation cohort separately. DeSurv uses three factor scores (F1, F2, F3); NMF at BO-selected $k = 7$ uses seven (F1--F7). BIC penalises complexity as $k \log n_{\text{events}}$. Positive $\Delta$BIC (NMF $-$ DeSurv) indicates DeSurv's parsimonious 3-factor decomposition is preferred. DeSurv is BIC-preferred in three of five validation cohorts; the remaining two are essentially tied. \label{tab:tab-bic-percohort}}
 \centering
 \fontsize{9}{11}\selectfont
 \begin{tabular}[t]{lrrrrr}
@@ -107,7 +130,7 @@ Puleo array & 288 & 181 & 1782.0 & 1782.6 & +0.6\\
  
 \begin{table}[H]
 \centering
-\caption{\label{tab:tab-gene-list-270}Top 270 genes for DeSurv factor D1 (Factor D1 (Classical tumor + restCAF stroma)), ranked by factor specificity score $s_{ij}$. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}}$). \label{tab:gene-list-270-D1}}
+\caption{\label{tab:tab-gene-list-270-D1}Top 270 genes for DeSurv factor D1 (Factor D1 (Classical tumor + restCAF stroma)), ranked by factor specificity score $s_{ij}$. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}}$). \label{tab:gene-list-270-D1}}
 \centering
 \fontsize{8}{10}\selectfont
 \begin{tabular}[t]{llllll}
@@ -165,7 +188,7 @@ COL16A1 & PLXNA2 & CPS1 & UGT2B15 & BACE2 & FLJ23867\\
 \end{tabular}
 \end{table}\begin{table}[H]
 \centering
-\caption{\label{tab:tab-gene-list-270}Top 270 genes for DeSurv factor D2 (Factor D2 (proCAF stroma)), ranked by factor specificity score $s_{ij}$. \label{tab:gene-list-270-D2}}
+\caption{\label{tab:tab-gene-list-270-D2}Top 270 genes for DeSurv factor D2 (Factor D2 (proCAF stroma)), ranked by factor specificity score $s_{ij}$. \label{tab:gene-list-270-D2}}
 \centering
 \fontsize{8}{10}\selectfont
 \begin{tabular}[t]{llllll}
@@ -223,7 +246,7 @@ ITGBL1 & FERMT2 & SEL1L & AHR & SLC38A2 & SLC2A3\\
 \end{tabular}
 \end{table}\begin{table}[H]
 \centering
-\caption{\label{tab:tab-gene-list-270}Top 270 genes for DeSurv factor D3 (Factor D3 (Basal-like tumor)), ranked by factor specificity score $s_{ij}$. \label{tab:gene-list-270-D3}}
+\caption{\label{tab:tab-gene-list-270-D3}Top 270 genes for DeSurv factor D3 (Factor D3 (Basal-like tumor)), ranked by factor specificity score $s_{ij}$. \label{tab:gene-list-270-D3}}
 \centering
 \fontsize{8}{10}\selectfont
 \begin{tabular}[t]{llllll}

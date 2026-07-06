@@ -1085,8 +1085,9 @@ load_result("desurv_brier_stats")
 The main-text external validation reports discrimination with Harrell's C-index
 under a Cox proportional-hazards model. Because Harrell's C can be optimistic when
 hazards are non-proportional [@birolo2025beyondcox; @hao2021dnnsurv], we additionally
-evaluated the frozen DeSurv linear predictor with a proper score, the integrated
-Brier score (IBS), in each validation cohort, recalibrating only the scalar slope
+evaluated the DeSurv linear predictor---its direction frozen from training---with
+a proper score, the integrated Brier score (IBS), in each validation cohort,
+recalibrating only its scalar slope and baseline hazard
 within each cohort and scoring over that cohort's follow-up. For a single
 time-invariant risk score under proportional hazards the monotone score-to-survival
 map preserves the concordance ordering, so Antolini's time-dependent concordance
@@ -1096,7 +1097,10 @@ event-weighted integrated Brier score of `r sprintf("%.3f", .brp["ibs"])` versus
 `r sprintf("%.3f", .brp["ibs_null"])` for a Kaplan--Meier reference, an index of
 prediction accuracy (IPA $= 1 - \mathrm{IBS}/\mathrm{IBS}_{\text{null}}$) of
 `r sprintf("%.1f", 100*.brp["ipa"])`\% (per-cohort range
-`r sprintf("%.1f", 100*.bripa[1])`--`r sprintf("%.1f", 100*.bripa[2])`\%). This
+`r sprintf("%.1f", 100*.bripa[1])`--`r sprintf("%.1f", 100*.bripa[2])`\%). Because each
+cohort's IBS is integrated over its own event-time horizon, this pooled value is a
+descriptive event-weighted summary rather than a single common-horizon proper score,
+and the per-cohort IPA range is the more directly interpretable quantity. This
 modest proper-score improvement over the null is consistent with the moderate
 discrimination (C $= `r sprintf("%.2f", .brp["cindex"])`$) and with DeSurv's
 contribution being source-attributable decomposition rather than higher predictive
@@ -1134,7 +1138,7 @@ load_result("desurv_clinical_adjustment")
              `Purity-adjusted`=.caf(r$purity_adjusted), check.names=FALSE, stringsAsFactors=FALSE) })
 .catab <- do.call(rbind, .carows)
 knitr::kable(.catab, format="latex", escape=FALSE, booktabs=TRUE,
-  caption="Adjusted hazard ratios (per SD of the DeSurv linear predictor) for overall survival, before and after adjustment for standard clinical covariates and, where annotated, tumor purity, fitted separately in each cohort. The Covariates column lists the clinical variables entered (stage, grade, age, sex, nodal status, or resection margin, as available). The DeSurv score remains independently prognostic after clinical adjustment in the fully-annotated external PACA-AU cohorts and both training cohorts, and after purity adjustment, arguing against a purity- or composition-driven artifact; the smaller Dijk and Moffitt cohorts were individually underpowered (non-significant even unadjusted). Training-cohort (TCGA, CPTAC) hazard ratios are in-sample. \\label{tab:clinical-adjustment}") |>
+  caption="Adjusted hazard ratios (per SD of the DeSurv linear predictor) for overall survival, before and after adjustment for standard clinical covariates and, where annotated, tumor purity, fitted separately in each cohort by complete-case analysis (per-cell $n$ and events shown). The Covariates column lists the clinical variables entered (stage, grade, age, sex, nodal status, or resection margin, as available). The DeSurv score remains independently prognostic after clinical adjustment in the fully-annotated external PACA-AU cohorts and both training cohorts; where tumor-purity annotation was available (PACA-AU array and TCGA), it also remained prognostic after purity adjustment, consistent with the association not being driven solely by purity or composition; the smaller Dijk and Moffitt cohorts were individually underpowered (non-significant even unadjusted). Training-cohort (TCGA, CPTAC) hazard ratios are in-sample. \\label{tab:clinical-adjustment}") |>
   kableExtra::kable_styling(latex_options=c("HOLD_position","scale_down"), font_size=8)
 ```
 

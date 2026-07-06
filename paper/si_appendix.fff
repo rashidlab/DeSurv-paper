@@ -40,7 +40,7 @@
  
 \begin{figure}
 \centering
-\includegraphics{si_appendix_files/figures/fig-desurv-k5-heatmap-1.png}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/fig-desurv-k5-heatmap-1.png}}
 \caption{Gene program overlap heatmap for DeSurv at elbow-selected rank
 \(k = 5\). Each cell shows the number of top genes from a given factor
 (rows) overlapping established PDAC gene programs (columns). DeSurv at
@@ -53,7 +53,7 @@ represented as dominant factors. \label{fig:fig-desurv-k5-heatmap}}
  
 \begin{figure}
 \centering
-\includegraphics{si_appendix_files/figures/fig-nmf-k5-heatmap-1.png}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/fig-nmf-k5-heatmap-1.png}}
 \caption{Gene program overlap heatmap for standard NMF at elbow-selected
 rank \(k = 5\). Each cell shows the number of top genes from a given
 factor (rows) overlapping established PDAC gene programs (columns). The
@@ -66,7 +66,7 @@ variance not aligned with survival outcomes.
  
 \begin{figure}
 \centering
-\includegraphics{si_appendix_files/figures/fig-nmf-k7-heatmap-1.png}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/fig-nmf-k7-heatmap-1.png}}
 \caption{Gene program overlap heatmap for standard NMF at \(k = 7\)
 (BO-selected rank with \(\alpha = 0\)). Compared with \(k = 3\) and
 \(k = 5\), the 7-factor solution shows increased fragmentation: multiple
@@ -77,7 +77,7 @@ coherent biological program emerges. \label{fig:fig-nmf-k7-heatmap}}
  
 \begin{figure}
 \centering
-\includegraphics{si_appendix_files/figures/fig-varsurvival-k5-1.png}
+\pandocbounded{\includegraphics[keepaspectratio]{figures/fig-varsurvival-k5-1.png}}
 \caption{Per-factor contribution to reconstruction (normalized
 reconstruction Shapley share) versus Type III partial likelihood
 contribution for each standard NMF factor at elbow-selected \(k = 5\).

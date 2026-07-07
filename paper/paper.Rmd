@@ -70,6 +70,7 @@ header-includes:
   - \affil[d]{Lineberger Comprehensive Cancer Center, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA}
   - \affil[e]{Department of Surgery, University of North Carolina at Chapel Hill, Chapel Hill, NC 27599, USA}
   - '\affil[*]{Corresponding author: nur2@email.unc.edu}'
+  - '\renewcommand{\author}[2][]{}'
 ---
 ```{r, echo=FALSE}
 knitr::opts_chunk$set(

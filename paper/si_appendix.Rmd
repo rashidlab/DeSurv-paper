@@ -805,7 +805,7 @@ The parameter $n_{\text{top}}$ controls which genes enter the survival linear pr
 \section{PDAC Datasets}
 
 We analyzed PDAC cohorts from TCGA-PAAD and CPTAC-PDAC as training data
-[@raphael2017integrated;@ellis2013clinical]. External validation used
+[@raphael2017integrated;@cao2021proteogenomic]. External validation used
 independent cohorts from Dijk, Moffitt, PACA-AU (array and RNA-seq), and Puleo
 [@dijk2020unsupervised;@moffitt2015virtual;@Bailey2016;@puleo2018stratification].
 Training models were fit on the combined TCGA and CPTAC expression matrices
@@ -915,13 +915,13 @@ column independently. Gene programs were included in the visualization only if
 at least one factor yielded a Spearman correlation exceeding 0.2. Asterisks
 ($*$) indicate adjusted p-value $< 0.1$.
 
-Reference gene programs included Classical and Basal-like tumor cell signatures
+Reference gene programs included classical and basal-like tumor cell signatures
 from Moffitt et al.\ [@moffitt2015virtual]; iCAF and myCAF
 cancer-associated fibroblast signatures from Elyada et al.\
 [@elyada2019cross]; promoting (proCAF) and restraining (restCAF) cancer-associated fibroblast subtypes
 from the DeCAF study [@peng2024determination]; proCAF and restCAF subtypes from SCISSORS [@leary2023s]; tumor,
 stromal, and immune compartment signatures from DECODER [@peng2019novo];
-and Classical and Basal-like subtype classifiers from PurIST
+and classical and basal-like subtype classifiers from PurIST
 [@rashid2020purity]. Programs from Bailey et al.\ [@Bailey2016],
 periductal subtypes, and MSI subtypes were excluded from visualization due to
 redundancy with other included programs or low overall correlation across all
@@ -997,7 +997,7 @@ source("R/reconstruction_helpers.R")
 .r2_D <- projection_r2(.fit_d$W, .fit_n$W)   # DeSurv factor -> NMF basis
 .pr <- data.frame(
   Factor = c("NMF N1 (tumor)", "NMF N2 (exocrine)", "NMF N3 (microenviron.)",
-             "DeSurv D1 (Classical/restCAF)", "DeSurv D2 (proCAF)", "DeSurv D3 (Basal-like)"),
+             "DeSurv D1 (classical/restCAF)", "DeSurv D2 (proCAF)", "DeSurv D3 (basal-like)"),
   R2 = sprintf("%.2f", c(.r2_N, .r2_D)),
   Interpretation = c("preserved", "dissolved", "preserved",
                      "novel ($\\approx$91\\% de novo)", "inherited ($\\approx$N3)", "inherited ($\\approx$N1)"),
@@ -1014,7 +1014,7 @@ DeSurv creates is therefore novel, not a reweighting of an existing unsupervised
 factor. Conversely, the biologically dominant tumor (N1) and stromal (N3)
 programs carry over intact ($R^2 = 0.90$ and $0.88$), so supervision conserves
 nearly all of the unsupervised structure and spends its remaining capacity
-resolving tumor into Basal- and Classical-aligned programs and shedding the
+resolving tumor into basal- and classical-aligned programs and shedding the
 prognostically uninformative exocrine factor.
 
 \subsection{Overall reconstruction \texorpdfstring{$R^2$}{R2}: the price of supervision}
@@ -1060,12 +1060,12 @@ recovered D1 closely (per-patient $|r| = `r sprintf("%.2f", .srcor("Supervised P
 for supervised PCA, $`r sprintf("%.2f", .srcor("Cox-PLS"))`$ for Cox-PLS, and
 $`r sprintf("%.2f", .srcor("Sparse Cox"))`$ for sparse Cox; mean
 $`r sprintf("%.2f", .sr$sup_mean_score_cor)`$), and each aligned specifically with
-D1 rather than the stromal D2 or Basal-like D3 programs
+D1 rather than the stromal D2 or basal-like D3 programs
 (Fig. \ref{fig:suprec}). By contrast, the leading \emph{unsupervised} direction
 (the first principal component, which dominant-variance methods such as standard
 NMF and DECODER follow) was nearly orthogonal to D1
 ($|r| = `r sprintf("%.2f", .srcor("Unsupervised PCA"))`$) and instead tracked the
-high-variance D2/D3 stroma--Basal axis. This D1 axis is thus a property of
+high-variance D2/D3 stroma--basal axis. This D1 axis is thus a property of
 survival supervision shared across methods --- consistent with its being
 unreconstructable from the unsupervised NMF basis (Table \ref{tab:projection-r2})
 and with standard NMF's failure to enrich for the proCAF stroma at matched rank
@@ -1240,15 +1240,15 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 # Overlap of DeSurv risk groups with known molecular subtypes
 
-To assess whether the DeSurv-derived risk stratification captures biologically meaningful transcriptional programs, we examined the overlap between dichotomized risk groups (High vs Low) and two established PDAC molecular classifiers: PurIST (Basal-like vs Classical) and DeCAF (proCAF vs restCAF). Fig. \ref{fig:fig-subtype-overlap} shows the composition of each risk group across all pooled external validation cohorts, with Fisher's exact test P-values quantifying the association. The DeSurv high-risk group was significantly enriched for both Basal-like (PurIST) and proCAF (DeCAF) subtypes, consistent with the known poor prognosis of these molecular classes. By contrast, standard NMF risk groups at the matched rank ($k = 3$) separated Basal-like from Classical tumors (PurIST) but showed no significant enrichment for proCAF versus restCAF (DeCAF), indicating that survival-unsupervised factorization does not recover the tumor--stroma axis captured by DeSurv's D1. This concordance confirms that DeSurv's survival-driven factorization recovers clinically relevant biology without requiring subtype labels during training.
+To assess whether the DeSurv-derived risk stratification captures biologically meaningful transcriptional programs, we examined the overlap between dichotomized risk groups (High vs Low) and two established PDAC molecular classifiers: PurIST (basal-like vs classical) and DeCAF (proCAF vs restCAF). Fig. \ref{fig:fig-subtype-overlap} shows the composition of each risk group across all pooled external validation cohorts, with Fisher's exact test P-values quantifying the association. The DeSurv high-risk group was significantly enriched for both basal-like (PurIST) and proCAF (DeCAF) subtypes, consistent with the known poor prognosis of these molecular classes. By contrast, standard NMF risk groups at the matched rank ($k = 3$) separated basal-like from classical tumors (PurIST) but showed no significant enrichment for proCAF versus restCAF (DeCAF), indicating that survival-unsupervised factorization does not recover the tumor--stroma axis captured by DeSurv's D1. This concordance confirms that DeSurv's survival-driven factorization recovers clinically relevant biology without requiring subtype labels during training.
 
-```{r fig-subtype-overlap, fig.width = 8, fig.height = 10, fig.cap = "Subtype composition of DeSurv (top) and standard NMF $k=3$ (bottom) risk groups in pooled external validation cohorts. Stacked bar charts show the proportion of PurIST (left) and DeCAF (right) subtypes within Low and High risk groups defined by the log-rank-optimized cutpoint. Numbers indicate sample counts; Fisher's exact test P-values are shown above each panel. DeSurv risk groups are enriched for both Basal-like (PurIST) and proCAF (DeCAF) poor-prognosis subtypes; NMF risk groups separate Basal-like from Classical tumors but show no significant CAF subtype enrichment.", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
+```{r fig-subtype-overlap, fig.width = 8, fig.height = 10, fig.cap = "Subtype composition of DeSurv (top) and standard NMF $k=3$ (bottom) risk groups in pooled external validation cohorts. Stacked bar charts show the proportion of PurIST (left) and DeCAF (right) subtypes within Low and High risk groups defined by the log-rank-optimized cutpoint. Numbers indicate sample counts; Fisher's exact test P-values are shown above each panel. DeSurv risk groups are enriched for both basal-like (PurIST) and proCAF (DeCAF) poor-prognosis subtypes; NMF risk groups separate basal-like from classical tumors but show no significant CAF subtype enrichment.", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_subtype_overlap_tcgacptac.pdf", density = 300))
 ```
 
 <!-- ## Analysis of scRNA-seq {.unnumbered} -->
-<!-- Next, we verify our findings at the cellular level using the Elyada scRNA-seq data [@elyada2019cross]. We found that our DeSurv factor 1 signature was expressed primarily in iCAF and B cells, factor 2 was expressed in Acinar and Classical PDAC 2, and factor 3 was expressed primarily in Basal-like PDAC cells (Figure \ref{fig:fig-sc}B-E). This is consistent with our ORA analysis which found that factor 1 was mostly immune and factor 3 was basal-like, and with the overlap we saw with published gene lists that identified factor 1 as iCAF/classical/immune and factor 3 as basal-like. Interestingly, we do not see a large overlap of factor 1 with the classical PDAC cell types despite some overlap with classical gene lists. Need more here... -->
+<!-- Next, we verify our findings at the cellular level using the Elyada scRNA-seq data [@elyada2019cross]. We found that our DeSurv factor 1 signature was expressed primarily in iCAF and B cells, factor 2 was expressed in Acinar and Classical PDAC 2, and factor 3 was expressed primarily in basal-like PDAC cells (Figure \ref{fig:fig-sc}B-E). This is consistent with our ORA analysis which found that factor 1 was mostly immune and factor 3 was basal-like, and with the overlap we saw with published gene lists that identified factor 1 as iCAF/classical/immune and factor 3 as basal-like. Interestingly, we do not see a large overlap of factor 1 with the classical PDAC cell types despite some overlap with classical gene lists. Need more here... -->
 
 <!-- ```{r fig-sc, fig.cap="A. Cell type clusters from the Elyada scRNA-seq data. B-D. VAM scores for the DeSurv factor signatures in each cell shown on the UMAP of cells in the Elyada-sc data. E. Heatmap of average VAM scores by cell type and factor signature in the Elyada-sc data.", fig.env='figure*', fig.pos='t', out.height= "8in", out.width='\\textwidth'} -->
 
@@ -1260,9 +1260,9 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 Throughout the main text, both DeSurv and standard NMF were fit at the same rank ($k = 3$), enabling a controlled comparison of the effect of survival supervision on factor structure. When each method selects its own rank independently, standard NMF chooses $k = 5$ via residual elbow detection or $k = 7$ via Bayesian optimization with $\alpha = 0$, while supervised DeSurv BO selects $k = 3$. We examine here the gene program structure at elbow-selected $k = 5$ for both DeSurv (Fig. \ref{fig:fig-desurv-k5-heatmap}) and standard NMF (Fig. \ref{fig:fig-nmf-k5-heatmap}), and the NMF $k = 7$ structure to illustrate additional fragmentation when supervision is absent (Fig. \ref{fig:fig-nmf-k7-heatmap}).
 
-At elbow-selected $k = 5$, supervised and unsupervised factorizations yield substantially different gene-program structures. DeSurv at $k = 5$ (Fig. \ref{fig:fig-desurv-k5-heatmap}) splits the ECM/activated-stroma (proCAF-associated) signal into two factors with opposing tumor correlations (one positively correlated with Classical tumor programs, one negatively correlated) and isolates restCAF as a separate factor; exocrine and Basal-like programs are not represented as dominant factors in the supervised solution. Standard NMF at $k = 5$ (Fig. \ref{fig:fig-nmf-k5-heatmap}), by contrast, recovers the three core programs from its $k = 3$ solution and adds two factors capturing Exocrine-like and restCAF variance, transcriptional variance not aligned with survival outcomes. These biologically redundant NMF factors explain why supervised BO selects $k = 3$ in the production model: the additional NMF factors at $k = 5$ contribute no independent prognostic content beyond the three core programs (Fig. \ref{fig:varsurvival-k5}), even though the overall higher-rank model still validates externally on per-cohort C-index (Table \ref{tab:tab-cindex-comparison}).
+At elbow-selected $k = 5$, supervised and unsupervised factorizations yield substantially different gene-program structures. DeSurv at $k = 5$ (Fig. \ref{fig:fig-desurv-k5-heatmap}) splits the ECM/activated-stroma (proCAF-associated) signal into two factors with opposing tumor correlations (one positively correlated with classical tumor programs, one negatively correlated) and isolates restCAF as a separate factor; exocrine and basal-like programs are not represented as dominant factors in the supervised solution. Standard NMF at $k = 5$ (Fig. \ref{fig:fig-nmf-k5-heatmap}), by contrast, recovers the three core programs from its $k = 3$ solution and adds two factors capturing Exocrine-like and restCAF variance, transcriptional variance not aligned with survival outcomes. These biologically redundant NMF factors explain why supervised BO selects $k = 3$ in the production model: the additional NMF factors at $k = 5$ contribute no independent prognostic content beyond the three core programs (Fig. \ref{fig:varsurvival-k5}), even though the overall higher-rank model still validates externally on per-cohort C-index (Table \ref{tab:tab-cindex-comparison}).
 
-```{r fig-desurv-k5-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene program overlap heatmap for DeSurv at elbow-selected rank $k = 5$. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). DeSurv at $k = 5$ splits the ECM/activated-stroma (proCAF-associated) signal into two factors with opposing Classical-tumor correlations and isolates restCAF as a separate factor; exocrine and Basal-like programs are not represented as dominant factors. \\label{fig:fig-desurv-k5-heatmap}", fig.env='figure', fig.pos='t'}
+```{r fig-desurv-k5-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene program overlap heatmap for DeSurv at elbow-selected rank $k = 5$. Each cell shows the number of top genes from a given factor (rows) overlapping established PDAC gene programs (columns). DeSurv at $k = 5$ splits the ECM/activated-stroma (proCAF-associated) signal into two factors with opposing classical-tumor correlations and isolates restCAF as a separate factor; exocrine and basal-like programs are not represented as dominant factors. \\label{fig:fig-desurv-k5-heatmap}", fig.env='figure', fig.pos='t'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_desurv_k5_heatmap_tcgacptac.pdf", density = 300))
 ```
@@ -1311,7 +1311,7 @@ kable(cindex_wide, format = "latex", booktabs = TRUE, linesep = "", escape = FAL
   kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
-Standard NMF at elbow-selected $k = 5$ and BO-selected $k = 7$ both substantially improve over NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}), confirming that additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, NMF matches or exceeds DeSurv's per-cohort C-index in most cohorts, demonstrating that unsupervised factorization can approach supervised concordance given enough factors. However, this comes at the cost of a less parsimonious and less interpretable factorization: the $k = 7$ NMF solution shows increased fragmentation (Fig. \ref{fig:fig-nmf-k7-heatmap}). DeSurv's advantage thus combines biological concordance and methodological complementarity: its risk groups identify the same poor-prognosis subtypes as established classifiers (Basal-like, proCAF; Fig. \ref{fig:fig-subtype-overlap}), while its linear predictor retains significant prognostic value after adjustment for those classifiers (main-text Table 1).
+Standard NMF at elbow-selected $k = 5$ and BO-selected $k = 7$ both substantially improve over NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}), confirming that additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, NMF matches or exceeds DeSurv's per-cohort C-index in most cohorts, demonstrating that unsupervised factorization can approach supervised concordance given enough factors. However, this comes at the cost of a less parsimonious and less interpretable factorization: the $k = 7$ NMF solution shows increased fragmentation (Fig. \ref{fig:fig-nmf-k7-heatmap}). DeSurv's advantage thus combines biological concordance and methodological complementarity: its risk groups identify the same poor-prognosis subtypes as established classifiers (basal-like, proCAF; Fig. \ref{fig:fig-subtype-overlap}), while its linear predictor retains significant prognostic value after adjustment for those classifiers (main-text Table 1).
 
 Table \ref{tab:tab-bic-percohort} provides a complementary perspective that isolates the prognostic information carried by each method's factor decomposition from the transfer quality of its trained linear predictor. Whereas main-text Table 1 freezes the training-derived $\beta$ coefficients into a single risk-score covariate, Table \ref{tab:tab-bic-percohort} re-estimates $\beta$ on each validation cohort using the individual factor scores (F1, F2, F3 for DeSurv; F1--F7 for NMF) as separate covariates and reports the Bayesian Information Criterion (BIC) of the resulting Cox proportional hazards fits. BIC uses $k \log n_{\text{events}}$ as the complexity penalty (Volinsky and Raftery, \textit{Biometrics} 52, 203--223, 1996; Kass and Raftery, \textit{JASA} 90, 773--795, 1995). DeSurv's parsimonious 3-factor decomposition is BIC-preferred over NMF's 7-factor decomposition in three of five validation cohorts (Dijk, Moffitt, PACA-AU array), with the remaining two cohorts essentially tied: NMF's four additional factors do not provide sufficient log-likelihood improvement to overcome their complexity penalty.
 
@@ -1383,7 +1383,7 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 \section{Factor-Specific Gene Lists}
 
-Tables \ref{tab:gene-list-270-D1}--\ref{tab:gene-list-270-D3} list the top 270 genes for each of the three DeSurv factors, ranked by the factor specificity score $s_{ij}$ defined in SI Appendix, Section \ref{sec:gene-program-correlation}. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}} = 270$); these are the genes used to compute sample-level factor scores for survival prediction. Factor D1 is enriched for Classical tumor and restCAF stromal genes, Factor D2 for proCAF-associated stromal genes, and Factor D3 for Basal-like tumor and proliferation-associated genes.
+Tables \ref{tab:gene-list-270-D1}--\ref{tab:gene-list-270-D3} list the top 270 genes for each of the three DeSurv factors, ranked by the factor specificity score $s_{ij}$ defined in SI Appendix, Section \ref{sec:gene-program-correlation}. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}} = 270$); these are the genes used to compute sample-level factor scores for survival prediction. Factor D1 is enriched for classical tumor and restCAF stromal genes, Factor D2 for proCAF-associated stromal genes, and Factor D3 for basal-like tumor and proliferation-associated genes.
 
 ```{r tab-gene-list-270, echo=FALSE, results='asis'}
 library(knitr)
@@ -1409,9 +1409,9 @@ build_factor_table <- function(df, fct) {
 
 factor_labels <- c("D1", "D2", "D3")
 factor_captions <- c(
-  "Factor D1 (Classical tumor + restCAF stroma)",
+  "Factor D1 (classical tumor + restCAF stroma)",
   "Factor D2 (proCAF stroma)",
-  "Factor D3 (Basal-like tumor)"
+  "Factor D3 (basal-like tumor)"
 )
 
 for (i in seq_along(factor_labels)) {
@@ -1457,7 +1457,7 @@ Factor scores were computed by projection using the same trained, top-gene-trunc
 
 \begin{table}[H]
 \centering
-\caption{Per-cohort overall-survival hazard ratios per SD in the three bulk treated PDAC cohorts. $D_1$ marginal; $D_2$ marginal and PurIST + DeCAF-adjusted; $D_3$ marginal. Sample sizes: Linehan $n=`r .prev("Linehan")$n`$ (`r .prev("Linehan")$events` events), Rash $n=`r .prev("Rash")$n`$ (`r .prev("Rash")$events` events), Accept $n=`r .prev("Accept")$n`$ (`r .prev("Accept")$events` events); Basal-like prevalence Linehan `r .prev("Linehan")$pct_basal`\% (`r .prev("Linehan")$n_basal` cases), Rash `r .prev("Rash")$pct_basal`\%, Accept `r .prev("Accept")$pct_basal`\%. \label{tab:treated-os}}
+\caption{Per-cohort overall-survival hazard ratios per SD in the three bulk treated PDAC cohorts. $D_1$ marginal; $D_2$ marginal and PurIST + DeCAF-adjusted; $D_3$ marginal. Sample sizes: Linehan $n=`r .prev("Linehan")$n`$ (`r .prev("Linehan")$events` events), Rash $n=`r .prev("Rash")$n`$ (`r .prev("Rash")$events` events), Accept $n=`r .prev("Accept")$n`$ (`r .prev("Accept")$events` events); basal-like prevalence Linehan `r .prev("Linehan")$pct_basal`\% (`r .prev("Linehan")$n_basal` cases), Rash `r .prev("Rash")$pct_basal`\%, Accept `r .prev("Accept")$pct_basal`\%. \label{tab:treated-os}}
 \begin{tabular}{lcccc}
 \toprule
 Cohort (setting) & $D_1$ (marginal) & $D_2$ (marginal) & $D_2$ (+PurIST+DeCAF) & $D_3$ (marginal) \\
@@ -1469,15 +1469,15 @@ Accept (metastatic) & `r .os("Accept","D1","marginal")`  & `r .os("Accept","D2",
 \end{tabular}
 \end{table}
 
-The proCAF stromal program $D_2$ was protective in all three cohorts (marginal and, where powered, adjusted), with a consistent direction across the independent settings and chemotherapy backbones; it was significant in Linehan and non-significant but directionally concordant in the metastatic cohorts (Accept and Rash). Because $D_2$ is stromal and not collinear with the classifiers, its association was not an artifact of adjustment: in Linehan it was significant both before and after adjustment, and across all three cohorts the adjusted estimate strengthened rather than attenuated relative to the marginal one, indicating the classifiers partially mask rather than create it. The basal--classical program $D_1$ was prognostic in the less-advanced Linehan cohort (marginal HR `r sub(",.*","",.os("Linehan","D1","marginal"))`) but not in the metastatic cohorts --- a setting-dependence we show below is a property of the basal--classical axis itself (shared by PurIST, Moffitt, and Bailey), not a failure of $D_1$. $D_3$ (Basal-like) was not associated with overall survival in any treated cohort, consistent with the basal--classical contrast residing in $D_1$.
+The proCAF stromal program $D_2$ was protective in all three cohorts (marginal and, where powered, adjusted), with a consistent direction across the independent settings and chemotherapy backbones; it was significant in Linehan and non-significant but directionally concordant in the metastatic cohorts (Accept and Rash). Because $D_2$ is stromal and not collinear with the classifiers, its association was not an artifact of adjustment: in Linehan it was significant both before and after adjustment, and across all three cohorts the adjusted estimate strengthened rather than attenuated relative to the marginal one, indicating the classifiers partially mask rather than create it. The basal--classical program $D_1$ was prognostic in the less-advanced Linehan cohort (marginal HR `r sub(",.*","",.os("Linehan","D1","marginal"))`) but not in the metastatic cohorts --- a setting-dependence we show below is a property of the basal--classical axis itself (shared by PurIST, Moffitt, and Bailey), not a failure of $D_1$. $D_3$ (basal-like) was not associated with overall survival in any treated cohort, consistent with the basal--classical contrast residing in $D_1$.
 
 \subsection{The basal--classical axis is setting-dependent (classifier triangulation)}
 
-That $D_1$ attenuates in metastatic disease reflects the basal--classical prognostic axis itself rather than $D_1$ specifically: every established basal--classical classifier shows the same pattern (Table \ref{tab:axis}). In the less-advanced Linehan cohort the axis is strongly prognostic (PurIST Classical-vs-Basal HR `r sub(",.*","",.ax("Linehan","PurIST"))`), whereas in the metastatic cohorts PurIST, Moffitt, and Bailey are all non-significant. Basal-like prevalence in the metastatic cohorts is the expected 16--22\% (not range-restricted; the Linehan estimate rests on only six Basal-like cases and is correspondingly imprecise), and the same axis is prognostic at $P<10^{-8}$ in equally-prevalent treatment-naive validation cohorts (main text), indicating a genuine stage-dependent attenuation rather than reduced power.
+That $D_1$ attenuates in metastatic disease reflects the basal--classical prognostic axis itself rather than $D_1$ specifically: every established basal--classical classifier shows the same pattern (Table \ref{tab:axis}). In the less-advanced Linehan cohort the axis is strongly prognostic (PurIST classical-vs-basal HR `r sub(",.*","",.ax("Linehan","PurIST"))`), whereas in the metastatic cohorts PurIST, Moffitt, and Bailey are all non-significant. Basal-like prevalence in the metastatic cohorts is the expected 16--22\% (not range-restricted; the Linehan estimate rests on only six basal-like cases and is correspondingly imprecise), and the same axis is prognostic at $P<10^{-8}$ in equally-prevalent treatment-naive validation cohorts (main text), indicating a genuine stage-dependent attenuation rather than reduced power.
 
 \begin{table}[H]
 \centering
-\caption{Classical-vs-Basal overall-survival hazard ratios for established subtype classifiers, by cohort. All are strongly prognostic in less-advanced disease (Linehan) and attenuate in metastatic disease (Rash, Accept). \label{tab:axis}}
+\caption{classical-vs-basal overall-survival hazard ratios for established subtype classifiers, by cohort. All are strongly prognostic in less-advanced disease (Linehan) and attenuate in metastatic disease (Rash, Accept). \label{tab:axis}}
 \begin{tabular}{lccc}
 \toprule
 Classifier & Linehan (BR/LA) & Rash (metastatic) & Accept (metastatic) \\
@@ -1491,7 +1491,7 @@ Bailey (squamous) & ---                & `r .ax("Rash","Bailey")`  & `r .ax("Acc
 
 \subsection{D2 is prognostic on progression-free survival and is treatment-remodelled}
 
-In the metastatic RASH-ACCEPT cohort, $D_2$ was also associated with longer progression-free survival (HR per SD `r {r<-.tcs$pfs[.tcs$pfs$program=="D2",]; sprintf("$%.2f$ ($%.2f$--$%.2f$), %s", r$hr, r$lo, r$hi, .pfmt(r$p))}`); $D_3$ was significantly associated with shorter progression-free survival (`r {r<-.tcs$pfs[.tcs$pfs$program=="D3",]; sprintf("HR $%.2f$ ($%.2f$--$%.2f$), %s", r$hr, r$lo, r$hi, .pfmt(r$p))}`) --- a single-cohort, single-endpoint observation consistent with the aggressive biology of Basal-like tumours. In the `r .tcs$paired$n` Linehan patients with paired pre- and post-treatment biopsies, $D_2$ increased significantly from pre- to post-treatment (paired Wilcoxon `r .pfmt(.tcs$paired$wilcox_p)`; mean $\Delta = `r sprintf("%+.2f", .tcs$paired$mean_delta)`$ SD), indicating that the proCAF program is itself remodelled by therapy.
+In the metastatic RASH-ACCEPT cohort, $D_2$ was also associated with longer progression-free survival (HR per SD `r {r<-.tcs$pfs[.tcs$pfs$program=="D2",]; sprintf("$%.2f$ ($%.2f$--$%.2f$), %s", r$hr, r$lo, r$hi, .pfmt(r$p))}`); $D_3$ was significantly associated with shorter progression-free survival (`r {r<-.tcs$pfs[.tcs$pfs$program=="D3",]; sprintf("HR $%.2f$ ($%.2f$--$%.2f$), %s", r$hr, r$lo, r$hi, .pfmt(r$p))}`) --- a single-cohort, single-endpoint observation consistent with the aggressive biology of basal-like tumours. In the `r .tcs$paired$n` Linehan patients with paired pre- and post-treatment biopsies, $D_2$ increased significantly from pre- to post-treatment (paired Wilcoxon `r .pfmt(.tcs$paired$wilcox_p)`; mean $\Delta = `r sprintf("%+.2f", .tcs$paired$mean_delta)`$ SD), indicating that the proCAF program is itself remodelled by therapy.
 
 \subsection{D2 molecular sub-components (exploratory)}
 
@@ -1512,7 +1512,7 @@ cat("\\begin{table}[H]\\centering\n",
 
 \subsection{Orthogonal validation of program identity}
 
-Independently of survival, the $D_1$ program score correlated with GATA6 RNA in situ hybridization in the COMPASS cohort (Spearman $\rho = `r sprintf("%.2f", .tcs$gata6$rho)`$, `r .pfmt(.tcs$gata6$p)`, $n = `r .tcs$gata6$n`$), validating the Classical/GATA6 identity of $D_1$ beyond the signature-level correlations in the main-text factor--signature heatmap.
+Independently of survival, the $D_1$ program score correlated with GATA6 RNA in situ hybridization in the COMPASS cohort (Spearman $\rho = `r sprintf("%.2f", .tcs$gata6$rho)`$, `r .pfmt(.tcs$gata6$p)`, $n = `r .tcs$gata6$n`$), validating the classical/GATA6 identity of $D_1$ beyond the signature-level correlations in the main-text factor--signature heatmap.
 
 \subsection{Robustness to projection convention}
 

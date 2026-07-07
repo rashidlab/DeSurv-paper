@@ -1,5 +1,5 @@
 ---
-title: "SI Appendix"
+title: "Supplementary Information"
 subtitle: "Survival-supervised deconvolution identifies a reproducible tumor--stroma prognostic axis in pancreatic cancer"
 author: Amber M. Young, Alisa Yurovsky, Xianlu Laura Peng, Jen Jen Yeh, Didong Li, Naim U. Rashid
 header-includes:
@@ -800,7 +800,7 @@ is refit at the selected parameters using the consensus-based initialization
 described above, and the BO-chosen $n_{\text{top}}$ (when tuned) is used to
 truncate each program for downstream analysis.
 
-The parameter $n_{\text{top}}$ controls which genes enter the survival linear predictor. After factorization, each sample's score for factor $j$ is computed as $\widetilde{W}_j^\top x$, where $\widetilde{W}_j$ retains only the $n_{\text{top}}$ genes with the largest factor-specificity scores $s_{ij}$ (SI Appendix, Section \ref{sec:gene-program-correlation}); genes outside this set still shape the factorization but do not enter the linear predictor. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. When $\alpha = 0$ (no survival supervision), gene selection and survival outcomes are decoupled, so varying $n_{\text{top}}$ has negligible effect on precision in the null simulation.
+The parameter $n_{\text{top}}$ controls which genes enter the survival linear predictor. After factorization, each sample's score for factor $j$ is computed as $\widetilde{W}_j^\top x$, where $\widetilde{W}_j$ retains only the $n_{\text{top}}$ genes with the largest factor-specificity scores $s_{ij}$ (Supplementary Information, Section \ref{sec:gene-program-correlation}); genes outside this set still shape the factorization but do not enter the linear predictor. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. When $\alpha = 0$ (no survival supervision), gene selection and survival outcomes are decoupled, so varying $n_{\text{top}}$ has negligible effect on precision in the null simulation.
 
 \section{PDAC Datasets}
 
@@ -1383,7 +1383,7 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 \section{Factor-Specific Gene Lists}
 
-Tables \ref{tab:gene-list-270-D1}--\ref{tab:gene-list-270-D3} list the top 270 genes for each of the three DeSurv factors, ranked by the factor specificity score $s_{ij}$ defined in SI Appendix, Section \ref{sec:gene-program-correlation}. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}} = 270$); these are the genes used to compute sample-level factor scores for survival prediction. Factor D1 is enriched for classical tumor and restCAF stromal genes, Factor D2 for proCAF-associated stromal genes, and Factor D3 for basal-like tumor and proliferation-associated genes.
+Tables \ref{tab:gene-list-270-D1}--\ref{tab:gene-list-270-D3} list the top 270 genes for each of the three DeSurv factors, ranked by the factor specificity score $s_{ij}$ defined in Supplementary Information, Section \ref{sec:gene-program-correlation}. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}} = 270$); these are the genes used to compute sample-level factor scores for survival prediction. Factor D1 is enriched for classical tumor and restCAF stromal genes, Factor D2 for proCAF-associated stromal genes, and Factor D3 for basal-like tumor and proliferation-associated genes.
 
 ```{r tab-gene-list-270, echo=FALSE, results='asis'}
 library(knitr)

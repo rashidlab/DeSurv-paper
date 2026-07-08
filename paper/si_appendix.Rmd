@@ -1182,7 +1182,7 @@ if (!exists("set_fig_font", inherits = TRUE)) {
 
 # The DeSurv model shows consistent convergence and stability across restarts
 
-In the PDAC training cohort, the DeSurv objective converged to numerically stable solutions within the designated iteration budget across random multi-start initializations. Supervised fits were computed along a warm-start path over the supervision parameter $\alpha$, with the solution at each $\alpha$ initializing the fit at the next, improving optimization efficiency and stability along the supervision path. Fig. \ref{fig:fig-converge} shows representative loss trajectories demonstrating monotone decreases until convergence across restarts.
+In the PDAC training cohort, the DeSurv objective converged to numerically stable solutions within the designated iteration budget across random multi-start initializations. Fig. \ref{fig:fig-converge} shows representative loss trajectories demonstrating monotone decreases until convergence across restarts.
 
 
 ```{r fig-converge, fig.width = 5, fig.height= 3, fig.cap="Convergence trajectories of the DeSurv objective across five randomly selected multi-start initializations on the PDAC training cohort (TCGA + CPTAC). Each line shows the relative loss (loss at iteration $t$ divided by the initial loss for that restart) as a function of iteration number, restricted to the first 5{,}000 iterations for readability. The total objective decreases monotonically and stabilizes well within the iteration budget across all initializations, confirming convergence of the alternating block-update scheme.", fig.env='figure*', fig.pos='t', out.height= "3in", out.width='5in', fig.align='center'}

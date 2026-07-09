@@ -939,9 +939,9 @@ reconstruction of the expression matrix $X \approx WH$. We therefore measure
 each factor's contribution to reconstruction rather than to ``variance
 explained.'' For a subset of factors $S \subseteq \{1, \ldots, k\}$, define the
 reconstruction value
-$$v(S) = \|X\|_F^2 - \Big\| X - \sum_{j \in S} W_j H_j^\top \Big\|_F^2,$$
+$$v(S) = \|X\|_F^2 - \Big\| X - \sum_{j \in S} W_{\cdot j} H_{j \cdot} \Big\|_F^2,$$
 the reduction in residual error relative to the null (zero-factor) model, where
-$W_j H_j^\top$ is the rank-one outer-product contribution of factor $j$. The
+$W_{\cdot j} H_{j \cdot}$ is the rank-one outer-product contribution of factor $j$ (the outer product of column $j$ of $W$ with row $j$ of $H$). The
 reconstruction Shapley value of factor $j$,
 $$\phi_j = \sum_{S \subseteq \{1,\ldots,k\} \setminus \{j\}}
 \frac{|S|!\,(k - |S| - 1)!}{k!}\,\big(v(S \cup \{j\}) - v(S)\big),$$
@@ -959,10 +959,12 @@ $k = 3$ or $k = 5$).
 The survival contribution of factor $j$ was quantified as the Type III partial
 likelihood increment: the reduction in Cox partial log-likelihood when factor $j$
 is omitted from the full $k$-factor model,
-$$\Delta\ell_j = \ell(\beta_1, \ldots, \beta_k) - \ell(\beta_1, \ldots,
-\beta_{j-1}, \beta_{j+1}, \ldots, \beta_k),$$
-where $\ell(\cdot)$ denotes the Cox partial log-likelihood evaluated at the
-maximum partial likelihood estimates. Larger $\Delta\ell_j$ indicates a greater
+$$\Delta\ell_j = \ell_{\text{full}}(\hat{\beta}_{\text{full}}) - \ell_{-j}(\hat{\beta}_{-j}),$$
+where $\ell_{\text{full}}(\hat{\beta}_{\text{full}})$ is the maximized unpenalized
+Cox partial log-likelihood of the full $k$-factor model and
+$\ell_{-j}(\hat{\beta}_{-j})$ is that of the reduced model refit on the remaining
+$k - 1$ factors after omitting factor $j$, each evaluated at its own maximum
+partial likelihood estimate. Larger $\Delta\ell_j$ indicates a greater
 marginal contribution of factor $j$ to survival prediction given all other
 factors. These two quantities are plotted against each other in
 main text, Fig.\ 2C. In PDAC at $k = 3$, the reconstruction shares are
@@ -1006,22 +1008,22 @@ source("R/reconstruction_helpers.R")
              "DeSurv D1 (classical/restCAF)", "DeSurv D2 (proCAF)", "DeSurv D3 (basal-like)"),
   R2 = sprintf("%.2f", c(.r2_N, .r2_D)),
   Interpretation = c("preserved", "dissolved", "preserved",
-                     sprintf("novel ($\\approx$%.0f\\%% de novo)", 100*(1 - .r2_D[1])), "inherited ($\\approx$N3)", "inherited ($\\approx$N1)"),
+                     "not reconstructable", "inherited ($\\approx$N3)", "inherited ($\\approx$N1)"),
   stringsAsFactors = FALSE)
 colnames(.pr) <- c("Factor", "$R^2$ from other basis", "Interpretation")
 knitr::kable(.pr, format = "latex", escape = FALSE, booktabs = TRUE,
-  caption = sprintf("Cross-method projection $R^2$: how reconstructable each factor's gene-loading vector is from the other method's full basis (OLS $R^2$). DeSurv retains the bulk of the unsupervised structure (NMF N1 and N3 carry over at $R^2 \\ge %.2f$) and reorganizes it: the survival-aligned D1 program is essentially unreconstructable from the NMF basis ($R^2 = %.2f$), i.e. created de novo by supervision, while the exocrine NMF factor N2 dissolves ($R^2 = %.2f$). \\label{tab:projection-r2}", min(.r2_N[1], .r2_N[3]), .r2_D[1], .r2_N[2])) |>
+  caption = sprintf("Cross-method projection $R^2$: how reconstructable each factor's gene-loading vector is from the other method's full basis (OLS $R^2$). DeSurv retains the bulk of the unsupervised structure (NMF N1 and N3 carry over at $R^2 \\ge %.2f$) and reorganizes it: the survival-aligned D1 program is essentially unreconstructable from the NMF basis ($R^2 = %.2f$), i.e. not well reconstructed as a linear combination of the NMF factors, while the exocrine NMF factor N2 is poorly reconstructed from the DeSurv basis ($R^2 = %.2f$). \\label{tab:projection-r2}", min(.r2_N[1], .r2_N[3]), .r2_D[1], .r2_N[2])) |>
   kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
-The headline is DeSurv D1: $R^2 = `r sprintf("%.2f", .r2_D[1])`$ from the NMF basis, i.e. essentially
-unreconstructable from any combination of NMF factors. The prognostic program
-DeSurv creates is therefore novel, not a reweighting of an existing unsupervised
-factor. Conversely, the biologically dominant tumor (N1) and stromal (N3)
-programs carry over intact ($R^2 = `r sprintf("%.2f", .r2_N[1])`$ and $`r sprintf("%.2f", .r2_N[3])`$), so supervision conserves
-nearly all of the unsupervised structure and spends its remaining capacity
-resolving tumor into basal- and classical-aligned programs and shedding the
-prognostically uninformative exocrine factor.
+The headline is DeSurv D1: $R^2 = `r sprintf("%.2f", .r2_D[1])`$ from the NMF basis, indicating that
+its gene-loading vector is not well reconstructed as a linear combination of the
+matched-rank NMF factors. The biologically dominant tumor (N1) and stromal (N3)
+programs, by contrast, are largely reconstructable from the DeSurv basis
+($R^2 = `r sprintf("%.2f", .r2_N[1])`$ and $`r sprintf("%.2f", .r2_N[3])`$), so most of the unsupervised structure is
+retained; the principal reorganization is that the DeSurv basis resolves tumor
+signal into basal- and classical-aligned programs while reconstructing the
+exocrine factor (N2) less well ($R^2 = `r sprintf("%.2f", .r2_N[2])`$).
 
 \subsection{Overall reconstruction \texorpdfstring{$R^2$}{R2}: the price of supervision}
 
@@ -1316,7 +1318,7 @@ kable(cindex_wide, format = "latex", booktabs = TRUE, linesep = "", escape = FAL
   kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
-Standard NMF at elbow-selected $k = 5$ and BO-selected $k = 7$ both substantially improve over NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}), confirming that additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, NMF matches or exceeds DeSurv's per-cohort C-index in most cohorts, demonstrating that unsupervised factorization can approach supervised concordance given enough factors. However, this comes at the cost of a less parsimonious and less interpretable factorization: the $k = 7$ NMF solution shows increased fragmentation (Fig. \ref{fig:fig-nmf-k7-heatmap}). DeSurv's advantage thus combines biological concordance and methodological complementarity: its risk groups identify the same poor-prognosis subtypes as established classifiers (basal-like, proCAF; Fig. \ref{fig:fig-subtype-overlap}), while its linear predictor retains significant prognostic value after adjustment for those classifiers (main-text Table \ref{tab:hr-adjusted}).
+Standard NMF at elbow-selected $k = 5$ and BO-selected $k = 7$ both substantially improve over NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}), confirming that additional unsupervised factors capture prognostically relevant variation missed at the matched rank. This external C-index gain reflects a more fragmented multivariate representation of the existing prognostic signal rather than independent Type III survival content in the added factors (Fig. \ref{fig:varsurvival-k5}): the added factors are individually negligible in the per-factor decomposition even as the higher-rank predictor validates externally. At $k = 7$, NMF matches or exceeds DeSurv's per-cohort C-index in most cohorts, demonstrating that unsupervised factorization can approach supervised concordance given enough factors. However, this comes at the cost of a less parsimonious and less interpretable factorization: the $k = 7$ NMF solution shows increased fragmentation (Fig. \ref{fig:fig-nmf-k7-heatmap}). DeSurv's advantage thus combines biological concordance and methodological complementarity: its risk groups identify the same poor-prognosis subtypes as established classifiers (basal-like, proCAF; Fig. \ref{fig:fig-subtype-overlap}), while its linear predictor retains significant prognostic value after adjustment for those classifiers (main-text Table \ref{tab:hr-adjusted}).
 
 Table \ref{tab:tab-bic-percohort} provides a complementary perspective that isolates the prognostic information carried by each method's factor decomposition from the transfer quality of its trained linear predictor. Whereas main-text Table \ref{tab:hr-adjusted} freezes the training-derived $\beta$ coefficients into a single risk-score covariate, Table \ref{tab:tab-bic-percohort} re-estimates $\beta$ on each validation cohort using the individual factor scores (F1, F2, F3 for DeSurv; F1--F7 for NMF) as separate covariates and reports the Bayesian Information Criterion (BIC) of the resulting Cox proportional hazards fits. BIC uses $k \log n_{\text{events}}$ as the complexity penalty (Volinsky and Raftery, \textit{Biometrics} 52, 203--223, 1996; Kass and Raftery, \textit{JASA} 90, 773--795, 1995). DeSurv's parsimonious 3-factor decomposition is BIC-preferred over NMF's 7-factor decomposition in three of five validation cohorts (Dijk, Moffitt, PACA-AU array), with the remaining two cohorts essentially tied: NMF's four additional factors do not provide sufficient log-likelihood improvement to overcome their complexity penalty. This comparison is descriptive and was not used for model selection or the primary external-validation claims, because the Cox coefficients are re-estimated using validation-cohort outcomes.
 
@@ -1440,7 +1442,7 @@ for (i in seq_along(factor_labels)) {
 }
 ```
 
-\section{Translational analysis in independent bulk treated PDAC cohorts (RASH-ACCEPT and Linehan)}
+\section{Translational analysis in independent bulk treated PDAC cohorts (Rash-Accept and Linehan)}
 \label{si:treated}
 
 ```{r treated-setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -1454,7 +1456,7 @@ load_result("treated_cohort_stats")
 .prev <- function(coh) .tcs$prevalence[.tcs$prevalence$cohort==coh, ]
 ```
 
-The primary analysis evaluated DeSurv in treatment-naive, non-metastatic PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the fixed treatment-naive programs retained interpretable prognostic associations in treated PDAC, and specifically whether they remain prognostic after adjustment, where appropriate, for the established PurIST (tumor-intrinsic) and DeCAF (stromal) molecular classifiers --- the same dual adjustment applied to the treatment-naive validation cohorts in the main paper (Table \ref{tab:hr-adjusted}). We used three bulk-tissue treated cohorts spanning two disease settings: the two metastatic gemcitabine-backbone trials Rash ($n = `r .prev("Rash")$n`$, gemcitabine + erlotinib) and Accept ($n = `r .prev("Accept")$n`$, gemcitabine $\pm$ afatinib) --- together the RASH-ACCEPT series ($n = `r .prev("Rash")$n + .prev("Accept")$n`$, bulk RNA-seq, first-line chemotherapy) --- and Linehan ($n = `r .prev("Linehan")$n`$ borderline-resectable / locally advanced PDAC, bulk biopsy; FOLFIRINOX $\pm$ the CCR2 inhibitor PF-04136309). All are bulk tissue, so PurIST and DeCAF are both computable (unlike microdissected cohorts, where the stromal classifier cannot be applied), although adjusted estimates are interpreted cautiously given limited sample size and confounding. Because the cohorts differ in stage and regimen, they are analysed per cohort rather than pooled (below).
+The primary analysis evaluated DeSurv in treatment-naive, non-metastatic PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As an exploratory translational test we asked whether the fixed treatment-naive programs retained interpretable prognostic associations in treated PDAC, and specifically whether they remain prognostic after adjustment, where appropriate, for the established PurIST (tumor-intrinsic) and DeCAF (stromal) molecular classifiers --- the same dual adjustment applied to the treatment-naive validation cohorts in the main paper (Table \ref{tab:hr-adjusted}). We used three bulk-tissue treated cohorts spanning two disease settings: the two metastatic gemcitabine-backbone trials Rash ($n = `r .prev("Rash")$n`$, gemcitabine + erlotinib) and Accept ($n = `r .prev("Accept")$n`$, gemcitabine $\pm$ afatinib) --- together the Rash-Accept series ($n = `r .prev("Rash")$n + .prev("Accept")$n`$, bulk RNA-seq, first-line chemotherapy) --- and Linehan ($n = `r .prev("Linehan")$n`$ borderline-resectable / locally advanced PDAC, bulk biopsy; FOLFIRINOX $\pm$ the CCR2 inhibitor PF-04136309). All are bulk tissue, so PurIST and DeCAF are both computable (unlike microdissected cohorts, where the stromal classifier cannot be applied), although adjusted estimates are interpreted cautiously given limited sample size and confounding. Because the cohorts differ in stage and regimen, they are analysed per cohort rather than pooled (below).
 
 \subsection{Per-cohort overall survival (no pooling)}
 
@@ -1496,7 +1498,7 @@ Bailey (squamous) & ---                & `r .ax("Rash","Bailey")`  & `r .ax("Acc
 
 \subsection{D2 is associated with progression-free survival and increases after treatment}
 
-In the metastatic RASH-ACCEPT cohort, $D_2$ showed a nominal association with longer progression-free survival (not significant after Benjamini--Hochberg correction) (HR per SD `r {r<-.tcs$pfs[.tcs$pfs$program=="D2",]; sprintf("$%.2f$ ($%.2f$--$%.2f$), %s", r$hr, r$lo, r$hi, .pfmt(r$p))}`); $D_3$ was associated with shorter progression-free survival (significant after Benjamini--Hochberg correction) (`r {r<-.tcs$pfs[.tcs$pfs$program=="D3",]; sprintf("HR $%.2f$ ($%.2f$--$%.2f$), %s", r$hr, r$lo, r$hi, .pfmt(r$p))}`) --- a single-cohort, single-endpoint observation consistent with the aggressive biology of basal-like tumors. In the `r .tcs$paired$n` Linehan patients with paired pre- and post-treatment biopsies, $D_2$ increased significantly from pre- to post-treatment (paired Wilcoxon `r .pfmt(.tcs$paired$wilcox_p)`; mean $\Delta = `r sprintf("%+.2f", .tcs$paired$mean_delta)`$ SD), consistent with treatment-associated remodeling of the proCAF program.
+In the metastatic Rash-Accept cohort, $D_2$ showed a nominal association with longer progression-free survival (not significant after Benjamini--Hochberg correction) (HR per SD `r {r<-.tcs$pfs[.tcs$pfs$program=="D2",]; sprintf("$%.2f$ ($%.2f$--$%.2f$), %s", r$hr, r$lo, r$hi, .pfmt(r$p))}`); $D_3$ was associated with shorter progression-free survival (significant after Benjamini--Hochberg correction) (`r {r<-.tcs$pfs[.tcs$pfs$program=="D3",]; sprintf("HR $%.2f$ ($%.2f$--$%.2f$), %s", r$hr, r$lo, r$hi, .pfmt(r$p))}`) --- a single-cohort, single-endpoint observation consistent with the aggressive biology of basal-like tumors. In the `r .tcs$paired$n` Linehan patients with paired pre- and post-treatment biopsies, $D_2$ increased significantly from pre- to post-treatment (paired Wilcoxon `r .pfmt(.tcs$paired$wilcox_p)`; mean $\Delta = `r sprintf("%+.2f", .tcs$paired$mean_delta)`$ SD), consistent with treatment-associated remodeling of the proCAF program.
 
 \subsection{D2 molecular sub-components (exploratory)}
 

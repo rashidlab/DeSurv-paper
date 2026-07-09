@@ -244,7 +244,7 @@ line search.
             \State \textbf{(Column normalization)}
             \State \hspace{0.5cm} Compute $D = \mathrm{diag}\!\big(\lVert W^{(t+1)}_{(:,1)cand}\rVert_2,\dots,\lVert W^{(t+1)}_{(:,k)cand}\rVert_2\big)$
             \State \hspace{0.5cm} and set $W^{(t+1)}_{cand} \leftarrow W^{(t+1)}_{cand} D^{-1}$, $H^{(t+1)}_{cand} \leftarrow D H^{(t+1)}$, and $\beta^{(t)}_{cand} \leftarrow D \beta^{(t)}$
-            \If{$\mathcal{L}(W^{(t+1)}_{cand},H^{(t+1)}_{cand},\beta^{(t)}_{cand}) \leq \mathcal{L}(W^{(t)},H^{(t+1)},\beta^{(t)})$}
+            \If{$\mathcal{L}(W^{(t+1)}_{cand},H^{(t+1)},\beta^{(t)}) \leq \mathcal{L}(W^{(t)},H^{(t+1)},\beta^{(t)})$}
               \State $W^{(t+1)} = W^{(t+1)}_{cand}$
               \State $H^{(t+1)} = H^{(t+1)}_{cand}$
               \State $\beta^{(t)} = \beta^{(t)}_{cand}$

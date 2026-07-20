@@ -260,9 +260,16 @@ line search.
     \end{algorithmic}
 \end{algorithm}
 
-The column normalization preserves both $WH$ and $W\beta$, and therefore
-leaves the loss $\mathcal{L}$ invariant up to numerical error. Backtracking
-guarantees that the accepted $W$ update does not increase $\mathcal{L}$.
+The column normalization preserves both $WH$ and $W\beta$ exactly, so the
+reconstruction term, the Cox log-partial-likelihood term, and the elastic-net
+$\beta$ penalty are all unchanged (the penalty acts on $\beta\odot\mathrm{sd}(W^\top X)$,
+which is invariant under the rescaling; see Section \ref{subsec:conv_normalization}).
+The Frobenius penalties $\tfrac{\lambda_H}{2nk}\|H\|_F^2$ and
+$\tfrac{\lambda_W}{2pk}\|W\|_F^2$ are not scale-invariant, but $\lambda_H=\lambda_W=0$
+in all reported runs, so in the operating regime the normalization leaves the
+full loss $\mathcal{L}$ invariant up to numerical error. Backtracking then
+guarantees that the accepted update does not increase $\mathcal{L}$, because the
+acceptance test re-evaluates the full loss at the normalized candidate.
 
 \subsection{Update for $\beta$}
 
@@ -318,10 +325,17 @@ $W \leftarrow W D^{-1}$, and adjust $H$ and $\beta$ as
 H \leftarrow D H, \qquad \beta \leftarrow D \beta,
 \]
 where $D$ is the diagonal matrix of column $\ell_2$-norms of $W$.
-This preserves the reconstruction $WH$ and the linear predictor $W\beta$,
-leaving both the NMF and Cox terms in the loss unchanged. Normalization
-prevents degeneracy in the scale-nonidentifiable factorization and keeps
-columns of $W$ comparable in magnitude and interpretable as gene programs.
+This preserves the reconstruction $WH$ and the linear predictor $W\beta$
+exactly, leaving the NMF reconstruction term and the Cox log-partial-likelihood
+term unchanged. The elastic-net penalty is likewise unchanged because it is
+computed on the standardized coefficients $\beta\odot\mathrm{sd}(W^\top X)$: the
+rescaling $\beta\mapsto D\beta$ is exactly cancelled by the corresponding change
+in $\mathrm{sd}(W^\top X)$ under $W\mapsto WD^{-1}$, so the penalty is
+scale-invariant. The Frobenius penalties on $H$ and $W$ are not scale-invariant,
+but carry weights $\lambda_H=\lambda_W=0$ in all reported runs; in this operating
+regime the full loss is invariant under normalization. Normalization prevents
+degeneracy in the scale-nonidentifiable factorization and keeps columns of $W$
+comparable in magnitude and interpretable as gene programs.
 
 
 \subsection{Derivation of W update from projected coordinate descent}
@@ -372,10 +386,10 @@ loss function
 \[
 \mathcal{L}(W,H,\beta).
 \]
-For clarity, we first analyze the algorithm \emph{without} the column
-normalization of $W$ inside the loop, and then argue in
-Section \ref{subsec:conv_normalization} that the normalization step preserves
-stationarity of limit points.
+For clarity, we analyze the algorithm on the normalized set $\mathcal{N}$
+(Assumption 1(iv)), the set the implementation operates on, and show in
+Section \ref{subsec:conv_normalization} that the column-normalization step is a
+loss-neutral gauge fix that preserves stationarity of limit points.
 
 Throughout, let $\theta = (W,H,\beta)$ and denote
 \(\mathcal{L}(\theta) = \mathcal{L}(W,H,\beta)\).
@@ -391,8 +405,13 @@ The feasible set is
 We assume:
 \begin{enumerate}[label=(\roman*)]
   \item The data $X \in \mathbb{R}_{\ge 0}^{p\times n}$, $y \in \mathbb{R}^n_{>0}$, and $\delta \in \{0,1\}^n$ are fixed and bounded.
-  \item The hyperparameters satisfy $\lambda_H > 0$, $\lambda>0$, $\alpha \in [0,1)$, and $\xi \in [0,1]$.
+  \item The hyperparameters satisfy $\lambda_H \ge 0$, $\lambda>0$, $\alpha \in [0,1)$, and $\xi \in [0,1]$, consistent with the objective definition above. The lower bound $\lambda>0$ is used only to force $\beta$ to lie in a bounded set (Lemma 1); all reported runs use $\lambda_H=\lambda_W=0$, which is the regime under which the normalization argument of Section \ref{subsec:conv_normalization} is exact.
   \item The initial iterate $\theta^{(0)} = (W^{(0)},H^{(0)},\beta^{(0)})$ lies in $\Theta$ and satisfies $W^{(0)},H^{(0)} > 0$ elementwise.
+  \item The iterates are constrained to the normalized set
+        \[
+          \mathcal{N} = \{(W,H,\beta)\in\Theta : \lVert W_{(:,j)}\rVert_2 = 1 \text{ for all } j=1,\dots,k\},
+        \]
+        which the column-normalization step of Algorithm \ref{alg:backtrack} enforces after every accepted update. Restricting to $\mathcal{N}$ is a free gauge fix rather than a substantive constraint: the diagonal rescaling $(W,H,\beta)\mapsto(WD^{-1},DH,D\beta)$ with $D=\mathrm{diag}(\lVert W_{(:,1)}\rVert_2,\dots,\lVert W_{(:,k)}\rVert_2)$ leaves the reconstruction $WH$ and the linear predictor $W\beta$ unchanged, so it selects a representative from each scaling-equivalence class without altering the fitted model.
 \end{enumerate}
 
 \textbf{Assumption 2 (Block updates).}
@@ -420,6 +439,13 @@ Algorithm \ref{alg:desurv} satisfy:
         If no candidate satisfies the Armijo-type condition within the allowed
         number of backtracking steps, the algorithm sets
         $W^{(t+1)} := W^{(t)}$.
+        \emph{Note.} The implementation fuses column normalization into this test:
+        it evaluates the loss at the normalized candidate
+        $(W^{(t+1)}_{cand}D^{-1}, DH^{(t+1)}, D\beta^{(t)})$ and accepts on the
+        same inequality. Because normalization leaves the full loss unchanged in
+        the operating regime $\lambda_H=\lambda_W=0$ (Section \ref{subsec:conv_normalization}),
+        this fused test is equivalent to the $W$-only inequality stated above, and
+        the accepted iterate lies in $\mathcal{N}$.
   \item \emph{$\beta$-update.} For fixed $(W^{(t+1)},H^{(t+1)})$, the update
         $\beta^{(t)} \mapsto \beta^{(t+1)}$ is obtained by running the
         coordinate descent method of Simon et al. (2011) on the convex elastic-net Cox
@@ -440,10 +466,10 @@ Algorithm \ref{alg:desurv} satisfy:
 \vspace{0.5em}
 \textbf{Lemma 1 (Continuity and bounded level sets).}
 Under Assumption 1, $\mathcal{L}:\Theta\to\mathbb{R}$ is continuous, and the
-initial sublevel set
+initial sublevel set restricted to the normalized set,
 \[
-  \mathcal{S}_0 := \{\theta \in \Theta:
-    \mathcal{L}(\theta) \le \mathcal{L}(\theta^{(0)})\}
+  \mathcal{S}_0 := \{\theta \in \Theta\cap\mathcal{N}:
+    \mathcal{L}(\theta) \le \mathcal{L}(\theta^{(0)})\},
 \]
 is nonempty, closed, and bounded.
 
@@ -456,22 +482,43 @@ continuously differentiable in $(W,\beta)$. The $\ell_2$ penalty on $\beta$ is
 smooth, and the $\ell_1$ penalty is convex and lower semicontinuous. Therefore
 $\mathcal{L}$ is continuous on $\Theta$.
 
-The constraints $W,H\ge 0$ define closed convex cones, and
-$\beta\in\mathbb{R}^k$ is unconstrained. Because $\lambda_H>0$ and $\lambda>0$,
-the terms $\tfrac{\lambda_H}{nk}\|H\|_F^2$ and
-$\lambda\tfrac{1-\xi}{2}\|\beta\|_2^2$ dominate the objective as
-$\|H\|_F\to\infty$ or $\|\beta\|_2\to\infty$, respectively. Thus the sublevel
-set $\mathcal{S}_0$ is bounded in $(H,\beta)$. Since $W\ge 0$ and $X$ is
-fixed, the reconstruction term and Cox term being bounded prevent $W$ from
-diverging while $\mathcal{L}$ remains below $\mathcal{L}(\theta^{(0)})$, so
-$W$ is bounded on $\mathcal{S}_0$. Because $\Theta$ is closed and
-$\mathcal{L}$ is continuous, $\mathcal{S}_0$ is closed. Nonemptiness follows
-from $\theta^{(0)}\in\mathcal{S}_0$. \hfill$\square$
+We establish boundedness on $\mathcal{S}_0$ blockwise, using the normalization
+constraint to control $W$ (rather than the reconstruction term, which alone
+cannot bound $W$: the loss is invariant under the rescaling
+$(W,H,\beta)\mapsto(WD^{-1},DH,D\beta)$, so a bounded reconstruction and Cox
+term are compatible with $\|W\|_F\to\infty$).
+
+\emph{$W$ is bounded.} On $\mathcal{N}$ every column of $W$ has unit
+$\ell_2$ norm, so $\|W\|_F=\sqrt{k}$ exactly and $W$ ranges over the compact
+set $\{W\ge 0 : \lVert W_{(:,j)}\rVert_2=1\ \forall j\}$. This fixes the gauge and
+removes the scaling degeneracy.
+
+\emph{$H$ is bounded.} With $W$ confined to this compact unit-norm set and $X$
+fixed, the reconstruction term $\tfrac{1}{2\|X\|_F^2}\|X-WH\|_F^2$ is coercive
+in $H$ on $\{H\ge 0\}$: because each column of $W$ is a unit vector and $W\ge0$,
+$\|WH\|_F$ grows without bound as $\|H\|_F\to\infty$ (the columns of $W$ are
+nonzero, so $WH=0$ forces $H=0$), and hence so does the reconstruction error.
+Therefore the sublevel condition $\mathcal{L}(\theta)\le\mathcal{L}(\theta^{(0)})$
+confines $H$ to a bounded set. (When $\lambda_H>0$ the penalty
+$\tfrac{\lambda_H}{2nk}\|H\|_F^2$ gives an alternative, direct coercivity in $H$;
+neither route requires $\lambda_H>0$.)
+
+\emph{$\beta$ is bounded.} Because $\lambda>0$, the elastic-net penalty
+$\lambda\big(\xi\|\beta\|_1+\tfrac{1-\xi}{2}\|\beta\|_2^2\big)$ dominates the
+objective as $\|\beta\|_2\to\infty$ (the negative Cox log-partial likelihood is
+bounded below on the fixed compact set of linear predictors induced by bounded
+$(W,\beta\text{-direction})$), so $\beta$ is confined to a bounded set on
+$\mathcal{S}_0$.
+
+Thus $\mathcal{S}_0$ is bounded in $(W,H,\beta)$. Because $\Theta\cap\mathcal{N}$
+is closed and $\mathcal{L}$ is continuous, $\mathcal{S}_0$ is closed.
+Nonemptiness follows from $\theta^{(0)}\in\mathcal{S}_0$ (the initial iterate is
+normalized). \hfill$\square$
 
 \vspace{0.5em}
 \textbf{Lemma 2 (Monotone descent and existence of limit points).}
-Under Assumptions 1 and 2, Algorithm \ref{alg:desurv} (without $W$
-normalization) generates a sequence $\{\theta^{(t)}\}_{t\ge 0}\subset\mathcal{S}_0$
+Under Assumptions 1 and 2, Algorithm \ref{alg:desurv} generates a sequence
+$\{\theta^{(t)}\}_{t\ge 0}\subset\mathcal{S}_0\subseteq\Theta\cap\mathcal{N}$
 such that
 \[
   \mathcal{L}(\theta^{(t+1)}) \le \mathcal{L}(\theta^{(t)})\quad \forall\,t,
@@ -574,7 +621,7 @@ $\beta$-block given $(W^*,H^*)$ and hence satisfies its KKT conditions.
 \vspace{0.5em}
 \textbf{Theorem 1 (Convergence to a stationary point).}
 Under Assumptions 1 and 2, the sequence $\{\theta^{(t)}\}$ produced by
-Algorithm \ref{alg:desurv} (without $W$ normalization) satisfies:
+Algorithm \ref{alg:desurv} satisfies:
 \begin{enumerate}[label=(\alph*)]
   \item The objective values $\{\mathcal{L}(\theta^{(t)})\}$ are monotonically
         nonincreasing and converge to a finite limit $\mathcal{L}^*$.
@@ -620,37 +667,51 @@ Hence every limit point of Algorithm \ref{alg:desurv} is stationary.
 \subsection{Effect of column normalization of $W$}
 \label{subsec:conv_normalization}
 
-The above analysis omits the column-normalization step for $W$ used in
-Algorithm \ref{alg:backtrack}. We briefly argue that this normalization does
-not affect stationarity of limit points.
+The convergence argument above is stated on the normalized set $\mathcal{N}$
+(Assumption 1(iv)), which is the set the implemented algorithm operates on: the
+accepted $W$ update in Algorithm \ref{alg:backtrack} emits a column-normalized
+triple. Here we make precise why the normalization is a free gauge fix rather
+than a modification of the optimization problem, so that Theorem 1 applies to
+the implemented (normalized) algorithm.
 
-Let $D$ be a diagonal matrix with strictly positive diagonal entries. The
-transformation
+Let $D=\mathrm{diag}(d_1,\dots,d_k)$ have strictly positive diagonal entries.
+The transformation
 \[
   (W,H,\beta) \mapsto (W',H',\beta') = (W D^{-1},\, D H,\, D\beta)
 \]
-preserves both the product $WH$ and the linear predictor $W\beta$, and hence
-leaves $\mathcal{L}$ invariant. The column-normalization step is exactly such a
-transformation, with $D$ chosen from the column norms of $W$.
+preserves the product $WH$ and the linear predictor $W\beta$ \emph{exactly}.
+Consequently the NMF reconstruction term $\tfrac{1}{2\|X\|_F^2}\|X-WH\|_F^2$ and
+the Cox log-partial-likelihood term (a function of $\eta = X^\top W\beta$) are
+both invariant, as are their gradients. The elastic-net penalty is invariant as
+well, because it is evaluated on the standardized coefficients
+$\beta\odot\mathrm{sd}(W^\top X)$: under the transformation, $\beta\mapsto D\beta$
+while $\mathrm{sd}(W^\top X)\mapsto D^{-1}\mathrm{sd}(W^\top X)$ columnwise, and
+the two cancel. The only non-invariant terms are the Frobenius penalties
+$\tfrac{\lambda_H}{2nk}\|H\|_F^2$ and $\tfrac{\lambda_W}{2pk}\|W\|_F^2$; with
+$\lambda_H=\lambda_W=0$ (the operating regime of all reported runs, Assumption 1(ii)),
+the transformation leaves the full loss $\mathcal{L}$ invariant. We therefore do
+\emph{not} claim unconditional invariance of $\mathcal{L}$: the invariance is of
+the reconstruction, Cox, and standardized-penalty terms in general, and of the
+entire loss in the operating regime $\lambda_H=\lambda_W=0$.
 
-Let $\{\theta^{(t)}\}$ be the sequence generated by the algorithm without
-normalization, and let $\{\tilde{\theta}^{(t)}\}$ be the sequence with
-normalization. For each $t$ there exists a diagonal $D^{(t)}$ with strictly
-positive entries such that
-\[
-  \tilde{\theta}^{(t)} =
-  (W^{(t)} D^{(t),-1},\, D^{(t)} H^{(t)},\, D^{(t)}\beta^{(t)}),
-\]
-and $\mathcal{L}(\tilde{\theta}^{(t)}) = \mathcal{L}(\theta^{(t)})$.
-Thus limit points of $\{\tilde{\theta}^{(t)}\}$ are obtained from limit points
-of $\{\theta^{(t)}\}$ by such invertible diagonal scalings.
+The column-normalization step is exactly such a transformation, with $D$ the
+diagonal of column $\ell_2$-norms of the candidate $W$. Hence, within the
+operating regime, the loss value evaluated at the normalized candidate equals the
+loss value at the un-normalized candidate. This is why the implementation's
+acceptance test---which re-evaluates the full loss at the normalized triple
+$(W_{cand}D^{-1}, DH, D\beta)$ and accepts iff it does not exceed the previous
+loss---is equivalent to the block-descent inequality of Assumption 2(ii): the
+normalization contributes no change in loss, so acceptance is governed entirely
+by the $W$ candidate.
 
-Since the KKT conditions are expressed in terms of the gradients with respect
-to $WH$ and $W\beta$, and these quantities are invariant under the above
-scaling, stationarity is preserved under the transformation. Therefore
-Theorem 1 implies that every limit point of the \emph{normalized} algorithm is
-also a stationary point of $\mathcal{L}$ (up to this scaling equivalence), which
-establishes convergence of the implementation used in practice.
+Because the reconstruction, Cox, and standardized-penalty gradients that define
+the KKT conditions depend on $(W,H,\beta)$ only through $WH$ and $W\beta$, and
+these are invariant under the diagonal scaling, blockwise stationarity of a limit
+point is preserved under normalization. Therefore Theorem 1---proved on
+$\mathcal{N}$---applies directly to the sequence produced by the implemented
+algorithm: every limit point of the normalized algorithm is a stationary point
+of $\mathcal{L}$, which establishes convergence of the implementation used in
+practice.
 
 \subsection{Remark (Coxnet implementation)}
 Our implementation updates the $\beta$ block using a Coxnet-style coordinate descent that relies on an approximate Hessian. Consequently, the formal optimality proof is established for an idealized version of the $\beta$ update that assumes exact second-order information. Nonetheless, in empirical applications the approximate update is numerically stable and yields a monotone decrease in the objective, consistent with the behavior predicted by the idealized analysis.

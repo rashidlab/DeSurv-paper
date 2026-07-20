@@ -1115,6 +1115,22 @@ discrimination (C $= `r sprintf("%.2f", .brp["cindex"])`$) and with DeSurv's
 contribution being source-attributable decomposition rather than higher predictive
 accuracy.
 
+\subsection*{Proportional-hazards diagnostic}
+
+```{r si-ph-diagnostic, echo=FALSE, message=FALSE, warning=FALSE}
+.phdf <- do.call(rbind, lapply(val_latent_desurv_tcgacptac, function(x)
+  data.frame(risk_score = x$risk_score, time = x$survival$time,
+             event = x$survival$event, dataset = x$dataset)))
+.phdf$risk_z <- .phdf$risk_score / sd(.phdf$risk_score)
+.phz <- survival::cox.zph(
+  survival::coxph(survival::Surv(time, event) ~ risk_z + strata(dataset), data = .phdf))
+.ph_chisq <- .phz$table["GLOBAL", "chisq"]
+.ph_df    <- .phz$table["GLOBAL", "df"]
+.ph_p     <- .phz$table["GLOBAL", "p"]
+```
+
+Because the pooled hazard ratio assumes proportional hazards, we tested the scaled Schoenfeld residuals of the stratified validation model ($\mathrm{Surv}(t,\delta) \sim \text{risk\_z} + \mathrm{strata}(\text{dataset})$) with \texttt{survival::cox.zph}. The proportional-hazards assumption was not supported for the standardized DeSurv linear predictor ($\chi^2 = `r sprintf("%.1f", .ph_chisq)`$, $\mathrm{df} = `r .ph_df`$, $P = `r sprintf("%.1e", .ph_p)`$), with the score's effect attenuating over follow-up rather than reversing. The reported pooled hazard ratio should therefore be read as a time-averaged summary of a consistently prognostic score rather than a constant multiplicative effect; this time-varying behavior is precisely why we additionally report the horizon-integrated, proportional-hazards-free proper-scoring (IBS/IPA) sensitivity above.
+
 \subsection*{Independence of discovery and validation}
 
 To make the separation between discovery, adjustment, and validation unambiguous: DeSurv

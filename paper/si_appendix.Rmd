@@ -540,8 +540,8 @@ $\lambda>0$, so the $\beta$-penalty enters the loss with strictly positive
 coefficient $\alpha\lambda$: the term
 $\alpha\lambda\big(\xi\|\beta\odot s\|_1+\tfrac{1-\xi}{2}\|\beta\odot s\|_2^2\big)$
 dominates the objective as $\|\beta\|_2\to\infty$. Here $s=\mathrm{sd}(W^\top X)$
-has strictly positive entries on $\mathcal{N}$ (each column of $W$ is a nonzero
-unit vector and $X$ is fixed with nondegenerate columnwise variation), so
+has strictly positive entries on $\mathcal{N}$ by the non-degeneracy condition of
+Assumption 1(i), so
 $\|\beta\odot s\|_2\to\infty$ whenever $\|\beta\|_2\to\infty$; and the negative
 Cox log-partial likelihood is bounded below on the fixed compact set of linear
 predictors induced by bounded $(W,\beta\text{-direction})$. Hence the sublevel
@@ -690,8 +690,8 @@ The DeSurv loss can be written as
                      + I_{\{W\ge 0\}}(W) + I_{\{H\ge 0\}}(H),
 \]
 where $f$ is continuously differentiable, $g(\beta)=\alpha\lambda\xi\|\beta\odot s\|_1$
-(a weighted $\ell_1$ term, separable and convex in $\beta$ since $s>0$ is fixed given
-$W$) is the nonsmooth penalty, and $I_C$ denotes the
+(a weighted $\ell_1$ term with fixed positive weights $s$ by Assumption 1(i), hence
+separable and convex in $\beta$) is the nonsmooth penalty, and $I_C$ denotes the
 indicator of a closed convex set $C$. This is the smooth+nonsmooth composite
 form considered in block coordinate descent analyses such as [@tseng2001convergence].
 In this setting, any point that is optimal with respect to each block

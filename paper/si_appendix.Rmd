@@ -62,15 +62,26 @@ Let $y \in \mathbb{R}^n_{> 0}$ be the observed survival times,
 $\delta \in \{0,1\}^n$ the event indicators, and
 $Z = W^\top X \in \mathbb{R}^{k \times n}$ the sample-wise factor scores. We write $Z_i$ for the $i$th column of $Z$, and
 $n_{\text{event}} = \sum_{i=1}^n \delta_i$. We further write
-$s = s(W) = \mathrm{sd}(W^\top X) \in \mathbb{R}^k_{>0}$ for the vector of
+$s \in \mathbb{R}^k_{>0}$ for the vector of
 per-factor score standard deviations (the sample standard deviation of each row
 of $Z$); the elastic-net penalty on the Cox coefficients is applied to the
 standardized coefficients $\beta\odot s$, matching the coefficient
 standardization used by the \texttt{glmnet}/Coxnet routine that performs the
-$\beta$ update (below). For convenience we recall the
+$\beta$ update (below). We treat $s$ as an \emph{auxiliary standardization
+block}: a weight vector held fixed while the $W$, $H$, and $\beta$ blocks are
+updated, and refreshed only by the column-normalization step, which sets
+$s \leftarrow \mathrm{sd}(W^\top X)$ at the current normalized $W$. This is the
+role $s$ plays in the implementation, where the penalty weight vector \texttt{sdZ}
+is passed as a fixed argument to the $W$, $H$, and $\beta$ updates and recomputed
+only inside the normalization step (Section \ref{subsec:conv_normalization}).
+Writing the loss with $s$ as an explicit argument, $\mathcal{L}(W,H,\beta,s)$,
+the block updates differentiate $\mathcal{L}$ at fixed $s$, and the
+self-consistent standardization $s=\mathrm{sd}(W^\top X)$ is restored by the
+normalization gauge step rather than propagated through the $W$ gradient. For
+convenience we recall the
 DeSurv loss from Equation 1 in the main text and rewrite it as
 \begin{align}
-  \mathcal{L}(W,H,\beta) &=\nonumber \\
+  \mathcal{L}(W,H,\beta,s) &=\nonumber \\
   &(1-\alpha)\left(\frac{1}{2\lVert X \rVert_F^2}\lVert X - WH \rVert_F^2 + \frac{\lambda_H}{2nk} \lVert H \rVert_F^2\right) \nonumber \\
   -&\alpha \left(\frac{2}{n_{event}}\ell(W,\beta) - \lambda \{ \xi \lVert \beta\odot s \rVert_1 + \tfrac{1-\xi}{2} \lVert \beta\odot s \rVert_2^2 \} \right) \nonumber
 \end{align}
@@ -352,9 +363,9 @@ The W update can be derived directly from the projected coordinate descent updat
 
 Recall that the overall loss function is
 \begin{align*}
-    \mathcal{L}(W,H,\beta) = \frac{(1-\alpha)}{2\|X\|_F^2} ||X - WH||^2_F - \alpha\left(\frac{2}{n_{event}} \ell(W,\beta) - \lambda\left(\xi\|\beta\odot s\|_1 + \frac{(1-\xi)}{2}\|\beta\odot s\|_2^2\right)\right).
+    \mathcal{L}(W,H,\beta,s) = \frac{(1-\alpha)}{2\|X\|_F^2} ||X - WH||^2_F - \alpha\left(\frac{2}{n_{event}} \ell(W,\beta) - \lambda\left(\xi\|\beta\odot s\|_1 + \frac{(1-\xi)}{2}\|\beta\odot s\|_2^2\right)\right).
 \end{align*}
-where $\ell(W,\beta)$ is the log-partial likelihood for the Cox model. Let $\nabla_W \ell$ represent the derivative of $\ell(W,\beta)$ with respect to $W$. Then the derivative of the overall loss with respect to $W$ is
+where $\ell(W,\beta)$ is the log-partial likelihood for the Cox model. Throughout the $W$ update the standardization vector $s$ is held fixed at its current value (it is an auxiliary block, refreshed only by the subsequent normalization step; Section \ref{subsec:conv_normalization}), so the penalty term $\lambda(\xi\|\beta\odot s\|_1+\tfrac{1-\xi}{2}\|\beta\odot s\|_2^2)$ does not depend on $W$ and contributes no gradient in $W$; in particular no $\partial s/\partial W$ term arises. Let $\nabla_W \ell$ represent the derivative of $\ell(W,\beta)$ with respect to $W$. Then the derivative of the overall loss with respect to $W$ at fixed $s$ is
 
 \begin{equation*}
   \frac{\partial L}{\partial W} = \frac{(1-\alpha)}{\lVert X \rVert_F^2}\left( WHH^T - XH^T \right) - \frac{2\alpha}{n_{event}} \nabla_W \ell.
@@ -413,7 +424,7 @@ The feasible set is
 \textbf{Assumption 1 (Regularity and parameter space).}
 We assume:
 \begin{enumerate}[label=(\roman*)]
-  \item The data $X \in \mathbb{R}_{\ge 0}^{p\times n}$, $y \in \mathbb{R}^n_{>0}$, and $\delta \in \{0,1\}^n$ are fixed and bounded.
+  \item The data $X \in \mathbb{R}_{\ge 0}^{p\times n}$, $y \in \mathbb{R}^n_{>0}$, and $\delta \in \{0,1\}^n$ are fixed and bounded, and $X$ has nondegenerate per-factor score variation on $\mathcal{N}$: for every $W$ with nonzero columns the row-wise score standard deviations are strictly positive, $s=\mathrm{sd}(W^\top X)>0$ componentwise. (A sufficient data condition is that no two columns of $X$ are identical and $\mathrm{rank}(X)\ge 2$, so that $W^\top X$ cannot be constant across subjects for any nonzero $W$.) This guarantees the standardization $s$ used in the elastic-net penalty is well defined and strictly positive, so $\beta\odot s$ has the same support and coercivity as $\beta$.
   \item The hyperparameters satisfy $\lambda_H \ge 0$, $\lambda>0$, $\alpha \in (0,1)$, and $\xi \in [0,1]$, consistent with the objective definition above. We restrict to the supervised regime $\alpha>0$ because $\beta$ enters the joint loss only through the block $\alpha\big(\tfrac{2}{n_{\text{event}}}\ell(W,\beta)-\lambda\{\xi\|\beta\odot s\|_1+\tfrac{1-\xi}{2}\|\beta\odot s\|_2^2\}\big)$, whose $\beta$-penalty coefficient is $\alpha\lambda$; the lower bound $\lambda>0$ together with $\alpha>0$ is used to force $\beta$ to lie in a bounded set (Lemma 1). All reported runs use $\lambda_H=\lambda_W=0$, which is the regime under which the normalization argument of Section \ref{subsec:conv_normalization} is exact.
 
   \emph{Remark ($\alpha=0$).} At $\alpha=0$ the survival block drops out entirely and the objective reduces to standard (unsupervised) NMF in $(W,H)$, whose convergence to a stationary point is classical (Lee and Seung 2001; Lin 2007). In this case $\beta$ is not part of the joint objective and is instead fit post hoc by a single elastic-net Cox solve on the frozen final $W$; the joint-convergence result of this section therefore concerns the supervised regime $\alpha\in(0,1)$, and the $\alpha=0$ case is covered by the classical unsupervised-NMF theory.
@@ -427,7 +438,11 @@ We assume:
 
 \textbf{Assumption 2 (Block updates).}
 At each outer iteration $t$, the three block updates in
-Algorithm \ref{alg:desurv} satisfy:
+Algorithm \ref{alg:desurv} act on $(W,H,\beta)$ with the standardization vector
+$s$ held fixed at its current value $s^{(t)}$ throughout; $s$ is refreshed only by
+the column-normalization step (Section \ref{subsec:conv_normalization}), which
+maps $(W,H,\beta,s)\mapsto(WD^{-1},DH,D\beta,D^{-1}s)$ and is loss-neutral in the
+operating regime. With $s$ fixed, the three block updates satisfy:
 \begin{enumerate}[label=(\roman*)]
   \item \emph{$H$-update.} For fixed $(W^{(t)},\beta^{(t)})$, the update
         $H^{(t)} \mapsto H^{(t+1)}$ is given by the multiplicative rule
@@ -651,11 +666,17 @@ Algorithm \ref{alg:desurv} satisfies:
   \item The objective values $\{\mathcal{L}(\theta^{(t)})\}$ are monotonically
         nonincreasing and converge to a finite limit $\mathcal{L}^*$.
   \item Every limit point $\theta^* = (W^*,H^*,\beta^*)$ of $\{\theta^{(t)}\}$
-        is a stationary point of $\mathcal{L}$ on $\Theta$, i.e. it satisfies
-        the first-order KKT conditions for
+        is a stationary point of the fixed-standardization loss
+        $\mathcal{L}(\cdot,\cdot,\cdot,s^*)$ on $\Theta$ at the self-consistent
+        value $s^*=\mathrm{sd}(W^{*\top}X)$, i.e. it satisfies the first-order KKT
+        conditions for
         \[
-          \min_{\theta\in\Theta} \mathcal{L}(\theta).
+          \min_{\theta\in\Theta} \mathcal{L}(\theta,s^*),
         \]
+        with $s^*$ the standardization returned by the normalization step at
+        $W^*$. This is the stationarity notion realized by the implementation,
+        which holds $s$ fixed within every block update and refreshes it only via
+        the loss-neutral normalization step.
 \end{enumerate}
 
 \emph{Proof.}
@@ -701,17 +722,26 @@ than a modification of the optimization problem, so that Theorem 1 applies to
 the implemented (normalized) algorithm.
 
 Let $D=\mathrm{diag}(d_1,\dots,d_k)$ have strictly positive diagonal entries.
-The transformation
+Because $s$ is an auxiliary block, the normalization step acts jointly on all
+four variables as the gauge transformation
 \[
-  (W,H,\beta) \mapsto (W',H',\beta') = (W D^{-1},\, D H,\, D\beta)
+  (W,H,\beta,s) \mapsto (W',H',\beta',s') = (W D^{-1},\, D H,\, D\beta,\, D^{-1}s),
 \]
+where the $s$-component is not an independent choice but the value obtained by
+recomputing the standardization at the normalized $W'$: since
+$W'^{\top}X = D^{-1}W^\top X$, we have
+$\mathrm{sd}(W'^{\top}X)=D^{-1}\mathrm{sd}(W^\top X)=D^{-1}s=s'$. Thus refreshing
+$s$ from the normalized $W'$ is exactly the gauge action $s\mapsto D^{-1}s$, which
+is what the implementation computes (\texttt{sdZn = stddev}$(X^\top W_n)$ on the
+normalized $W_n$).
+The transformation
 preserves the product $WH$ and the linear predictor $W\beta$ \emph{exactly}.
 Consequently the NMF reconstruction term $\tfrac{1}{2\|X\|_F^2}\|X-WH\|_F^2$ and
 the Cox log-partial-likelihood term (a function of $\eta = X^\top W\beta$) are
 both invariant, as are their gradients. The elastic-net penalty is invariant as
 well, because it is evaluated on the standardized coefficients
-$\beta\odot s$ with $s=\mathrm{sd}(W^\top X)$: under the transformation, $\beta\mapsto D\beta$
-while $s = \mathrm{sd}(W^\top X)\mapsto D^{-1}s$ columnwise (since $W^\top X\mapsto D^{-1}W^\top X$), and
+$\beta\odot s$: under the joint transformation $\beta\mapsto D\beta$
+while $s\mapsto D^{-1}s$, and
 the two cancel, $(D\beta)\odot(D^{-1}s)=\beta\odot s$. The only non-invariant terms are the Frobenius penalties
 $\tfrac{\lambda_H}{2nk}\|H\|_F^2$ and $\tfrac{\lambda_W}{2pk}\|W\|_F^2$; with
 $\lambda_H=\lambda_W=0$ (the operating regime of all reported runs, Assumption 1(ii)),
@@ -738,6 +768,21 @@ $\mathcal{N}$---applies directly to the sequence produced by the implemented
 algorithm: every limit point of the normalized algorithm is a stationary point
 of $\mathcal{L}$, which establishes convergence of the implementation used in
 practice.
+
+Two consequences of the auxiliary-block treatment of $s$ should be stated
+explicitly. First, \emph{monotone descent is unaffected}: the $W$, $H$, and
+$\beta$ block updates decrease $\mathcal{L}(\cdot,\cdot,\cdot,s)$ at fixed $s$
+(Assumption 2), and the normalization-plus-$s$-refresh step is loss-neutral in
+the operating regime, so $\mathcal{L}$ is nonincreasing across each full outer
+iteration and the descent argument of Lemma 2 goes through verbatim. Second, the
+stationarity claim is understood at the \emph{self-consistent standardization}:
+a limit point $(W^*,H^*,\beta^*)$ is stationary for the fixed-$s$ loss
+$\mathcal{L}(\cdot,\cdot,\cdot,s^*)$ evaluated at $s^*=\mathrm{sd}(W^{*\top}X)$,
+the value the normalization step returns at $W^*$. Equivalently, $(W^*,H^*,\beta^*,s^*)$
+is a joint fixed point of the block updates and the standardization refresh. This
+is exactly the stationarity concept the implementation targets, since the code
+never differentiates the penalty through $s$; we do not claim stationarity of a
+loss in which $s$ is treated as a differentiable function of $W$.
 
 \subsection{Remark (Coxnet implementation)}
 Our implementation updates the $\beta$ block using a Coxnet-style coordinate descent that relies on an approximate Hessian. Consequently, the formal optimality proof is established for an idealized version of the $\beta$ update that assumes exact second-order information. Nonetheless, in empirical applications the approximate update is numerically stable and yields a monotone decrease in the objective, consistent with the behavior predicted by the idealized analysis.

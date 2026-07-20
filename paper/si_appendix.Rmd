@@ -854,24 +854,24 @@ dataset-specific exclusions). Patient-level metadata: OS = overall survival
 (Rashid et al. 2020); DeCAF = CAF subtype classification
 (Peng et al. 2026). Expression data and molecular classifications
 for the validation cohorts were originally compiled for the DeCAF study
-(Peng et al. 2026).}
+(Peng et al. 2026). Events denotes the number of overall-survival events (deaths) with the corresponding event rate; outcome frequency was lower and more homogeneous in the training cohorts (50--52\%) than across the validation cohorts (60--90\%, pooled 67\%), a case-mix difference relevant to the interpretation of external-validation performance.}
 \label{tab:cohorts}
 \footnotesize
-\begin{tabular}{llrllll}
+\begin{tabular}{llrrllll}
 \toprule
-Cohort & Platform & $N$ & Role & Accession & Metadata & Reference \\
+Cohort & Platform & $N$ & Events & Role & Accession & Metadata & Reference \\
 \midrule
-TCGA-PAAD        & RNA-seq    & 144 & Training   & GDC (TCGA-PAAD) & OS, PurIST, DeCAF & Raphael et al. (2017) \\
-CPTAC            & RNA-seq    & 129 & Training   & GDC (CPTAC-3)    & OS, PurIST, DeCAF & Cao et al. (2021) \\
+TCGA-PAAD        & RNA-seq    & 144 & 75 (52\%)  & Training   & GDC (TCGA-PAAD) & OS, PurIST, DeCAF & Raphael et al. (2017) \\
+CPTAC            & RNA-seq    & 129 & 64 (50\%)  & Training   & GDC (CPTAC-3)    & OS, PurIST, DeCAF & Cao et al. (2021) \\
 \addlinespace
-Dijk             & RNA-seq    &  90 & Validation & E-MTAB-6830      & OS, PurIST, DeCAF & Dijk et al. (2020) \\
-Moffitt          & Microarray & 123 & Validation & GSE71729         & OS, PurIST, DeCAF & Moffitt et al. (2015) \\
-PACA-AU (array)  & Microarray &  63 & Validation & GSE36924         & OS, PurIST, DeCAF & Bailey et al. (2016) \\
-PACA-AU (RNA-seq) & RNA-seq   &  52 & Validation & EGAS00001000154  & OS, PurIST, DeCAF & Bailey et al. (2016) \\
-Puleo            & Microarray & 288 & Validation & E-MTAB-6134      & OS, PurIST, DeCAF & Puleo et al. (2018) \\
+Dijk             & RNA-seq    &  90 & 81 (90\%)  & Validation & E-MTAB-6830      & OS, PurIST, DeCAF & Dijk et al. (2020) \\
+Moffitt          & Microarray & 123 & 83 (68\%)  & Validation & GSE71729         & OS, PurIST, DeCAF & Moffitt et al. (2015) \\
+PACA-AU (array)  & Microarray &  63 & 38 (60\%)  & Validation & GSE36924         & OS, PurIST, DeCAF & Bailey et al. (2016) \\
+PACA-AU (RNA-seq) & RNA-seq   &  52 & 31 (60\%)  & Validation & EGAS00001000154  & OS, PurIST, DeCAF & Bailey et al. (2016) \\
+Puleo            & Microarray & 288 & 181 (63\%) & Validation & E-MTAB-6134      & OS, PurIST, DeCAF & Puleo et al. (2018) \\
 \addlinespace
-\multicolumn{2}{l}{Training total} & 273 & & & & \\
-\multicolumn{2}{l}{Validation total} & 616 & & & & \\
+\multicolumn{2}{l}{Training total} & 273 & 139 (51\%) & & & & \\
+\multicolumn{2}{l}{Validation total} & 616 & 414 (67\%) & & & & \\
 \bottomrule
 \end{tabular}
 \end{table}

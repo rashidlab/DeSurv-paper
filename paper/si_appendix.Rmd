@@ -61,12 +61,18 @@ $W$ to survival via an elastic-net–penalized Cox model. Supervision is placed 
 Let $y \in \mathbb{R}^n_{> 0}$ be the observed survival times,
 $\delta \in \{0,1\}^n$ the event indicators, and
 $Z = W^\top X \in \mathbb{R}^{k \times n}$ the sample-wise factor scores. We write $Z_i$ for the $i$th column of $Z$, and
-$n_{\text{event}} = \sum_{i=1}^n \delta_i$. For convenience we recall the
+$n_{\text{event}} = \sum_{i=1}^n \delta_i$. We further write
+$s = s(W) = \mathrm{sd}(W^\top X) \in \mathbb{R}^k_{>0}$ for the vector of
+per-factor score standard deviations (the sample standard deviation of each row
+of $Z$); the elastic-net penalty on the Cox coefficients is applied to the
+standardized coefficients $\beta\odot s$, matching the coefficient
+standardization used by the \texttt{glmnet}/Coxnet routine that performs the
+$\beta$ update (below). For convenience we recall the
 DeSurv loss from Equation 1 in the main text and rewrite it as
 \begin{align}
   \mathcal{L}(W,H,\beta) &=\nonumber \\
   &(1-\alpha)\left(\frac{1}{2\lVert X \rVert_F^2}\lVert X - WH \rVert_F^2 + \frac{\lambda_H}{2nk} \lVert H \rVert_F^2\right) \nonumber \\
-  -&\alpha \left(\frac{2}{n_{event}}\ell(W,\beta) - \lambda \{ \xi \lVert \beta \rVert_1 + \tfrac{1-\xi}{2} \lVert \beta \rVert_2^2 \} \right) \nonumber
+  -&\alpha \left(\frac{2}{n_{event}}\ell(W,\beta) - \lambda \{ \xi \lVert \beta\odot s \rVert_1 + \tfrac{1-\xi}{2} \lVert \beta\odot s \rVert_2^2 \} \right) \nonumber
 \end{align}
 
 where $\lVert \cdot \rVert_F$ is the Frobenius norm and
@@ -262,7 +268,8 @@ line search.
 
 The column normalization preserves both $WH$ and $W\beta$ exactly, so the
 reconstruction term, the Cox log-partial-likelihood term, and the elastic-net
-$\beta$ penalty are all unchanged (the penalty acts on $\beta\odot\mathrm{sd}(W^\top X)$,
+$\beta$ penalty are all unchanged (the penalty acts on the standardized
+coefficients $\beta\odot s$ with $s=\mathrm{sd}(W^\top X)$,
 which is invariant under the rescaling; see Section \ref{subsec:conv_normalization}).
 The Frobenius penalties $\tfrac{\lambda_H}{2nk}\|H\|_F^2$ and
 $\tfrac{\lambda_W}{2pk}\|W\|_F^2$ are not scale-invariant, but $\lambda_H=\lambda_W=0$
@@ -283,8 +290,8 @@ dropped here, as it does not affect the minimizer:
   -\frac{2}{n_{\mathrm{event}}}\,\ell(W,\beta)
   +
   \lambda\left(
-    \xi \lVert \beta \rVert_1
-    +\frac{1-\xi}{2} \lVert \beta \rVert_2^2
+    \xi \lVert \beta\odot s \rVert_1
+    +\frac{1-\xi}{2} \lVert \beta\odot s \rVert_2^2
   \right)
 \right\}.
 \]
@@ -328,9 +335,11 @@ where $D$ is the diagonal matrix of column $\ell_2$-norms of $W$.
 This preserves the reconstruction $WH$ and the linear predictor $W\beta$
 exactly, leaving the NMF reconstruction term and the Cox log-partial-likelihood
 term unchanged. The elastic-net penalty is likewise unchanged because it is
-computed on the standardized coefficients $\beta\odot\mathrm{sd}(W^\top X)$: the
-rescaling $\beta\mapsto D\beta$ is exactly cancelled by the corresponding change
-in $\mathrm{sd}(W^\top X)$ under $W\mapsto WD^{-1}$, so the penalty is
+computed on the standardized coefficients $\beta\odot s$ with
+$s=\mathrm{sd}(W^\top X)$: under $W\mapsto WD^{-1}$ the scores transform as
+$W^\top X\mapsto D^{-1}W^\top X$, so $s\mapsto D^{-1}s$ columnwise, and the
+rescaling $\beta\mapsto D\beta$ is exactly cancelled because
+$(D\beta)\odot(D^{-1}s)=\beta\odot s$, so the penalty is
 scale-invariant. The Frobenius penalties on $H$ and $W$ are not scale-invariant,
 but carry weights $\lambda_H=\lambda_W=0$ in all reported runs; in this operating
 regime the full loss is invariant under normalization. Normalization prevents
@@ -343,7 +352,7 @@ The W update can be derived directly from the projected coordinate descent updat
 
 Recall that the overall loss function is
 \begin{align*}
-    \mathcal{L}(W,H,\beta) = \frac{(1-\alpha)}{2\|X\|_F^2} ||X - WH||^2_F - \alpha\left(\frac{2}{n_{event}} \ell(W,\beta) - \lambda\left(\xi\|\beta\|_1 + \frac{(1-\xi)}{2}\|\beta\|_2^2\right)\right).
+    \mathcal{L}(W,H,\beta) = \frac{(1-\alpha)}{2\|X\|_F^2} ||X - WH||^2_F - \alpha\left(\frac{2}{n_{event}} \ell(W,\beta) - \lambda\left(\xi\|\beta\odot s\|_1 + \frac{(1-\xi)}{2}\|\beta\odot s\|_2^2\right)\right).
 \end{align*}
 where $\ell(W,\beta)$ is the log-partial likelihood for the Cox model. Let $\nabla_W \ell$ represent the derivative of $\ell(W,\beta)$ with respect to $W$. Then the derivative of the overall loss with respect to $W$ is
 
@@ -405,8 +414,10 @@ The feasible set is
 We assume:
 \begin{enumerate}[label=(\roman*)]
   \item The data $X \in \mathbb{R}_{\ge 0}^{p\times n}$, $y \in \mathbb{R}^n_{>0}$, and $\delta \in \{0,1\}^n$ are fixed and bounded.
-  \item The hyperparameters satisfy $\lambda_H \ge 0$, $\lambda>0$, $\alpha \in [0,1)$, and $\xi \in [0,1]$, consistent with the objective definition above. The lower bound $\lambda>0$ is used only to force $\beta$ to lie in a bounded set (Lemma 1); all reported runs use $\lambda_H=\lambda_W=0$, which is the regime under which the normalization argument of Section \ref{subsec:conv_normalization} is exact.
-  \item The initial iterate $\theta^{(0)} = (W^{(0)},H^{(0)},\beta^{(0)})$ lies in $\Theta$ and satisfies $W^{(0)},H^{(0)} > 0$ elementwise.
+  \item The hyperparameters satisfy $\lambda_H \ge 0$, $\lambda>0$, $\alpha \in (0,1)$, and $\xi \in [0,1]$, consistent with the objective definition above. We restrict to the supervised regime $\alpha>0$ because $\beta$ enters the joint loss only through the block $\alpha\big(\tfrac{2}{n_{\text{event}}}\ell(W,\beta)-\lambda\{\xi\|\beta\odot s\|_1+\tfrac{1-\xi}{2}\|\beta\odot s\|_2^2\}\big)$, whose $\beta$-penalty coefficient is $\alpha\lambda$; the lower bound $\lambda>0$ together with $\alpha>0$ is used to force $\beta$ to lie in a bounded set (Lemma 1). All reported runs use $\lambda_H=\lambda_W=0$, which is the regime under which the normalization argument of Section \ref{subsec:conv_normalization} is exact.
+
+  \emph{Remark ($\alpha=0$).} At $\alpha=0$ the survival block drops out entirely and the objective reduces to standard (unsupervised) NMF in $(W,H)$, whose convergence to a stationary point is classical (Lee and Seung 2001; Lin 2007). In this case $\beta$ is not part of the joint objective and is instead fit post hoc by a single elastic-net Cox solve on the frozen final $W$; the joint-convergence result of this section therefore concerns the supervised regime $\alpha\in(0,1)$, and the $\alpha=0$ case is covered by the classical unsupervised-NMF theory.
+  \item The initial iterate $\theta^{(0)} = (W^{(0)},H^{(0)},\beta^{(0)})$ lies in $\Theta$, satisfies $W^{(0)},H^{(0)} > 0$ elementwise, and has unit-norm columns of $W^{(0)}$, i.e. $\theta^{(0)}\in\mathcal{N}$. The unit-norm requirement is without loss of generality by the gauge freedom of part (iv): any strictly positive initializer is mapped into $\mathcal{N}$ by the diagonal rescaling $(W^{(0)},H^{(0)},\beta^{(0)})\mapsto(W^{(0)}D_0^{-1},D_0H^{(0)},D_0\beta^{(0)})$ with $D_0=\mathrm{diag}(\lVert W^{(0)}_{(:,1)}\rVert_2,\dots,\lVert W^{(0)}_{(:,k)}\rVert_2)$, which leaves the fitted model unchanged, so we take $\theta^{(0)}$ to be this normalized representative.
   \item The iterates are constrained to the normalized set
         \[
           \mathcal{N} = \{(W,H,\beta)\in\Theta : \lVert W_{(:,j)}\rVert_2 = 1 \text{ for all } j=1,\dots,k\},
@@ -439,13 +450,19 @@ Algorithm \ref{alg:desurv} satisfy:
         If no candidate satisfies the Armijo-type condition within the allowed
         number of backtracking steps, the algorithm sets
         $W^{(t+1)} := W^{(t)}$.
-        \emph{Note.} The implementation fuses column normalization into this test:
-        it evaluates the loss at the normalized candidate
-        $(W^{(t+1)}_{cand}D^{-1}, DH^{(t+1)}, D\beta^{(t)})$ and accepts on the
-        same inequality. Because normalization leaves the full loss unchanged in
-        the operating regime $\lambda_H=\lambda_W=0$ (Section \ref{subsec:conv_normalization}),
-        this fused test is equivalent to the $W$-only inequality stated above, and
-        the accepted iterate lies in $\mathcal{N}$.
+        \emph{Note.} The implementation fuses column normalization into this test.
+        Because normalization is loss-neutral in the operating regime (the
+        standardized-penalty invariance of Section \ref{subsec:conv_normalization}
+        together with $\lambda_H=\lambda_W=0$), the loss at the normalized
+        candidate equals the loss at the un-normalized candidate
+        $(W^{(t+1)}_{cand}, H^{(t+1)}, \beta^{(t)})$ appearing in the inequality
+        above:
+        $\mathcal{L}(W^{(t+1)}_{cand}D^{-1}, DH^{(t+1)}, D\beta^{(t)})
+        = \mathcal{L}(W^{(t+1)}_{cand}, H^{(t+1)}, \beta^{(t)})$.
+        The implementation's fused normalize-then-test therefore yields exactly
+        the same acceptance decision as the displayed $W$-only inequality (the two
+        loss values are equal, not merely comparable), and the accepted iterate
+        lies in $\mathcal{N}$.
   \item \emph{$\beta$-update.} For fixed $(W^{(t+1)},H^{(t+1)})$, the update
         $\beta^{(t)} \mapsto \beta^{(t+1)}$ is obtained by running the
         coordinate descent method of Simon et al. (2011) on the convex elastic-net Cox
@@ -503,12 +520,20 @@ confines $H$ to a bounded set. (When $\lambda_H>0$ the penalty
 $\tfrac{\lambda_H}{2nk}\|H\|_F^2$ gives an alternative, direct coercivity in $H$;
 neither route requires $\lambda_H>0$.)
 
-\emph{$\beta$ is bounded.} Because $\lambda>0$, the elastic-net penalty
-$\lambda\big(\xi\|\beta\|_1+\tfrac{1-\xi}{2}\|\beta\|_2^2\big)$ dominates the
-objective as $\|\beta\|_2\to\infty$ (the negative Cox log-partial likelihood is
-bounded below on the fixed compact set of linear predictors induced by bounded
-$(W,\beta\text{-direction})$), so $\beta$ is confined to a bounded set on
-$\mathcal{S}_0$.
+\emph{$\beta$ is bounded.} Under Assumption 1(ii) we have $\alpha>0$ and
+$\lambda>0$, so the $\beta$-penalty enters the loss with strictly positive
+coefficient $\alpha\lambda$: the term
+$\alpha\lambda\big(\xi\|\beta\odot s\|_1+\tfrac{1-\xi}{2}\|\beta\odot s\|_2^2\big)$
+dominates the objective as $\|\beta\|_2\to\infty$. Here $s=\mathrm{sd}(W^\top X)$
+has strictly positive entries on $\mathcal{N}$ (each column of $W$ is a nonzero
+unit vector and $X$ is fixed with nondegenerate columnwise variation), so
+$\|\beta\odot s\|_2\to\infty$ whenever $\|\beta\|_2\to\infty$; and the negative
+Cox log-partial likelihood is bounded below on the fixed compact set of linear
+predictors induced by bounded $(W,\beta\text{-direction})$. Hence the sublevel
+condition confines $\beta$ to a bounded set on $\mathcal{S}_0$. (At $\alpha=0$
+this coefficient vanishes and $\beta$ is not part of the joint objective; that
+case is excluded here and handled by the unsupervised remark under
+Assumption 1(ii).)
 
 Thus $\mathcal{S}_0$ is bounded in $(W,H,\beta)$. Because $\Theta\cap\mathcal{N}$
 is closed and $\mathcal{L}$ is continuous, $\mathcal{S}_0$ is closed.
@@ -643,8 +668,9 @@ The DeSurv loss can be written as
 \mathcal{L}(\theta) = f(W,H,\beta) + g(\beta)
                      + I_{\{W\ge 0\}}(W) + I_{\{H\ge 0\}}(H),
 \]
-where $f$ is continuously differentiable, $g(\beta)=\lambda\xi\|\beta\|_1$ is
-a separable convex (possibly nondifferentiable) penalty, and $I_C$ denotes the
+where $f$ is continuously differentiable, $g(\beta)=\alpha\lambda\xi\|\beta\odot s\|_1$
+(a weighted $\ell_1$ term, separable and convex in $\beta$ since $s>0$ is fixed given
+$W$) is the nonsmooth penalty, and $I_C$ denotes the
 indicator of a closed convex set $C$. This is the smooth+nonsmooth composite
 form considered in block coordinate descent analyses such as [@tseng2001convergence].
 In this setting, any point that is optimal with respect to each block
@@ -684,9 +710,9 @@ Consequently the NMF reconstruction term $\tfrac{1}{2\|X\|_F^2}\|X-WH\|_F^2$ and
 the Cox log-partial-likelihood term (a function of $\eta = X^\top W\beta$) are
 both invariant, as are their gradients. The elastic-net penalty is invariant as
 well, because it is evaluated on the standardized coefficients
-$\beta\odot\mathrm{sd}(W^\top X)$: under the transformation, $\beta\mapsto D\beta$
-while $\mathrm{sd}(W^\top X)\mapsto D^{-1}\mathrm{sd}(W^\top X)$ columnwise, and
-the two cancel. The only non-invariant terms are the Frobenius penalties
+$\beta\odot s$ with $s=\mathrm{sd}(W^\top X)$: under the transformation, $\beta\mapsto D\beta$
+while $s = \mathrm{sd}(W^\top X)\mapsto D^{-1}s$ columnwise (since $W^\top X\mapsto D^{-1}W^\top X$), and
+the two cancel, $(D\beta)\odot(D^{-1}s)=\beta\odot s$. The only non-invariant terms are the Frobenius penalties
 $\tfrac{\lambda_H}{2nk}\|H\|_F^2$ and $\tfrac{\lambda_W}{2pk}\|W\|_F^2$; with
 $\lambda_H=\lambda_W=0$ (the operating regime of all reported runs, Assumption 1(ii)),
 the transformation leaves the full loss $\mathcal{L}$ invariant. We therefore do

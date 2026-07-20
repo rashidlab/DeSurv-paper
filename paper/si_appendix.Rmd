@@ -65,7 +65,7 @@ $n_{\text{event}} = \sum_{i=1}^n \delta_i$. For convenience we recall the
 DeSurv loss from Equation 1 in the main text and rewrite it as
 \begin{align}
   \mathcal{L}(W,H,\beta) &=\nonumber \\
-  &(1-\alpha)\left(\frac{1}{2np}\lVert X - WH \rVert_F^2 + \frac{\lambda_H}{2nk} \lVert H \rVert_F^2\right) \nonumber \\
+  &(1-\alpha)\left(\frac{1}{2\lVert X \rVert_F^2}\lVert X - WH \rVert_F^2 + \frac{\lambda_H}{2nk} \lVert H \rVert_F^2\right) \nonumber \\
   -&\alpha \left(\frac{2}{n_{event}}\ell(W,\beta) - \lambda \{ \xi \lVert \beta \rVert_1 + \tfrac{1-\xi}{2} \lVert \beta \rVert_2^2 \} \right) \nonumber
 \end{align}
 
@@ -89,7 +89,7 @@ likelihood $\ell(W,\beta)$ is
 The inner sum runs over the risk set $\{j : y_j \ge y_i\}$ of subjects still at risk at the observed time $y_i$; tied event times are handled by the Breslow approximation in the \texttt{glmnet} Coxnet routine used for the $\beta$ update (below).
 Hyperparameters satisfy $\alpha \in [0,1)$,
 $\lambda_H \ge 0$, $\lambda \ge 0$, and $\xi \in [0,1]$.
-The constants $1/(2np)$, $2/n_{\text{event}}$, and $1/(2nk)$ place the reconstruction, loadings-penalty, and survival terms on comparable numerical scales for stable optimization.
+The constants $1/(2\lVert X \rVert_F^2)$, $2/n_{\text{event}}$, and $1/(2nk)$ place the reconstruction, loadings-penalty, and survival terms on comparable numerical scales for stable optimization.
 
 
 \section{Optimization Algorithm}
@@ -124,7 +124,7 @@ Optimization proceeds by block coordinate descent (BCD; Algorithm \ref{alg:desur
             \State $loss = lossNew$
             \State $t = t + 1$
         \EndWhile
-        \State \Return $\hat{W} = W^{(t+1)}, \hat{H} = H^{(t+1)}, \hat{\beta}=\beta^{(t+1)}$
+        \State \Return $\hat{W} = W^{(t)}, \hat{H} = H^{(t)}, \hat{\beta}=\beta^{(t)}$
     \end{algorithmic}
 \end{algorithm}
 
@@ -137,7 +137,7 @@ update with $\ell_2$ penalty:
 H \leftarrow
 \max\!\left(
   H \odot \frac{W^\top X}{
-    W^\top W H + \lambda_H H + \varepsilon_H
+    W^\top W H + \dfrac{\lVert X \rVert_F^2}{nk}\,\lambda_H H + \varepsilon_H
   },
   \varepsilon_H
 \right),
@@ -234,13 +234,13 @@ line search.
 \caption{$W$ update with backtracking}
 \label{alg:backtrack}
     \begin{algorithmic}[1]
-        \Require Value of $W$ and the previous iteration $t$: $W^{(t)}$, the multiplicative update term at the current iteration $R^{(t+1)}$, the max number of backtracking updates $max\_bt$, the backtracking parameter $\rho \in (0,1)$
+        \Require Value of $W$ and the previous iteration $t$: $W^{(t)}$, the multiplicative update term at the current iteration $R^{(t)}$, the max number of backtracking updates $max\_bt$, the backtracking parameter $\rho \in (0,1)$
         \Ensure $W^{(t+1)}$
         \State $\theta =1$
         \State b = 1
         \State $flag\_accept = FALSE$
         \While{$b \leq max\_bt$}
-            \State $W^{(t+1)}_{cand} = W^{(t)} \odot [(1-\theta) + \theta R^{(t+1)}]$
+            \State $W^{(t+1)}_{cand} = \max\!\left( W^{(t)} \odot [(1-\theta) + \theta R^{(t)}],\ \varepsilon_W \right)$
             \State \textbf{(Column normalization)}
             \State \hspace{0.5cm} Compute $D = \mathrm{diag}\!\big(\lVert W^{(t+1)}_{(:,1)cand}\rVert_2,\dots,\lVert W^{(t+1)}_{(:,k)cand}\rVert_2\big)$
             \State \hspace{0.5cm} and set $W^{(t+1)}_{cand} \leftarrow W^{(t+1)}_{cand} D^{-1}$, $H^{(t+1)}_{cand} \leftarrow D H^{(t+1)}$, and $\beta^{(t)}_{cand} \leftarrow D \beta^{(t)}$
@@ -260,18 +260,27 @@ line search.
     \end{algorithmic}
 \end{algorithm}
 
-The column normalization preserves both $WH$ and $W\beta$, and therefore
-leaves the loss $\mathcal{L}$ invariant up to numerical error. Backtracking
-guarantees that the accepted $W$ update does not increase $\mathcal{L}$.
+The column normalization preserves the reconstruction $WH$ and the linear
+predictor $W\beta$, and (because the elastic-net penalty acts on the standardized
+coefficients $\beta \odot \mathrm{sd}(Z)$, whose scale factor
+$\mathrm{sd}(Z) \mapsto \mathrm{sd}(Z)\,D^{-1}$ cancels the rescaling
+$\beta \mapsto D\beta$) leaves the reconstruction and survival terms of
+$\mathcal{L}$ unchanged; the loadings and $W$ penalties ($\lambda_H, \lambda_W$)
+are not scale-invariant, but are set to zero in all reported runs. Crucially, the
+acceptance test evaluates the full penalized loss on the fully rescaled iterate,
+so an accepted step is nonincreasing in $\mathcal{L}$ by direct comparison,
+independent of any exact-invariance claim.
 
 \subsection{Update for $\beta$}
 
 Conditional on $(W,H)$, the loss in $\beta$ reduces to a convex
-elastic-net–penalized Cox problem:
+elastic-net–penalized Cox problem; the common factor $\alpha > 0$ multiplies both
+the log-partial-likelihood and the penalty in the joint loss (Equation 1) and is
+dropped here, as it does not affect the minimizer:
 \[
 \min_{\beta \in \mathbb{R}^k}
 \left\{
-  -\frac{2\alpha}{n_{\mathrm{event}}}\,\ell(W,\beta)
+  -\frac{2}{n_{\mathrm{event}}}\,\ell(W,\beta)
   +
   \lambda\left(
     \xi \lVert \beta \rVert_1
@@ -317,7 +326,11 @@ H \leftarrow D H, \qquad \beta \leftarrow D \beta,
 \]
 where $D$ is the diagonal matrix of column $\ell_2$-norms of $W$.
 This preserves the reconstruction $WH$ and the linear predictor $W\beta$,
-leaving both the NMF and Cox terms in the loss unchanged. Normalization
+leaving the NMF and Cox log-likelihood terms unchanged; the elastic-net penalty
+is likewise unchanged because it is applied to the standardized coefficients
+$\beta \odot \mathrm{sd}(W^\top X)$, which are invariant under the rescaling. (The
+optional $\lambda_H$ and $\lambda_W$ penalties are not scale-invariant and are set
+to zero in all reported analyses.) Normalization
 prevents degeneracy in the scale-nonidentifiable factorization and keeps
 columns of $W$ comparable in magnitude and interpretable as gene programs.
 
@@ -327,7 +340,7 @@ The W update can be derived directly from the projected coordinate descent updat
 
 Recall that the overall loss function is
 \begin{align*}
-    \mathcal{L}(W,H,\beta) = \frac{(1-\alpha)}{2np} ||X - WH||^2_F - \frac{2 \alpha}{n_{event}} \ell(W,\beta) + \lambda\left(\xi\|\beta\|_1 + \frac{(1-\xi)}{2}\|\beta\|_2^2\right).
+    \mathcal{L}(W,H,\beta) = \frac{(1-\alpha)}{2\|X\|_F^2} ||X - WH||^2_F - \alpha\left(\frac{2}{n_{event}} \ell(W,\beta) - \lambda\left(\xi\|\beta\|_1 + \frac{(1-\xi)}{2}\|\beta\|_2^2\right)\right).
 \end{align*}
 where $\ell(W,\beta)$ is the log-partial likelihood for the Cox model. Let $\nabla_W \ell$ represent the derivative of $\ell(W,\beta)$ with respect to $W$. Then the derivative of the overall loss with respect to $W$ is
 
@@ -631,6 +644,19 @@ preserves both the product $WH$ and the linear predictor $W\beta$, and hence
 leaves $\mathcal{L}$ invariant. The column-normalization step is exactly such a
 transformation, with $D$ chosen from the column norms of $W$.
 
+In the implementation, column normalization and the acceptance test are fused:
+the candidate is normalized first, and the acceptance inequality
+$\mathcal{L}(\cdot)\le\mathcal{L}(W^{(t)},H^{(t+1)},\beta^{(t)})$ is evaluated on
+the rescaled iterate $(W^{(t+1)}_{cand}D^{-1}, D H^{(t+1)}, D\beta^{(t)})$. In the
+reported operating regime $\lambda_H=\lambda_W=0$, and with the elastic-net
+penalty applied to the standardized coefficients $\beta\odot\mathrm{sd}(W^\top X)$,
+this rescaling is loss-preserving, so the fused test coincides with the
+unnormalized $W$-only test of Assumption 2(ii) and the convergence analysis
+applies unchanged. When $\lambda_H>0$ the normalization is no longer exactly
+loss-preserving, and Assumption 2(ii) should be read as the acceptance criterion
+applied to the unnormalized iterate, with normalization handled as the separate
+scale-equivalence step above.
+
 Let $\{\theta^{(t)}\}$ be the sequence generated by the algorithm without
 normalization, and let $\{\tilde{\theta}^{(t)}\}$ be the sequence with
 normalization. For each $t$ there exists a diagonal $D^{(t)}$ with strictly
@@ -720,7 +746,7 @@ $\hat{\eta}_i$:
 \Statex Number of folds $F$
 \Statex Number of initializations $R$
 \Statex Observed data ($X$, $y$, $\delta$)
-\Statex Hyperparameters $k$, $\alpha$, $\lambda$, $\xi$, and $\lambda_H$
+\Statex Hyperparameters $k$, $\alpha$, $\lambda$, $\xi$, $\lambda_H$, and number of top genes per factor $n_{top}$
 \Ensure The cross-validated c-index
 
 \State Divide subjects into $F$ folds.

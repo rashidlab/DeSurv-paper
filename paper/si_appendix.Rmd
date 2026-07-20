@@ -845,6 +845,26 @@ classifications for the validation cohorts were originally compiled for the
 DeCAF study [@peng2024determination]; training data were obtained directly
 from GDC.
 
+```{r cohorts-events, echo=FALSE, message=FALSE, warning=FALSE}
+.coh <- local({
+  tr <- read_result("tar_data_filtered_tcgacptac")$sampInfo
+  vl <- read_result("val_latent_desurv_tcgacptac")
+  ev <- list(TCGA_PAAD = tr$event[tr$dataset == "TCGA_PAAD"],
+             CPTAC     = tr$event[tr$dataset == "CPTAC"])
+  for (x in vl) ev[[x$dataset]] <- x$survival$event
+  ev$train_tot <- tr$event
+  ev$val_tot   <- unlist(lapply(vl, function(x) x$survival$event))
+  N    <- sapply(ev, length)
+  E    <- sapply(ev, function(z) sum(z == 1, na.rm = TRUE))
+  rate <- round(100 * E / N)
+  cell <- sprintf("%d (%d\\%%)", E, rate); names(cell) <- names(ev)
+  vr <- rate[c("Dijk","Moffitt_GEO_array","PACA_AU_array","PACA_AU_seq","Puleo_array")]
+  list(N = N, cell = cell,
+       train_lo = min(rate[c("TCGA_PAAD","CPTAC")]), train_hi = max(rate[c("TCGA_PAAD","CPTAC")]),
+       val_lo = min(vr), val_hi = max(vr), val_pooled = unname(rate["val_tot"]))
+})
+```
+
 \begin{table}[ht]
 \centering
 \caption{Summary of PDAC cohorts used in this study. $N$ denotes the number of
@@ -854,24 +874,24 @@ dataset-specific exclusions). Patient-level metadata: OS = overall survival
 (Rashid et al. 2020); DeCAF = CAF subtype classification
 (Peng et al. 2026). Expression data and molecular classifications
 for the validation cohorts were originally compiled for the DeCAF study
-(Peng et al. 2026). Events denotes the number of overall-survival events (deaths) with the corresponding event rate; outcome frequency was lower and more homogeneous in the training cohorts (50--52\%) than across the validation cohorts (60--90\%, pooled 67\%), a case-mix difference relevant to the interpretation of external-validation performance.}
+(Peng et al. 2026). Events denotes the number of overall-survival events (deaths) with the corresponding event rate; outcome frequency was lower and more homogeneous in the training cohorts (`r .coh$train_lo`--`r .coh$train_hi`\%) than across the validation cohorts (`r .coh$val_lo`--`r .coh$val_hi`\%, pooled `r .coh$val_pooled`\%), a case-mix difference relevant to the interpretation of external-validation performance.}
 \label{tab:cohorts}
 \footnotesize
 \begin{tabular}{llrrllll}
 \toprule
 Cohort & Platform & $N$ & Events & Role & Accession & Metadata & Reference \\
 \midrule
-TCGA-PAAD        & RNA-seq    & 144 & 75 (52\%)  & Training   & GDC (TCGA-PAAD) & OS, PurIST, DeCAF & Raphael et al. (2017) \\
-CPTAC            & RNA-seq    & 129 & 64 (50\%)  & Training   & GDC (CPTAC-3)    & OS, PurIST, DeCAF & Cao et al. (2021) \\
+TCGA-PAAD        & RNA-seq    & `r .coh$N[["TCGA_PAAD"]]` & `r .coh$cell[["TCGA_PAAD"]]`  & Training   & GDC (TCGA-PAAD) & OS, PurIST, DeCAF & Raphael et al. (2017) \\
+CPTAC            & RNA-seq    & `r .coh$N[["CPTAC"]]` & `r .coh$cell[["CPTAC"]]`  & Training   & GDC (CPTAC-3)    & OS, PurIST, DeCAF & Cao et al. (2021) \\
 \addlinespace
-Dijk             & RNA-seq    &  90 & 81 (90\%)  & Validation & E-MTAB-6830      & OS, PurIST, DeCAF & Dijk et al. (2020) \\
-Moffitt          & Microarray & 123 & 83 (68\%)  & Validation & GSE71729         & OS, PurIST, DeCAF & Moffitt et al. (2015) \\
-PACA-AU (array)  & Microarray &  63 & 38 (60\%)  & Validation & GSE36924         & OS, PurIST, DeCAF & Bailey et al. (2016) \\
-PACA-AU (RNA-seq) & RNA-seq   &  52 & 31 (60\%)  & Validation & EGAS00001000154  & OS, PurIST, DeCAF & Bailey et al. (2016) \\
-Puleo            & Microarray & 288 & 181 (63\%) & Validation & E-MTAB-6134      & OS, PurIST, DeCAF & Puleo et al. (2018) \\
+Dijk             & RNA-seq    &  `r .coh$N[["Dijk"]]` & `r .coh$cell[["Dijk"]]`  & Validation & E-MTAB-6830      & OS, PurIST, DeCAF & Dijk et al. (2020) \\
+Moffitt          & Microarray & `r .coh$N[["Moffitt_GEO_array"]]` & `r .coh$cell[["Moffitt_GEO_array"]]`  & Validation & GSE71729         & OS, PurIST, DeCAF & Moffitt et al. (2015) \\
+PACA-AU (array)  & Microarray &  `r .coh$N[["PACA_AU_array"]]` & `r .coh$cell[["PACA_AU_array"]]`  & Validation & GSE36924         & OS, PurIST, DeCAF & Bailey et al. (2016) \\
+PACA-AU (RNA-seq) & RNA-seq   &  `r .coh$N[["PACA_AU_seq"]]` & `r .coh$cell[["PACA_AU_seq"]]`  & Validation & EGAS00001000154  & OS, PurIST, DeCAF & Bailey et al. (2016) \\
+Puleo            & Microarray & `r .coh$N[["Puleo_array"]]` & `r .coh$cell[["Puleo_array"]]` & Validation & E-MTAB-6134      & OS, PurIST, DeCAF & Puleo et al. (2018) \\
 \addlinespace
-\multicolumn{2}{l}{Training total} & 273 & 139 (51\%) & & & & \\
-\multicolumn{2}{l}{Validation total} & 616 & 414 (67\%) & & & & \\
+\multicolumn{2}{l}{Training total} & `r .coh$N[["train_tot"]]` & `r .coh$cell[["train_tot"]]` & & & & \\
+\multicolumn{2}{l}{Validation total} & `r .coh$N[["val_tot"]]` & `r .coh$cell[["val_tot"]]` & & & & \\
 \bottomrule
 \end{tabular}
 \end{table}

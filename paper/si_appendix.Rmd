@@ -157,7 +157,7 @@ contributions of the NMF and Cox gradients. Let
 \[
 \nabla_W \mathcal{L}_{\mathrm{NMF}}(W,H)
 =
-\frac{1}{np}(W H - X)H^\top,
+\frac{1}{\lVert X \rVert_F^2}(W H - X)H^\top,
 \]
 and let
 \[
@@ -204,10 +204,10 @@ The multiplicative factor for $W$ is then
 R^{(t)}
 =
 \frac{
-  \frac{(1-\alpha)}{np} X H^{(t+1)\top}
+  \frac{(1-\alpha)}{\lVert X \rVert_F^2} X H^{(t+1)\top}
   +\frac{2\alpha}{n_{\mathrm{event}}}\,\zeta^{(t)}\,\nabla_W \ell(W^{(t)},\beta^{(t)})
 }{
-  \frac{(1-\alpha)}{np} W^{(t)} H^{(t+1)}H^{(t+1)\top}
+  \frac{(1-\alpha)}{\lVert X \rVert_F^2} W^{(t)} H^{(t+1)}H^{(t+1)\top}
   +\varepsilon_W
 },
 \end{equation}
@@ -266,10 +266,10 @@ coefficients $\beta \odot \mathrm{sd}(Z)$, whose scale factor
 $\mathrm{sd}(Z) \mapsto \mathrm{sd}(Z)\,D^{-1}$ cancels the rescaling
 $\beta \mapsto D\beta$) leaves the reconstruction and survival terms of
 $\mathcal{L}$ unchanged; the loadings and $W$ penalties ($\lambda_H, \lambda_W$)
-are not scale-invariant, but are set to zero in all reported runs. Crucially, the
-acceptance test evaluates the full penalized loss on the fully rescaled iterate,
-so an accepted step is nonincreasing in $\mathcal{L}$ by direct comparison,
-independent of any exact-invariance claim.
+are not scale-invariant, but are set to zero in all reported runs. Backtracking
+guarantees that an accepted $W$ update does not increase $\mathcal{L}$; the
+relationship between this acceptance test and the column-normalization step is
+detailed in Section \ref{subsec:conv_normalization}.
 
 \subsection{Update for $\beta$}
 
@@ -345,32 +345,32 @@ Recall that the overall loss function is
 where $\ell(W,\beta)$ is the log-partial likelihood for the Cox model. Let $\nabla_W \ell$ represent the derivative of $\ell(W,\beta)$ with respect to $W$. Then the derivative of the overall loss with respect to $W$ is
 
 \begin{equation*}
-  \frac{\partial L}{\partial W} = \frac{(1-\alpha)}{np}\left( WHH^T - XH^T \right) - \frac{2\alpha}{n_{event}} \nabla_W \ell.
+  \frac{\partial L}{\partial W} = \frac{(1-\alpha)}{\lVert X \rVert_F^2}\left( WHH^T - XH^T \right) - \frac{2\alpha}{n_{event}} \nabla_W \ell.
 \end{equation*}
 
 Then the gradient descent update rule at iteration $t$ is
 \begin{align*}
   W^{(t)} &= W^{(t-1)} - \gamma \left( \frac{\partial L}{\partial W} \right) \\
-          &= W^{(t-1)} - \gamma \left( \frac{(1-\alpha)}{np}\left( WHH^T - XH^T \right) - \frac{2\alpha}{n_{event}} \nabla_W \ell \right).
+          &= W^{(t-1)} - \gamma \left( \frac{(1-\alpha)}{\lVert X \rVert_F^2}\left( WHH^T - XH^T \right) - \frac{2\alpha}{n_{event}} \nabla_W \ell \right).
 \end{align*}
 Let the step size $\gamma$ be defined as in [@seung2001algorithms]:
 \begin{equation*}
-  \gamma = \frac{np}{(1-\alpha)}\frac{W}{WHH^T}.
+  \gamma = \frac{\lVert X \rVert_F^2}{(1-\alpha)}\frac{W}{WHH^T}.
 \end{equation*}
 Then the update becomes
 \begin{align*}
-  W^{(t)} &= W^{(t-1)} -\frac{np}{(1-\alpha)}\frac{W}{WHH^T} \left( \frac{(1-\alpha)}{np}\left( WHH^T - XH^T \right) - \frac{2\alpha}{n_{event}} \nabla_W \ell \right) \\
-          &= \frac{W}{WHH^T} XH^T + \frac{2\alpha np}{n_{event}(1-\alpha)} \nabla_W \ell \\
-          &= W \odot \frac{XH^T + \frac{2\alpha np}{n_{event}(1-\alpha)} \nabla_W \ell }{WHH^T} \\
-          &= W \odot \frac{\frac{(1-\alpha)}{np} XH^T + \frac{2\alpha}{n_{event}} \nabla_W \ell}{\frac{(1-\alpha)}{np} WHH^T}.
+  W^{(t)} &= W^{(t-1)} -\frac{\lVert X \rVert_F^2}{(1-\alpha)}\frac{W}{WHH^T} \left( \frac{(1-\alpha)}{\lVert X \rVert_F^2}\left( WHH^T - XH^T \right) - \frac{2\alpha}{n_{event}} \nabla_W \ell \right) \\
+          &= \frac{W}{WHH^T} XH^T + \frac{2\alpha \lVert X \rVert_F^2}{n_{event}(1-\alpha)} \nabla_W \ell \\
+          &= W \odot \frac{XH^T + \frac{2\alpha \lVert X \rVert_F^2}{n_{event}(1-\alpha)} \nabla_W \ell }{WHH^T} \\
+          &= W \odot \frac{\frac{(1-\alpha)}{\lVert X \rVert_F^2} XH^T + \frac{2\alpha}{n_{event}} \nabla_W \ell}{\frac{(1-\alpha)}{\lVert X \rVert_F^2} WHH^T}.
 \end{align*}
 Finally, projected coordinate descent projects the $W$ update in to the positive space
 \begin{equation*}
-  W^{(t)} =  \max \left(W \odot \frac{\frac{(1-\alpha)}{np} XH^T + \frac{2\alpha}{n_{event}} \nabla_W \ell}{\frac{(1-\alpha)}{np}WHH^T}, 0\right).
+  W^{(t)} =  \max \left(W \odot \frac{\frac{(1-\alpha)}{\lVert X \rVert_F^2} XH^T + \frac{2\alpha}{n_{event}} \nabla_W \ell}{\frac{(1-\alpha)}{\lVert X \rVert_F^2}WHH^T}, 0\right).
 \end{equation*}
 Since $W \geq 0$ this is equivalent to
 \begin{equation*}
-  W^{(t)} =  W \odot \max \left( \frac{\frac{(1-\alpha)}{np} XH^T + \frac{2\alpha}{n_{event}} \nabla_W \ell}{\frac{(1-\alpha)}{np} WHH^T}, 0 \right),
+  W^{(t)} =  W \odot \max \left( \frac{\frac{(1-\alpha)}{\lVert X \rVert_F^2} XH^T + \frac{2\alpha}{n_{event}} \nabla_W \ell}{\frac{(1-\alpha)}{\lVert X \rVert_F^2} WHH^T}, 0 \right),
 \end{equation*}
 which matches the multiplicative form used in the software implementation.
 
@@ -549,7 +549,7 @@ $\mathcal{L}(\theta^{(t_j)})\to\mathcal{L}^*$.
 
 (i) Conditional on $(W,\beta)$, the $H$-subproblem is
 \begin{equation}
-  \min_{H \geq 0}\frac{(1-\alpha)}{np}(\lVert X-WH \rVert_F^2 + \frac{\lambda_H}{nk}||H||_F^2) + \text{const in $H$},\nonumber
+  \min_{H \geq 0}\frac{(1-\alpha)}{\lVert X \rVert_F^2}(\lVert X-WH \rVert_F^2 + \frac{\lambda_H}{nk}||H||_F^2) + \text{const in $H$},\nonumber
 \end{equation}
 a strictly convex quadratic program. The multiplicative update for $H$ is known
 to be a descent method whose fixed points coincide with the KKT points of this
@@ -650,12 +650,14 @@ $\mathcal{L}(\cdot)\le\mathcal{L}(W^{(t)},H^{(t+1)},\beta^{(t)})$ is evaluated o
 the rescaled iterate $(W^{(t+1)}_{cand}D^{-1}, D H^{(t+1)}, D\beta^{(t)})$. In the
 reported operating regime $\lambda_H=\lambda_W=0$, and with the elastic-net
 penalty applied to the standardized coefficients $\beta\odot\mathrm{sd}(W^\top X)$,
-this rescaling is loss-preserving, so the fused test coincides with the
-unnormalized $W$-only test of Assumption 2(ii) and the convergence analysis
-applies unchanged. When $\lambda_H>0$ the normalization is no longer exactly
-loss-preserving, and Assumption 2(ii) should be read as the acceptance criterion
-applied to the unnormalized iterate, with normalization handled as the separate
-scale-equivalence step above.
+this rescaling is loss-preserving, so the fused acceptance test coincides with the
+unnormalized $W$-only test of Assumption 2(ii). The convergence proof itself is
+stated under Assumption 1(ii) ($\lambda_H>0$); the implemented setting uses
+$\lambda_H=\lambda_W=0$ and controls the scale of $W$ through the unit-norm column
+constraint enforced at each accepted update. When $\lambda_H>0$ the normalization
+is no longer exactly loss-preserving, and Assumption 2(ii) should be read as the
+acceptance criterion applied to the unnormalized iterate, with normalization
+handled as the separate scale-equivalence step above.
 
 Let $\{\theta^{(t)}\}$ be the sequence generated by the algorithm without
 normalization, and let $\{\tilde{\theta}^{(t)}\}$ be the sequence with
@@ -756,7 +758,7 @@ $\hat{\eta}_i$:
         \State set.seed$(r)$
         \State Apply Algorithm \ref{alg:desurv} with inputs $(X_{(-f)},y_{(-f)}, \delta_{(-f)})$, and $(k, \alpha, \lambda, \xi, \lambda_H)$
         \State Obtain $\hat{W}$ and $\hat{\beta}$ as output from Algorithm \ref{alg:desurv}
-        \State Compute the estimated linear predictor:
+        \State Restrict $\hat{W}$ to the top $n_{top}$ genes per factor (by scaled loading) and compute the estimated linear predictor on this support:
         $
         \hat{\eta} = X_{(f)}^T\hat{W}\hat{\beta}
         $

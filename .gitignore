@@ -9,6 +9,8 @@ paper/*.log
 paper/*.tex
 paper/*_files/
 paper/*.knit.md
+paper/*.fff
+paper/*.ttt
 /out.pdf
 logs/
 

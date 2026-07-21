@@ -1,5 +1,5 @@
 \begin{figure*}[t]
-\includegraphics[width=\textwidth]{../figures/fig_supervised_recovery} \caption{Independent survival-supervised methods recover the D1 axis; an unsupervised method does not. (A) Absolute per-patient correlation of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox all recover D1 (green), whereas the leading unsupervised principal component does not (grey). (B) Per-patient agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \label{fig:suprec}}\label{fig:fig-suprec}
+\includegraphics[width=\textwidth]{../figures/fig_supervised_recovery} \caption{Independent survival-supervised methods recover the D1 axis; an unsupervised method does not. (A) Absolute correlation (across training-cohort patients) of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox all recover D1 (green), whereas the leading unsupervised principal component does not (grey). (B) Sample-level agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \label{fig:suprec}}\label{fig:fig-suprec}
 \end{figure*}
 \efloatseparator
  
@@ -14,7 +14,7 @@
 \efloatseparator
  
 \begin{figure*}[t]
-\includegraphics[width=\textwidth,height=6.5in]{figures/fig-sim-null-mixed-1} \caption{DeSurv performance under null and mixed simulation scenarios. (A--B) Null scenario ($\beta = 0$): both methods yield C-index $\approx 0.5$ (A) and comparable rank distributions (B), confirming DeSurv does not hallucinate prognostic structure; precision is omitted as no true survival genes exist. (C--F) Mixed scenario: survival depends on factor-specific marker genes (50\%) and shared background genes (50\%). (C) C-index is modestly higher for DeSurv. (D) Precision by gene-set definition: marker-only precision (150 genes; left facet) substantially favors DeSurv; full 300-gene survival-set precision (right facet) shows a more modest improvement. (E) The matched factor receives a substantially larger Cox coefficient $|\beta|$ under DeSurv, confirming preferential amplification of marker-specific signal. (F) Selected-rank distributions. DeSurv (blue); NMF (red, $\alpha = 0$); both Bayesian-optimized. \label{fig:sim-null-mixed}}\label{fig:fig-sim-null-mixed}
+\includegraphics[width=\textwidth,height=6.5in]{figures/fig-sim-null-mixed-1} \caption{DeSurv performance under null and mixed simulation scenarios. (A--B) Null scenario ($\beta = 0$): both methods yield C-index $\approx 0.5$ (A) and comparable rank distributions (B), confirming DeSurv does not recover spurious prognostic structure; precision is omitted as no true survival genes exist. (C--F) Mixed scenario: survival depends on factor-specific marker genes (50\%) and shared background genes (50\%). (C) C-index is modestly higher for DeSurv. (D) Precision by gene-set definition: marker-only precision (150 genes; left facet) substantially favors DeSurv; full 300-gene survival-set precision (right facet) shows a more modest improvement. (E) The matched factor receives a substantially larger Cox coefficient $|\beta|$ under DeSurv, confirming preferential amplification of marker-specific signal. (F) Selected-rank distributions. DeSurv (blue); NMF (red, $\alpha = 0$); both Bayesian-optimized. \label{fig:sim-null-mixed}}\label{fig:fig-sim-null-mixed}
 \end{figure*}
 \efloatseparator
  
@@ -24,36 +24,36 @@
 \efloatseparator
  
 \begin{figure*}[t]
-\includegraphics[width=\textwidth,height=3.5in]{figures/fig-nmf-diagnostics-1} \caption{Standard unsupervised NMF rank selection heuristics for the PDAC training cohort (TCGA + CPTAC). (A) Reconstruction residuals as a function of factorization rank $k$. (B) Cophenetic correlation coefficient as a function of $k$. (C) Mean silhouette width across multiple distance metrics as a function of $k$. These criteria yield inconsistent guidance, motivating the survival-supervised model selection approach (main text Fig.~\ref{fig:sim}D). \label{fig:nmf-diagnostics}}\label{fig:fig-nmf-diagnostics}
+\includegraphics[width=\textwidth,height=3.5in]{figures/fig-nmf-diagnostics-1} \caption{Standard unsupervised NMF rank selection heuristics for the PDAC training cohort (TCGA + CPTAC). (A) Reconstruction residuals as a function of factorization rank $k$. (B) Cophenetic correlation coefficient as a function of $k$. (C) Mean silhouette width across multiple distance metrics as a function of $k$. These criteria yield inconsistent guidance, motivating the survival-supervised model-selection approach described in the main text. \label{fig:nmf-diagnostics}}\label{fig:fig-nmf-diagnostics}
 \end{figure*}
 \efloatseparator
  
 \begin{figure*}[t]
-\includegraphics[width=\textwidth,height=8in]{figures/fig-cutpoint-km-1} \caption{Cutpoint selection and external validation of dichotomized risk groups. (A) Cross-validated mean absolute log-rank z-statistic as a function of z-score cutpoint; red dashed line indicates the selected optimum. (B) Pooled validation Kaplan--Meier curves (stratified log-rank test). (C--D) Per-cohort validation KM curves: (C) Dijk, (D) Moffitt. (E--F) Per-cohort validation KM curves: (E) PACA-AU (array and RNA-seq subsets pooled), (F) Puleo.}\label{fig:fig-cutpoint-km}
+\includegraphics[width=\textwidth,height=8in]{figures/fig-cutpoint-km-1} \caption{Cutpoint selection and external validation of dichotomized risk groups. (A) Cross-validated mean absolute log-rank z-statistic as a function of z-score cutpoint; red dashed line indicates the selected optimum. (B) Pooled validation Kaplan--Meier curves (log-rank test). (C--D) Per-cohort validation KM curves: (C) Dijk, (D) Moffitt. (E--F) Per-cohort validation KM curves: (E) PACA-AU (array and RNA-seq subsets pooled), (F) Puleo.}\label{fig:fig-cutpoint-km}
 \end{figure*}
 \efloatseparator
  
 \begin{figure*}[t]
-\includegraphics[width=\textwidth]{figures/fig-subtype-overlap-1} \caption{Subtype composition of DeSurv (top) and standard NMF $k=3$ (bottom) risk groups in pooled external validation cohorts. Stacked bar charts show the proportion of PurIST (left) and DeCAF (right) subtypes within Low and High risk groups defined by the log-rank-optimized cutpoint. Numbers indicate sample counts; Fisher's exact test P-values are shown above each panel. DeSurv risk groups are enriched for both Basal-like (PurIST) and proCAF (DeCAF) poor-prognosis subtypes; NMF risk groups separate Basal-like from Classical tumors but show no significant CAF subtype enrichment.}\label{fig:fig-subtype-overlap}
+\includegraphics[width=\textwidth]{figures/fig-subtype-overlap-1} \caption{Subtype composition of DeSurv (top) and standard NMF $k=3$ (bottom) risk groups in pooled external validation cohorts. Stacked bar charts show the proportion of PurIST (left) and DeCAF (right) subtypes within Low and High risk groups, among samples with available classifier calls, defined by the training-derived cross-validated cutpoint. Numbers indicate sample counts; Fisher's exact test P-values are shown above each panel. DeSurv risk groups are enriched for both basal-like (PurIST) and proCAF (DeCAF) poor-prognosis subtypes; NMF risk groups separate basal-like from classical tumors but show no significant CAF subtype enrichment.}\label{fig:fig-subtype-overlap}
 \end{figure*}
 \efloatseparator
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/fig-desurv-k5-heatmap-1.png}}
+\includegraphics{si_appendix_files/figures/fig-desurv-k5-heatmap-1.png}
 \caption{Gene program overlap heatmap for DeSurv at elbow-selected rank
 \(k = 5\). Each cell shows the number of top genes from a given factor
 (rows) overlapping established PDAC gene programs (columns). DeSurv at
 \(k = 5\) splits the ECM/activated-stroma (proCAF-associated) signal
-into two factors with opposing Classical-tumor correlations and isolates
-restCAF as a separate factor; exocrine and Basal-like programs are not
+into two factors with opposing classical-tumor correlations and isolates
+restCAF as a separate factor; exocrine and basal-like programs are not
 represented as dominant factors. \label{fig:fig-desurv-k5-heatmap}}
 \end{figure}
 \efloatseparator
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/fig-nmf-k5-heatmap-1.png}}
+\includegraphics{si_appendix_files/figures/fig-nmf-k5-heatmap-1.png}
 \caption{Gene program overlap heatmap for standard NMF at elbow-selected
 rank \(k = 5\). Each cell shows the number of top genes from a given
 factor (rows) overlapping established PDAC gene programs (columns). The
@@ -66,7 +66,7 @@ variance not aligned with survival outcomes.
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/fig-nmf-k7-heatmap-1.png}}
+\includegraphics{si_appendix_files/figures/fig-nmf-k7-heatmap-1.png}
 \caption{Gene program overlap heatmap for standard NMF at \(k = 7\)
 (BO-selected rank with \(\alpha = 0\)). Compared with \(k = 3\) and
 \(k = 5\), the 7-factor solution shows increased fragmentation: multiple
@@ -77,7 +77,7 @@ coherent biological program emerges. \label{fig:fig-nmf-k7-heatmap}}
  
 \begin{figure}
 \centering
-\pandocbounded{\includegraphics[keepaspectratio]{figures/fig-varsurvival-k5-1.png}}
+\includegraphics{si_appendix_files/figures/fig-varsurvival-k5-1.png}
 \caption{Per-factor contribution to reconstruction (normalized
 reconstruction Shapley share) versus Type III partial likelihood
 contribution for each standard NMF factor at elbow-selected \(k = 5\).
@@ -88,3 +88,8 @@ factor is removed from the full model. The two factors new relative to
 elbow selection recovers no additional prognostic structure.
 \label{fig:varsurvival-k5}}
 \end{figure}
+\efloatseparator
+ 
+\begin{figure*}[t]
+\includegraphics[width=\textwidth]{figures/fig-treated-1} \caption{DeSurv programs show context-dependent prognostic associations in treated PDAC. Trained DeSurv programs were projected without retraining onto three bulk treated cohorts: Linehan, borderline-resectable/locally advanced disease ($n=66$); Rash, metastatic disease ($n=85$); and Accept, metastatic disease ($n=70$). (A) Per-cohort overall-survival hazard ratios per SD for each program; D1 and D3 are shown marginally, D2 adjusted for PurIST and DeCAF. (B) Overall-survival hazard ratios for the classical-versus-basal contrast (PurIST, Moffitt and Bailey classifiers) in less-advanced versus metastatic disease. (C) The proCAF program D2 before and after treatment in paired Linehan biopsies (paired Wilcoxon test). (D) The D1 score versus GATA6 RNA in situ hybridization in COMPASS samples (Spearman correlation). Error bars denote 95\% confidence intervals. \label{fig:treated}}\label{fig:fig-treated}
+\end{figure*}

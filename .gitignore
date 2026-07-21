@@ -8,6 +8,8 @@ Rplots.pdf
 paper/*.log
 paper/*.tex
 paper/*_files/
+paper/*.knit.md
+/out.pdf
 logs/
 
 # OS

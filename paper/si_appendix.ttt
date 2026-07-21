@@ -5,26 +5,26 @@ samples after all quality-control filters (histology, survival validity,
 dataset-specific exclusions). Patient-level metadata: OS = overall survival
 (time and event indicator); PurIST = tumor subtype classification
 (Rashid et al. 2020); DeCAF = CAF subtype classification
-(Peng et al. 2020). Expression data and molecular classifications
+(Peng et al. 2026). Expression data and molecular classifications
 for the validation cohorts were originally compiled for the DeCAF study
-(Peng et al. 2020).}
+(Peng et al. 2026). Events denotes the number of overall-survival events (deaths) with the corresponding event rate; outcome frequency was lower and more homogeneous in the training cohorts (50--52\%) than across the validation cohorts (60--90\%, pooled 67\%), a case-mix difference relevant to the interpretation of external-validation performance.}
 \label{tab:cohorts}
 \footnotesize
-\begin{tabular}{llrllll}
+\begin{tabular}{llrrllll}
 \toprule
-Cohort & Platform & $N$ & Role & Accession & Metadata & Reference \\
+Cohort & Platform & $N$ & Events & Role & Accession & Metadata & Reference \\
 \midrule
-TCGA-PAAD        & RNA-seq    & 144 & Training   & GDC (TCGA-PAAD) & OS, PurIST, DeCAF & Raphael et al. (2017) \\
-CPTAC            & RNA-seq    & 129 & Training   & GDC (CPTAC-3)    & OS, PurIST, DeCAF & Ellis et al. (2013) \\
+TCGA-PAAD        & RNA-seq    & 144 & 75 (52\%)  & Training   & GDC (TCGA-PAAD) & OS, PurIST, DeCAF & Raphael et al. (2017) \\
+CPTAC            & RNA-seq    & 129 & 64 (50\%)  & Training   & GDC (CPTAC-3)    & OS, PurIST, DeCAF & Cao et al. (2021) \\
 \addlinespace
-Dijk             & RNA-seq    &  90 & Validation & E-MTAB-6830      & OS, PurIST, DeCAF & Dijk et al. (2020) \\
-Moffitt          & Microarray & 123 & Validation & GSE71729         & OS, PurIST, DeCAF & Moffitt et al. (2015) \\
-PACA-AU (array)  & Microarray &  63 & Validation & GSE36924         & OS, PurIST, DeCAF & Bailey et al. (2016) \\
-PACA-AU (RNA-seq) & RNA-seq   &  52 & Validation & EGAS00001000154  & OS, PurIST, DeCAF & Bailey et al. (2016) \\
-Puleo            & Microarray & 288 & Validation & E-MTAB-6134      & OS, PurIST, DeCAF & Puleo et al. (2018) \\
+Dijk             & RNA-seq    &  90 & 81 (90\%)  & Validation & E-MTAB-6830      & OS, PurIST, DeCAF & Dijk et al. (2020) \\
+Moffitt          & Microarray & 123 & 83 (67\%)  & Validation & GSE71729         & OS, PurIST, DeCAF & Moffitt et al. (2015) \\
+PACA-AU (array)  & Microarray &  63 & 38 (60\%)  & Validation & GSE36924         & OS, PurIST, DeCAF & Bailey et al. (2016) \\
+PACA-AU (RNA-seq) & RNA-seq   &  52 & 31 (60\%)  & Validation & EGAS00001000154  & OS, PurIST, DeCAF & Bailey et al. (2016) \\
+Puleo            & Microarray & 288 & 181 (63\%) & Validation & E-MTAB-6134      & OS, PurIST, DeCAF & Puleo et al. (2018) \\
 \addlinespace
-\multicolumn{2}{l}{Training total} & 273 & & & & \\
-\multicolumn{2}{l}{Validation total} & 616 & & & & \\
+\multicolumn{2}{l}{Training total} & 273 & 139 (51\%) & & & & \\
+\multicolumn{2}{l}{Validation total} & 616 & 414 (67\%) & & & & \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -32,7 +32,7 @@ Puleo            & Microarray & 288 & Validation & E-MTAB-6134      & OS, PurIST
  
 \begin{table}[H]
 \centering
-\caption{\label{tab:tab-projection-r2}Cross-method projection $R^2$: how reconstructable each factor's gene-loading vector is from the other method's full basis (OLS $R^2$). DeSurv retains the bulk of the unsupervised structure (NMF N1 and N3 carry over at $R^2 \ge 0.88$) and reorganizes it: the survival-aligned D1 program is essentially unreconstructable from the NMF basis ($R^2 = 0.09$), i.e. created de novo by supervision, while the exocrine NMF factor N2 dissolves ($R^2 = 0.38$). \label{tab:projection-r2}}
+\caption{\label{tab:tab-projection-r2}Cross-method projection $R^2$: how reconstructable each factor's gene-loading vector is from the other method's full basis (OLS $R^2$). DeSurv retains the bulk of the unsupervised structure (NMF N1 and N3 carry over at $R^2 \ge 0.88$) and reorganizes it: the survival-aligned D1 program is essentially unreconstructable from the NMF basis ($R^2 = 0.09$), i.e. not well reconstructed as a linear combination of the NMF factors, while the exocrine NMF factor N2 is poorly reconstructed from the DeSurv basis ($R^2 = 0.38$). \label{tab:projection-r2}}
 \centering
 \fontsize{9}{11}\selectfont
 \begin{tabular}[t]{lll}
@@ -42,10 +42,10 @@ Factor & $R^2$ from other basis & Interpretation\\
 NMF N1 (tumor) & 0.90 & preserved\\
 NMF N2 (exocrine) & 0.38 & dissolved\\
 NMF N3 (microenviron.) & 0.88 & preserved\\
-DeSurv D1 (Classical/restCAF) & 0.09 & novel ($\approx$91\% de novo)\\
+DeSurv D1 (classical/restCAF) & 0.09 & not reconstructable\\
 DeSurv D2 (proCAF) & 0.81 & inherited ($\approx$N3)\\
 \addlinespace
-DeSurv D3 (Basal-like) & 0.75 & inherited ($\approx$N1)\\
+DeSurv D3 (basal-like) & 0.75 & inherited ($\approx$N1)\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -69,7 +69,7 @@ DeSurv ($k = 3$) & 0.938 & 0.062\\
  
 \begin{table}[H]
 \centering
-\caption{\label{tab:clinical-adj}Adjusted hazard ratios (per SD of the DeSurv linear predictor) for overall survival, before and after adjustment for standard clinical covariates and, where annotated, tumor purity, fitted separately in each cohort by complete-case analysis (per-cell $n$ and events shown). The Covariates column lists the clinical variables entered (stage, grade, age, sex, nodal status, or resection margin, as available). The DeSurv score remains independently prognostic after clinical adjustment in the fully-annotated external PACA-AU cohorts and both training cohorts; where tumor-purity annotation was available (PACA-AU array and TCGA), it also remained prognostic after purity adjustment, consistent with the association not being driven solely by purity or composition; the smaller Dijk and Moffitt cohorts were individually underpowered (non-significant even unadjusted). Training-cohort (TCGA, CPTAC) hazard ratios are in-sample. \label{tab:clinical-adjustment}}
+\caption{\label{tab:clinical-adj}Adjusted hazard ratios (per SD of the DeSurv linear predictor) for overall survival, before and after adjustment for standard clinical covariates and, where annotated, tumor purity, fitted separately in each cohort by complete-case analysis (per-cell $n$ and events shown). The Covariates column lists the clinical variables entered (stage, grade, age, sex, nodal status, or resection margin, as available). The DeSurv score remains independently prognostic after clinical adjustment in the fully-annotated external PACA-AU cohorts and both training cohorts; where tumor-purity annotation was available, it also remained prognostic after purity adjustment in the adequately-powered cohorts (both PACA-AU cohorts and TCGA), consistent with the association not being driven solely by purity or composition. The smaller Dijk and Moffitt cohorts were individually underpowered (non-significant even unadjusted; the Moffitt purity-adjusted model, $n = 29$, likewise). Training-cohort (TCGA, CPTAC) hazard ratios are in-sample. \label{tab:clinical-adjustment}}
 \centering
 \resizebox{\ifdim\width>\linewidth\linewidth\else\width\fi}{!}{
 \fontsize{8}{10}\selectfont
@@ -130,12 +130,12 @@ Puleo array & 288 & 181 & 1782.0 & 1782.6 & +0.6\\
  
 \begin{table}[H]
 \centering
-\caption{\label{tab:tab-gene-list-270-D1}Top 270 genes for DeSurv factor D1 (Factor D1 (Classical tumor + restCAF stroma)), ranked by factor specificity score $s_{ij}$. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}}$). \label{tab:gene-list-270-D1}}
+\caption{\label{tab:tab-gene-list-270-D1}Top 270 genes for DeSurv factor D1 (Factor D1 (classical tumor + restCAF-like stroma)), ranked by factor specificity score $s_{ij}$. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}}$). \label{tab:gene-list-270-D1}}
 \centering
 \fontsize{8}{10}\selectfont
 \begin{tabular}[t]{llllll}
 \toprule
-\multicolumn{6}{c}{\textbf{Factor D1 (Classical tumor + restCAF stroma)}} \\
+\multicolumn{6}{c}{\textbf{Factor D1 (classical tumor + restCAF-like stroma)}} \\
 \cmidrule(l{3pt}r{3pt}){1-6}
 1--45 & 46--90 & 91--135 & 136--180 & 181--225 & 226--270\\
 \midrule
@@ -246,12 +246,12 @@ ITGBL1 & FERMT2 & SEL1L & AHR & SLC38A2 & SLC2A3\\
 \end{tabular}
 \end{table}\begin{table}[H]
 \centering
-\caption{\label{tab:tab-gene-list-270-D3}Top 270 genes for DeSurv factor D3 (Factor D3 (Basal-like tumor)), ranked by factor specificity score $s_{ij}$. \label{tab:gene-list-270-D3}}
+\caption{\label{tab:tab-gene-list-270-D3}Top 270 genes for DeSurv factor D3 (Factor D3 (basal-like tumor)), ranked by factor specificity score $s_{ij}$. \label{tab:gene-list-270-D3}}
 \centering
 \fontsize{8}{10}\selectfont
 \begin{tabular}[t]{llllll}
 \toprule
-\multicolumn{6}{c}{\textbf{Factor D3 (Basal-like tumor)}} \\
+\multicolumn{6}{c}{\textbf{Factor D3 (basal-like tumor)}} \\
 \cmidrule(l{3pt}r{3pt}){1-6}
 1--45 & 46--90 & 91--135 & 136--180 & 181--225 & 226--270\\
 \midrule
@@ -307,7 +307,7 @@ BGN & LRRC8A & SMAD3 & KCNK5 & VWA1 & TAP1\\
  
 \begin{table}[H]
 \centering
-\caption{Per-cohort overall-survival hazard ratios per SD in the three bulk treated PDAC cohorts. $D_1$ marginal; $D_2$ marginal and PurIST + DeCAF-adjusted; $D_3$ marginal. Sample sizes: Linehan $n=66$ (22 events), Rash $n=85$ (73 events), Accept $n=70$ (57 events); Basal-like prevalence Linehan 9\% (6 cases), Rash 22\%, Accept 16\%. \label{tab:treated-os}}
+\caption{Per-cohort overall-survival hazard ratios per SD in the three bulk treated PDAC cohorts. $D_1$ marginal; $D_2$ marginal and PurIST + DeCAF-adjusted; $D_3$ marginal. Sample sizes: Linehan $n=66$ (22 events), Rash $n=85$ (73 events), Accept $n=70$ (57 events); basal-like prevalence Linehan 9\% (6 cases), Rash 22\%, Accept 16\%. \label{tab:treated-os}}
 \begin{tabular}{lcccc}
 \toprule
 Cohort (setting) & $D_1$ (marginal) & $D_2$ (marginal) & $D_2$ (+PurIST+DeCAF) & $D_3$ (marginal) \\
@@ -322,7 +322,7 @@ Accept (metastatic) & $1.10$ ($0.87$--$1.38$), 0.427  & $0.78$ ($0.58$--$1.04$),
  
 \begin{table}[H]
 \centering
-\caption{Classical-vs-Basal overall-survival hazard ratios for established subtype classifiers, by cohort. All are strongly prognostic in less-advanced disease (Linehan) and attenuate in metastatic disease (Rash, Accept). \label{tab:axis}}
+\caption{Classical-vs-basal overall-survival hazard ratios for established subtype classifiers, by cohort. PurIST is strongly prognostic in the less-advanced Linehan cohort; all three classifiers attenuate in metastatic disease (Rash, Accept). \label{tab:axis}}
 \begin{tabular}{lccc}
 \toprule
 Classifier & Linehan (BR/LA) & Rash (metastatic) & Accept (metastatic) \\

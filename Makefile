@@ -76,6 +76,7 @@ all:
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/16_desurv_vs_supervised.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/17_brier_metrics.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/18_clinical_adjustment.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/19_desurv_vs_supervised_tuned.R
 	DESURV_RECOMPUTE=FALSE $(RSCRIPT) code/10_render_paper.R
 	@echo "=== Full pipeline complete ==="
 

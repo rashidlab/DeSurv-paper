@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-# code/17_desurv_vs_supervised_tuned.R
+# code/19_desurv_vs_supervised_tuned.R
 # ---------------------------------------------------------------------------
 # Hardened DeSurv-vs-supervised comparison for the Nature Cancer revision.
 #
@@ -35,7 +35,7 @@ source("R/get_top_genes.R")
 QUICK  <- toupper(Sys.getenv("DESURV_QUICK")) %in% c("TRUE","1","YES")
 NSEED  <- if (QUICK) 3L else 12L      # superpc/sparse-Cox stability + attribution seeds
 NTHR   <- if (QUICK) 10L else 20L     # superpc CV thresholds
-message(sprintf("[17] tuned supervised comparison (NSEED=%d, NTHR=%d)%s", NSEED, NTHR, if (QUICK) " [QUICK]" else ""))
+message(sprintf("[19] tuned supervised comparison (NSEED=%d, NTHR=%d)%s", NSEED, NTHR, if (QUICK) " [QUICK]" else ""))
 
 ## ---- data (shared training-only 1,970-gene universe; already rank-transformed) ----
 dat <- readRDS("results/tar_data_filtered_tcgacptac.rds")
@@ -127,7 +127,7 @@ res <- list(
   ref_seed1 = list("Sparse Cox"=annot_set(genes[w_SC!=0]), "Supervised PCA"=annot_set(sd1$genes)),
   signature_sizes = sapply(sig,length))
 saveRDS(res, "results/desurv_vs_supervised_tuned.rds")
-message("[17] saved results/desurv_vs_supervised_tuned.rds")
+message("[19] saved results/desurv_vs_supervised_tuned.rds")
 
 cat("\n== prediction (pooled transfer C) ==\n"); print(res$prediction[,"POOLED",drop=FALSE])
 cat("\n== axis decomposition (comparator vs D1/D2/D3/fullLP) ==\n"); print(res$axis_decomposition)

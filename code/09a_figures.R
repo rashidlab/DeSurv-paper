@@ -503,11 +503,30 @@ km_legend_gg   <- ggplotGrob(km_legend_plot)
 km_legend_grob <- km_legend_gg$grobs[
   sapply(km_legend_gg$grobs, function(x) x$name) == "guide-box"][[1]]
 
+## Fig 3C: tuned supervised scores vs DeSurv programs (|Spearman r|; axis_decomposition cache)
+.axd <- readRDS("results/desurv_vs_supervised_tuned.rds")$axis_decomposition
+.hm_df <- data.frame(
+  method  = factor(rep(c("Supervised PCA", "Penalized Cox"), each = 3),
+                   levels = c("Supervised PCA", "Penalized Cox")),
+  program = factor(rep(c("D1", "D2", "D3"), 2), levels = c("D1", "D2", "D3")),
+  r = c(abs(as.numeric(.axd["Supervised PCA", c("D1", "D2", "D3")])),
+        abs(as.numeric(.axd["Sparse Cox",     c("D1", "D2", "D3")])))
+)
+fig_supcorr_hm <- ggplot(.hm_df, aes(program, method, fill = r)) +
+  geom_tile(color = "white", linewidth = 0.6) +
+  geom_text(aes(label = sprintf("%.2f", r)), size = km_text_size / ggplot2::.pt) +
+  scale_fill_gradient(low = "#f7fbff", high = "#08519c", limits = c(0, 1),
+                      name = expression("|" * italic(r) * "|")) +
+  labs(x = NULL, y = NULL, title = "Supervised score vs DeSurv program") +
+  theme_pnas +
+  theme(plot.title = element_text(size = 9), axis.text = element_text(size = km_text_size),
+        legend.position = "right", legend.key.width = unit(8, "pt"))
+
 km_block_4 <- plot_grid(
   stack_surv(fig_median_survival_desurv, "DeSurv"),
-  stack_surv(fig_median_survival_std_desurvk, "NMF"),
   ggdraw(km_legend_grob),
-  nrow = 3, labels = c("B", "C", ""), label_size = 12, rel_heights = c(5, 5, 0.6)
+  fig_supcorr_hm,
+  nrow = 3, labels = c("B", "", "C"), label_size = 12, rel_heights = c(5, 0.6, 4.2)
 )
 ggsave(
   file.path(FIGURE_DIR, "fig4_tcgacptac.pdf"),

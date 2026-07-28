@@ -70,7 +70,8 @@ superpc_pick <- function(seed){ set.seed(seed)
   lr<-cv$scor; lr[is.na(lr)]<--Inf; bi<-which(lr==max(lr),arr.ind=TRUE)[1,]
   list(ncomp=as.integer(bi[1]), thr=cv$thresholds[bi[2]], scor_by_ncomp=apply(cv$scor,1,max,na.rm=TRUE)) }
 superpc_dir <- function(pk){ pr<-superpc.predict(sp,dtr,dtr,threshold=pk$thr,n.components=pk$ncomp,prediction.type="continuous")
-  scr<-as.numeric(pr$v.pred[,1]); keepg<-abs(sp$feature.scores)>=pk$thr
+  V<-as.matrix(pr$v.pred); scr<-as.numeric(V %*% coef(coxph(Surv(y,d) ~ V)))  # Cox-combine ALL CV-tuned components
+  keepg<-abs(sp$feature.scores)>=pk$thr
   w<-setNames(rep(0,length(genes)),genes); w[keepg]<-apply(Xtr[,keepg,drop=FALSE],2,function(g)cor(g,scr))
   list(w=w, genes=genes[keepg], score=scr) }
 
@@ -97,6 +98,16 @@ enrich <- function(gs,cs,N=length(genes)) -log10(max(phyper(length(intersect(gs,
 hits <- function(gs) names(sig)[sapply(sig,function(cs) enrich(gs,cs))>2]
 desurv_attr <- lapply(1:3, function(j) hits(intersect(tg[[j]],genes))); names(desurv_attr)<-c("D1","D2","D3")
 
+## ---- stromal-signal CARRIAGE: does each risk score track an external activated-stroma/proCAF
+## signature at all (distinguishes "stromal signal absent" from "present but not resolved")? ----
+strom_genes <- intersect(unique(c(sig$ActivatedStroma, sig$proCAF)), genes)
+strom_score <- rowMeans(Xtr[, strom_genes, drop=FALSE])   # per-sample stromal signature score
+carriage_of <- function(s) round(abs(cor(s, strom_score)), 2)
+stromal_carriage <- c("DeSurv D2 (proCAF factor)" = carriage_of(Zt[,2]),
+                      "DeSurv full LP"             = carriage_of(proj(ex, M[["DeSurv full LP"]])),
+                      "Sparse Cox"                 = carriage_of(comp_scores[["Sparse Cox"]]),
+                      "Supervised PCA"             = carriage_of(comp_scores[["Supervised PCA"]]))
+
 ## ---- (3)+(4) attribution robustness + superpc stability across seeds ----
 stab <- data.frame(); comp_hit_counts <- list("Sparse Cox"=setNames(integer(length(sig)),names(sig)),
                                                "Supervised PCA"=setNames(integer(length(sig)),names(sig)))
@@ -119,6 +130,7 @@ res <- list(
               methods=c("DeSurv (top-270 x3)","Sparse Cox (glmnet)","Supervised PCA (superpc)")),
   prediction = round(val,3),
   axis_decomposition = round(abs(factor_dist),2),   # report |r| (orientation-invariant)
+  stromal_carriage = stromal_carriage,              # |r| of each risk score with external stroma signature
   superpc_ncomp_scores = round(pk1$scor_by_ncomp,2),
   desurv_attribution = desurv_attr,
   supervised_attribution_across_seeds = comp_hit_counts,
@@ -131,6 +143,7 @@ message("[19] saved results/desurv_vs_supervised_tuned.rds")
 
 cat("\n== prediction (pooled transfer C) ==\n"); print(res$prediction[,"POOLED",drop=FALSE])
 cat("\n== axis decomposition (comparator vs D1/D2/D3/fullLP) ==\n"); print(res$axis_decomposition)
+cat("\n== stromal-signal carriage (|r| with external activated-stroma/proCAF signature) ==\n"); print(res$stromal_carriage)
 cat("\n== attribution across", NSEED, "seeds (# seeds each compartment hit) ==\n")
 for (m in names(comp_hit_counts)) cat(sprintf("  %-16s %s | genes/seed med=%d [%d,%d]\n", m,
    paste(sprintf("%s:%d", names(comp_hit_counts[[m]])[comp_hit_counts[[m]]>0], comp_hit_counts[[m]][comp_hit_counts[[m]]>0]),collapse=" "),

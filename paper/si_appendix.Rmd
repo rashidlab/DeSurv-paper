@@ -1104,6 +1104,24 @@ and with standard NMF's failure to enrich for the proCAF stroma at matched rank
 knitr::include_graphics(file.path("..", "figures", "fig_supervised_recovery.pdf"), error = FALSE)
 ```
 
+```{r suptuned-stats, echo=FALSE, message=FALSE, warning=FALSE}
+load_result("desurv_vs_supervised_tuned")
+.stv    <- desurv_vs_supervised_tuned
+.stvp   <- function(m) sprintf("%.2f", .stv$prediction[m, "POOLED"])
+.stva   <- function(m, f) sprintf("%.2f", abs(.stv$axis_decomposition[m, f]))
+.stvhit <- function(m) unname(.stv$supervised_attribution_across_seeds[[m]]["BasalTumor"])
+.stvg   <- function(m, q) unname(.stv$genes_per_seed[[m]][q])
+.stvns  <- .stv$meta$nseed
+```
+
+\subsection{Robustness to tuned supervised comparators and compartment attribution}
+
+The recovery above establishes the D1 axis as a genuine survival direction shared across methods; here we ask what DeSurv adds beyond recovering it, using canonical, independently tuned comparators in place of the simple single-component versions above: supervised principal components (\texttt{superpc}; Bair--Tibshirani, with cross-validated screening threshold and component number) and penalized (lasso) Cox (\texttt{glmnet}, a single $\lambda_{\min}$ model). Cox partial least squares was not re-run in this pass, as a validated multi-component implementation was unavailable in our environment; the two canonical methods are sufficient. Every method began from the same 1{,}970-gene training-only expression/variance universe and performed its own feature selection; DeSurv was scored with its Bayesian-optimization-selected top-270-per-factor programs; all scoring used the frozen, rank-transformed transfer with no validation refitting.
+
+Prediction parity was preserved: the pooled frozen-transfer C-index was $`r .stvp("DeSurv full LP")`$ for the DeSurv linear predictor, $`r .stvp("Supervised PCA")`$ for supervised PCA, and $`r .stvp("Sparse Cox")`$ for penalized Cox. Consistent with the score-level recovery above, both tuned methods aligned with the D1 direction (training $|r| = `r .stva("Sparse Cox","D1")`$ and $`r .stva("Supervised PCA","D1")`$) and with the DeSurv linear predictor ($|r| = `r .stva("Sparse Cox","fullLP")`$ and $`r .stva("Supervised PCA","fullLP")`$), but were essentially orthogonal to the activated-stroma/proCAF program D2 ($|r| = `r .stva("Sparse Cox","D2")`$ and $`r .stva("Supervised PCA","D2")`$): a single supervised risk axis captures the dominant tumour-axis signal but not the separate stromal program.
+
+The compartment attribution made this explicit. Because D1 runs from a classical-tumour, restraining-stroma protective pole to a basal-like high-risk pole, a sparse supervised risk score aligned with D1 is naturally composed of basal-like tumour markers. Accordingly, across `r .stvns` cross-validation seeds the genes selected by both methods were reproducibly enriched (hypergeometric $P < 0.01$) for the basal-like tumour program (in `r .stvhit("Sparse Cox")`/`r .stvns` seeds for penalized Cox and `r .stvhit("Supervised PCA")`/`r .stvns` for supervised PCA) and in no seed for the activated-stroma/proCAF, restraining-stroma, immune, or exocrine compartments. DeSurv instead distributed the same prognostic structure across three compartment-attributable programs --- classical tumour with restraining/normal stroma (D1), activated stroma/proCAF (D2), and basal-like tumour (D3) --- representing the stromal contribution to prognosis explicitly rather than omitting it. The supervised feature selection was also unstable: the number of genes selected by supervised PCA ranged from `r .stvg("Supervised PCA","min")` to `r .stvg("Supervised PCA","max")` across seeds while its discrimination stayed near-constant, whereas DeSurv's programs are fixed. Together, these analyses indicate that tuned survival-supervised predictors recover the dominant prognostic direction and predict comparably, but express it as an unstable, tumour-restricted gene axis, whereas DeSurv resolves it into stable, source-attributable tumour and stromal programs.
+
 ```{r brier-stats, echo=FALSE, message=FALSE, warning=FALSE}
 load_result("desurv_brier_stats")
 .br <- desurv_brier_stats; .brp <- .br$pooled; .bripa <- range(.br$per_cohort$ipa)

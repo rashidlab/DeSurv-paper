@@ -374,7 +374,9 @@ plot_3d <- plot_grid(
 # Panel E: DeSurv D1 score vs GATA6 RNA-ISH in COMPASS. Raw per-sample points are
 # cached (aggregate-level derived values, no raw expression) in the tracked
 # treated_cohort_stats.rds by code/11 (run out of band on the restricted data).
-.g6 <- readRDS(file.path(RESULTS_DIR, "treated_cohort_stats.rds"))$gata6
+# Read from the fixed base "results/" path (where code/11 writes it), NOT
+# RESULTS_DIR, so it resolves under quick/ntop subfolder modes too.
+.g6 <- readRDS(file.path("results", "treated_cohort_stats.rds"))$gata6
 plot_3e <- ggplot(.g6$points, aes(x = factor(gata6), y = D1)) +
   geom_boxplot(outlier.shape = NA, width = 0.6, fill = "grey92", linewidth = 0.3) +
   geom_jitter(width = 0.12, height = 0, size = 1.3, alpha = 0.75, colour = "#08519c") +

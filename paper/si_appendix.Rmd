@@ -811,6 +811,10 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 ```
 
+\subsection{Consensus initialization for the final model}
+
+The final DeSurv model at the selected hyperparameters was initialized from a consensus of multiple independent runs to reduce sensitivity to random starts. We first fit several DeSurv models to the training data from independent random nonnegative initializations at the selected $(k,\alpha,\lambda,\xi,n_{\text{top}})$. For each run, the top $n_{\text{top}}$ genes of every learned program were extracted by factor-specificity score, and a gene-by-gene consensus matrix was accumulated across runs, recording how often each pair of genes appeared together among the top genes of the same program. Genes appearing in the top sets of fewer than $m$ runs (default $m = 2$) were treated as inactive and excluded from clustering. The consensus matrix over the remaining genes was partitioned into $k$ groups by agglomerative hierarchical clustering (average linkage), and each cluster defined one column of the initial gene-program matrix $W_0$; inactive genes and otherwise-empty entries were set to a small positive floor ($\sqrt{\epsilon_{\text{mach}}}$) to preserve strict positivity. The initial loadings $H_0$ were obtained by nonnegative least squares given $W_0$ and the training expression matrix, and the initial Cox coefficients $\beta_0$ were set to zero. This consensus seed used only training-cohort expression and was applied solely to initialize the single final refit after hyperparameter selection; it used no validation-cohort data and therefore introduced no information leakage.
+
 \section{PDAC Datasets}
 
 We analyzed PDAC cohorts from TCGA-PAAD and CPTAC-PDAC as training data
@@ -1249,7 +1253,7 @@ if (!exists("set_fig_font", inherits = TRUE)) {
 
 # The DeSurv model shows consistent convergence and stability across restarts
 
-In the PDAC training cohort, the DeSurv objective converged to numerically stable solutions within the designated iteration budget across random multi-start initializations. Fig. \ref{fig:fig-converge} shows representative loss trajectories demonstrating monotone decreases until convergence across restarts.
+Supplementary Theorem 1 establishes convergence to a stationary point under $\lambda_H > 0$. The reported analyses used $\lambda_H = 0$, so the theorem does not formally apply to the fitted models; convergence was therefore assessed empirically across multiple initializations and was consistently observed (Fig.\ \ref{fig:fig-converge}). The software implementation also supports an optional ridge penalty on the gene programs ($\lambda_W$), which was likewise set to zero in all reported analyses. In the PDAC training cohort, the DeSurv objective converged to numerically stable solutions within the designated iteration budget across random multi-start initializations. Fig. \ref{fig:fig-converge} shows representative loss trajectories demonstrating monotone decreases until convergence across restarts.
 
 
 ```{r fig-converge, fig.width = 5, fig.height= 3, fig.cap="Convergence trajectories of the DeSurv objective across five randomly selected multi-start initializations on the PDAC training cohort (TCGA + CPTAC). Each line shows the relative loss (loss at iteration $t$ divided by the initial loss for that restart) as a function of iteration number, restricted to the first 5{,}000 iterations for readability. The total objective decreases monotonically and stabilizes well within the iteration budget across all initializations, confirming convergence of the alternating block-update scheme.", fig.env='figure*', fig.pos='t', out.height= "3in", out.width='5in', fig.align='center'}

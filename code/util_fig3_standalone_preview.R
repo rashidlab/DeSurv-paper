@@ -123,8 +123,9 @@ p_leg <- ggplot(all_data, aes(HR, factor_name, colour = dataset, shape = dataset
   scale_size_manual(values = cohort_sizes, name = NULL) +
   guides(colour = guide_legend(nrow = 1, override.aes = list(size = 2.5)),
          shape = guide_legend(nrow = 1), size = guide_legend(nrow = 1)) +
-  theme_void(base_size = base_size) + theme(legend.position = "bottom",
-                                            legend.text = element_text(size = 8))
+  theme_void(base_size = base_size) +
+  theme(legend.position = "bottom", legend.text = element_text(size = 7),
+        legend.spacing.x = unit(2, "pt"), legend.margin = margin(0, 0, 0, 0))
 forest_legend <- gtable::gtable_filter(ggplotGrob(p_leg), "guide-box")
 plot_forest <- plot_grid(
   plot_grid(make_forest_panel(desurv_dat, "DeSurv (D1-D3)", "D1"),
@@ -132,14 +133,52 @@ plot_forest <- plot_grid(
             ncol = 2, align = "hv", axis = "tb"),
   forest_legend, nrow = 2, rel_heights = c(15, 1))
 
-# --- Panel B: DeSurv KM, plot stacked over number-at-risk table --------------
-km_plot <- km$plot + ggtitle("DeSurv") + theme(plot.title = element_text(size = 9, hjust = 0.5))
-km_b <- if (has_ggtext) {
-  plot_grid(km_plot, km$table + theme(plot.title = element_text(size = 8)),
-            ncol = 1, rel_heights = c(4, 1.2))
-} else {
+# --- Panel B: DeSurv KM + number-at-risk table (verbatim 09a stack_surv) -----
+theme_pnas <- theme_classic(base_size = base_size) +
+  theme(plot.title = element_text(face = "bold"),
+        plot.margin = margin(6, 10, 6, 15), legend.box.margin = margin(0, 0, 0, 0),
+        legend.spacing.x = unit(6, "pt"), legend.key.width = unit(12, "pt"))
+km_text_size <- base_size
+
+stack_surv <- function(surv_obj, title) {
+  p <- surv_obj$plot + theme_pnas +
+    theme(legend.position = "none", axis.title.x = element_blank(),
+          axis.title.y = element_text(size = km_text_size),
+          axis.text.x = element_text(size = km_text_size),
+          axis.text.y = element_text(size = km_text_size),
+          plot.margin = margin(4, 10, 0, 10), plot.title = element_text(size = 9)) +
+    labs(title = title)
+  t <- surv_obj$table + theme_pnas +
+    theme(legend.position = "none", axis.title.y = element_blank(),
+          axis.text.x = element_text(size = km_text_size),
+          axis.text.y = element_text(size = km_text_size),
+          text = element_text(size = km_text_size),
+          axis.title.x = element_text(size = km_text_size),
+          plot.title = element_text(size = km_text_size),
+          plot.margin = margin(4, 10, 2, 10)) +
+    labs(x = "Time (months)")
+  t$layers[[1]]$aes_params$size <- km_text_size / ggplot2::.pt   # shrink at-risk numbers
+  plot_grid(p, t, ncol = 1, rel_heights = c(2.5, 1.5), align = "v", axis = "lr")
+}
+
+# separate Low/High strata legend, drawn once below the KM (as in 09a)
+km_legend_plot <- ggplot(data.frame(x = 1:2, y = 1:2,
+                                    group = factor(c("Low", "High"), levels = c("Low", "High"))),
+                         aes(x, y, colour = group)) + geom_line() +
+  scale_colour_manual(values = c("Low" = "violetred2", "High" = "turquoise4"),
+                      name = "Risk group") +
+  theme_pnas + theme(legend.position = "bottom",
+                     legend.text = element_text(size = km_text_size),
+                     legend.title = element_text(size = km_text_size)) +
+  guides(colour = guide_legend(nrow = 1))
+km_legend_gg   <- ggplotGrob(km_legend_plot)
+km_legend_grob <- km_legend_gg$grobs[
+  vapply(km_legend_gg$grobs, function(g) g$name, "") == "guide-box"][[1]]
+
+km_b <- if (has_ggtext) stack_surv(km, "DeSurv") else {
   message("ggtext not available: dropping number-at-risk table from panel B")
-  km_plot
+  km$plot + theme_pnas + theme(legend.position = "none", plot.title = element_text(size = 9)) +
+    labs(title = "DeSurv")
 }
 
 # --- Panel C: tuned-supervised vs DeSurv-program correspondence heatmap ------
@@ -159,11 +198,14 @@ fig_c <- ggplot(hm_df, aes(program, method, fill = r)) +
   theme(plot.title = element_text(size = 9, hjust = 0.5), panel.grid = element_blank(),
         axis.text = element_text(color = "black"), legend.position = "right")
 
-km_block <- plot_grid(km_b, fig_c, ncol = 1, labels = c("B", "C"), rel_heights = c(5, 4.2))
+# right column: B (KM+table) / strata legend / C (heatmap) — verbatim 09a km_block_4
+km_block <- plot_grid(km_b, ggdraw(km_legend_grob), fig_c,
+                      nrow = 3, labels = c("B", "", "C"), label_size = 12,
+                      rel_heights = c(5, 0.6, 4.2))
 
-# --- compose full Fig 3 -----------------------------------------------------
+# --- compose full Fig 3 (dims + label_size match 09a's fig4_tcgacptac.pdf) ---
 fig3 <- plot_grid(plot_forest, km_block, ncol = 2, rel_widths = c(1.4, 1),
-                  labels = c("A", ""))
-ggsave(file.path(out_dir, "fig3_full.pdf"), fig3, width = 9.2, height = 6.4)
+                  labels = c("A", ""), label_size = 12)
+ggsave(file.path(out_dir, "fig3_full.pdf"), fig3, width = 7, height = 4.8)
 cat("Wrote", file.path(out_dir, "fig3_full.pdf"),
     "- full Fig 3 (A forest + B KM + C supervised heatmap), built locally without DeSurv.\n")

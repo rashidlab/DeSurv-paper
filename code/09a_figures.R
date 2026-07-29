@@ -371,11 +371,25 @@ plot_3d <- plot_grid(
   plot_grid(NULL, cowplot::ggdraw(legend_d_grob), nrow = 2, rel_heights = c(0.08, 0.92)),
   ncol = 2, rel_widths = c(4, 1)
 )
-bottom_row_3 <- plot_grid(plot_3c, plot_3d, ncol = 2, labels = c("C", "D"),
-                          label_size = 12, rel_widths = c(0.55, 0.45))
+# Panel E: DeSurv D1 score vs GATA6 RNA-ISH in COMPASS. Raw per-sample points are
+# cached (aggregate-level derived values, no raw expression) in the tracked
+# treated_cohort_stats.rds by code/11 (run out of band on the restricted data).
+.g6 <- readRDS(file.path(RESULTS_DIR, "treated_cohort_stats.rds"))$gata6
+plot_3e <- ggplot(.g6$points, aes(x = factor(gata6), y = D1)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, fill = "grey92", linewidth = 0.3) +
+  geom_jitter(width = 0.12, height = 0, size = 1.3, alpha = 0.75, colour = "#08519c") +
+  annotate("text", x = 0.6, y = max(.g6$points$D1), hjust = 0, vjust = 1, size = 2.9,
+           label = sprintf("Spearman~italic(r)==%.2f", .g6$rho), parse = TRUE) +
+  annotate("text", x = 0.6, y = max(.g6$points$D1) - 0.45, hjust = 0, vjust = 1, size = 2.9,
+           label = sprintf("italic(P)<0.001*','~n==%d", .g6$n), parse = TRUE) +
+  labs(x = "GATA6 RNA-ISH level", y = "DeSurv D1 score (z)") +
+  theme_classic(base_size = 9) + theme(axis.title = element_text(size = 8))
+
+bottom_row_3 <- plot_grid(plot_3c, plot_3d, plot_3e, ncol = 3, labels = c("C", "D", "E"),
+                          label_size = 12, rel_widths = c(0.37, 0.33, 0.30))
 ggsave(
   file.path(FIGURE_DIR, "fig3_tcgacptac.pdf"),
-  plot_grid(top_row_3, bottom_row_3, nrow = 2, rel_heights = c(1.3, 0.7)),
+  plot_grid(top_row_3, bottom_row_3, nrow = 2, rel_heights = c(1.3, 0.72)),
   width = 7, height = 7
 )
 message("Saved fig3_tcgacptac.pdf")

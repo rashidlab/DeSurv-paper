@@ -1,12 +1,17 @@
 # Longleaf figure-regeneration run-book (Nature Cancer resubmission)
 
-Regenerating the main figures needs the populated `results/precomputed/` store, which exists
-**only on Longleaf** (Amber's pipeline runs), plus the DeSurv package and Amber's ggplot2. In the
-`DeSurv-paper-clean` local checkout `results/precomputed/` is empty, so figures cannot be rebuilt
-there. This run-book is the exact sequence to do it on the cluster.
+The cached model store lives in the **flat `results/` directory** (`RESULTS_DIR <- "results"`,
+`code/00_helpers.R:28` — the `results/precomputed/` path in the stale CLAUDE.md doc is not used).
+The `DeSurv-paper-clean` checkout on this machine **already contains that store** (59 `.rds`), so
+**Fig 3 can be, and has been, rebuilt locally** via `code/util_fig3_standalone_preview.R` (no DeSurv
+/ DiceKriging / ggplot2-downgrade needed — see that script). Longleaf is still the cleanest place to
+regenerate the **full** set in one pass, because `code/09a_figures.R` also recomputes cutpoint KMs
+through `DeSurv::`, Fig 4 needs the step-07 simulation store, and Amber's env has the exact ggplot2
+Amber built with. This run-book is the **environment + build + verify** wrapper; the per-panel
+content changes live in `figures/FIGURE_REGENERATION.md`.
 
-Work through it top to bottom. The per-figure content changes (what each panel should show) live in
-`figures/FIGURE_REGENERATION.md`; this file is the **environment + build + verify** wrapper.
+If you only need Fig 3, skip the cluster: run `Rscript code/util_fig3_standalone_preview.R` locally
+(output `figures/standalone_preview/fig3_full.pdf`) and drop it in as `fig4_tcgacptac.pdf`.
 
 ---
 
@@ -35,11 +40,11 @@ git checkout naim/nature-resubmission
 git pull origin naim/nature-resubmission          # pulls splot_cutpoint recovery (71c319f) + FIGURE_REGENERATION fixes
 ```
 
-Confirm the store is present (this is what the clean checkout lacks):
+Confirm the store is present (flat `results/`, not `results/precomputed/`):
 
 ```bash
-ls results/precomputed/tar_fit_desurv_tcgacptac.rds results/precomputed/data_val_filtered_tcgacptac.rds
-# both must exist; if empty, you are in the clean checkout, not the pipeline checkout
+ls results/tar_fit_desurv_tcgacptac.rds results/data_val_filtered_tcgacptac.rds results/sim_figs_by_scenario.rds
+# the first two drive Figs 2-3; sim_figs_by_scenario drives Fig 4
 ```
 
 ## 2. Environment
@@ -106,18 +111,19 @@ These need code/caption edits beyond re-running the builders:
 ## 6. Re-render and verify
 
 ```bash
-make paper
+make paper 2>&1 | tee /tmp/desurv_render.log     # make paper -> code/10_render_paper.R (3-pass)
 ```
 
-Then confirm the manuscript is clean:
+`code/10_render_paper.R` deletes the LaTeX aux/`.log` files on completion, so there is no persistent
+`paper/paper.pdf.log` to grep — check the render **stdout** instead:
 
 ```bash
-grep -c '??' paper/paper.pdf.log 2>/dev/null   # or check render stdout: 0 unresolved "??" refs
+grep -nE '\?\?|undefined (reference|citation)|LaTeX Warning: (Reference|Citation)' /tmp/desurv_render.log
+# expect no matches: 0 unresolved "??" cross-refs, 0 undefined citations
 ```
 
-Manually confirm the three new panel references now resolve in `paper/paper.pdf`: **Fig 2E** (GATA6),
-**Fig 3C** (supervised heatmap), **Fig 4D** (scenario gradient), and that there are 0 "??" and 0
-undefined citations in the render log.
+Then open `paper/paper.pdf` and confirm the three new panel references resolve: **Fig 2E** (GATA6),
+**Fig 3C** (supervised heatmap), **Fig 4D** (scenario gradient).
 
 ## 7. Commit the regenerated assets
 
@@ -130,12 +136,13 @@ git push origin naim/nature-resubmission
 
 ---
 
-### Quick reference: minimal path if you only want Fig 3 (the 3C swap)
+### Quick reference: Fig 3 only (the 3C swap) — no cluster needed
 
 ```bash
-git pull origin naim/nature-resubmission
-module load r/4.4.0
-# apply §3 ggplot2 guard if ggplot2 >= 4.0
-Rscript code/09a_figures.R       # rebuilds fig4_tcgacptac.pdf with the new 3C heatmap
+Rscript code/util_fig3_standalone_preview.R      # -> figures/standalone_preview/fig3_full.pdf
+cp figures/standalone_preview/fig3_full.pdf figures/fig4_tcgacptac.pdf   # drop-in as manuscript Fig 3
 # edit the fig-val caption (§5), then: make paper
 ```
+
+This reproduces `code/09a`'s Fig-3 output (A forest + B KM + C heatmap) from the cached `results/`
+store using default-library ggplot2/survminer/cowplot — the fastest path when only Fig 3 changed.

@@ -26,9 +26,10 @@ suppressMessages({
   library(survival); library(dplyr); library(gtable)
 })
 # The cached KM risk table styles its strata labels with element_markdown, which
-# needs ggtext loaded to render. ggtext is not a declared pipeline dependency, so
-# load it defensively: if absent, we drop the number-at-risk table (panel B keeps
-# the survival curve). Add "ggtext" to code/01_install.R to always include it.
+# needs ggtext loaded to render. ggtext is declared in code/01_install.R, but we
+# still load it defensively here (via requireNamespace) so this util runs even in
+# an environment where 01_install has not been run: if ggtext is absent, we drop
+# the number-at-risk table and panel B keeps just the survival curve.
 has_ggtext <- requireNamespace("ggtext", quietly = TRUE)
 if (has_ggtext) suppressMessages({
   library(ggtext)

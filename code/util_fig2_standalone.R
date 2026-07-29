@@ -136,14 +136,11 @@ plot_3d <- plot_grid(
   fig_desurv_std_correlation$plot + theme(plot.margin = margin(2, 2, 2, 20)),
   plot_grid(NULL, cowplot::ggdraw(legend_d_grob), nrow = 2, rel_heights = c(0.08, 0.92)),
   ncol = 2, rel_widths = c(4, 1))
-bottom_row_3 <- plot_grid(plot_3c, plot_3d, ncol = 2, labels = c("C", "D"),
-                          label_size = 12, rel_widths = c(0.55, 0.45))
+# Bottom row: C, D, E side by side -> keeps a ~square aspect so the figure renders
+# full-width (out.width='\textwidth') without distortion or overflowing the page.
+bottom_row_3 <- plot_grid(plot_3c, plot_3d, plot_3e, ncol = 3, labels = c("C", "D", "E"),
+                          label_size = 12, rel_widths = c(0.37, 0.33, 0.30))
 
-# Panel E in its own row, centered at ~half width
-e_row <- plot_grid(plot_3e, NULL, ncol = 2, labels = c("E", ""),
-                   label_size = 12, rel_widths = c(0.55, 0.45))
-
-fig2 <- plot_grid(top_row_3, bottom_row_3, e_row, nrow = 3,
-                  rel_heights = c(1.3, 0.7, 0.62))
-ggsave(file.path(out_dir, "fig2_full.pdf"), fig2, width = 7, height = 9)
-cat("Wrote", file.path(out_dir, "fig2_full.pdf"), "- Fig 2 panels A-E.\n")
+fig2 <- plot_grid(top_row_3, bottom_row_3, nrow = 2, rel_heights = c(1.3, 0.72))
+ggsave(file.path(out_dir, "fig2_full.pdf"), fig2, width = 7, height = 7)
+cat("Wrote", file.path(out_dir, "fig2_full.pdf"), "- Fig 2 panels A-E (7x7, full-width).\n")

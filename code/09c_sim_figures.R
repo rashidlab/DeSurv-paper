@@ -47,14 +47,17 @@ fig_bo_heat <- fig_bo_heat + theme(legend.position = "none")
 panel_b <- alt_plots$precision_box +
   labs(title = NULL, y = "Proportion of selected genes\nfrom true prognostic program")
 
-# 4D: scenario gradient — gene-recovery advantage grows as prognosis diverges from
-# dominant variance. Precision is undefined in the null scenario (no true prognostic
-# program), so the gradient spans the two signal regimes: variance-aligned -> mixed.
+# 4D: scenario gradient in gene recovery. R0_easy = prognostic program explains LOW
+# variance (separated from dominant variance); R_mixed = partial overlap between
+# variance and prognosis (per code/07_simulations.R). DeSurv recovers the true
+# program across both regimes while standard NMF, which chases variance, does not.
+# Precision is undefined in the null scenario (no true prognostic program), so it
+# is excluded here (null is covered by 4A C-index = 0.5 and the SI).
 prec_grad <- do.call(rbind, lapply(list(alt_plots, mixed_plots), function(b)
   b$cindex_box$data[, c("scenario_id", "method", "precision")]))
 prec_grad <- prec_grad[!is.na(prec_grad$precision), ]
 prec_grad$scenario <- factor(prec_grad$scenario_id, levels = c("R0_easy", "R_mixed"),
-  labels = c("Prognostic\n(variance-aligned)", "Mixed\n(divergent)"))
+  labels = c("Prognostic\n(low variance)", "Partial\noverlap"))
 prec_grad$method <- factor(prec_grad$method, levels = c("DeSurv", "NMF"))
 panel_d <- ggplot(prec_grad, aes(x = scenario, y = precision, fill = method)) +
   geom_boxplot(outlier.size = 0.4, linewidth = 0.3, position = position_dodge(0.8)) +

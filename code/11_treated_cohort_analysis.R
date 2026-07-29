@@ -228,7 +228,7 @@ treated_cohort_stats <- list(
   cohorts = list(Linehan = "borderline-resectable/locally-advanced; FOLFIRINOX +/- CCR2 inhibitor (PF-04136309)",
                  Rash = "metastatic; gemcitabine + erlotinib", Accept = "metastatic; gemcitabine +/- afatinib",
                  OKane = "O'Kane/COMPASS metastatic (laser-capture microdissected); FOLFIRINOX or gemcitabine/nab-paclitaxel"),
-  generated_note = "Derived from restricted-access external cohorts (O'Kane/COMPASS, RASH-ACCEPT, Linehan) via code/11_treated_cohort_analysis.R; only aggregate-level and paired derived program scores (no raw expression or patient identifiers) are stored; raw data not in repo.")
+  generated_note = "Derived from restricted-access external cohorts (O'Kane/COMPASS, RASH-ACCEPT, Linehan) via code/11_treated_cohort_analysis.R; stores derived summary statistics plus per-sample derived program scores (paired D2 pre/post in paired$points; D1 vs GATA6 in gata6$points) with no raw expression and no patient identifiers; raw data not in repo.")
 saveRDS(treated_cohort_stats, file.path("results", "treated_cohort_stats.rds"))
 cat("Wrote results/treated_cohort_stats.rds\n")
 print(os[, c("cohort","program","model","hr","lo","hi","p")])

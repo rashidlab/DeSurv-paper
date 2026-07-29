@@ -803,6 +803,14 @@ truncate each program for downstream analysis.
 
 The parameter $n_{\text{top}}$ controls which genes enter the survival linear predictor. After factorization, each sample's score for factor $j$ is computed as $\widetilde{W}_j^\top x$, where $\widetilde{W}_j$ retains only the $n_{\text{top}}$ genes with the largest factor-specificity scores $s_{ij}$ (Supplementary Information, Section \ref{sec:gene-program-correlation}); genes outside this set still shape the factorization but do not enter the linear predictor. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. When $\alpha = 0$ (no survival supervision), gene selection and survival outcomes are decoupled, so varying $n_{\text{top}}$ has negligible effect on precision in the null simulation.
 
+Supplementary Fig. \ref{fig:fig-si-bo-tuning} illustrates the tuned response surface for the two most influential coordinates in the PDAC training cohort: the cross-validated C-index over factorization rank $k$ and supervision strength $\alpha$. Performance is maximized at intermediate supervision and moderate rank and degrades toward the unsupervised corner ($\alpha = 0$), consistent with a benefit of survival supervision; this is an empirical model-selection sensitivity surface, not a simulation result.
+
+```{r fig-si-bo-tuning, fig.cap="Bayesian-optimization tuning surface for DeSurv in the PDAC training cohort (TCGA + CPTAC). Gaussian-process--predicted mean cross-validated C-index over factorization rank ($k$) and supervision strength ($\\alpha$; $\\alpha = 0$ corresponds to standard NMF). The response surface is smooth and single-peaked, with the best cross-validated performance at intermediate supervision and moderate rank; discrimination degrades toward the unsupervised corner. This is empirical model-selection tuning on the training data, not a simulation result.", fig.env='figure*', fig.pos='t', out.height= '3.6in', out.width='4.5in', fig.align='center'}
+cowplot::ggdraw() + cowplot::draw_image(
+  magick::image_read("figures/si_fig_bo_tuning_surface_tcgacptac.pdf", density = 300))
+
+```
+
 \section{PDAC Datasets}
 
 We analyzed PDAC cohorts from TCGA-PAAD and CPTAC-PDAC as training data

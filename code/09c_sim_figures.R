@@ -34,15 +34,17 @@ alt_plots   <- sim_figs_by_scenario[[which(scenario_ids == "R0_easy"  & analysis
 null_plots  <- sim_figs_by_scenario[[which(scenario_ids == "R00_null" & analysis_ids == "bo_tune_ntop")]]
 mixed_plots <- sim_figs_by_scenario[[which(scenario_ids == "R_mixed"  & analysis_ids == "bo_tune_ntop")]]
 
-# ── Fig 2: Simulation panels A-C + BO heatmap D ──────────────────────────
-fig_bo_heat <- load_precomputed("fig_bo_heat_tcgacptac")
-fig_bo_heat <- fig_bo_heat +
-  guides(fill = guide_colorbar(barheight = unit(2, "cm"), barwidth = unit(0.3, "cm"))) +
-  theme(legend.title = element_text(size = 7), legend.text = element_text(size = 7))
-leg_grob    <- ggplotGrob(fig_bo_heat)
-heat_legend <- leg_grob$grobs[[which(leg_grob$layout$name == "guide-box-right")]]
-fig_bo_heat <- fig_bo_heat + theme(legend.position = "none")
+# ── SI: BO tuning surface (relocated from the old main-text Fig 4D) ───────
+# GP-predicted CV C-index over factorization rank (k) x supervision strength;
+# a model-selection sensitivity display, now an SI figure rather than main text.
+fig_bo_heat <- load_precomputed("fig_bo_heat_tcgacptac") +
+  guides(fill = guide_colorbar(barheight = unit(2.4, "cm"), barwidth = unit(0.35, "cm"))) +
+  theme(legend.title = element_text(size = 8), legend.text = element_text(size = 8))
+ggsave(file.path(FIGURE_DIR, "si_fig_bo_tuning_surface_tcgacptac.pdf"),
+       fig_bo_heat, width = 5, height = 4)
+message("Saved si_fig_bo_tuning_surface_tcgacptac.pdf")
 
+# ── Fig 2 (main text): simulation panels A-D ──────────────────────────────
 # 4B: recovery of true prognostic genes (relabeled away from "Precision")
 panel_b <- alt_plots$precision_box +
   labs(title = NULL, y = "Proportion of selected genes\nfrom true prognostic program")

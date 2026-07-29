@@ -23,7 +23,15 @@
 
 suppressMessages({
   library(ggplot2); library(cowplot); library(survminer)
-  library(survival); library(dplyr); library(gtable); library(ggtext)
+  library(survival); library(dplyr); library(gtable)
+})
+# The cached KM risk table styles its strata labels with element_markdown, which
+# needs ggtext loaded to render. ggtext is not a declared pipeline dependency, so
+# load it defensively: if absent, we drop the number-at-risk table (panel B keeps
+# the survival curve). Add "ggtext" to code/01_install.R to always include it.
+has_ggtext <- requireNamespace("ggtext", quietly = TRUE)
+if (has_ggtext) suppressMessages({
+  library(ggtext)
 })
 
 out_dir <- "figures/standalone_preview"
@@ -124,10 +132,14 @@ plot_forest <- plot_grid(
   forest_legend, nrow = 2, rel_heights = c(15, 1))
 
 # --- Panel B: DeSurv KM, plot stacked over number-at-risk table --------------
-km_b <- plot_grid(km$plot + ggtitle("DeSurv") +
-                    theme(plot.title = element_text(size = 9, hjust = 0.5)),
-                  km$table + theme(plot.title = element_text(size = 8)),
-                  ncol = 1, rel_heights = c(4, 1.2))
+km_plot <- km$plot + ggtitle("DeSurv") + theme(plot.title = element_text(size = 9, hjust = 0.5))
+km_b <- if (has_ggtext) {
+  plot_grid(km_plot, km$table + theme(plot.title = element_text(size = 8)),
+            ncol = 1, rel_heights = c(4, 1.2))
+} else {
+  message("ggtext not available: dropping number-at-risk table from panel B")
+  km_plot
+}
 
 # --- Panel C: tuned-supervised vs DeSurv-program correspondence heatmap ------
 hm_df <- data.frame(

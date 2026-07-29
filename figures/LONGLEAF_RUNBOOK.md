@@ -34,7 +34,7 @@ So a full main-figure rebuild = run **both** `code/09a_figures.R` (Figs 2, 3) **
 
 ```bash
 ssh <onyen>@longleaf.unc.edu
-cd <path-to-Amber's DeSurv-paper checkout>        # the one whose results/precomputed/ is populated
+cd <path-to-Amber's DeSurv-paper checkout>        # the one whose flat results/ store is populated
 git fetch origin
 git checkout naim/nature-resubmission
 git pull origin naim/nature-resubmission          # pulls splot_cutpoint recovery (71c319f) + FIGURE_REGENERATION fixes

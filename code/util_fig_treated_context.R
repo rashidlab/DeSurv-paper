@@ -57,10 +57,10 @@ pB <- ggplot(selB, aes(hr, cohort)) +
 
 ## --- Panel C: Linehan paired pre/post D2 ----------------------------------
 pp <- t$paired$points
-long <- data.frame(pid = rep(pp$pid, 2),
+long <- data.frame(pair = rep(seq_len(nrow(pp)), 2),
                    time = factor(rep(c("Pre", "Post"), each = nrow(pp)), levels = c("Pre", "Post")),
                    D2 = c(pp$D2_pre, pp$D2_post))
-pC <- ggplot(long, aes(time, D2, group = pid)) +
+pC <- ggplot(long, aes(time, D2, group = pair)) +
   geom_line(alpha = 0.35, colour = "grey40") +
   geom_point(alpha = 0.65, size = 1.4, colour = blue) +
   annotate("text", x = 0.7, y = max(long$D2), hjust = 0, vjust = 1, size = 2.9,

@@ -134,8 +134,9 @@ dl <- data.frame(sample=names(ZL), D2=as.numeric(scale(ZL)), pid=clL$patient_id[
 pr <- merge(dl[dl$pp==1,], dl[dl$pp==2,], by="pid", suffixes=c("_pre","_post"))
 paired <- list(n=nrow(pr), wilcox_p=wilcox.test(pr$D2_pre,pr$D2_post,paired=TRUE)$p.value,
                mean_delta=mean(pr$D2_post-pr$D2_pre),
-               # raw paired pre/post D2 scores for Fig S13C (aggregate-level, no raw expression)
-               points=pr[, c("pid","D2_pre","D2_post")])
+               # paired pre/post D2 program scores for Fig S13B (derived z-scores, no raw
+               # expression and no patient identifiers; rows are paired within patient)
+               points=data.frame(D2_pre=pr$D2_pre, D2_post=pr$D2_post))
 
 ## ---- (6) D2 sub-component decomposition (cohort-stratified; exploratory) ----
 GRP <- list(
@@ -191,12 +192,14 @@ names(concordance) <- c("D1","D2","D3")
 okane <- local({
   ok <- canon$OKane; cl <- ok$clin
   xrk <- rankX(t(ok$X))
-  Z1  <- as.numeric(scale(projZ(xrk, PGENES, 1)))
+  Z1  <- projZ(xrk, PGENES, 1)                 # named by sample (colnames of xrk)
   keep <- cl$treatment %in% c("FFX", "GA", "GA/experimental") &
           is.finite(cl$os_months) & cl$os_months > 0 & !is.na(cl$death)
+  # align the projected score to the clinical rows by SAMPLE NAME, then z-score
+  # (do not rely on incidental row/column ordering matching between X and clin)
   dd <- data.frame(os = cl$os_months, ev = cl$death,
                    arm = factor(cl$treatment, levels = c("FFX", "GA", "GA/experimental")),
-                   D1 = Z1)[keep, ]
+                   D1 = as.numeric(scale(Z1[cl$sample])))[keep, ]
   # D1 is already z-scaled over the cohort; use it directly so per-arm and
   # stratified HRs are all "per cohort SD" on a common scale (no per-arm rescaling).
   per_arm <- do.call(rbind, lapply(levels(dd$arm), function(a) {
@@ -223,8 +226,9 @@ treated_cohort_stats <- list(
   paired = paired, decomp = decomp, meta = meta, gata6 = gata6, okane = okane,
   concordance = concordance, ntop = 270,
   cohorts = list(Linehan = "borderline-resectable/locally-advanced; FOLFIRINOX +/- CCR2 inhibitor (PF-04136309)",
-                 Rash = "metastatic; gemcitabine + erlotinib", Accept = "metastatic; gemcitabine +/- afatinib"),
-  generated_note = "Derived from restricted-access external cohorts (RASH-ACCEPT, Linehan) via code/11_treated_cohort_analysis.R; raw data not in repo.")
+                 Rash = "metastatic; gemcitabine + erlotinib", Accept = "metastatic; gemcitabine +/- afatinib",
+                 OKane = "O'Kane/COMPASS metastatic (laser-capture microdissected); FOLFIRINOX or gemcitabine/nab-paclitaxel"),
+  generated_note = "Derived from restricted-access external cohorts (O'Kane/COMPASS, RASH-ACCEPT, Linehan) via code/11_treated_cohort_analysis.R; only aggregate-level and paired derived program scores (no raw expression or patient identifiers) are stored; raw data not in repo.")
 saveRDS(treated_cohort_stats, file.path("results", "treated_cohort_stats.rds"))
 cat("Wrote results/treated_cohort_stats.rds\n")
 print(os[, c("cohort","program","model","hr","lo","hi","p")])

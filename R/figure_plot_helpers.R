@@ -347,3 +347,83 @@ normalize_gp_params <- function(param_df, bounds_df) {
   }
   param_df
 }
+
+
+## ---------------------------------------------------------------------------
+## splot_cutpoint(): dichotomized KM/cutpoint survival plot for the validation
+## linear predictor. Recovered from R/figure_targets.R@4439bd6 (dropped in the
+## 491f3e7 restructure while code/09a_figures.R kept calling it).
+## ---------------------------------------------------------------------------
+splot_cutpoint = function(data_val_filtered, tar_fit_desurv, lp_stats, ntop = NULL,
+                         cutpoint_field = "optimal_z_cutpoint") {
+
+  lp_mean <- lp_stats$lp_mean
+  lp_sd   <- lp_stats$lp_sd
+  z_cut   <- lp_stats[[cutpoint_field]]
+
+  df <- list()
+  for (i in seq_along(data_val_filtered)) {
+    dat  <- data_val_filtered[[i]]
+    keep <- intersect(rownames(dat$ex), rownames(tar_fit_desurv$W))
+    W    <- tar_fit_desurv$W[keep, , drop = FALSE]
+    beta <- tar_fit_desurv$beta
+    X    <- dat$ex[keep, , drop = FALSE]
+
+    lp_val  <- compute_lp(W, beta, X, ntop)
+    z_val   <- (lp_val - lp_mean) / lp_sd
+    bin     <- as.integer(z_val > z_cut)
+
+    sdf        <- dat$sampInfo
+    sdf$factor <- bin
+    df[[i]]    <- sdf
+  }
+  df <- do.call("rbind", df)
+
+  sfit       <- survfit(Surv(time, event) ~ factor, data = df)
+  hr_fit     <- coxph(Surv(time, event) ~ factor, data = df)
+  hr_summary <- summary(hr_fit)$conf.int
+  hr_label   <- sprintf(
+    "HR (High vs Low) = %.2f\n(95%% CI %.2f-%.2f)",
+    hr_summary[1, "exp(coef)"],
+    hr_summary[1, "lower .95"],
+    hr_summary[1, "upper .95"]
+  )
+  lr_test <- survdiff(Surv(time, event) ~ factor, data = df)
+  p_val   <- 1 - pchisq(lr_test$chisq, df = 1)
+  p_label <- if (p_val < 0.001) "Log-rank p < 0.001" else sprintf("Log-rank p = %.3f", p_val)
+  
+  label = paste0(hr_label,"\n",p_label)
+
+  x_max <- max(df$time, na.rm = TRUE)
+  
+  if(x_max < 30){
+    breaks = 5
+  }else{
+    breaks = 25
+  }
+
+  splot <- ggsurvplot(sfit, data = df, risk.table = TRUE,
+                      xlab = "Time (months)",
+                      palette = c("violetred2", "turquoise4"),
+                      break.time.by = breaks,
+                      legend.labs = c("Low", "High"),
+                      risk.table.y.text = TRUE,
+                      fontsize = 2.5,
+                      censor.size = 2,
+                      font.legend = 8,
+                      font.tickslab=8,
+                      font.x=10,
+                      font.y=10,
+                      tables.theme = theme_classic(base_size = 10))
+  splot$plot <- splot$plot +
+    ggplot2::annotate(
+      "text",
+      x     = x_max * 0.98,
+      y     = 0.85,
+      hjust = 1,
+      size  = 2.5,
+      label = label
+    ) 
+
+  splot
+}

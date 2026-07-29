@@ -133,7 +133,9 @@ dl <- data.frame(sample=names(ZL), D2=as.numeric(scale(ZL)), pid=clL$patient_id[
                  pp=exL$pre_post[match(names(ZL),exL$sample)])
 pr <- merge(dl[dl$pp==1,], dl[dl$pp==2,], by="pid", suffixes=c("_pre","_post"))
 paired <- list(n=nrow(pr), wilcox_p=wilcox.test(pr$D2_pre,pr$D2_post,paired=TRUE)$p.value,
-               mean_delta=mean(pr$D2_post-pr$D2_pre))
+               mean_delta=mean(pr$D2_post-pr$D2_pre),
+               # raw paired pre/post D2 scores for Fig S13C (aggregate-level, no raw expression)
+               points=pr[, c("pid","D2_pre","D2_post")])
 
 ## ---- (6) D2 sub-component decomposition (cohort-stratified; exploratory) ----
 GRP <- list(
@@ -180,10 +182,45 @@ concordance <- sapply(1:3, function(j){
   cor(a, b, use = "complete.obs") })
 names(concordance) <- c("D1","D2","D3")
 
+## ---- (10) O'Kane/COMPASS treated-metastatic D1 transportability (per ACTUAL arm) ----
+# Frozen-projection transportability test in an independently treated metastatic cohort.
+# Specimens are laser-capture microdissected (epithelial-enriched), so this tests the
+# tumor-associated D1 direction, not the stromal programs. Treatment arms are kept
+# SEPARATE (FFX, GA, GA/experimental) and never pooled (per-arm HRs + arm-stratified
+# common effect with treatment-specific baseline hazards + factor x arm interaction).
+okane <- local({
+  ok <- canon$OKane; cl <- ok$clin
+  xrk <- rankX(t(ok$X))
+  Z1  <- as.numeric(scale(projZ(xrk, PGENES, 1)))
+  keep <- cl$treatment %in% c("FFX", "GA", "GA/experimental") &
+          is.finite(cl$os_months) & cl$os_months > 0 & !is.na(cl$death)
+  dd <- data.frame(os = cl$os_months, ev = cl$death,
+                   arm = factor(cl$treatment, levels = c("FFX", "GA", "GA/experimental")),
+                   D1 = Z1)[keep, ]
+  # D1 is already z-scaled over the cohort; use it directly so per-arm and
+  # stratified HRs are all "per cohort SD" on a common scale (no per-arm rescaling).
+  per_arm <- do.call(rbind, lapply(levels(dd$arm), function(a) {
+    z <- dd[dd$arm == a, ]; s <- summary(coxph(Surv(os, ev) ~ D1, z))
+    data.frame(arm = a, n = nrow(z), events = sum(z$ev),
+               hr = exp(s$coef[1]), lo = s$conf.int[1, 3], hi = s$conf.int[1, 4])
+  }))
+  ss <- summary(coxph(Surv(os, ev) ~ D1 + strata(arm), dd))
+  int_p <- anova(coxph(Surv(os, ev) ~ D1 + arm, dd),
+                 coxph(Surv(os, ev) ~ D1 * arm, dd))[2, "Pr(>|Chi|)"]
+  list(per_arm = per_arm,
+       stratified = c(hr = exp(ss$coef[1]), lo = ss$conf.int[1, 3],
+                      hi = ss$conf.int[1, 4], p = ss$coef[1, 5]),
+       interaction_p = int_p, n = nrow(dd), events = sum(dd$ev),
+       n_shared_genes = nrow(xrk))
+})
+cat(sprintf("OKane D1: arm-stratified HR=%.2f (%.2f-%.2f) P=%.3g | interaction P=%.2f | n=%d ev=%d\n",
+    okane$stratified["hr"], okane$stratified["lo"], okane$stratified["hi"],
+    okane$stratified["p"], okane$interaction_p, okane$n, okane$events))
+
 ## ---- assemble + save ----
 treated_cohort_stats <- list(
   os = os, axis = axis, d1_auc = d1auc, prevalence = prev, pfs = pfs,
-  paired = paired, decomp = decomp, meta = meta, gata6 = gata6,
+  paired = paired, decomp = decomp, meta = meta, gata6 = gata6, okane = okane,
   concordance = concordance, ntop = 270,
   cohorts = list(Linehan = "borderline-resectable/locally-advanced; FOLFIRINOX +/- CCR2 inhibitor (PF-04136309)",
                  Rash = "metastatic; gemcitabine + erlotinib", Accept = "metastatic; gemcitabine +/- afatinib"),

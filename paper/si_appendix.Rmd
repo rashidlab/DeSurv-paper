@@ -1572,6 +1572,28 @@ The proCAF stromal program $D_2$ was protective in all three cohorts (both margi
 
 In the `r .tcs$paired$n` Linehan patients with paired pre- and post-treatment biopsies, $D_2$ increased significantly from pre- to post-treatment (paired Wilcoxon `r .pfmt(.tcs$paired$wilcox_p)`; mean $\Delta = `r sprintf("%+.2f", .tcs$paired$mean_delta)`$ SD; Fig.\ \ref{fig:treated}B), consistent with treatment-associated remodeling of the proCAF program.
 
+\subsection{Arm-separated exploratory analyses}
+
+We also examined each treatment arm separately across overall survival, time to progression, binary response and continuous depth of response (Supplementary Table \ref{tab:arm-separated}). These within-arm comparisons are underpowered for between-arm (treatment-specific) contrasts: the arms are small, and the few nominal associations were scattered across programs and endpoints and did not survive correction for multiple testing. The prognostic association instead prevails in the better-powered pooled and arm-stratified analyses (the O'Kane arm-stratified D1 effect and the consistent protective direction of D2 across the bulk cohorts), whereas differential effects by treatment arm are not resolvable in these data.
+
+```{r tab-arm-separated, echo=FALSE, results='asis'}
+.as <- .tcs$arm_separated
+.est <- ifelse(.as$measure == "rho",
+               sprintf("$\\rho$ %.2f", .as$estimate),
+               sprintf("%s %.2f (%.2f--%.2f)", .as$measure, .as$estimate, .as$lo, .as$hi))
+.ne  <- ifelse(is.na(.as$events), sprintf("%d", .as$n), sprintf("%d (%d)", .as$n, .as$events))
+.pf  <- function(p) ifelse(p < 0.001, "$<0.001$", sprintf("%.3f", p))
+cat("\\begin{table}[H]\\footnotesize\\centering\n",
+    "\\caption{Arm-separated exploratory associations of the projected DeSurv programs (per SD) with clinical endpoints in the treated RASH/ACCEPT cohorts, analysed within each treatment arm. Overall survival and time to progression are Cox hazard ratios (HR); binary response (PR/SD vs PD) is a logistic odds ratio (OR); depth of response is a Spearman correlation ($\\rho$). Benjamini--Hochberg (BH) adjustment is across all unique arm-separated tests shown. \\label{tab:arm-separated}}\n",
+    "\\begin{tabular}{lllccc}\n\\toprule\n",
+    "Arm & Program & Endpoint & $n$ (events) & Estimate (95\\% CI) & $P$ ($P_{\\mathrm{BH}}$) \\\\\n\\midrule\n", sep = "")
+for (i in seq_len(nrow(.as))) cat(sprintf("%s & %s & %s & %s & %s & %s (%s) \\\\\n",
+    .as$arm[i], .as$program[i], .as$endpoint[i], .ne[i], .est[i], .pf(.as$p[i]), .pf(.as$p_bh[i])))
+cat("\\bottomrule\n\\end{tabular}\n\\end{table}\n")
+```
+
+{\footnotesize Disease-control (CR/PR/SD vs PD) analyses were identical to the binary response analyses because no complete responses occurred in these treatment arms, and are therefore not reported separately or counted twice in the multiplicity adjustment. These analyses were exploratory: nominal $P$ values are reported for transparency, but no association remained significant after correction for multiple testing, and estimates from the smallest treatment arms are imprecise and should not be interpreted as evidence of treatment-specific effects.}
+
 \subsection{Caveats}
 
 These analyses are exploratory and prognostic, not predictive: treatment, stage and cohort are confounded, the treated cohorts are modestly sized, and no analysis plan was preregistered. The programs are analysed per cohort and never pooled, and $D_1$ is reported marginally in the bulk cohorts because it is collinear with the PurIST classifier. Robust treated-cohort validation, and any assessment of whether the programs predict differential treatment benefit, will require larger harmonized series with adequately powered treatment-by-program interaction analyses.

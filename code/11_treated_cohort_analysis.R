@@ -220,8 +220,50 @@ cat(sprintf("OKane D1: arm-stratified HR=%.2f (%.2f-%.2f) P=%.3g | interaction P
     okane$stratified["hr"], okane$stratified["lo"], okane$stratified["hi"],
     okane$stratified["p"], okane$interaction_p, okane$n, okane$events))
 
+## ---- (11) Arm-separated exploratory endpoint sweep (RASH/ACCEPT) for SI table ----
+# Complete, transparent arm x program x endpoint associations, with treatment arms
+# analysed SEPARATELY (the arms are clinically distinct). Unique endpoints only:
+# overall survival, time to progression, binary response (PR/SD vs PD), and
+# continuous depth of response where available. Disease control (CR/PR/SD vs PD) is
+# identical to binary response here (no CR in these arms) and is therefore NOT stored
+# as a separate inferential row (avoids double-counting in the multiplicity family).
+# Benjamini-Hochberg correction is applied across the unique family. Exploratory only.
+arm_separated <- local({
+  ra <- canon$RASH_ACCEPT; cl <- ra$clin; ex2 <- ra$extras
+  xrk <- rankX(t(ra$X)); mm <- match(cl$sample, ex2$sample)
+  z0 <- data.frame(arm = as.character(cl$treatment), os = cl$os_months, ev = cl$death,
+                   ttp = ex2$ttp_months[mm], ttpev = ex2$ttp_event[mm],
+                   dpr = as.numeric(ex2$dpr[mm]), resp2 = ex2$resp2.1[mm])
+  for (j in 1:3) z0[[paste0("D", j)]] <- as.numeric(scale(projZ(xrk, PGENES, j)[cl$sample]))
+  z0$prsd <- ifelse(z0$resp2 == "PR_SD", 1, ifelse(z0$resp2 == "PD", 0, NA))
+  arms <- c("FOLFIRINOX", "Gemcitabine", "Gemcitabine/Erlotinib", "Gemcitabine/Afatinib")
+  rows <- list(); add <- function(...) rows[[length(rows) + 1]] <<- data.frame(..., stringsAsFactors = FALSE)
+  for (a in arms) { z <- z0[z0$arm == a, ]
+    for (p in c("D1", "D2", "D3")) {
+      r <- try(summary(coxph(as.formula(sprintf("Surv(os,ev)~%s", p)), z)), silent = TRUE)
+      if (!inherits(r, "try-error")) add(arm = a, program = p, endpoint = "Overall survival", measure = "HR",
+        n = nrow(z), events = sum(z$ev, na.rm = TRUE), estimate = exp(r$coef[1,1]), lo = r$conf.int[1,3], hi = r$conf.int[1,4], p = r$coef[1,5])
+      zt <- z[is.finite(z$ttp) & z$ttp > 0, ]
+      r <- try(summary(coxph(as.formula(sprintf("Surv(ttp,ttpev)~%s", p)), zt)), silent = TRUE)
+      if (!inherits(r, "try-error")) add(arm = a, program = p, endpoint = "Time to progression", measure = "HR",
+        n = nrow(zt), events = sum(zt$ttpev, na.rm = TRUE), estimate = exp(r$coef[1,1]), lo = r$conf.int[1,3], hi = r$conf.int[1,4], p = r$coef[1,5])
+      r <- try({ mo <- glm(as.formula(sprintf("prsd~%s", p)), z, family = binomial)
+                 list(s = summary(mo)$coef, ci = exp(confint.default(mo)[2, ])) }, silent = TRUE)
+      if (!inherits(r, "try-error")) add(arm = a, program = p, endpoint = "Response (PR/SD vs PD)", measure = "OR",
+        n = sum(!is.na(z$prsd)), events = sum(z$prsd == 1, na.rm = TRUE), estimate = exp(r$s[2,1]), lo = r$ci[1], hi = r$ci[2], p = r$s[2,4])
+      o <- is.finite(z[[p]]) & is.finite(z$dpr)
+      if (sum(o) >= 8) { ct <- suppressWarnings(cor.test(z[[p]][o], z$dpr[o], method = "spearman"))
+        add(arm = a, program = p, endpoint = "Depth of response", measure = "rho",
+            n = sum(o), events = NA_integer_, estimate = unname(ct$estimate), lo = NA_real_, hi = NA_real_, p = ct$p.value) }
+    } }
+  tab <- do.call(rbind, rows); tab$p_bh <- p.adjust(tab$p, method = "BH"); tab
+})
+cat(sprintf("arm_separated: %d unique tests; min nominal P=%.3f, min BH-adjusted P=%.2f\n",
+    nrow(arm_separated), min(arm_separated$p), min(arm_separated$p_bh)))
+
 ## ---- assemble + save ----
 treated_cohort_stats <- list(
+  arm_separated = arm_separated,
   os = os, axis = axis, d1_auc = d1auc, prevalence = prev, pfs = pfs,
   paired = paired, decomp = decomp, meta = meta, gata6 = gata6, okane = okane,
   concordance = concordance, ntop = 270,

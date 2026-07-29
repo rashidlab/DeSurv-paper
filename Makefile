@@ -55,6 +55,7 @@ main:
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/04_fit_models.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/05_external_validation.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/08_cutpoint_analysis.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/19_desurv_vs_supervised_tuned.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09a_figures.R
 	@echo "=== Main pipeline complete (figures 3-4 ready) ==="
 
@@ -68,15 +69,15 @@ all:
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/06_cv_grid.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/07_simulations.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/08_cutpoint_analysis.R
-	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09a_figures.R
-	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09b_si_figures.R
-	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09c_sim_figures.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/14_d1_variance_partition.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/15_supervised_recovery.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/16_desurv_vs_supervised.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/17_brier_metrics.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/18_clinical_adjustment.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/19_desurv_vs_supervised_tuned.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09a_figures.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09b_si_figures.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09c_sim_figures.R
 	DESURV_RECOMPUTE=FALSE $(RSCRIPT) code/10_render_paper.R
 	@echo "=== Full pipeline complete ==="
 

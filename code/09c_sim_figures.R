@@ -43,20 +43,42 @@ leg_grob    <- ggplotGrob(fig_bo_heat)
 heat_legend <- leg_grob$grobs[[which(leg_grob$layout$name == "guide-box-right")]]
 fig_bo_heat <- fig_bo_heat + theme(legend.position = "none")
 
+# 4B: recovery of true prognostic genes (relabeled away from "Precision")
+panel_b <- alt_plots$precision_box +
+  labs(title = NULL, y = "Proportion of selected genes\nfrom true prognostic program")
+
+# 4D: scenario gradient — gene-recovery advantage grows as prognosis diverges from
+# dominant variance. Precision is undefined in the null scenario (no true prognostic
+# program), so the gradient spans the two signal regimes: variance-aligned -> mixed.
+prec_grad <- do.call(rbind, lapply(list(alt_plots, mixed_plots), function(b)
+  b$cindex_box$data[, c("scenario_id", "method", "precision")]))
+prec_grad <- prec_grad[!is.na(prec_grad$precision), ]
+prec_grad$scenario <- factor(prec_grad$scenario_id, levels = c("R0_easy", "R_mixed"),
+  labels = c("Prognostic\n(variance-aligned)", "Mixed\n(divergent)"))
+prec_grad$method <- factor(prec_grad$method, levels = c("DeSurv", "NMF"))
+panel_d <- ggplot(prec_grad, aes(x = scenario, y = precision, fill = method)) +
+  geom_boxplot(outlier.size = 0.4, linewidth = 0.3, position = position_dodge(0.8)) +
+  scale_fill_manual(values = c("DeSurv" = "#1f78b4", "NMF" = "#e31a1c"), name = "Method") +
+  labs(x = NULL, y = "Proportion from true\nprognostic program", title = NULL) +
+  theme_minimal(base_size = 10) +
+  theme(legend.position = "right", panel.grid.minor = element_blank(),
+        axis.text.x = element_text(size = 8))
+
 upper <- plot_grid(
-  alt_plots$cindex_box    + labs(title = NULL) + scale_y_continuous(limits = c(.5, 1)),
-  alt_plots$precision_box + labs(title = NULL),
-  NULL,
+  alt_plots$cindex_box + labs(title = NULL) + scale_y_continuous(limits = c(.5, 1)),
+  panel_b, NULL,
   ncol = 3, labels = c("A", "B", ""), rel_widths = c(4, 4, .8)
 )
 lower <- plot_grid(
-  alt_plots$k_hist, fig_bo_heat, heat_legend,
-  ncol = 3, labels = c("C", "D", ""), rel_widths = c(4, 4, .8)
+  alt_plots$k_hist + labs(title = NULL), panel_d,
+  ncol = 2, labels = c("C", "D"), rel_widths = c(1, 1.3)
 )
 ggsave(file.path(FIGURE_DIR, "fig2_tcgacptac.pdf"),
        plot_grid(upper, lower, nrow = 2),
        width = 6.5, height = 6)
 message("Saved fig2_tcgacptac.pdf")
+# NOTE: the k x alpha BO tuning surface (fig_bo_heat, former Fig 4D) is no longer a
+# main-text panel; relocate it to the SI (model-selection sensitivity) in a follow-up.
 
 # ── SI S1: Convergence trajectories ──────────────────────────────────────
 desurv_seed_fits <- load_precomputed("desurv_seed_fits_tcgacptac")

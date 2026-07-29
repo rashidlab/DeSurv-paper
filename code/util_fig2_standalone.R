@@ -14,11 +14,11 @@
 #
 # get_top_genes (R/get_top_genes.R) and make_gene_overlap_heatmap
 # (R/figure_plot_helpers.R) are DeSurv-free; make_spearman_heatmap is inlined
-# verbatim from 09a. Panel E (D1 vs GATA6 ISH in COMPASS) is NOT built here:
-# the raw COMPASS points are not cached (treated_cohort_stats.rds$gata6 stores
-# only rho/p/n) and COMPASS is restricted -- add E where code/11 can re-run.
+# verbatim from 09a. Panel E (D1 score vs GATA6 RNA-ISH in COMPASS) reads the
+# raw per-sample points cached in treated_cohort_stats.rds$gata6$points by
+# code/11 -- aggregate-level derived values, so no restricted-data dependency here.
 #
-# Output: figures/standalone_preview/fig2_AD.pdf  (7x7, matches 09a)
+# Output: figures/standalone_preview/fig2_full.pdf  (7x9, panels A-E)
 # ---------------------------------------------------------------------------
 
 suppressMessages({
@@ -89,6 +89,22 @@ fig_desurv_std_correlation <- make_spearman_heatmap(
   cor(fit_std_desurvk$W, tar_fit_desurv$W, method = "spearman"),
   heatmap_factor_labels_std, heatmap_factor_labels)
 
+# --- Panel E: D1 score vs GATA6 RNA-ISH in COMPASS --------------------------
+# Raw per-sample points are cached in treated_cohort_stats.rds$gata6$points by
+# code/11 (aggregate-level derived values; no raw expression), so panel E builds
+# here with no restricted-data dependency.
+g6 <- readRDS("results/treated_cohort_stats.rds")$gata6
+plot_3e <- ggplot(g6$points, aes(x = factor(gata6), y = D1)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, fill = "grey92", linewidth = 0.3) +
+  geom_jitter(width = 0.12, height = 0, size = 1.3, alpha = 0.75, colour = "#08519c") +
+  annotate("text", x = 0.6, y = max(g6$points$D1), hjust = 0, vjust = 1, size = 2.9,
+           label = sprintf("Spearman~italic(r)==%.2f", g6$rho), parse = TRUE) +
+  annotate("text", x = 0.6, y = max(g6$points$D1) - 0.45, hjust = 0, vjust = 1, size = 2.9,
+           label = sprintf("italic(P)<0.001*','~n==%d", g6$n), parse = TRUE) +
+  labs(x = "GATA6 RNA-ISH level", y = "DeSurv D1 score (z)") +
+  theme_classic(base_size = 9) +
+  theme(axis.title = element_text(size = 8))
+
 # --- assemble (verbatim code/09a_figures.R:336-379) -------------------------
 plot_3a <- fig_gene_overlap_heatmap_desurv$plot +
   theme(plot.margin = margin(t = 14, r = 2, b = 2, l = 2))
@@ -123,8 +139,11 @@ plot_3d <- plot_grid(
 bottom_row_3 <- plot_grid(plot_3c, plot_3d, ncol = 2, labels = c("C", "D"),
                           label_size = 12, rel_widths = c(0.55, 0.45))
 
-ggsave(file.path(out_dir, "fig2_AD.pdf"),
-       plot_grid(top_row_3, bottom_row_3, nrow = 2, rel_heights = c(1.3, 0.7)),
-       width = 7, height = 7)
-cat("Wrote", file.path(out_dir, "fig2_AD.pdf"),
-    "- Fig 2 panels A-D (no panel E; GATA6/COMPASS TODO).\n")
+# Panel E in its own row, centered at ~half width
+e_row <- plot_grid(plot_3e, NULL, ncol = 2, labels = c("E", ""),
+                   label_size = 12, rel_widths = c(0.55, 0.45))
+
+fig2 <- plot_grid(top_row_3, bottom_row_3, e_row, nrow = 3,
+                  rel_heights = c(1.3, 0.7, 0.62))
+ggsave(file.path(out_dir, "fig2_full.pdf"), fig2, width = 7, height = 9)
+cat("Wrote", file.path(out_dir, "fig2_full.pdf"), "- Fig 2 panels A-E.\n")

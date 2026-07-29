@@ -168,7 +168,10 @@ ok <- !is.na(g6)
 gata6 <- list(rho = cor(D1c[ok], g6[ok], method="spearman"),
               p   = cor.test(D1c[ok], g6[ok], method="spearman")$p.value,
               n   = sum(ok),
-              group_means = sapply(sort(unique(g6[ok])), function(lv) mean(D1c[ok][g6[ok]==lv])))
+              group_means = sapply(sort(unique(g6[ok])), function(lv) mean(D1c[ok][g6[ok]==lv])),
+              # raw per-sample points for Fig 2E (scaled D1 score vs GATA6 ISH level);
+              # aggregate-level derived values (no raw expression), so tracked in the .rds
+              points = data.frame(D1 = D1c[ok], gata6 = g6[ok]))
 
 ## ---- (9) concordance: full-W vs top-270 projection (robustness) ----
 .ps <- function(M, genes, j) projZ(M$xr, genes, j)

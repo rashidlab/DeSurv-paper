@@ -73,7 +73,7 @@ in COMPASS**, Spearman **ρ = 0.68, P < 0.001, n = 33**.
   |               | D1   | D2 (proCAF) | D3   |
   |---------------|------|------|------|
   | Penalized Cox | 0.71 | **0.06** | 0.10 |
-  | Supervised PCA| 0.46 | **0.14** | 0.29 |
+  | Supervised PCA| 0.46 | **0.14** | 0.31 |
 
   Message: supervised risk scores concentrate on the D1 direction and are near-orthogonal to the
   separately-resolved D2 stromal program. **Do NOT add a DeSurv-LP row** — DeSurv's trained score has

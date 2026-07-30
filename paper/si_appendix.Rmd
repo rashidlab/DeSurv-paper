@@ -118,7 +118,7 @@ Optimization proceeds by block coordinate descent (BCD; Algorithm \ref{alg:desur
             \State \hspace{0.5cm} holding $H^{(t+1)}$ and $\beta^{(t)}$ fixed, and perform backtracking to ensure
             \State \hspace{0.5cm} $\mathcal{L}$ does not increase.
             \State \textbf{($\beta$-update)}
-            \State \hspace{0.5cm} Update $\beta^{(t+1)}$ from $\beta^{(t)}$ using a Newton-like step for the Cox loss
+            \State \hspace{0.5cm} Update $\beta^{(t+1)}$ by solving the elastic-net Cox subproblem using cyclic coordinate descent to numerical tolerance
             \State \hspace{0.5cm} (Eq. \ref{eqn:beta_update}), holding $W^{(t+1)}$ and $H^{(t+1)}$ fixed.
             \State $lossNew = \mathcal{L}(W^{(t+1)},H^{(t+1)},\beta^{(t+1)})$
             \State $eps = |lossNew - loss| / |loss|$
@@ -466,6 +466,20 @@ controls the exploration margin. EI is evaluated over a candidate pool sampled
 from the bounded search region, and the maximizer is evaluated next. The loop
 continues until the iteration budget is exhausted or the improvement plateaus.
 
+For the PDAC application, the objective was the mean 5-fold cross-validated
+Harrell C-index (Algorithm \ref{alg:cv}), with folds stratified by cohort under
+a fixed seed (123); each configuration was evaluated from 30 random
+initializations and its C-index averaged across them. The bounded search domain
+was $k \in [2, 12]$, $\alpha \in [0, 1]$, $\lambda \in [10^{-3}, 10^{3}]$
+(optimized on a $\log_{10}$ scale), $\xi \in [0, 1]$, and
+$n_{\text{top}} \in [50, 300]$, with the loadings ridge penalty fixed at
+$\lambda_H = 0$. Bayesian optimization used an initial design of 50 evaluations
+followed by 100 GP-guided iterations (150 total evaluations), maximizing
+expected improvement over a candidate pool of $4{,}000$ points sampled from the
+bounded domain at each step with an exploration margin $\kappa = 0.01$. The
+unsupervised comparator fixed $\alpha = 0$ and tuned the remaining coordinates
+identically.
+
 For model selection, we take the highest observed $\hat{c}(\theta)$ as the
 optimal configuration. When fold-level standard errors are available, we apply
 a one-standard-error rule for $k$, selecting the smallest rank whose mean
@@ -474,11 +488,11 @@ is refit at the selected parameters using the consensus-based initialization
 described above, and the BO-chosen $n_{\text{top}}$ (when tuned) is used to
 truncate each program for downstream analysis.
 
-The parameter $n_{\text{top}}$ controls which genes enter the survival linear predictor. After factorization, each sample's score for factor $j$ is computed as $\widetilde{W}_j^\top x$, where $\widetilde{W}_j$ retains only the $n_{\text{top}}$ genes with the largest factor-specificity scores $s_{ij}$ (Supplementary Information, Section \ref{sec:gene-program-correlation}); genes outside this set still shape the factorization but do not enter the linear predictor. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. When $\alpha = 0$ (no survival supervision), gene selection and survival outcomes are decoupled, so varying $n_{\text{top}}$ has negligible effect on precision in the null simulation.
+The parameter $n_{\text{top}}$ controls which genes enter the survival linear predictor. After factorization, each sample's score for factor $j$ is computed as $\widetilde{W}_j^\top x$, where $\widetilde{W}_j$ retains only the $n_{\text{top}}$ genes with the largest factor-specificity scores $s_{ij}$ (Supplementary Information, Section \ref{sec:gene-program-correlation}); genes outside this set still shape the factorization but do not enter the linear predictor. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. When $\alpha = 0$ (no survival supervision), gene selection and survival outcomes are decoupled.
 
 Supplementary Fig. \ref{fig:fig-si-bo-tuning} illustrates the tuned response surface for the two most influential coordinates in the PDAC training cohort: the cross-validated C-index over factorization rank $k$ and supervision strength $\alpha$. Performance is maximized at intermediate supervision and moderate rank and degrades toward the unsupervised corner ($\alpha = 0$), consistent with a benefit of survival supervision; this is an empirical model-selection sensitivity surface, not a simulation result.
 
-```{r fig-si-bo-tuning, fig.cap="Bayesian-optimization tuning surface for DeSurv in the PDAC training cohort (TCGA + CPTAC). Gaussian-process--predicted mean cross-validated C-index over factorization rank ($k$) and supervision strength ($\\alpha$; $\\alpha = 0$ corresponds to standard NMF). The response surface is smooth and single-peaked, with the best cross-validated performance at intermediate supervision and moderate rank; discrimination degrades toward the unsupervised corner. This is empirical model-selection tuning on the training data, not a simulation result.", fig.env='figure*', fig.pos='t', out.height= '3.6in', out.width='4.5in', fig.align='center'}
+```{r fig-si-bo-tuning, fig.cap="Bayesian-optimization tuning surface for DeSurv in the PDAC training cohort (TCGA + CPTAC). Gaussian-process--predicted mean cross-validated C-index over factorization rank ($k$) and supervision strength ($\\alpha$; $\\alpha = 0$ corresponds to standard NMF). The response surface shows a broad region of high cross-validated performance at intermediate supervision and moderate rank, with discrimination degrading toward the unsupervised ($\\alpha = 0$) boundary. This is empirical model-selection tuning on the training data, not a simulation result.", echo=FALSE, fig.env='figure*', fig.pos='t', out.height= '3.6in', out.width='4.5in', fig.align='center'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_bo_tuning_surface_tcgacptac.pdf", density = 300))
 
@@ -486,7 +500,7 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 \subsection{Consensus initialization for the final model}
 
-The final DeSurv model at the selected hyperparameters was initialized from a consensus of multiple independent runs to reduce sensitivity to random starts. We first fit several DeSurv models to the training data from independent random nonnegative initializations at the selected $(k,\alpha,\lambda,\xi,n_{\text{top}})$. For each run, the top $n_{\text{top}}$ genes of every learned program were extracted by factor-specificity score, and a gene-by-gene consensus matrix was accumulated across runs, recording how often each pair of genes appeared together among the top genes of the same program. Genes appearing in the top sets of fewer than $\lceil 0.3R \rceil$ of the $R$ runs were treated as inactive and excluded from clustering. The consensus matrix over the remaining genes was partitioned into $k$ groups by agglomerative hierarchical clustering (average linkage), and each cluster defined one column of the initial gene-program matrix $W_0$; inactive genes and otherwise-empty entries were set to a small positive floor ($\sqrt{\epsilon_{\text{mach}}}$) to preserve strict positivity. The initial loadings $H_0$ were obtained by nonnegative least squares given $W_0$ and the training expression matrix, and the initial Cox coefficients $\beta_0$ were set to zero. This consensus seed used only training-cohort expression and was applied solely to initialize the single final refit after hyperparameter selection; it used no validation-cohort data and therefore introduced no information leakage.
+The final DeSurv model at the selected hyperparameters was initialized from a consensus of multiple independent runs to reduce sensitivity to random starts. We first fit $R = 100$ DeSurv models to the training data from independent random nonnegative initializations at the selected $(k,\alpha,\lambda,\xi,n_{\text{top}})$ (seed 1--100). For each run, the top $n_{\text{top}}$ genes of every learned program were extracted by factor-specificity score, and a gene-by-gene consensus matrix was accumulated across runs, recording how often each pair of genes appeared together among the top genes of the same program. Genes appearing in the top sets of fewer than $\lceil 0.3R \rceil$ of the $R$ runs were treated as inactive and excluded from clustering. The consensus matrix over the remaining genes was partitioned into $k$ groups by agglomerative hierarchical clustering (average linkage), and each cluster defined one column of the initial gene-program matrix $W_0$; inactive genes and otherwise-empty entries were set to a small positive floor ($\sqrt{\epsilon_{\text{mach}}}$) to preserve strict positivity. The initial loadings $H_0$ were obtained by nonnegative least squares given $W_0$ and the training expression matrix, and the initial Cox coefficients $\beta_0$ were set to zero. This consensus seed used only training-cohort expression and was applied solely to initialize the single final refit after hyperparameter selection; it used no validation-cohort data and therefore introduced no information leakage.
 
 \section{PDAC Datasets}
 
@@ -550,7 +564,14 @@ from GDC.
   rate <- round(100 * E / N)
   cell <- sprintf("%d (%d\\%%)", E, rate); names(cell) <- names(ev)
   vr <- rate[c("Dijk","Moffitt_GEO_array","PACA_AU_array","PACA_AU_seq","Puleo_array")]
-  list(N = N, cell = cell,
+  # Combined unique-patient validation set (DeCAF-consistent PACA-AU de-duplication)
+  pooled <- do.call(rbind, lapply(vl, function(x) data.frame(
+    id = rownames(x$survival), dataset = x$dataset, event = x$survival$event,
+    stringsAsFactors = FALSE)))
+  pooled <- dedup_combined(pooled, "dataset", "id")
+  Ncomb <- nrow(pooled); Ecomb <- sum(pooled$event == 1, na.rm = TRUE)
+  list(N = N, cell = cell, comb_N = Ncomb,
+       comb_cell = sprintf("%d (%d\\%%)", Ecomb, round(100 * Ecomb / Ncomb)),
        train_lo = min(rate[c("TCGA_PAAD","CPTAC")]), train_hi = max(rate[c("TCGA_PAAD","CPTAC")]),
        val_lo = min(vr), val_hi = max(vr), val_pooled = unname(rate["val_tot"]))
 })
@@ -582,9 +603,12 @@ PACA-AU (RNA-seq) & RNA-seq   &  `r .coh$N[["PACA_AU_seq"]]` & `r .coh$cell[["PA
 Puleo            & Microarray & `r .coh$N[["Puleo_array"]]` & `r .coh$cell[["Puleo_array"]]` & Validation & E-MTAB-6134      & OS, PurIST, DeCAF & Puleo et al. (2018) \\
 \addlinespace
 \multicolumn{2}{l}{Training total} & `r .coh$N[["train_tot"]]` & `r .coh$cell[["train_tot"]]` & & & & \\
-\multicolumn{2}{l}{Validation total} & `r .coh$N[["val_tot"]]` & `r .coh$cell[["val_tot"]]` & & & & \\
+\multicolumn{2}{l}{Validation platform profiles total} & `r .coh$N[["val_tot"]]` & `r .coh$cell[["val_tot"]]` & & & & \\
+\multicolumn{2}{l}{Combined unique-patient validation set} & `r .coh$comb_N` & `r .coh$comb_cell` & & & & \\
 \bottomrule
 \end{tabular}
+
+{\footnotesize PACA-AU contains 46 patients profiled on both the array and RNA-seq platforms; combined (pooled) analyses represent each patient once, retaining the RNA-seq profile for duplicated patients, consistent with the DeCAF preprocessing rule. Platform-specific per-dataset analyses retain both records.}
 \end{table}
 
 \section{Survival Analysis}
@@ -992,7 +1016,7 @@ if (!exists("set_fig_font", inherits = TRUE)) {
 .tol_tex <- sprintf("10^{%d}", as.integer(round(log10(.tol))))
 ```
 
-The idealized alternating scheme is not accompanied by a formal convergence guarantee for the fitted models, both because the reported analyses set the ridge penalties on the gene programs and loadings to zero ($\lambda_W = \lambda_H = 0$) and because the implemented algorithm combines column normalization, gradient balancing between the reconstruction and Cox terms, and a Coxnet approximation of the $\beta$ update. We therefore evaluated optimization stability empirically across $R = `r .R`$ independent random initializations of the selected PDAC model. The stopping tolerance was $`r .tol_tex`$ with a maximum of `r format(.maxit, big.mark=",")` iterations. Of the $`r .R`$ runs, $`r .n_conv`$ terminated after satisfying the stopping criterion and $`r .n_maxit`$ reached the iteration limit; the median number of iterations was $`r median(.niter)`$ (range, $`r min(.niter)`$--$`r max(.niter)`$). `r if (sum(.nan) == 0) "No numerical failures were observed." else sprintf("Numerical failures were observed in %d runs.", sum(.nan))` `r if (all(.mono)) "In every run the recorded full penalized objective decreased monotonically to a numerically stable value." else sprintf("The recorded full penalized objective decreased monotonically in %d of the %d runs.", sum(.mono), .R)` Supplementary Fig.\ \ref{fig:fig-converge} shows five runs selected at random (seed 147). These analyses document empirical optimization stability for the reported application rather than providing a formal convergence guarantee.
+The idealized alternating scheme is not accompanied by a formal convergence guarantee for the fitted models, both because the reported analyses set the loadings ridge penalty to zero ($\lambda_H = 0$) and because the implemented algorithm combines column normalization, gradient balancing between the reconstruction and Cox terms, and a Coxnet approximation of the $\beta$ update. We therefore evaluated optimization stability empirically across $R = `r .R`$ independent random initializations of the selected PDAC model. The stopping tolerance was $`r .tol_tex`$ with a maximum of `r format(.maxit, big.mark=",")` iterations. Of the $`r .R`$ runs, $`r .n_conv`$ terminated after satisfying the stopping criterion and $`r .n_maxit`$ reached the iteration limit; the median number of iterations was $`r median(.niter)`$ (range, $`r min(.niter)`$--$`r max(.niter)`$). `r if (sum(.nan) == 0) "No numerical failures were observed." else sprintf("Numerical failures were observed in %d runs.", sum(.nan))` `r if (all(.mono)) "In every run the recorded full penalized objective decreased monotonically to a numerically stable value." else sprintf("The recorded full penalized objective decreased monotonically in %d of the %d runs.", sum(.mono), .R)` Supplementary Fig.\ \ref{fig:fig-converge} shows five runs selected at random (seed 147). These analyses document empirical optimization stability for the reported application rather than providing a formal convergence guarantee.
 
 
 ```{r fig-converge, fig.width = 5, fig.height= 3, fig.cap="Empirical optimization-stability diagnostic for the DeSurv objective across five randomly selected multi-start initializations on the PDAC training cohort (TCGA + CPTAC). Each line shows the relative loss (loss at iteration $t$ divided by the initial loss for that restart) as a function of iteration number. In these runs the recorded full objective decreases and stabilizes within the iteration budget. This figure is an empirical diagnostic of optimization behavior for the reported application rather than a formal convergence proof.", fig.env='figure*', fig.pos='t', out.height= "3in", out.width='5in', fig.align='center'}
@@ -1055,9 +1079,9 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 # Cutpoint selection and validation of dichotomized risk groups
 
-To convert the continuous DeSurv linear predictor into a clinically interpretable binary risk stratification, we selected an optimal z-score cutpoint via cross-validation on the TCGA+CPTAC training cohort. For each candidate cutpoint in $\{-2.0, -1.8, \ldots, 2.0\}$, we computed the mean absolute log-rank z-statistic across held-out folds and selected the cutpoint maximizing this metric (Fig. \ref{fig:fig-cutpoint-km}A). We then applied this cutpoint to external validation cohorts by standardizing each patient's linear predictor using the training mean and standard deviation. Fig. \ref{fig:fig-cutpoint-km}B shows the resulting Kaplan--Meier curves for the pooled external validation samples. To respect between-cohort differences in baseline hazard, the reported inference is cohort-stratified: the hazard ratio is from a Cox model with the risk group as covariate and dataset as a stratifying factor ($\mathrm{Surv}(t,\delta) \sim \text{group} + \mathrm{strata}(\text{dataset})$), and the accompanying log-rank test is stratified by dataset. The Kaplan--Meier curves themselves are shown pooled for visualization. Panels C--F display per-cohort validation KM curves for Dijk, Moffitt, PACA-AU (array and RNA-seq subsets pooled), and Puleo, respectively. Across cohorts, the DeSurv-derived high-risk group showed directionally shorter survival, indicating that the training-derived cutpoint generalizes to independent datasets.
+To convert the continuous DeSurv linear predictor into a clinically interpretable binary risk stratification, we selected an optimal z-score cutpoint via cross-validation on the TCGA+CPTAC training cohort. For each candidate cutpoint in $\{-2.0, -1.8, \ldots, 2.0\}$, we computed the mean absolute log-rank z-statistic across held-out folds and selected the cutpoint maximizing this metric (Fig. \ref{fig:fig-cutpoint-km}A). We then applied this cutpoint to external validation cohorts by standardizing each patient's linear predictor using the training mean and standard deviation. Fig. \ref{fig:fig-cutpoint-km}B shows the resulting Kaplan--Meier curves for the pooled external validation samples. To respect between-cohort differences in baseline hazard, the reported inference is cohort-stratified: the hazard ratio is from a Cox model with the risk group as covariate and dataset as a stratifying factor ($\mathrm{Surv}(t,\delta) \sim \text{group} + \mathrm{strata}(\text{dataset})$), and the accompanying log-rank test is stratified by dataset. The Kaplan--Meier curves themselves are shown pooled for visualization. Panels C--F display per-cohort validation KM curves for Dijk, Moffitt, PACA-AU (de-duplicated across array and RNA-seq platforms, retaining RNA-seq for dual-platform patients), and Puleo, respectively. Across cohorts, the DeSurv-derived high-risk group showed directionally shorter survival, indicating that the training-derived cutpoint generalizes to independent datasets.
 
-```{r fig-cutpoint-km, fig.width = 10, fig.height = 11, fig.cap = "Cutpoint selection and external validation of dichotomized risk groups. (A) Cross-validated mean absolute log-rank z-statistic as a function of z-score cutpoint; red dashed line indicates the selected optimum. (B) Pooled validation Kaplan--Meier curves (log-rank test). (C--D) Per-cohort validation KM curves: (C) Dijk, (D) Moffitt. (E--F) Per-cohort validation KM curves: (E) PACA-AU (array and RNA-seq subsets pooled), (F) Puleo.", fig.env='figure*', fig.pos='t', out.height = "8in", out.width='\\textwidth', echo=FALSE}
+```{r fig-cutpoint-km, fig.width = 10, fig.height = 11, fig.cap = "Cutpoint selection and external validation of dichotomized risk groups. (A) Cross-validated mean absolute log-rank z-statistic as a function of z-score cutpoint; red dashed line indicates the selected optimum. (B) Pooled validation Kaplan--Meier curves (log-rank test). (C--D) Per-cohort validation KM curves: (C) Dijk, (D) Moffitt. (E--F) Per-cohort validation KM curves: (E) PACA-AU (de-duplicated across array and RNA-seq platforms), (F) Puleo.", fig.env='figure*', fig.pos='t', out.height = "8in", out.width='\\textwidth', echo=FALSE}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_cutpoint_km_tcgacptac.pdf", density = 300))
 ```
@@ -1078,7 +1102,7 @@ Throughout the main text, both DeSurv and standard NMF were fit at the same rank
 
 At BO-selected $k = 7$ under $\alpha = 0$ (Fig. \ref{fig:fig-nmf-k7-heatmap}), standard NMF shows increased fragmentation relative to the matched-rank $k = 3$ solution: multiple factors partially overlap the same PDAC gene signatures, and no additional factor maps cleanly onto a distinct established PDAC program; the added factors fragment existing signatures rather than resolving new biology.
 
-```{r fig-nmf-k7-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene program overlap heatmap for standard NMF at $k = 7$ (BO-selected rank with $\\alpha = 0$). Compared with the matched-rank $k = 3$ solution, the 7-factor solution shows increased fragmentation: multiple factors partially capture the same PDAC gene signatures and no new coherent biological program emerges. \\label{fig:fig-nmf-k7-heatmap}", fig.env='figure', fig.pos='t'}
+```{r fig-nmf-k7-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Rank-biserial enrichment of reference gene programs for standard NMF at $k = 7$ (BO-selected rank with $\\alpha = 0$), computed with the same full-universe rank-biserial statistic ($2\\,\\mathrm{AUC}-1$) and the same prespecified reference-program panel as main-text Fig.\\ 2A,B. Compared with the matched-rank $k = 3$ solution, the 7-factor solution shows increased fragmentation: multiple factors are enriched for the same established PDAC signatures and no additional factor maps cleanly onto a distinct program. \\label{fig:fig-nmf-k7-heatmap}", fig.env='figure', fig.pos='t'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_nmf_k7_heatmap_tcgacptac.pdf", density = 300))
 ```

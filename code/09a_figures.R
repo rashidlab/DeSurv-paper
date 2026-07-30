@@ -214,8 +214,13 @@ saveRDS(fig_gene_overlap_heatmap_desurv_elbowk,
         file.path(RESULTS_DIR, "fig_gene_overlap_heatmap_desurv_elbowk_tcgacptac.rds"))
 
 # DeSurv alpha=0 heatmap
+# k=7 unsupervised (alpha=0) NMF fragmentation heatmap (Supplementary Fig. S8):
+# uses the SAME full-universe rank-biserial statistic and the SAME prespecified
+# reference-program panel as main-text Fig. 2A/B, so DeSurv coherence and NMF
+# fragmentation are judged on one metric.
 fig_gene_overlap_heatmap_desurv_alpha0 <- make_gene_overlap_heatmap(
-      tar_fit_desurv_alpha0, tar_tops_desurv_alpha0$top_genes, top_genes
+      tar_fit_desurv_alpha0, tar_tops_desurv_alpha0$top_genes, top_genes,
+      display_sigs = fig2_display_sigs
     )
 saveRDS(fig_gene_overlap_heatmap_desurv_alpha0,
         file.path(RESULTS_DIR, "fig_gene_overlap_heatmap_desurv_alpha0_tcgacptac.rds"))

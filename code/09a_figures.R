@@ -34,6 +34,7 @@ source("R/fit_cox_model.R")
 source("R/variance_helpers.R")
 source("R/reconstruction_helpers.R")
 source("R/figure_plot_helpers.R")
+source("R/theme_nature.R")   # single source of truth: theme_nature(), semantic color vectors
 
 # ── Load prerequisites ────────────────────────────────────────────────────
 tar_fit_desurv        <- load_precomputed("tar_fit_desurv_tcgacptac")
@@ -130,7 +131,7 @@ fig_variation_explained <- ggplot(df_plot,
       size = 4, max.overlaps = Inf, box.padding = 0.6,
       point.padding = 0.4, segment.size = 0.3, force = 2
     ) +
-    scale_color_manual(values = c("NMF" = "red", "DeSurv" = "blue")) +
+    scale_color_manual(values = desurv_method_cols) +   # DeSurv #0072B2, NMF #D55E00
     scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
     labs(
       x = "Contribution to reconstruction\n(Shapley share, %)",
@@ -138,7 +139,7 @@ fig_variation_explained <- ggplot(df_plot,
                           "(full vs. k-1 factor model)")),
       color = "Method"
     ) +
-    theme_classic(base_size = 10)
+    theme_nature(base_size = 8)
 saveRDS(fig_variation_explained, file.path(RESULTS_DIR, "fig_variation_explained_tcgacptac.rds"))
 
 # ── Gene overlap heatmaps ─────────────────────────────────────────────────
@@ -270,8 +271,9 @@ make_spearman_heatmap <- function(c_mat, row_labels, col_labels) {
     mat = c_mat,
     cluster_rows = FALSE, cluster_cols = FALSE,
     show_colnames = TRUE, show_rownames = TRUE,
-    fontsize = 8, fontsize_number = 8, number_color = "black",
-    breaks = seq(-0.5, 1, length.out = 101),
+    color = desurv_diverging(100),
+    fontsize = 7, fontsize_number = 7, number_color = "black",
+    breaks = seq(-1, 1, length.out = 101),   # symmetric so 0 maps to white midpoint
     display_numbers = TRUE, number_format = "%.2f", silent = TRUE
   )
   ph <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = FALSE)))
@@ -356,7 +358,7 @@ legend_ab <- gtable::gtable_add_padding(
 # the right of panel B (matches util_fig2_standalone.R).
 top_row_3 <- plot_grid(
   plot_3a, plot_3b, cowplot::ggdraw(legend_ab),
-  ncol = 3, labels = c("A", "B", ""), align = "hv",
+  ncol = 3, labels = c("a", "b", ""), align = "hv",
   label_size = 12, rel_widths = c(3.4, 3.4, 0.85)
 )
 
@@ -371,8 +373,8 @@ legend_d_plot <- ggplot(
 ) +
   geom_tile() +
   scale_fill_gradientn(
-    colors = grDevices::colorRampPalette(rev(RColorBrewer::brewer.pal(n = 7, name = "RdYlBu")))(100),
-    limits = c(-0.5, 1), breaks = c(-0.4, 0, 0.4, 0.8), name = "Spearman\ncorrelation"
+    colors = desurv_diverging(100),
+    limits = c(-1, 1), breaks = c(-0.8, -0.4, 0, 0.4, 0.8), name = "Spearman\ncorrelation"
   ) +
   guides(fill = guide_colorbar(barwidth = unit(0.3, "cm"), barheight = unit(2, "cm"),
                                title.position = "top", title.hjust = 0.5)) +
@@ -394,7 +396,7 @@ plot_3d <- plot_grid(
 .g6 <- readRDS(file.path("results", "treated_cohort_stats.rds"))$gata6
 plot_3e <- ggplot(.g6$points, aes(x = factor(gata6), y = D1)) +
   geom_boxplot(outlier.shape = NA, width = 0.6, fill = "grey92", linewidth = 0.3) +
-  geom_jitter(width = 0.12, height = 0, size = 1.3, alpha = 0.75, colour = "#08519c") +
+  geom_jitter(width = 0.12, height = 0, size = 1.3, alpha = 0.75, colour = desurv_accent) +
   annotate("text", x = 0.6, y = max(.g6$points$D1), hjust = 0, vjust = 1, size = 2.9,
            label = sprintf("Spearman~italic(r)==%.2f", .g6$rho), parse = TRUE) +
   annotate("text", x = 0.6, y = max(.g6$points$D1) - 0.45, hjust = 0, vjust = 1, size = 2.9,
@@ -402,7 +404,7 @@ plot_3e <- ggplot(.g6$points, aes(x = factor(gata6), y = D1)) +
   labs(x = "GATA6 RNA-ISH level", y = "DeSurv D1 score (z)") +
   theme_classic(base_size = 9) + theme(axis.title = element_text(size = 8))
 
-bottom_row_3 <- plot_grid(plot_3c, plot_3d, plot_3e, ncol = 3, labels = c("C", "D", "E"),
+bottom_row_3 <- plot_grid(plot_3c, plot_3d, plot_3e, ncol = 3, labels = c("c", "d", "e"),
                           label_size = 12, rel_widths = c(0.37, 0.33, 0.30))
 ggsave(
   file.path(FIGURE_DIR, "fig3_tcgacptac.pdf"),
@@ -482,7 +484,7 @@ make_forest_panel <- function(dat, title, highlight_level) {
     scale_size_manual(values = cohort_sizes, name = NULL, drop = FALSE) +
     scale_x_log10(limits = c(0.35, 3)) +
     labs(x = "Hazard ratio (95% CI)", y = NULL, title = title) +
-    theme_classic(base_size = base_size) +
+    theme_nature(base_size = base_size) +
     theme(legend.position = "none",
           plot.title    = element_text(face = "bold", size = 9, hjust = 0.5),
           axis.text.y   = element_text(size = 8, face = "bold"),
@@ -510,7 +512,7 @@ plot_forest_4 <- plot_grid(
   forest_legend, nrow = 2, rel_heights = c(15, 1)
 )
 
-theme_pnas <- theme_classic(base_size = base_size) +
+theme_pnas <- theme_nature(base_size = base_size) +
   theme(plot.title = element_text(face = "bold"),
         plot.margin = margin(6, 10, 6, 15),
         legend.box.margin = margin(0, 0, 0, 0),
@@ -544,8 +546,7 @@ km_legend_plot <- ggplot(
   aes(x = x, y = y, colour = group)
 ) +
   geom_line() +
-  scale_colour_manual(values = c("Low" = "violetred2", "High" = "turquoise4"),
-                      name = "Risk group") +
+  scale_colour_manual(values = desurv_risk_cols, name = "Risk group") +   # blue/vermillion, matches SI + splot_cutpoint
   theme_pnas +
   theme(legend.position = "bottom",
         legend.text  = element_text(size = km_text_size),
@@ -567,7 +568,7 @@ km_legend_grob <- km_legend_gg$grobs[
 fig_supcorr_hm <- ggplot(.hm_df, aes(program, method, fill = r)) +
   geom_tile(color = "white", linewidth = 0.6) +
   geom_text(aes(label = sprintf("%.2f", r)), size = km_text_size / ggplot2::.pt) +
-  scale_fill_gradient(low = "#f7fbff", high = "#08519c", limits = c(0, 1),
+  scale_fill_gradient(low = "#f7fbff", high = desurv_accent, limits = c(0, 1),   # |r| ramp anchored on DeSurv blue
                       name = expression("|" * italic(r) * "|")) +
   labs(x = NULL, y = NULL, title = "Supervised score vs DeSurv program") +
   theme_pnas +
@@ -578,12 +579,12 @@ km_block_4 <- plot_grid(
   stack_surv(fig_median_survival_desurv, "DeSurv"),
   ggdraw(km_legend_grob),
   fig_supcorr_hm,
-  nrow = 3, labels = c("B", "", "C"), label_size = 12, rel_heights = c(5, 0.6, 4.2)
+  nrow = 3, labels = c("b", "", "c"), label_size = 12, rel_heights = c(5, 0.6, 4.2)
 )
 ggsave(
   file.path(FIGURE_DIR, "fig4_tcgacptac.pdf"),
   plot_grid(plot_forest_4, km_block_4, ncol = 2, rel_widths = c(1.4, 1),
-            labels = c("A", ""), label_size = 12),
+            labels = c("a", ""), label_size = 12),
   width = 7, height = 4.8
 )
 message("Saved fig4_tcgacptac.pdf")

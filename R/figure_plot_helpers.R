@@ -2,6 +2,12 @@
 # pre-flatten R/figure_targets.R (deleted in 491f3e7). Required by
 # code/09a_figures.R / 09b_si_figures.R for main+SI figure generation.
 
+# Semantic palette / theme helpers (desurv_diverging, desurv_risk_cols, ...).
+# Source here too so callers that use only these helpers (util scripts, the SI
+# table builder) get the palette without needing to source the theme first.
+if (!exists("desurv_diverging"))
+  source(if (file.exists("R/theme_nature.R")) "R/theme_nature.R" else "../R/theme_nature.R")
+
 make_nmf_metric_plot <- function(fit_std, metric) {
   p <- plot(
     fit_std,
@@ -305,7 +311,9 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
     colnames(mat) <- factor_labels
   }
 
-  my_colors <- grDevices::colorRampPalette(rev(RColorBrewer::brewer.pal(n = 7, name = "RdYlBu")))(100)
+  # Centered-at-0 diverging ramp from theme_nature.R (was RdYlBu, whose yellow
+  # midpoint reads as weak positive enrichment; RdBu puts white at 0).
+  my_colors <- desurv_diverging(100)
   ph_args <- list(
     mat = mat,
     cluster_cols = FALSE,
@@ -437,8 +445,13 @@ splot_cutpoint = function(data_val_filtered, tar_fit_desurv, lp_stats, ntop = NU
   }
   df <- do.call("rbind", df)
 
-  sfit       <- survfit(Surv(time, event) ~ factor, data = df)
-  hr_fit     <- coxph(Surv(time, event) ~ factor, data = df)
+  sfit       <- survfit(Surv(time, event) ~ factor, data = df)   # pooled curves (visualization)
+  # Cohort-stratified inference (matches the caption and the SI pooled KM): the
+  # HR and log-rank use dataset as a stratifying factor so cohorts contribute
+  # their own baseline hazard rather than being pooled as one population.
+  has_ds     <- "dataset" %in% names(df) && length(unique(df$dataset)) > 1
+  hr_fit     <- if (has_ds) coxph(Surv(time, event) ~ factor + strata(dataset), data = df)
+                else        coxph(Surv(time, event) ~ factor, data = df)
   hr_summary <- summary(hr_fit)$conf.int
   hr_label   <- sprintf(
     "HR (High vs Low) = %.2f\n(95%% CI %.2f-%.2f)",
@@ -446,7 +459,8 @@ splot_cutpoint = function(data_val_filtered, tar_fit_desurv, lp_stats, ntop = NU
     hr_summary[1, "lower .95"],
     hr_summary[1, "upper .95"]
   )
-  lr_test <- survdiff(Surv(time, event) ~ factor, data = df)
+  lr_test <- if (has_ds) survdiff(Surv(time, event) ~ factor + strata(dataset), data = df)
+             else        survdiff(Surv(time, event) ~ factor, data = df)
   p_val   <- 1 - pchisq(lr_test$chisq, df = 1)
   p_label <- if (p_val < 0.001) "Log-rank p < 0.001" else sprintf("Log-rank p = %.3f", p_val)
   
@@ -462,7 +476,7 @@ splot_cutpoint = function(data_val_filtered, tar_fit_desurv, lp_stats, ntop = NU
 
   splot <- ggsurvplot(sfit, data = df, risk.table = TRUE,
                       xlab = "Time (months)",
-                      palette = c("violetred2", "turquoise4"),
+                      palette = unname(desurv_risk_cols[c("Low", "High")]),  # blue/vermillion, matches SI
                       break.time.by = breaks,
                       legend.labs = c("Low", "High"),
                       risk.table.y.text = TRUE,

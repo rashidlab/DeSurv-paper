@@ -15,6 +15,15 @@ source("code/00_helpers.R")
 library(ggplot2)
 library(cowplot)
 library(dplyr)
+source("R/theme_nature.R")   # single source of truth: theme_nature(), desurv_method_cols
+
+# Recolor a prebuilt sim panel (step 07) to the semantic DeSurv/NMF pair and put
+# it on the shared theme. Legends are suppressed here; a single shared Method
+# legend is composed once per figure (avoids the duplicate fill+colour legends).
+recolor <- function(p) p +
+  ggplot2::scale_fill_manual(values = desurv_method_cols, guide = "none") +
+  ggplot2::scale_colour_manual(values = desurv_method_cols, guide = "none") +
+  theme_nature()
 
 
 set_fig_font <- function(plot_obj, size = 10) {
@@ -46,7 +55,7 @@ message("Saved si_fig_bo_tuning_surface_tcgacptac.pdf")
 
 # ── Fig 2 (main text): simulation panels A-D ──────────────────────────────
 # 4B: recovery of true prognostic genes (relabeled away from "Precision")
-panel_b <- alt_plots$precision_box +
+panel_b <- recolor(alt_plots$precision_box) +
   labs(title = NULL, y = "Proportion of selected genes\nfrom true prognostic program")
 
 # 4D: scenario gradient in gene recovery. R0_easy = prognostic program explains LOW
@@ -63,20 +72,24 @@ prec_grad$scenario <- factor(prec_grad$scenario_id, levels = c("R0_easy", "R_mix
 prec_grad$method <- factor(prec_grad$method, levels = c("DeSurv", "NMF"))
 panel_d <- ggplot(prec_grad, aes(x = scenario, y = precision, fill = method)) +
   geom_boxplot(outlier.size = 0.4, linewidth = 0.3, position = position_dodge(0.8)) +
-  scale_fill_manual(values = c("DeSurv" = "#1f78b4", "NMF" = "#e31a1c"), name = "Method") +
+  scale_fill_manual(values = desurv_method_cols, name = "Method") +   # DeSurv #0072B2, NMF #D55E00
   labs(x = NULL, y = "Proportion from true\nprognostic program", title = NULL) +
-  theme_minimal(base_size = 10) +
+  theme_nature() +
   theme(legend.position = "right", panel.grid.minor = element_blank(),
         axis.text.x = element_text(size = 8))
 
+# One shared Method legend (from panel_d) placed in the upper row's third column.
+method_legend <- cowplot::get_legend(
+  panel_d + theme_nature() + theme(legend.position = "right"))
 upper <- plot_grid(
-  alt_plots$cindex_box + labs(title = NULL) + scale_y_continuous(limits = c(.5, 1)),
-  panel_b, NULL,
-  ncol = 3, labels = c("A", "B", ""), rel_widths = c(4, 4, .8)
+  recolor(alt_plots$cindex_box) + labs(title = NULL) + scale_y_continuous(limits = c(.5, 1)),
+  panel_b, method_legend,
+  ncol = 3, labels = c("a", "b", ""), rel_widths = c(4, 4, 1)
 )
 lower <- plot_grid(
-  alt_plots$k_hist + labs(title = NULL), panel_d,
-  ncol = 2, labels = c("C", "D"), rel_widths = c(1, 1.3)
+  recolor(alt_plots$k_hist) + labs(title = NULL),
+  panel_d + theme(legend.position = "none"),
+  ncol = 2, labels = c("c", "d"), rel_widths = c(1, 1.3)
 )
 ggsave(file.path(FIGURE_DIR, "fig2_tcgacptac.pdf"),
        plot_grid(upper, lower, nrow = 2),
@@ -107,10 +120,17 @@ lossit <- dplyr::bind_rows(lapply(seeds, function(i) {
 
 ggsave(
   file.path(FIGURE_DIR, "si_fig_converge_tcgacptac.pdf"),
-  ggplot(lossit, aes(y = rel_delta_loss, x = iter, color = init_label)) +
-    geom_line(linewidth = 0.8) +
-    theme_minimal(base_size = 10) +
-    labs(x = "Iteration", y = "Loss normalized to initial value", color = "Initialization"),
+  # The normalized loss sits at 0.99993-1.0 (reconstruction-dominated total),
+  # so the raw curve looks flat. Plot the relative DECREASE from the initial
+  # value, (loss_0 - loss_t)/loss_0, on a x10^-5 scale (same quantity, readable).
+  ggplot(lossit, aes(y = 1 - rel_delta_loss, x = iter, color = init_label)) +
+    geom_line(linewidth = 0.6) +
+    scale_color_manual(values = desurv_discrete()) +
+    scale_y_continuous(labels = function(y) formatC(y * 1e5, format = "f", digits = 1)) +
+    labs(x = "Iteration",
+         y = expression("Relative decrease in objective (" * 10^{-5} * ")"),
+         color = "Initialization") +
+    theme_nature(),
   width = 5, height = 3
 )
 message("Saved si_fig_converge_tcgacptac.pdf")
@@ -123,7 +143,7 @@ null_cindex <- null_f$cindex_box + labs(title = NULL) + scale_y_continuous(limit
 null_cindex$data$scenario_id <- "Null scenario (β = 0)"
 null_khist  <- null_f$k_hist + labs(title = NULL)
 null_khist$data$scenario_id  <- "Null scenario (β = 0)"
-null_row <- plot_grid(null_cindex, null_khist, ncol = 2, labels = c("A", "B"), rel_widths = c(1, 1.2))
+null_row <- plot_grid(null_cindex, null_khist, ncol = 2, labels = c("a", "b"), rel_widths = c(1, 1.2))
 
 mixed_cindex <- mixed_f$cindex_box + labs(title = NULL) + scale_y_continuous(limits = c(0.3, 1)) +
   theme(plot.clip = "off", plot.margin = margin(t = 5, r = 20, b = 5, l = 5, unit = "pt"))
@@ -133,7 +153,7 @@ mixed_prec <- if (!is.null(mixed_f$precision_breakdown)) {
 } else {
   mixed_f$precision_box + labs(title = NULL)
 }
-mixed_row1 <- plot_grid(mixed_cindex, mixed_prec, ncol = 2, labels = c("C", "D"), rel_widths = c(1, 2))
+mixed_row1 <- plot_grid(mixed_cindex, mixed_prec, ncol = 2, labels = c("c", "d"), rel_widths = c(1, 2))
 
 mixed_beta  <- if (!is.null(mixed_f$matched_beta_box)) mixed_f$matched_beta_box + labs(title = NULL) else NULL
 mixed_khist <- mixed_f$k_hist + labs(title = NULL)
@@ -141,11 +161,11 @@ mixed_khist$data$scenario_id <- "Mixed scenario"
 
 fig_null_mixed <- if (!is.null(mixed_beta)) {
   plot_grid(null_row, mixed_row1,
-            plot_grid(mixed_beta, mixed_khist, ncol = 2, labels = c("E", "F"), rel_widths = c(1, 1.2)),
+            plot_grid(mixed_beta, mixed_khist, ncol = 2, labels = c("e", "f"), rel_widths = c(1, 1.2)),
             nrow = 3, rel_heights = c(1, 1, 1))
 } else {
   plot_grid(null_row, mixed_row1,
-            plot_grid(mixed_khist, ncol = 1, labels = "E"),
+            plot_grid(mixed_khist, ncol = 1, labels = "e"),
             nrow = 3, rel_heights = c(1, 1, 0.7))
 }
 ggsave(file.path(FIGURE_DIR, "si_fig_sim_null_mixed_tcgacptac.pdf"), fig_null_mixed, width = 6.5, height = 7)

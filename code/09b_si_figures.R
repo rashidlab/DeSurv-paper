@@ -32,6 +32,7 @@ source("R/cv_grid_helpers.R")
 source("R/preprocess_helpers.R")
 source("R/variance_helpers.R")
 source("R/reconstruction_helpers.R")
+source("R/theme_nature.R")   # single source of truth for the SI figures too
 
 # ── Identifier used in output filenames ──────────────────────────────────
 # Mirrors the bo_label convention from the original DeSurv-paper repo. The
@@ -203,7 +204,7 @@ ggsave(
       set_fig_font(fig_res,  10) + theme(legend.position = "none"),
       set_fig_font(fig_coph, 10) + theme(legend.position = "none"),
       set_fig_font(fig_sil,  10) + theme(legend.position = "none"),
-      ncol = 3, labels = c("A", "B", "C")
+      ncol = 3, labels = c("a", "b", "c")
     ),
     legend_s4, nrow = 2, rel_heights = c(1, 0.15)
   ),
@@ -221,15 +222,15 @@ ggsave(
     cowplot::plot_grid(
       read_pdf_grob(file.path(FIGURE_DIR, sprintf("cutpoint_curve_logrank_%s.pdf", bo_label))),
       read_pdf_grob(file.path(FIGURE_DIR,  sprintf("km_val_pooled_logrank_%s.pdf", bo_label))),
-      ncol = 2, labels = c("A", "B"), label_size = 14),
+      ncol = 2, labels = c("a", "b"), label_size = 12),
     cowplot::plot_grid(
       read_pdf_grob(file.path(FIGURE_DIR, sprintf("km_val_Dijk_logrank_%s.pdf", bo_label))),
       read_pdf_grob(file.path(FIGURE_DIR, sprintf("km_val_Moffitt_GEO_array_logrank_%s.pdf", bo_label))),
-      ncol = 2, labels = c("C", "D"), label_size = 14),
+      ncol = 2, labels = c("c", "d"), label_size = 12),
     cowplot::plot_grid(
       read_pdf_grob(file.path(FIGURE_DIR, sprintf("km_val_PACA_AU_logrank_%s.pdf", bo_label))),
       read_pdf_grob(file.path(FIGURE_DIR, sprintf("km_val_Puleo_array_logrank_%s.pdf", bo_label))),
-      ncol = 2, labels = c("E", "F"), label_size = 14),
+      ncol = 2, labels = c("e", "f"), label_size = 12),
     nrow = 3, rel_heights = c(1, 1, 1)
   ),
   width = 10, height = 11
@@ -348,7 +349,7 @@ if (all(file.exists(cv_summary_path, cv_val_path, cv_alpha_path))) {
   legend_grob  <- gt$grobs[[which(vapply(gt$grobs, `[[`, character(1), "name") == "guide-box")]]
   plots_no_leg <- lapply(plots, function(p) p + ggplot2::theme(legend.position = "none"))
   panel_grid   <- cowplot::plot_grid(plotlist = plots_no_leg, nrow = 2,
-                                     labels = c("A", "B"), label_size = 12)
+                                     labels = c("a", "b"), label_size = 12)
   combined     <- cowplot::plot_grid(panel_grid, legend_grob,
                                      ncol = 1, rel_heights = c(1, 0.05))
   ggplot2::ggsave(file.path(FIGURE_DIR, "cv_cindex_by_k_primary.pdf"),

@@ -27,6 +27,7 @@ suppressMessages({
 })
 source("R/get_top_genes.R")
 source("R/figure_plot_helpers.R")   # make_gene_overlap_heatmap (DeSurv-free)
+source("R/theme_nature.R")          # shared Nature Cancer theme + semantic palettes
 
 out_dir <- "figures/standalone_preview"
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
@@ -35,8 +36,9 @@ dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 make_spearman_heatmap <- function(c_mat, row_labels, col_labels) {
   rownames(c_mat) <- row_labels; colnames(c_mat) <- col_labels
   ph_args <- list(mat = c_mat, cluster_rows = FALSE, cluster_cols = FALSE,
-    show_colnames = TRUE, show_rownames = TRUE, fontsize = 8, fontsize_number = 8,
-    number_color = "black", breaks = seq(-0.5, 1, length.out = 101),
+    show_colnames = TRUE, show_rownames = TRUE, fontsize = 7, fontsize_number = 7,
+    number_color = "black", color = desurv_diverging(100),
+    breaks = seq(-1, 1, length.out = 101),   # symmetric so 0 maps to white
     display_numbers = TRUE, number_format = "%.2f", silent = TRUE)
   ph <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = FALSE)))
   ph_grob <- ph$gtable
@@ -104,14 +106,13 @@ fig_desurv_std_correlation <- make_spearman_heatmap(
 g6 <- readRDS("results/treated_cohort_stats.rds")$gata6
 plot_3e <- ggplot(g6$points, aes(x = factor(gata6), y = D1)) +
   geom_boxplot(outlier.shape = NA, width = 0.6, fill = "grey92", linewidth = 0.3) +
-  geom_jitter(width = 0.12, height = 0, size = 1.3, alpha = 0.75, colour = "#08519c") +
+  geom_jitter(width = 0.12, height = 0, size = 1.3, alpha = 0.75, colour = desurv_accent) +
   annotate("text", x = 0.6, y = max(g6$points$D1), hjust = 0, vjust = 1, size = 2.9,
            label = sprintf("Spearman~italic(r)==%.2f", g6$rho), parse = TRUE) +
   annotate("text", x = 0.6, y = max(g6$points$D1) - 0.45, hjust = 0, vjust = 1, size = 2.9,
            label = sprintf("italic(P)<0.001*','~n==%d", g6$n), parse = TRUE) +
   labs(x = "GATA6 RNA-ISH level", y = "DeSurv D1 score (z)") +
-  theme_classic(base_size = 9) +
-  theme(axis.title = element_text(size = 8))
+  theme_nature(base_size = 8)
 
 # --- assemble (verbatim code/09a_figures.R:336-379) -------------------------
 plot_3a <- fig_gene_overlap_heatmap_desurv$plot +
@@ -123,19 +124,21 @@ legend_ab <- gtable::gtable_add_padding(
 # Wider legend column so the "Rank-biserial enrichment" title is not clipped on
 # the right of panel B.
 top_row_3 <- plot_grid(plot_3a, plot_3b, cowplot::ggdraw(legend_ab),
-  ncol = 3, labels = c("A", "B", ""), align = "hv", label_size = 12,
+  ncol = 3, labels = c("a", "b", ""), align = "hv", label_size = 12,
   rel_widths = c(3.4, 3.4, 0.85))
 
 plot_3c <- fig_variation_explained +
+  scale_color_manual(values = desurv_method_cols) +   # match production restyle
+  theme_nature(base_size = 8) +
   theme(legend.position = c(1, 0.5), legend.justification = c(1, 0),
         legend.background = element_rect(color = "black"),
-        axis.title = element_text(size = 8), plot.margin = margin(2, 30, 2, 2))
+        plot.margin = margin(2, 30, 2, 2))
 
-legend_d_plot <- ggplot(data.frame(x = 0, y = seq(-0.5, 1, length.out = 100)),
+legend_d_plot <- ggplot(data.frame(x = 0, y = seq(-1, 1, length.out = 100)),
                         aes(x = x, y = y, fill = y)) + geom_tile() +
   scale_fill_gradientn(
-    colors = grDevices::colorRampPalette(rev(RColorBrewer::brewer.pal(7, "RdYlBu")))(100),
-    limits = c(-0.5, 1), breaks = c(-0.4, 0, 0.4, 0.8), name = "Spearman\ncorrelation") +
+    colors = desurv_diverging(100),
+    limits = c(-1, 1), breaks = c(-0.8, -0.4, 0, 0.4, 0.8), name = "Spearman\ncorrelation") +
   guides(fill = guide_colorbar(barwidth = unit(0.3, "cm"), barheight = unit(2, "cm"),
                                title.position = "top", title.hjust = 0.5)) +
   theme_void() + theme(legend.position = "right",
@@ -148,7 +151,7 @@ plot_3d <- plot_grid(
   ncol = 2, rel_widths = c(4, 1))
 # Bottom row: C, D, E side by side -> keeps a ~square aspect so the figure renders
 # full-width (out.width='\textwidth') without distortion or overflowing the page.
-bottom_row_3 <- plot_grid(plot_3c, plot_3d, plot_3e, ncol = 3, labels = c("C", "D", "E"),
+bottom_row_3 <- plot_grid(plot_3c, plot_3d, plot_3e, ncol = 3, labels = c("c", "d", "e"),
                           label_size = 12, rel_widths = c(0.37, 0.33, 0.30))
 
 fig2 <- plot_grid(top_row_3, bottom_row_3, nrow = 2, rel_heights = c(1.3, 0.72))

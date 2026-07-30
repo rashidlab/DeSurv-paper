@@ -28,11 +28,19 @@ suppressMessages({ library(survival); library(riskRegression); library(prodlim) 
 set.seed(1)
 
 val <- readRDS("results/val_latent_desurv_tcgacptac.rds")
+source("R/paca_dedup.R")   # combined-analysis PACA-AU de-duplication (shared rule)
+
+# Combined analysis: exclude PACA-AU array patients also profiled by RNA-seq, so
+# the event-weighted pooled score is over unique patients (RNA-seq retained).
+.seqacc <- { i <- which(vapply(val, function(e) e$dataset, "") == "PACA_AU_seq")
+  if (length(i)) paca_accession(rownames(val[[i]]$survival)) else character(0) }
 
 rows <- list()
 for (e in val) {
-  df <- data.frame(time = e$survival$time, event = e$survival$event,
-                   rz = as.numeric(scale(e$risk_score)))
+  ids  <- rownames(e$survival)
+  keep <- if (e$dataset == "PACA_AU_array") !(paca_accession(ids) %in% .seqacc) else rep(TRUE, length(ids))
+  df <- data.frame(time = e$survival$time[keep], event = e$survival$event[keep],
+                   rz = as.numeric(scale(e$risk_score[keep])))
   df <- df[is.finite(df$time) & df$time > 0 & is.finite(df$event) & is.finite(df$rz), ]
   et <- sort(df$time[df$event == 1])
   if (length(et) < 3) next

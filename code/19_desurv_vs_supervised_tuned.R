@@ -45,12 +45,23 @@ dv  <- readRDS("results/data_val_filtered_tcgacptac.rds")
 genes <- rownames(W); Xtr <- t(ex[genes,,drop=FALSE])
 gsd <- apply(Xtr,2,sd); Xtr <- Xtr[,gsd>0,drop=FALSE]; genes <- colnames(Xtr)
 
+source("R/paca_dedup.R")   # combined-analysis PACA-AU de-duplication (shared rule)
+# Combined (POOLED) transfer C-index is over unique patients: drop PACA-AU array
+# patients also profiled by RNA-seq (RNA-seq retained). Per-cohort C-indices for
+# display are produced separately (code/05) and are unaffected.
+.seqacc19 <- { s <- Filter(function(co) co$sampInfo$dataset[1] == "PACA_AU_seq", dv)
+  if (length(s)) { co <- s[[1]]; kp <- if (!is.null(co$samp_keeps)) co$samp_keeps else which(co$sampInfo$keep==1)
+    paca_accession(rownames(co$sampInfo)[kp]) } else character(0) }
+
 proj <- function(E,w){ g<-intersect(names(w),rownames(E)); as.numeric(drop(t(E[g,,drop=FALSE])%*%w[g])) }
 cidx <- function(s,t,e) unname(survival::concordance(Surv(t,e)~s)$concordance)
 transfer <- function(w){ ci<-nev<-c(); nm<-c()
   for(co in dv){ keep<-if(!is.null(co$samp_keeps))co$samp_keeps else which(co$sampInfo$keep==1)
-    E<-co$ex[,keep,drop=FALSE];tt<-co$sampInfo$time[keep];ee<-co$sampInfo$event[keep];ok<-is.finite(tt)&tt>0&is.finite(ee)
-    ci<-c(ci,cidx(proj(E[,ok,drop=FALSE],w),tt[ok],ee[ok]));nev<-c(nev,sum(ee[ok]));nm<-c(nm,co$sampInfo$dataset[1]) }
+    ids<-rownames(co$sampInfo)[keep]; dsn<-co$sampInfo$dataset[1]
+    ded<-if(dsn=="PACA_AU_array") !(paca_accession(ids) %in% .seqacc19) else rep(TRUE,length(ids))
+    E<-co$ex[,keep,drop=FALSE];tt<-co$sampInfo$time[keep];ee<-co$sampInfo$event[keep]
+    ok<-is.finite(tt)&tt>0&is.finite(ee)&ded
+    ci<-c(ci,cidx(proj(E[,ok,drop=FALSE],w),tt[ok],ee[ok]));nev<-c(nev,sum(ee[ok]));nm<-c(nm,dsn) }
   c(setNames(ci,nm), POOLED=sum(ci*nev)/sum(nev)) }
 
 ## ---- DeSurv: top-270-per-factor truncated (published scoring) ----

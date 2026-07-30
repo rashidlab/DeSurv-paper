@@ -106,11 +106,15 @@ extract_pool_df <- function(val_latent) {
   pool_dfs <- lapply(val_latent, function(entry) {
     surv <- entry$survival
     if (is.null(surv) || !all(c("time", "event") %in% names(surv))) return(NULL)
-    data.frame(time = surv$time, event = surv$event,
-               dataset = entry$dataset, risk_score = entry$risk_score)
+    data.frame(id = rownames(surv), time = surv$time, event = surv$event,
+               dataset = entry$dataset, risk_score = entry$risk_score,
+               stringsAsFactors = FALSE)
   })
   df <- dplyr::bind_rows(Filter(Negate(is.null), pool_dfs))
-  df[is.finite(df$time) & is.finite(df$risk_score), ]
+  df <- df[is.finite(df$time) & is.finite(df$risk_score), ]
+  # Combined analysis: one record per unique patient (drop PACA-AU array
+  # duplicates, keep RNA-seq), per the shared DeCAF-consistent rule.
+  dedup_combined(df, dataset_col = "dataset", id_col = "id")
 }
 
 # ── Helper: fit stratified Cox on SD-standardized risk_score ─────────────────
@@ -134,6 +138,13 @@ pool_df      <- extract_pool_df(val_latent_desurv_tcgacptac)
 n_val_total  <- nrow(pool_df)
 n_val_events <- sum(pool_df$event, na.rm = TRUE)
 n_val_cohorts <- length(unique(pool_df$dataset))
+# Build-time safeguard against pipeline drift: report the combined-cohort counts
+# and flag any deviation from the expected de-duplicated totals. dedup_combined()
+# already hard-asserts one record per unique patient.
+message(sprintf("Unique validation patients: %d\nOS events: %d", n_val_total, n_val_events))
+if (n_val_total != DESURV_EXPECTED_COMBINED_PATIENTS || n_val_events != DESURV_EXPECTED_COMBINED_EVENTS)
+  warning(sprintf("Combined validation counts (%d patients, %d events) differ from expected (%d, %d): check PACA-AU de-duplication / cohort inputs.",
+                  n_val_total, n_val_events, DESURV_EXPECTED_COMBINED_PATIENTS, DESURV_EXPECTED_COMBINED_EVENTS))
 desurv_stats <- pooled_cox_stats(pool_df)
 hr_pool      <- sprintf("%.2f", desurv_stats$hr)
 ci_pool_lo   <- sprintf("%.2f", desurv_stats$ci_lo)
@@ -160,7 +171,9 @@ extract_pool_df_with_covariates <- function(val_latent, data_val) {
     df
   })
   df <- dplyr::bind_rows(Filter(Negate(is.null), pool_dfs))
-  df[is.finite(df$time) & is.finite(df$risk_score), ]
+  df <- df[is.finite(df$time) & is.finite(df$risk_score), ]
+  # Combined analysis: one record per unique patient, per the shared rule.
+  dedup_combined(df, dataset_col = "dataset", id_col = "sample_id")
 }
 
 pool_df_adj_complete <- extract_pool_df_with_covariates(
@@ -252,9 +265,9 @@ knitr::include_graphics(file.path("..", "figures", "fig3_tcgacptac.pdf"))
 ```
 
 
-## Survival-aligned programs generalize across independent PDAC cohorts {.unnumbered}
+## Survival-aligned programs generalize across independent PDAC patient cohorts {.unnumbered}
 
-We next tested whether the programs learned in TCGA and CPTAC generalized without retraining to five independent PDAC cohorts (Dijk, Moffitt, PACA-AU array, PACA-AU RNA-seq and Puleo; non-metastatic, treatment-naive; Supplementary Table \ref{tab:cohorts}; $n = `r n_val_total`$, `r n_val_events` events), projecting the trained programs into each validation expression matrix ($Z = \widetilde{W}^\top X_{\text{new}}$). The dominant survival-aligned programs D1 and D3 showed directionally consistent associations across cohorts (protective and higher-risk, respectively), whereas the proCAF-like D2 program was near-null and more variable (Fig.\ \ref{fig:val}A), while the frozen multivariable DeSurv linear predictor (oriented so that higher values indicate higher risk) was associated with overall survival in a cohort-stratified analysis (pooled HR per SD $= `r hr_pool`$, 95\% CI $`r ci_pool_lo`$--$`r ci_pool_hi`$, $P = `r p_pool`$; Table \ref{tab:hr-adjusted}). At the same three-program complexity, the corresponding standard NMF predictor showed a substantially weaker association (HR per SD $= `r hr_pool_nmf`$, 95\% CI $`r ci_pool_lo_nmf`$--$`r ci_pool_hi_nmf`$, $P = `r p_pool_nmf`$).
+We next tested whether the programs learned in TCGA and CPTAC generalized without retraining to five external validation datasets spanning four independent patient cohorts (Dijk, Moffitt, PACA-AU [array and RNA-seq], and Puleo; non-metastatic, treatment-naive; Supplementary Table \ref{tab:cohorts}), projecting the trained programs into each validation expression matrix ($Z = \widetilde{W}^\top X_{\text{new}}$). Because the PACA-AU array and RNA-seq datasets profile a partially overlapping set of patients, combined analyses represented each patient once (retaining the RNA-seq profile and excluding the corresponding array measurement, consistent with the DeCAF preprocessing rule [@peng2024determination]), giving a combined validation population of $`r n_val_total`$ unique patients (`r n_val_events` deaths). The dominant survival-aligned programs D1 and D3 showed directionally consistent associations across cohorts (protective and higher-risk, respectively), whereas the proCAF-like D2 program was near-null and more variable (Fig.\ \ref{fig:val}A), while the frozen multivariable DeSurv linear predictor (oriented so that higher values indicate higher risk) was associated with overall survival in a cohort-stratified analysis (pooled HR per SD $= `r hr_pool`$, 95\% CI $`r ci_pool_lo`$--$`r ci_pool_hi`$, $P = `r p_pool`$; Table \ref{tab:hr-adjusted}). At the same three-program complexity, the corresponding standard NMF predictor showed a substantially weaker association (HR per SD $= `r hr_pool_nmf`$, 95\% CI $`r ci_pool_lo_nmf`$--$`r ci_pool_hi_nmf`$, $P = `r p_pool_nmf`$).
 
 We then asked whether comparable prognostic performance could be achieved without survival-supervised deconvolution. Increasing the rank of standard NMF substantially improved external discrimination: NMF at $k = 7$ matched or exceeded DeSurv's concordance in most validation cohorts and, like DeSurv, remained prognostic after simultaneous adjustment for PurIST and DeCAF (Table \ref{tab:hr-adjusted}; Supplementary Table \ref{tab:tab-cindex-comparison}). Thus, survival supervision was not required to recover prognostic information from the transcriptome. Increasing NMF rank, however, distributed this information across a rank-sensitive set of overlapping factors: at $k = 7$, multiple factors partially captured the same established PDAC signatures, yielding a more fragmented biological representation despite strong performance of the combined predictor (Supplementary Fig. \ref{fig:fig-nmf-k7-heatmap}).
 
@@ -267,7 +280,7 @@ load_result("desurv_vs_supervised_tuned")
 
 As a secondary, clinical visualization, a risk cutpoint selected entirely within the training data separated survival across the external validation cohorts (cohort-stratified HR $= `r km_desurv$hr`$, 95\% CI $`r km_desurv$ci_lo`$--$`r km_desurv$ci_hi`$, dataset-stratified Cox model, $P `r if(km_desurv$p_lt) "< 0.001" else paste0("= ", km_desurv$p_val)`$; Fig. \ref{fig:val}B); per-cohort Kaplan--Meier analyses are provided in the Supplementary Information. Prediction alone therefore did not distinguish DeSurv from higher-rank NMF, and, as we show next, comparable prediction is also achieved by conventional survival-supervised models. We therefore asked whether DeSurv instead provided a different biological representation of the prognostic signal, beyond that available from established classifiers and other survival-supervised approaches.
 
-```{r fig-val, fig.cap = paste0("Survival-aligned programs generalize across independent PDAC cohorts (pooled $n=", n_val_total, "$ patients across ", n_val_cohorts, " cohorts: ", paste(sprintf("%s $n=%d$", gsub("AU seq", "AU RNA-seq", gsub("PACA AU", "PACA-AU", gsub("_", " ", names(table(pool_df$dataset))))), as.integer(table(pool_df$dataset))), collapse = "; "), "). (A) Forest plot of per-cohort univariate hazard ratios (95\\% CIs) for each factor; black diamonds denote inverse-variance-weighted pooled estimates. (B) Kaplan--Meier curves for pooled validation samples stratified by the training-derived multivariate DeSurv linear predictor, dichotomized at a cross-validated optimal cutpoint. (C) Correspondence ($|$Spearman $r|$) of tuned supervised risk scores (penalized Cox and supervised PCA) with the three DeSurv programs (D1--D3); supervised scores concentrate on D1 and are near-orthogonal to the D2 stromal program. No validation-cohort survival outcomes were used in training, scoring or hyperparameter selection. \\label{fig:val}"), fig.env='figure*', fig.pos='t', fig.width=7, fig.height=4.8, out.height= "4.5in", out.width='\\textwidth'}
+```{r fig-val, fig.cap = paste0("Survival-aligned programs generalize across independent PDAC patient cohorts (five external validation datasets: Dijk, Moffitt GEO array, PACA-AU array, PACA-AU RNA-seq and Puleo; combined $n=", n_val_total, "$ unique patients, ", n_val_events, " deaths, with PACA-AU patients profiled on both platforms represented once via RNA-seq). (A) Forest plot of per-dataset univariate hazard ratios (95\\% CIs) for each factor; the platform-specific PACA-AU array and RNA-seq estimates are shown separately, and the black diamonds denote combined estimates over unique patients (inverse-variance weighted; array duplicates excluded from the combined estimate). (B) Kaplan--Meier curves for the combined validation samples stratified by the training-derived multivariate DeSurv linear predictor, dichotomized at a cross-validated optimal cutpoint. (C) Correspondence ($|$Spearman $r|$) of tuned supervised risk scores (penalized Cox and supervised PCA) with the three DeSurv programs (D1--D3); supervised scores concentrate on D1 and are near-orthogonal to the D2 stromal program. No validation-cohort survival outcomes were used in training, scoring or hyperparameter selection. \\label{fig:val}"), fig.env='figure*', fig.pos='t', fig.width=7, fig.height=4.8, out.height= "4.5in", out.width='\\textwidth'}
 
 knitr::include_graphics(file.path("..", "figures", "fig4_tcgacptac.pdf"))
 ```

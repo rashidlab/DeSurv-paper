@@ -21,6 +21,7 @@ suppressMessages({ library(survival) })
 
 val  <- readRDS("results/val_latent_desurv_tcgacptac.rds")
 dval <- readRDS("results/data_val_filtered_tcgacptac.rds")
+source("R/paca_dedup.R")   # combined-analysis PACA-AU de-duplication (shared rule)
 
 ## --- assemble pooled per-sample table: D1/D2/D3 + survival + PurIST + DeCAF ---
 rows <- list()
@@ -41,6 +42,9 @@ for (e in val) {
 }
 df <- do.call(rbind, rows); rownames(df) <- NULL
 df <- df[is.finite(df$time) & is.finite(df$D1) & !is.na(df$PurIST) & !is.na(df$DeCAF), ]
+# Combined analysis: one record per unique patient (PACA-AU array duplicates
+# excluded, RNA-seq retained), per the shared DeCAF-consistent rule.
+df <- dedup_combined(df, dataset_col = "dataset", id_col = "sample_id")
 # z-score D1 within cohort (remove scale/level differences between datasets)
 df$D1z <- ave(df$D1, df$dataset, FUN = function(x) as.numeric(scale(x)))
 df$PurIST <- factor(df$PurIST); df$DeCAF <- factor(df$DeCAF)

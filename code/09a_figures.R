@@ -409,15 +409,36 @@ d <- fig_hr_forest$data
 d$dataset <- dplyr::recode(d$dataset,
   "Puleo_array" = "Puleo", "Moffitt_GEO_array" = "Moffitt",
   "PACA_AU_seq" = "PACA seq", "PACA_AU_array" = "PACA array")
-pooled <- d %>%
-  dplyr::mutate(logHR = log(HR), se = (log(upper) - log(lower)) / (2 * 1.96), w = 1 / se^2) %>%
-  dplyr::group_by(method, factor_name) %>%
-  dplyr::summarise(pooled_logHR = sum(logHR * w) / sum(w),
-                   pooled_se    = sqrt(1 / sum(w)), .groups = "drop") %>%
-  dplyr::mutate(HR = exp(pooled_logHR),
-                lower = exp(pooled_logHR - 1.96 * pooled_se),
-                upper = exp(pooled_logHR + 1.96 * pooled_se),
-                dataset = "Pooled")
+# Pooled diamonds are derived from the DE-DUPLICATED patient-level dataset (one
+# record per unique patient; PACA-AU array duplicates excluded, RNA-seq retained
+# -- shared DeCAF-consistent rule) via a per-factor cohort-stratified Cox on the
+# within-cohort standardized factor score. This cannot treat the two PACA-AU
+# platform estimates as independent contributions; the per-cohort points above
+# still display each platform separately.
+source("R/paca_dedup.R")
+pooled_factor_hr <- function(data_val, fit, prefix) {
+  rows <- lapply(data_val, function(co) {
+    keep <- intersect(rownames(fit$W), rownames(co$ex))
+    Z  <- t(co$ex[keep, , drop = FALSE]) %*% fit$W[keep, , drop = FALSE]
+    si <- co$sampInfo
+    data.frame(id = rownames(si), dataset = si$dataset, time = si$time,
+               event = si$event, Z, check.names = FALSE, stringsAsFactors = FALSE)
+  })
+  df <- do.call(rbind, rows); df <- df[is.finite(df$time) & df$time > 0, ]
+  df <- dedup_combined(df, "dataset", "id")
+  kc <- setdiff(colnames(df), c("id", "dataset", "time", "event"))
+  do.call(rbind, lapply(seq_along(kc), function(j) {
+    z <- ave(df[[kc[j]]], df$dataset, FUN = function(x) as.numeric(scale(x)))
+    s <- summary(survival::coxph(survival::Surv(df$time, df$event) ~ z + strata(df$dataset)))
+    data.frame(factor_name = paste0(prefix, j),
+               HR = s$conf.int[1], lower = s$conf.int[3], upper = s$conf.int[4],
+               stringsAsFactors = FALSE)
+  }))
+}
+pooled <- rbind(
+  cbind(pooled_factor_hr(data_val_filtered, tar_fit_desurv, "D"), method = "DeSurv"),
+  cbind(pooled_factor_hr(data_val_filtered, fit_std_desurvk, "N"), method = "NMF"))
+pooled$dataset <- "Pooled"
 keep_cols <- c("factor_name", "HR", "lower", "upper", "dataset", "method", "row_type")
 d$row_type <- "cohort"; pooled$row_type <- "pooled"
 all_data <- rbind(d[, keep_cols], pooled[, keep_cols])

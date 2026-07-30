@@ -1433,6 +1433,7 @@ plot_km_validation_pooled <- function(grid_fit_entry, val_datasets) {
   pooled_time <- numeric(0)
   pooled_event <- integer(0)
   pooled_ds <- character(0)
+  pooled_id <- character(0)
 
   for (ds_name in names(val_datasets)) {
     val_ds <- val_datasets[[ds_name]]
@@ -1453,6 +1454,8 @@ plot_km_validation_pooled <- function(grid_fit_entry, val_datasets) {
     ds_labels <- si$dataset[valid]
     if (is.null(ds_labels)) ds_labels <- rep(ds_name, sum(valid))
     pooled_ds <- c(pooled_ds, ds_labels)
+    ids <- rownames(si); if (is.null(ids)) ids <- colnames(val_ds$ex)
+    pooled_id <- c(pooled_id, ids[valid])
   }
 
   if (length(pooled_lp) < 2) return(NULL)
@@ -1468,8 +1471,13 @@ plot_km_validation_pooled <- function(grid_fit_entry, val_datasets) {
     event = pooled_event,
     group = group,
     dataset = pooled_ds,
+    id = pooled_id,
     stringsAsFactors = FALSE
   )
+  # Combined KM/inference over unique patients: drop PACA-AU array duplicates
+  # (RNA-seq retained), per the shared DeCAF-consistent rule.
+  if (!exists("paca_combined_keep")) source("R/paca_dedup.R")
+  df <- df[paca_combined_keep(df$dataset, df$id), , drop = FALSE]
   if (length(unique(df$group)) < 2) return(NULL)
 
   sfit <- survival::survfit(survival::Surv(time, event) ~ group, data = df)

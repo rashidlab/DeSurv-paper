@@ -57,6 +57,7 @@ main:
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/08_cutpoint_analysis.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/19_desurv_vs_supervised_tuned.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09a_figures.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/util_rb_enrichment_table.R
 	@echo "=== Main pipeline complete (figures 3-4 ready) ==="
 
 # ── Full pipeline (simulations run locally) ───────────────────────────────
@@ -76,6 +77,7 @@ all:
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/18_clinical_adjustment.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/19_desurv_vs_supervised_tuned.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09a_figures.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/util_rb_enrichment_table.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09b_si_figures.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09c_sim_figures.R
 	DESURV_RECOMPUTE=FALSE $(RSCRIPT) code/10_render_paper.R

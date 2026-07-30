@@ -132,7 +132,7 @@ extract_gp_curve_maxed <- function(bo_results, ci_level = 0.95,
   )
 }
 
-make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_labels = NULL, title = NULL, fontsize_row = 6){
+make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_labels = NULL, title = NULL, fontsize_row = 6, display_sigs = NULL, perm_B = 0L, perm_seed = 1L){
 
   if (is.null(top_genes_ref) || !length(top_genes_ref)) {
     stop("Reference gene signatures are missing.")
@@ -178,11 +178,10 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
 
   W <- fit_desurv$W
 
-  tops = tops[1:50,]
-
-  W <- W[unlist(tops), , drop = FALSE]
-  common_genes <- Reduce(intersect, list(rownames(W), unique(unlist(ref_sigs))))
-  W <- W[common_genes, , drop = FALSE]
+  # Fixed-universe reanalysis: evaluate each factor's loading vector against
+  # reference-program membership over the ENTIRE trained gene universe (all rows of
+  # W), with no selection on factor loadings, avoiding circularity. `tops` unused.
+  common_genes <- rownames(W)
   
   cor_mat <- matrix(
     NA,
@@ -203,23 +202,80 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
     dimnames = list(names(ref_sigs), colnames(W))
   )
   
+  # Factor-specificity score s_ij over the full universe: scale each column to unit
+  # maximum, then subtract the elementwise maximum of the other factors (the same
+  # score used to rank genes elsewhere).
+  col_max <- pmax(apply(W, 2, max), .Machine$double.eps)
+  Wsc <- sweep(W, 2, col_max, "/")
+  Smat <- vapply(seq_len(ncol(Wsc)), function(j) {
+    others <- if (ncol(Wsc) > 1) apply(Wsc[, -j, drop = FALSE], 1, max) else rep(0, nrow(Wsc))
+    Wsc[, j] - others
+  }, numeric(nrow(Wsc)))
+
+  # Rank-biserial enrichment r_RB = 2*AUC - 1, AUC = P(a signature gene outranks a
+  # non-signature gene) by factor-specificity score over the full fixed universe.
+  # Effect sizes only; permutation P values (joint BH) go to the SI source table.
+  rb_mat <- matrix(NA, nrow = length(ref_sigs), ncol = ncol(W),
+                   dimnames = list(names(ref_sigs), colnames(W)))
   for (j in seq_len(ncol(W))) {
-    wj <- W[, j]
+    rj <- rank(Smat[, j])
     for (k in seq_along(ref_sigs)) {
-      vk <- as.numeric(common_genes %in% ref_sigs[[k]])
-      cor_mat[k, j] <- stats::cor(wj, vk, method = "spearman")
-      p_mat[k, j] <- stats::cor.test(wj, vk, method = "spearman")$p.value
+      mem <- common_genes %in% ref_sigs[[k]]; n1 <- sum(mem); n0 <- sum(!mem)
+      if (n1 == 0 || n0 == 0) next
+      rb_mat[k, j] <- 2 * ((sum(rj[mem]) - n1 * (n1 + 1) / 2) / (n1 * n0)) - 1
     }
-    p_mat_adj[, j] <- stats::p.adjust(p_mat[, j], method = "BH")
   }
-  
-  keep <- vapply(seq_len(nrow(cor_mat)), function(j) {
-    !any(is.na(cor_mat[j, ])) & sum(cor_mat[j,]>.2) > 0#& sum(p_mat_adj[j, ] < 0.1) > 0
-  }, logical(1))
-  mat <- cor_mat[which(keep), , drop = FALSE]
-  p_mat_adj = p_mat_adj[which(keep),,drop=FALSE]
-  sig = matrix("",nrow=nrow(mat),ncol=ncol(mat))
-  sig[p_mat_adj < .1] = "*"
+
+  # Full matrix (raw signature names) is returned for the SI source table.
+  full_rb <- rb_mat
+
+  # Optional size-preserving gene-label permutation P values (for the SI source
+  # table only; perm_B = 0 skips this so the figure build stays deterministic).
+  # Under the null, membership is a random size-n1 subset of the fixed gene
+  # universe; the null distribution of r_RB for a given factor depends only on
+  # the signature size n1, so we memoize the null draws per (factor, n1).
+  full_p <- NULL
+  if (perm_B > 0L) {
+    set.seed(perm_seed)
+    ng <- nrow(Smat)
+    full_p <- matrix(NA, nrow = length(ref_sigs), ncol = ncol(W),
+                     dimnames = list(names(ref_sigs), colnames(W)))
+    for (j in seq_len(ncol(W))) {
+      rj <- rank(Smat[, j])
+      null_cache <- list()
+      for (k in seq_along(ref_sigs)) {
+        n1 <- sum(common_genes %in% ref_sigs[[k]]); n0 <- ng - n1
+        if (n1 == 0 || n0 == 0 || is.na(rb_mat[k, j])) next
+        key <- as.character(n1)
+        if (is.null(null_cache[[key]])) {
+          nd <- vapply(seq_len(perm_B), function(b) {
+            idx <- sample.int(ng, n1)
+            2 * ((sum(rj[idx]) - n1 * (n1 + 1) / 2) / (n1 * n0)) - 1
+          }, numeric(1))
+          null_cache[[key]] <- nd
+        }
+        nd <- null_cache[[key]]
+        full_p[k, j] <- (1 + sum(abs(nd) >= abs(rb_mat[k, j]))) / (perm_B + 1)
+      }
+    }
+  }
+
+  # Row selection for the MAIN figure. To avoid a second, outcome-dependent
+  # selection step, the displayed rows are a FIXED, biologically prespecified
+  # panel supplied by the caller (identical rows and order in panels A and B),
+  # chosen independently of the observed r_RB values. When display_sigs is NULL
+  # we fall back to the legacy observed-effect filter (used only for previews).
+  if (!is.null(display_sigs)) {
+    sel <- display_sigs[display_sigs %in% rownames(rb_mat)]
+    sel <- sel[!vapply(sel, function(s) any(is.na(rb_mat[s, ])), logical(1))]
+    mat <- rb_mat[sel, , drop = FALSE]
+  } else {
+    keep <- vapply(seq_len(nrow(rb_mat)), function(j) {
+      !any(is.na(rb_mat[j, ])) & any(abs(rb_mat[j, ]) > 0.35)
+    }, logical(1))
+    mat <- rb_mat[which(keep), , drop = FALSE]
+  }
+  sig <- matrix("", nrow = nrow(mat), ncol = ncol(mat))  # effect sizes only, no stars
 
   # Format row labels: "GROUP_SubtypeName" -> "GROUP: Subtype Name"
   rownames(mat) <- vapply(rownames(mat), function(x) {
@@ -238,7 +294,8 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
     "DECODER: Basal Tumor"      = "DECODER: Basal-like tumor",
     "Puleo: Pure Basal-like"    = "Puleo Basal-like",
     "Puleo: tumor Basal-like"   = "Puleo: Basal-like",
-    "Puleo: tumor Classical"    = "Puleo: Immune Classical"
+    "Puleo: tumor Classical"    = "Puleo: Immune Classical",
+    "PurIST: Basal Like"        = "PurIST: Basal-like"
   )
   hits <- match(rownames(mat), names(label_overrides))
   rownames(mat)[!is.na(hits)] <- label_overrides[hits[!is.na(hits)]]
@@ -252,8 +309,9 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
   ph_args <- list(
     mat = mat,
     cluster_cols = FALSE,
+    cluster_rows = is.null(display_sigs),  # keep prespecified family order when supplied
     color = my_colors,
-    breaks = seq(-0.5, 0.5, length.out = 101),
+    breaks = seq(-0.8, 0.8, length.out = 101),
     fontsize = 6,
     fontsize_row = fontsize_row,
     fontsize_col = fontsize_row,
@@ -272,15 +330,15 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
   # cowplot::get_legend() on a ggplot object produces a correctly-sized
   # legend grob that plot_grid can place without clipping.
   legend_dummy <- ggplot2::ggplot(
-    data.frame(x = 0, y = seq(-0.6, 0.6, length.out = 100)),
+    data.frame(x = 0, y = seq(-0.8, 0.8, length.out = 100)),
     ggplot2::aes(x = x, y = y, fill = y)
   ) +
     ggplot2::geom_tile() +
     ggplot2::scale_fill_gradientn(
       colors = my_colors,
-      limits = c(-0.6, 0.6),
-      breaks = c(-0.6, -0.3, 0, 0.3, 0.6),
-      name = "Spearman\ncorrelation"
+      limits = c(-0.8, 0.8),
+      breaks = c(-0.8, -0.4, 0, 0.4, 0.8),
+      name = "Rank-biserial\nenrichment"
     ) +
     ggplot2::guides(fill = ggplot2::guide_colorbar(
       barwidth  = ggplot2::unit(0.3, "cm"),
@@ -297,7 +355,7 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
   legend_gg <- cowplot::get_legend(legend_dummy)
 
   pheat <- cowplot::plot_grid(NULL, cowplot::ggdraw(ph_grob), nrow = 2, rel_heights = c(0.25, 4))
-  list(plot = pheat, legend = legend_gg)
+  list(plot = pheat, legend = legend_gg, full_rb = full_rb, full_p = full_p)
 }
 
 compute_hrs = function(data_val_filtered,tar_fit_desurv,method){

@@ -77,12 +77,20 @@ tar_tops_desurv      <- get_top_genes(W = tar_fit_desurv$W,  ntop = ntop_value)
 tar_tops_std_desurvk <- get_top_genes(W = fit_std_desurvk$W, ntop = ntop_value)
 
 # --- Panels A/B: gene-overlap heatmaps --------------------------------------
+# Fixed, biologically prespecified reference panel displayed in BOTH panels
+# (identical rows and order), chosen independently of the observed rank-biserial
+# values. Single source of truth in R/fig2_display_panel.R (shared with the
+# production pipeline code/09a_figures.R and the SI source table).
+source("R/fig2_display_panel.R")
+
 fig_gene_overlap_heatmap_desurv <- make_gene_overlap_heatmap(
   tar_fit_desurv, tar_tops_desurv$top_genes, top_genes,
-  factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7)
+  factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7,
+  display_sigs = fig2_display_sigs)
 fig_gene_overlap_heatmap_std_desurvk <- make_gene_overlap_heatmap(
   fit_std_desurvk, tar_tops_std_desurvk$top_genes, top_genes,
-  factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7)
+  factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7,
+  display_sigs = fig2_display_sigs)
 
 # --- Panel D: NMF vs DeSurv W-loading correspondence ------------------------
 fig_desurv_std_correlation <- make_spearman_heatmap(
@@ -111,10 +119,12 @@ plot_3a <- fig_gene_overlap_heatmap_desurv$plot +
 plot_3b <- fig_gene_overlap_heatmap_std_desurvk$plot +
   theme(plot.margin = margin(t = 14, r = 2, b = 2, l = 2))
 legend_ab <- gtable::gtable_add_padding(
-  fig_gene_overlap_heatmap_desurv$legend, padding = unit(c(0, 10, 0, 0), "pt"))
+  fig_gene_overlap_heatmap_desurv$legend, padding = unit(c(0, 6, 0, 6), "pt"))
+# Wider legend column so the "Rank-biserial enrichment" title is not clipped on
+# the right of panel B.
 top_row_3 <- plot_grid(plot_3a, plot_3b, cowplot::ggdraw(legend_ab),
   ncol = 3, labels = c("A", "B", ""), align = "hv", label_size = 12,
-  rel_widths = c(3.5, 3.5, 0.3))
+  rel_widths = c(3.4, 3.4, 0.85))
 
 plot_3c <- fig_variation_explained +
   theme(legend.position = c(1, 0.5), legend.justification = c(1, 0),

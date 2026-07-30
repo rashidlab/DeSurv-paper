@@ -179,17 +179,23 @@ tar_tops_std_elbowk    <- get_top_genes(W = fit_std_elbowk$W, ntop = ntop_value)
 tar_fit_desurv_alpha0 <- load_precomputed("tar_fit_desurv_alpha0_tcgacptac")
 tar_tops_desurv_alpha0 <- get_top_genes(W = tar_fit_desurv_alpha0$W, ntop = ntop_value)
 
+# Fixed, biologically prespecified reference panel for the main-text Fig. 2A/B
+# (identical rows/order in both panels), from the shared single source of truth.
+source("R/fig2_display_panel.R")
+
 # DeSurv heatmap
 fig_gene_overlap_heatmap_desurv <- make_gene_overlap_heatmap(
       tar_fit_desurv, tar_tops_desurv$top_genes, top_genes,
-      factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7
+      factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7,
+      display_sigs = fig2_display_sigs
     )
 
 
 # Standard NMF at DeSurv k heatmap
 fig_gene_overlap_heatmap_std_desurvk <- make_gene_overlap_heatmap(
       fit_std_desurvk, tar_tops_std_desurvk$top_genes, top_genes,
-      factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7
+      factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7,
+      display_sigs = fig2_display_sigs
     )
 
 
@@ -338,11 +344,13 @@ plot_3a <- fig_gene_overlap_heatmap_desurv$plot +
 plot_3b <- fig_gene_overlap_heatmap_std_desurvk$plot +
   theme(plot.margin = margin(t = 14, r = 2, b = 2, l = 2))
 legend_ab <- gtable::gtable_add_padding(
-  fig_gene_overlap_heatmap_desurv$legend, padding = unit(c(0, 10, 0, 0), "pt"))
+  fig_gene_overlap_heatmap_desurv$legend, padding = unit(c(0, 6, 0, 6), "pt"))
+# Wider legend column so the "Rank-biserial enrichment" title is not clipped on
+# the right of panel B (matches util_fig2_standalone.R).
 top_row_3 <- plot_grid(
   plot_3a, plot_3b, cowplot::ggdraw(legend_ab),
   ncol = 3, labels = c("A", "B", ""), align = "hv",
-  label_size = 12, rel_widths = c(3.5, 3.5, 0.3)
+  label_size = 12, rel_widths = c(3.4, 3.4, 0.85)
 )
 
 plot_3c <- fig_variation_explained +

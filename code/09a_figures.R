@@ -220,6 +220,8 @@ saveRDS(fig_gene_overlap_heatmap_desurv_elbowk,
 # fragmentation are judged on one metric.
 fig_gene_overlap_heatmap_desurv_alpha0 <- make_gene_overlap_heatmap(
       tar_fit_desurv_alpha0, tar_tops_desurv_alpha0$top_genes, top_genes,
+      factor_labels = paste0("N", seq_len(ncol(tar_fit_desurv_alpha0$W))),
+      title = "NMF", fontsize_row = 7,
       display_sigs = fig2_display_sigs
     )
 saveRDS(fig_gene_overlap_heatmap_desurv_alpha0,

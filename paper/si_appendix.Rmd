@@ -632,26 +632,28 @@ by dataset to allow cohort-specific baseline hazards. P-values for Kaplan--Meier
 \section{Gene Program Correlation Analysis}
 \label{sec:gene-program-correlation}
 
-To characterize the biological identity of the learned factors, we ranked genes
-within each factor by a factor-specificity score and assessed their enrichment
-for established PDAC gene programs. Each column $j$ of the gene program matrix
-$W$ was first scaled by its column maximum, $W^*_{ij} = W_{ij} / \max_i W_{ij}$,
-placing all factors on a common $[0,1]$ scale, and the specificity score for
-gene $i$ in factor $j$ was defined as
+To assess the biological identity of learned factors, we evaluated the
+correspondence between factor-specific gene rankings and established PDAC gene
+programs. Each column $j$ of the gene program matrix $W$ was first scaled by its
+column maximum, $W^*_{ij} = W_{ij} / \max_i W_{ij}$, placing all factors on a
+common $[0,1]$ scale, and the specificity score for gene $i$ in factor $j$ was
+defined as
 $$s_{ij} = W^*_{ij} - \max_{j' \neq j} W^*_{ij'}.$$
 Genes were ranked in descending order of $s_{ij}$. This ranking defines both the
 top-$n_{\text{top}}$ genes used to score samples (Supplementary Data: factor-specific
-gene lists) and the ordering used to quantify factor--program correspondence.
+gene lists) and, for the top 50 genes per factor, the loadings used to quantify
+factor--program correspondence.
 
-Correspondence between each factor and each reference program was quantified over
-the entire trained $1{,}970$-gene universe by the rank-biserial enrichment
-statistic $r_{\mathrm{RB}} = 2\,\mathrm{AUC} - 1$ (main-text Fig.\ 2A,B; Methods),
-rather than by a top-gene overlap or a binary correlation restricted to a
-gene-count-thresholded subset. Evaluating enrichment over the full universe
-avoids an arbitrary gene-count threshold and is insensitive to the imbalance
-between program size and universe size; size-preserving gene-label permutation
-$P$ values with joint Benjamini--Hochberg control across all factor--program tests
-are reported in Table \ref{tab:rb-enrichment}.
+For each factor $j$ and each reference gene program $G_k$, we computed the
+Spearman rank correlation between the continuous factor loadings $W_{\cdot j}$
+(restricted to the union of the per-factor top-50 gene sets intersected with the
+reference programs) and a binary indicator vector $\mathbf{1}[\text{gene} \in G_k]$
+(main-text Fig.\ 2a,b; Methods). $P$ values were derived from the asymptotic
+Spearman test and adjusted for multiple comparisons using the Benjamini--Hochberg
+procedure within each factor column independently. Reference programs were
+included in the visualization only if at least one factor yielded a Spearman
+correlation exceeding $0.2$, and asterisks ($*$) indicate an adjusted $P$ value
+$< 0.1$.
 
 Reference gene programs displayed spanned classical and basal-like tumor
 signatures and activated/immune stromal programs from Moffitt et al.\
@@ -711,7 +713,7 @@ $k-1$ factors) and are nonadditive: they do not partition the total model partia
 likelihood and are not comparable across factors as variance-style shares. We
 therefore report them as per-factor conditional increments rather than as an
 additive survival decomposition. These two quantities are plotted against each other in
-main text, Fig.\ 2C. In PDAC at $k = 3$, the reconstruction shares are
+main text, Fig.\ 2c. In PDAC at $k = 3$, the reconstruction shares are
 $41.8\%/18.6\%/39.7\%$ for NMF (N1/N2/N3) and $18.8\%/25.2\%/56.0\%$ for DeSurv
 (D1/D2/D3), while the survival contribution $\Delta\ell$ concentrates in DeSurv
 D1 ($\Delta\ell = 66.4$) with all NMF factors negligible --- the factors that
@@ -730,41 +732,7 @@ would impose an arbitrary threshold and overstate apparent preservation.
 Spearman correlation was used to capture monotone correspondence in gene loading
 ranks while remaining robust to scale differences between the two methods.
 Results are displayed as a heatmap with NMF factors as rows and DeSurv factors
-as columns (main text, Fig.\ 2D).
-
-\subsection{Rank-biserial enrichment of reference gene programs}
-
-Main-text Fig.\ 2A,B display, for a common biologically prespecified subset of
-reference programs, the rank-biserial enrichment $r_{\mathrm{RB}} = 2\,\mathrm{AUC}-1$
-of each DeSurv and matched-rank NMF factor for independently defined PDAC tumor
-and microenvironmental gene programs, evaluated over the fixed $1{,}970$-gene
-training universe (Methods). Table \ref{tab:rb-enrichment} reports the complete
-reference set for both methods, with size-preserving gene-label permutation
-$P$ values ($20{,}000$ replicates) and Benjamini--Hochberg adjusted $P$ values
-computed jointly across all DeSurv and NMF factor--program tests. The displayed
-subset was fixed on biological grounds before inspecting these values, so the
-main figure imposes no outcome-dependent selection on the reported effect sizes.
-
-```{r rb-enrichment, echo=FALSE, results='asis'}
-.rb <- read_result("rb_enrichment_table")
-.rb <- .rb[order(.rb$method, .rb$factor, -abs(.rb$r_RB)), ]
-.fmt_p <- function(p) ifelse(p < 1e-3, "$<$0.001", sprintf("%.3f", p))
-.rbt <- data.frame(
-  Method    = .rb$method,
-  Factor    = .rb$factor,
-  Program   = .rb$signature,
-  rRB       = sprintf("%+.2f", .rb$r_RB),
-  Pperm     = .fmt_p(.rb$p_perm),
-  q         = .fmt_p(.rb$q_BH),
-  Shown     = ifelse(.rb$in_main_figure, "yes", ""),
-  stringsAsFactors = FALSE)
-colnames(.rbt) <- c("Method", "Factor", "Reference program",
-                    "$r_{\\mathrm{RB}}$", "$P_{\\mathrm{perm}}$",
-                    "$P_{\\mathrm{BH}}$", "In Fig.\\ 2")
-knitr::kable(.rbt, format = "latex", escape = FALSE, booktabs = TRUE, longtable = TRUE,
-  caption = sprintf("Rank-biserial enrichment ($r_{\\mathrm{RB}} = 2\\,\\mathrm{AUC}-1$) of every reference gene program for each DeSurv factor (D1--D3) and each matched-rank standard NMF factor (N1--N3), over the fixed $1{,}970$-gene universe. Positive values indicate that genes of the reference program rank preferentially higher for that factor. $P_{\\mathrm{perm}}$ is a two-sided size-preserving gene-label permutation $P$ value ($%d$ replicates); $P_{\\mathrm{BH}}$ is the Benjamini--Hochberg adjusted $P$ value across all %d factor--program tests (both methods). The final column marks the biologically prespecified subset displayed in main-text Fig.\\ 2A,B.", attr(.rb, "perm_B"), nrow(.rb))) |>
-  kableExtra::kable_styling(latex_options = c("repeat_header"), font_size = 7)
-```
+as columns (main text, Fig.\ 2d).
 
 \subsection{Cross-method reconstructability and reconstruction fidelity}
 
@@ -1102,7 +1070,7 @@ Throughout the main text, both DeSurv and standard NMF were fit at the same rank
 
 At BO-selected $k = 7$ under $\alpha = 0$ (Fig. \ref{fig:fig-nmf-k7-heatmap}), standard NMF shows increased fragmentation relative to the matched-rank $k = 3$ solution: multiple factors partially overlap the same PDAC gene signatures, and no additional factor maps cleanly onto a distinct established PDAC program; the added factors fragment existing signatures rather than resolving new biology.
 
-```{r fig-nmf-k7-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Rank-biserial enrichment of reference gene programs for standard NMF at $k = 7$ (BO-selected rank with $\\alpha = 0$), computed with the same full-universe rank-biserial statistic ($2\\,\\mathrm{AUC}-1$) and the same prespecified reference-program panel as main-text Fig.\\ 2A,B. Compared with the matched-rank $k = 3$ solution, the 7-factor solution shows increased fragmentation: multiple factors are enriched for the same established PDAC signatures and no additional factor maps cleanly onto a distinct program. \\label{fig:fig-nmf-k7-heatmap}", fig.env='figure', fig.pos='t'}
+```{r fig-nmf-k7-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene-program correspondence for standard NMF at $k = 7$ (BO-selected rank with $\\alpha = 0$), computed with the same Spearman-correlation analysis and reference programs as main-text Fig.\\ 2A,B (top 50 genes per factor; only $|r| > 0.2$ shown). Compared with the matched-rank $k = 3$ solution, the 7-factor solution shows increased fragmentation: multiple factors correlate with the same established PDAC signatures and no additional factor maps cleanly onto a distinct program. \\label{fig:fig-nmf-k7-heatmap}", fig.env='figure', fig.pos='t'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_nmf_k7_heatmap_tcgacptac.pdf", density = 300))
 ```

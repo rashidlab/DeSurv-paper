@@ -180,23 +180,17 @@ tar_tops_std_elbowk    <- get_top_genes(W = fit_std_elbowk$W, ntop = ntop_value)
 tar_fit_desurv_alpha0 <- load_precomputed("tar_fit_desurv_alpha0_tcgacptac")
 tar_tops_desurv_alpha0 <- get_top_genes(W = tar_fit_desurv_alpha0$W, ntop = ntop_value)
 
-# Fixed, biologically prespecified reference panel for the main-text Fig. 2A/B
-# (identical rows/order in both panels), from the shared single source of truth.
-source("R/fig2_display_panel.R")
-
 # DeSurv heatmap
 fig_gene_overlap_heatmap_desurv <- make_gene_overlap_heatmap(
       tar_fit_desurv, tar_tops_desurv$top_genes, top_genes,
-      factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7,
-      display_sigs = fig2_display_sigs
+      factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7
     )
 
 
 # Standard NMF at DeSurv k heatmap
 fig_gene_overlap_heatmap_std_desurvk <- make_gene_overlap_heatmap(
       fit_std_desurvk, tar_tops_std_desurvk$top_genes, top_genes,
-      factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7,
-      display_sigs = fig2_display_sigs
+      factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7
     )
 
 
@@ -214,16 +208,11 @@ fig_gene_overlap_heatmap_desurv_elbowk <- make_gene_overlap_heatmap(
 saveRDS(fig_gene_overlap_heatmap_desurv_elbowk,
         file.path(RESULTS_DIR, "fig_gene_overlap_heatmap_desurv_elbowk_tcgacptac.rds"))
 
-# DeSurv alpha=0 heatmap
-# k=7 unsupervised (alpha=0) NMF fragmentation heatmap (Supplementary Fig. S8):
-# uses the SAME full-universe rank-biserial statistic and the SAME prespecified
-# reference-program panel as main-text Fig. 2A/B, so DeSurv coherence and NMF
-# fragmentation are judged on one metric.
+# DeSurv alpha=0 heatmap (k=7 unsupervised NMF fragmentation, Supplementary Fig. S8)
 fig_gene_overlap_heatmap_desurv_alpha0 <- make_gene_overlap_heatmap(
       tar_fit_desurv_alpha0, tar_tops_desurv_alpha0$top_genes, top_genes,
       factor_labels = paste0("N", seq_len(ncol(tar_fit_desurv_alpha0$W))),
-      title = "NMF", fontsize_row = 7,
-      display_sigs = fig2_display_sigs
+      title = "NMF", fontsize_row = 7
     )
 saveRDS(fig_gene_overlap_heatmap_desurv_alpha0,
         file.path(RESULTS_DIR, "fig_gene_overlap_heatmap_desurv_alpha0_tcgacptac.rds"))
@@ -354,8 +343,8 @@ plot_3b <- fig_gene_overlap_heatmap_std_desurvk$plot +
   theme(plot.margin = margin(t = 14, r = 2, b = 2, l = 2))
 legend_ab <- gtable::gtable_add_padding(
   fig_gene_overlap_heatmap_desurv$legend, padding = unit(c(0, 6, 0, 6), "pt"))
-# Wider legend column so the "Rank-biserial enrichment" title is not clipped on
-# the right of panel B (matches util_fig2_standalone.R).
+# Wider legend column so the "Spearman correlation" title is not clipped on
+# the right of panel b.
 top_row_3 <- plot_grid(
   plot_3a, plot_3b, cowplot::ggdraw(legend_ab),
   ncol = 3, labels = c("a", "b", ""), align = "hv",
@@ -384,9 +373,9 @@ legend_d_plot <- ggplot(
 legend_d_grob <- cowplot::get_legend(legend_d_plot)
 
 plot_3d <- plot_grid(
-  fig_desurv_std_correlation$plot + theme(plot.margin = margin(2, 2, 2, 20)),
+  fig_desurv_std_correlation$plot + theme(plot.margin = margin(2, 2, 2, 6)),
   plot_grid(NULL, cowplot::ggdraw(legend_d_grob), nrow = 2, rel_heights = c(0.08, 0.92)),
-  ncol = 2, rel_widths = c(4, 1)
+  ncol = 2, rel_widths = c(5.5, 1)
 )
 # Panel E: DeSurv D1 score vs GATA6 RNA-ISH in COMPASS. Raw per-sample points are
 # cached (aggregate-level derived values, no raw expression) in the tracked
@@ -405,7 +394,7 @@ plot_3e <- ggplot(.g6$points, aes(x = factor(gata6), y = D1)) +
   theme_classic(base_size = 9) + theme(axis.title = element_text(size = 8))
 
 bottom_row_3 <- plot_grid(plot_3c, plot_3d, plot_3e, ncol = 3, labels = c("c", "d", "e"),
-                          label_size = 12, rel_widths = c(0.37, 0.33, 0.30))
+                          label_size = 12, rel_widths = c(0.34, 0.40, 0.26))
 ggsave(
   file.path(FIGURE_DIR, "fig3_tcgacptac.pdf"),
   plot_grid(top_row_3, bottom_row_3, nrow = 2, rel_heights = c(1.3, 0.72)),

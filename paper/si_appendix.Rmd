@@ -652,8 +652,7 @@ reference programs) and a binary indicator vector $\mathbf{1}[\text{gene} \in G_
 Spearman test and adjusted for multiple comparisons using the Benjamini--Hochberg
 procedure within each factor column independently. Reference programs were
 included in the visualization only if at least one factor yielded a Spearman
-correlation exceeding $0.2$, and asterisks ($*$) indicate an adjusted $P$ value
-$< 0.1$.
+correlation exceeding $0.2$.
 
 Reference gene programs displayed spanned classical and basal-like tumor
 signatures and activated/immune stromal programs from Moffitt et al.\
@@ -1070,7 +1069,7 @@ Throughout the main text, both DeSurv and standard NMF were fit at the same rank
 
 At BO-selected $k = 7$ under $\alpha = 0$ (Fig. \ref{fig:fig-nmf-k7-heatmap}), standard NMF shows increased fragmentation relative to the matched-rank $k = 3$ solution: multiple factors partially overlap the same PDAC gene signatures, and no additional factor maps cleanly onto a distinct established PDAC program; the added factors fragment existing signatures rather than resolving new biology.
 
-```{r fig-nmf-k7-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene-program correspondence for standard NMF at $k = 7$ (BO-selected rank with $\\alpha = 0$), computed with the same Spearman-correlation analysis and reference programs as main-text Fig.\\ 2A,B (top 50 genes per factor; only $|r| > 0.2$ shown). Compared with the matched-rank $k = 3$ solution, the 7-factor solution shows increased fragmentation: multiple factors correlate with the same established PDAC signatures and no additional factor maps cleanly onto a distinct program. \\label{fig:fig-nmf-k7-heatmap}", fig.env='figure', fig.pos='t'}
+```{r fig-nmf-k7-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene-program correspondence for standard NMF at $k = 7$ (BO-selected rank with $\\alpha = 0$), computed with the same Spearman-correlation analysis and reference programs as main-text Fig.\\ 2a,b (top 50 genes per factor; only $r > 0.2$ shown). Compared with the matched-rank $k = 3$ solution, the 7-factor solution shows increased fragmentation: multiple factors correlate with the same established PDAC signatures and no additional factor maps cleanly onto a distinct program. \\label{fig:fig-nmf-k7-heatmap}", fig.env='figure', fig.pos='t'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_nmf_k7_heatmap_tcgacptac.pdf", density = 300))
 ```

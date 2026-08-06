@@ -715,7 +715,7 @@ additive survival decomposition. These two quantities are plotted against each o
 main text, Fig.\ 2c. In PDAC at $k = 3$, the reconstruction shares are
 $41.8\%/18.6\%/39.7\%$ for NMF (N1/N2/N3) and $18.8\%/25.2\%/56.0\%$ for DeSurv
 (D1/D2/D3), while the survival contribution $\Delta\ell$ concentrates in DeSurv
-D1 ($\Delta\ell = 66.4$) with all NMF factors negligible --- the factors that
+D1 ($\Delta\ell = 66.4$) with all NMF factors negligible. The factors that
 contribute most to reconstruction are not the most prognostic.
 
 \section{Factor Correspondence Analysis}
@@ -820,10 +820,10 @@ load_result("supervised_recovery_stats")
 If the D1 tumor--stroma axis were an artifact of DeSurv's particular
 optimizer, independent survival-supervised methods should not recover it. We
 therefore fit three other supervised dimension-reduction methods on the same
-training cohort ($n = `r .sr$meta$n`$, `r .sr$meta$n_events` events) --- supervised
+training cohort ($n = `r .sr$meta$n`$, `r .sr$meta$n_events` events), namely supervised
 principal components (Cox-screened genes followed by PCA), one-component Cox
 partial least squares against martingale residuals, and a sparse Cox model
-(lasso-penalized, `r .sr$meta$n_sparse_cox_genes` selected genes) --- and compared
+(lasso-penalized, `r .sr$meta$n_sparse_cox_genes` selected genes), and compared
 their leading survival-aligned direction to the DeSurv D1 score. All three
 recovered D1 closely (per-patient $|r| = `r sprintf("%.2f", .srcor("Supervised PCA"))`$
 for supervised PCA, $`r sprintf("%.2f", .srcor("Cox-PLS"))`$ for Cox-PLS, and
@@ -834,10 +834,9 @@ D1 rather than the stromal D2 or basal-like D3 programs
 (the first principal component, a variance-dominant unsupervised direction) was nearly orthogonal to D1
 ($|r| = `r sprintf("%.2f", .srcor("Unsupervised PCA"))`$) and instead tracked the
 high-variance D2/D3 stroma--basal axis. This D1 axis is thus a property of
-survival supervision shared across methods --- consistent with its being
+survival supervision shared across methods, consistent with its being
 unreconstructable from the unsupervised NMF basis (Table \ref{tab:projection-r2})
-and with standard NMF's failure to enrich for the proCAF stroma at matched rank
---- and not an idiosyncrasy of the DeSurv algorithm.
+and with standard NMF's failure to enrich for the proCAF stroma at matched rank, and not an idiosyncrasy of the DeSurv algorithm.
 
 ```{r fig-suprec, echo=FALSE, fig.width = 8, fig.height = 3.6, fig.cap = "Independent survival-supervised methods recover the D1 axis; an unsupervised method does not. (A) Absolute correlation (across training-cohort patients) of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox all recover D1 (green), whereas the leading unsupervised principal component does not (grey). (B) Sample-level agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \\label{fig:suprec}", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
 knitr::include_graphics(file.path("..", "figures", "fig_supervised_recovery.pdf"), error = FALSE)
@@ -872,7 +871,7 @@ load_result("desurv_brier_stats")
 The main-text external validation reports discrimination with Harrell's C-index
 under a Cox proportional-hazards model. Because Harrell's C can be optimistic when
 hazards are non-proportional [@birolo2025beyondcox; @hao2021dnnsurv], we additionally
-evaluated the DeSurv linear predictor---its direction frozen from training---with
+evaluated the DeSurv linear predictor, its direction frozen from training, with
 a proper score, the integrated Brier score (IBS), in each validation cohort,
 recalibrating only its scalar slope and baseline hazard
 within each cohort and scoring over that cohort's follow-up. For a single
@@ -1268,7 +1267,7 @@ load_result("treated_cohort_stats")
   sprintf("$%.2f$ ($%.2f$--$%.2f$)", r$hr, r$lo, r$hi) }
 ```
 
-The programs were learned in treatment-naive, non-metastatic PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As a translational test we projected the fixed programs, without retraining, into independently treated PDAC cohorts and asked whether they retained clinically relevant associations. We used two complementary resources. First, the O'Kane/COMPASS cohort of treated metastatic PDAC (laser-capture microdissected and therefore epithelial-enriched), which supports a transportability test of the tumor-associated $D_1$ direction (Fig.\ \ref{fig:treated}A). Second, three bulk-tissue treated cohorts spanning two disease settings --- the metastatic gemcitabine-backbone trials Rash ($n = `r .prev("Rash")$n`$, gemcitabine + erlotinib) and Accept ($n = `r .prev("Accept")$n`$, gemcitabine $\pm$ afatinib) and the borderline-resectable / locally advanced Linehan cohort ($n = `r .prev("Linehan")$n`$; FOLFIRINOX $\pm$ the CCR2 inhibitor PF-04136309) --- in which, because tissue is bulk, both the PurIST (tumor-intrinsic) and DeCAF (stromal) classifiers are computable and the full three-program structure, including the stromal $D_2$ program, can be evaluated (Fig.\ \ref{fig:treated}C; Table \ref{tab:hr-adjusted} gives the same dual adjustment used in the main validation). Because the cohorts differ in stage and regimen, they are analysed per cohort and never pooled. The elastic-net penalty shrank the trained survival coefficient for the proCAF program $D_2$ to exactly zero in the treatment-naive model (an estimated selection outcome, not an imposed constraint), so any association of $D_2$ in the treated cohorts reflects a marginal re-evaluation of the projected program in a new clinical context rather than a property of the trained predictor.
+The programs were learned in treatment-naive, non-metastatic PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As a translational test we projected the fixed programs, without retraining, into independently treated PDAC cohorts and asked whether they retained clinically relevant associations. We used two complementary resources. First, the O'Kane/COMPASS cohort of treated metastatic PDAC (laser-capture microdissected and therefore epithelial-enriched), which supports a transportability test of the tumor-associated $D_1$ direction (Fig.\ \ref{fig:treated}A). Second, three bulk-tissue treated cohorts spanning two disease settings, the metastatic gemcitabine-backbone trials Rash ($n = `r .prev("Rash")$n`$, gemcitabine + erlotinib) and Accept ($n = `r .prev("Accept")$n`$, gemcitabine $\pm$ afatinib) and the borderline-resectable / locally advanced Linehan cohort ($n = `r .prev("Linehan")$n`$; FOLFIRINOX $\pm$ the CCR2 inhibitor PF-04136309), in which, because tissue is bulk, both the PurIST (tumor-intrinsic) and DeCAF (stromal) classifiers are computable and the full three-program structure, including the stromal $D_2$ program, can be evaluated (Fig.\ \ref{fig:treated}C; Table \ref{tab:hr-adjusted} gives the same dual adjustment used in the main validation). Because the cohorts differ in stage and regimen, they are analysed per cohort and never pooled. The elastic-net penalty shrank the trained survival coefficient for the proCAF program $D_2$ to exactly zero in the treatment-naive model (an estimated selection outcome, not an imposed constraint), so any association of $D_2$ in the treated cohorts reflects a marginal re-evaluation of the projected program in a new clinical context rather than a property of the trained predictor.
 
 ```{r fig-treated, fig.cap = "Transportability of the frozen DeSurv programs into independently treated PDAC cohorts. (A) Prognostic transportability of D1 in treated metastatic PDAC. Forest plot of hazard ratios per SD of the frozen D1 score within each O'Kane/COMPASS treatment arm (FOLFIRINOX, gemcitabine/nab-paclitaxel [GA], and GA/experimental); the diamond is the common association from an arm-stratified Cox model with treatment-specific baseline hazards (not a pooled-arm estimate). D1 was protective in all three arms with no evidence of heterogeneity by treatment arm (interaction $P=0.40$). (B) The proCAF program D2 before and after treatment in paired Linehan biopsies (paired Wilcoxon test). (C) Per-cohort overall-survival hazard ratios per SD for each program in the bulk treated cohorts (Linehan, Rash, Accept); D1 and D3 are marginal, D2 is adjusted for PurIST and DeCAF. Error bars denote 95\\% confidence intervals. \\label{fig:treated}", fig.env='figure*', fig.pos='t', fig.width=7.2, fig.height=6, out.width='\\textwidth'}
 cowplot::ggdraw() + cowplot::draw_image(magick::image_read("figures/fig_treated_context.pdf", density = 300))

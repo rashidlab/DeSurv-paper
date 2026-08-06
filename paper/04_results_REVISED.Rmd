@@ -101,6 +101,12 @@ nmf_n2              <- nmf_vs[nmf_vs$factor == 2, ]
 nmf_n2_pct          <- round(nmf_n2$variance_explained * 100, 1)
 nmf_n2_dl           <- round(nmf_n2$delta_loglik, 2)
 
+# ── Orthogonal GATA6 validation (COMPASS) ────────────────────────────────────
+# Values come from the cached treated-cohort statistics rather than being typed
+# in. rho_excl is the self-correlation sensitivity with GATA6 removed from its
+# own projection support (see code/11).
+.g6 <- read_result("treated_cohort_stats")$gata6
+
 # ── Helper: extract pooled risk_score data from validation latent targets ─────
 extract_pool_df <- function(val_latent) {
   pool_dfs <- lapply(val_latent, function(entry) {
@@ -254,7 +260,7 @@ knitr::include_graphics(file.path("..", "figures", "model_schematic_final.pdf"))
 
 ## Survival supervision resolves a distinct tumor--stroma program structure {.unnumbered}
 
-To determine how survival supervision altered the biological representation, we compared DeSurv with standard NMF at the same rank ($k = 3$), thereby holding model complexity constant (a sensitivity analysis using NMF's independently selected ranks, elbow $k = 5$ and BO $k = 7$, is in Supplementary Table \ref{tab:tab-cindex-comparison}). DeSurv resolved three distinct programs (D1--D3): D1, enriched for classical tumor and restCAF-like stromal signatures; D2, enriched for proCAF-like stroma; and D3, enriched for basal-like tumor programs (Fig.\ \ref{fig:pdac}a). Together, these programs define a tumor--stroma prognostic architecture spanning classical/restCAF-like and basal-like/proCAF-like states across patients. The classical identity of D1 was independently supported in the COMPASS cohort, where D1 scores correlated with GATA6 RNA in situ hybridization (Spearman $\rho = 0.68$, $P < 0.001$, $n = 33$; Fig.\ \ref{fig:pdac}e).
+To determine how survival supervision altered the biological representation, we compared DeSurv with standard NMF at the same rank ($k = 3$), thereby holding model complexity constant (a sensitivity analysis using NMF's independently selected ranks, elbow $k = 5$ and BO $k = 7$, is in Supplementary Table \ref{tab:tab-cindex-comparison}). DeSurv resolved three distinct programs (D1--D3): D1, enriched for classical tumor and restCAF-like stromal signatures; D2, enriched for proCAF-like stroma; and D3, enriched for basal-like tumor programs (Fig.\ \ref{fig:pdac}a). Together, these programs define a tumor--stroma prognostic architecture spanning classical/restCAF-like and basal-like/proCAF-like states across patients. The classical identity of D1 was independently supported in the COMPASS cohort, where D1 scores correlated with GATA6 RNA in situ hybridization (Spearman $\rho = `r sprintf("%.2f", .g6$rho)`$, $P `r if (.g6$p < 0.001) "< 0.001" else sprintf("= %.3f", .g6$p)`$, $n = `r .g6$n`$; Fig.\ \ref{fig:pdac}e).
 
 Standard NMF produced a different organization at the same rank (Fig.\ \ref{fig:pdac}b). Its malignant factor (N1) combined classical and basal-like tumor programs, its microenvironmental factor (N3) combined multiple stromal and immune programs [@leary2023s; @Maurer2019], and a third factor (N2) captured exocrine-associated variation. DeSurv instead separated basal-like tumor (D3) and proCAF-like stroma (D2) while recovering the distinct classical/restCAF-like survival-aligned D1 program.
 

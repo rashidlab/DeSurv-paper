@@ -176,6 +176,18 @@ gata6 <- list(rho = cor(D1c[ok], g6[ok], method="spearman"),
               # aggregate-level derived values (no raw expression), so tracked in the .rds
               points = data.frame(D1 = D1c[ok], gata6 = g6[ok]))
 
+# Self-correlation sensitivity. GATA6 is itself one of the genes in the D1
+# projection support, so part of the correlation above is the score correlating
+# with one of its own inputs. Recompute with GATA6 dropped from the projection.
+{
+  D1x <- as.numeric(scale(projZ(xrC, setdiff(PGENES, "GATA6"), 1)))
+  ctx <- suppressWarnings(cor.test(D1x[ok], g6[ok], method = "spearman"))
+  gata6$in_support  <- "GATA6" %in% PGENES
+  gata6$n_support   <- length(intersect(PGENES, rownames(xrC)))
+  gata6$rho_excl    <- unname(ctx$estimate)
+  gata6$p_excl      <- ctx$p.value
+}
+
 ## ---- (9) concordance: full-W vs top-270 projection (robustness) ----
 .ps <- function(M, genes, j) projZ(M$xr, genes, j)
 concordance <- sapply(1:3, function(j){

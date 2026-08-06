@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 # ---------------------------------------------------------------------------
-# Generates figures/fig_treated_context.pdf (manuscript Supplementary Fig. S13):
+# Generates figures/fig_treated_context.pdf (manuscript Fig. 5, \label{fig:treated}):
 # a three-panel translational figure built entirely from the tracked cache
 # results/treated_cohort_stats.rds (no restricted data needed here).
 #   A: O'Kane/COMPASS prognostic transportability of D1 in treated metastatic
@@ -73,4 +73,4 @@ pC <- ggplot(long, aes(time, D2, group = pair)) +
 top <- plot_grid(pA, pC, ncol = 2, labels = c("a", "b"), label_size = 12, rel_widths = c(1.2, 0.8))
 fig <- plot_grid(top, pB, nrow = 2, labels = c("", "c"), label_size = 12, rel_heights = c(1, 0.62))
 ggsave("figures/fig_treated_context.pdf", fig, width = 7.2, height = 6)
-cat("Wrote figures/fig_treated_context.pdf (S13: A O'Kane per-arm, B paired D2, C bulk forest)\n")
+cat("Wrote figures/fig_treated_context.pdf (Fig. 5: a O'Kane per-arm, b paired D2, c bulk forest)\n")

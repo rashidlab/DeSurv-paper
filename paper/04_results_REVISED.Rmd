@@ -113,6 +113,12 @@ source("R/reconstruction_helpers.R")
 .r2c_nmf    <- overall_recon_r2_centered(.fit_n_r2$W, .fit_n_r2$H, .Xr2)
 .r2c_gap    <- 100 * (.r2c_nmf - .r2c_desurv)
 
+# Size of the DeSurv projection support: union across factors of the
+# BO-selected top genes. Used in Methods when contrasting comparator sparsity.
+source("R/get_top_genes.R")
+.n_support <- length(unique(unlist(get_top_genes(.fit_d_r2$W,
+                    as.integer(read_result("tar_params_best_tcgacptac")$ntop))$top_genes)))
+
 # ── Orthogonal GATA6 validation (COMPASS) ────────────────────────────────────
 # Values come from the cached treated-cohort statistics rather than being typed
 # in. rho_excl is the self-correlation sensitivity with GATA6 removed from its

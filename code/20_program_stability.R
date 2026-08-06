@@ -14,9 +14,12 @@
 #
 # Three parts, all computed from cached artifacts. Nothing is refitted.
 #   (A) restart vs the reported consensus basis
-#   (B) restart vs restart, over independent pairs. Fairer than (A), because the
-#       consensus fit aggregates all 100 runs and so is not itself a draw from
-#       the restart distribution.
+#   (B) restart vs restart, over all pairs among a sample of restarts. Fairer
+#       than (A), because the consensus fit aggregates all 100 runs and so is
+#       not itself a draw from the restart distribution. Note that these pairs
+#       SHARE restarts and are therefore not mutually independent: they
+#       summarise the spread of the restart distribution and should not be read
+#       as 435 independent observations.
 #   (C) consensus reproducibility. Split the 100 cached restarts into two
 #       DISJOINT blocks of 50, build the consensus gene partition from each
 #       independently per the SI procedure, and compare by Adjusted Rand Index.
@@ -32,7 +35,7 @@
 # ---------------------------------------------------------------------------
 
 NTOP     <- 270L   # BO-selected signature size, matches tar_params_best$ntop
-N_PAIRS  <- 30L    # restarts sampled for the pairwise comparison in part (B)
+N_PAIRS  <- 30L    # restarts sampled in part (B); all C(N_PAIRS,2) pairs are compared
 N_SPLITS <- 20L    # random 50/50 splits for part (C)
 
 seed_obj <- readRDS("results/desurv_seed_fits_tcgacptac.rds")
@@ -58,17 +61,27 @@ top_idx <- function(W, n = NTOP) {
 }
 jaccard <- function(a, b) length(intersect(a, b)) / length(union(a, b))
 
-# Greedy one-to-one column matching on |Spearman| of loadings. At k = 3 greedy
-# and optimal assignment coincide except in pathological cases, so this avoids a
-# dependency on clue::solve_LSAP.
+# Optimal one-to-one column matching on |Spearman| of loadings, by exhaustive
+# search over all k! permutations. At k = 3 that is 6 evaluations, so there is no
+# reason to approximate. An earlier version used a greedy assignment on the
+# assumption that it coincides with the optimum; it does not. Greedy disagrees
+# with the optimum in 18.4% of restart pairs on the cached fits and is slightly
+# pessimistic (median top-270 Jaccard 0.1297 greedy vs 0.1321 optimal). The
+# conclusions are unchanged, but the matching is cheap enough to do exactly.
+all_perms <- function(k) {
+  if (k == 1) return(list(1L))
+  out <- list()
+  for (i in seq_len(k)) for (p in all_perms(k - 1)) {
+    rest <- setdiff(seq_len(k), i); out[[length(out) + 1]] <- c(i, rest[p])
+  }
+  out
+}
 match_cols <- function(Wa, Wb) {
   C <- outer(seq_len(ncol(Wa)), seq_len(ncol(Wb)),
              Vectorize(function(i, j) abs(cor(Wa[, i], Wb[, j], method = "spearman"))))
-  perm <- integer(ncol(Wa)); avail <- seq_len(ncol(Wb))
-  for (i in order(-apply(C, 1, max))) {
-    j <- avail[which.max(C[i, avail])]; perm[i] <- j; avail <- setdiff(avail, j)
-  }
-  perm
+  perms <- all_perms(ncol(Wa))
+  scores <- vapply(perms, function(p) sum(C[cbind(seq_len(ncol(Wa)), p)]), numeric(1))
+  as.integer(perms[[which.max(scores)]])
 }
 
 adj_rand <- function(a, b) {
@@ -163,7 +176,10 @@ jac_chance <- exp_int / (2 * NTOP - exp_int)
 
 program_stability_stats <- list(
   meta = list(n_restarts = length(ok), k = k, ntop = NTOP, n_genes = p_genes,
-              n_pairs = nrow(prs), n_splits = length(C_ari),
+              n_sampled_restarts = min(N_PAIRS, length(ok)),
+              n_pairwise_comparisons = nrow(prs),
+              pairs_are_independent = FALSE,
+              n_splits = length(C_ari),
               jaccard_chance = jac_chance),
   vs_consensus = list(loading = summarise(A_load), score = summarise(A_score),
                       top_jaccard = summarise(A_jac)),
@@ -189,7 +205,8 @@ cat("\n(A) restart vs reported consensus basis (medians)\n")
 pr("loading r",  program_stability_stats$vs_consensus$loading)
 pr("score r",    program_stability_stats$vs_consensus$score)
 pr("top Jaccard",program_stability_stats$vs_consensus$top_jaccard)
-cat(sprintf("\n(B) restart vs restart, %d independent pairs (medians)\n", nrow(prs)))
+cat(sprintf("\n(B) restart vs restart, %d pairwise comparisons among %d sampled restarts (medians)\n",
+            nrow(prs), min(N_PAIRS, length(ok))))
 pr("loading r",  program_stability_stats$pairwise$loading)
 pr("score r",    program_stability_stats$pairwise$score)
 pr("top Jaccard",program_stability_stats$pairwise$top_jaccard)

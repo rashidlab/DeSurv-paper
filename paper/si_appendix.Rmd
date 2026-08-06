@@ -903,9 +903,15 @@ rather than higher predictive accuracy.
 \subsection*{Proportional-hazards diagnostic}
 
 ```{r si-ph-diagnostic, echo=FALSE, message=FALSE, warning=FALSE}
+# Combined-cohort analyses represent each patient once, per the shared PACA-AU
+# de-duplication rule (55cbdaf). This diagnostic previously pooled raw rows and
+# so counted the 46 dual-platform patients twice, making it the only combined
+# analysis in the paper not following that rule.
 .phdf <- do.call(rbind, lapply(val_latent_desurv_tcgacptac, function(x)
-  data.frame(risk_score = x$risk_score, time = x$survival$time,
-             event = x$survival$event, dataset = x$dataset)))
+  data.frame(id = rownames(x$survival), risk_score = x$risk_score,
+             time = x$survival$time, event = x$survival$event,
+             dataset = x$dataset, stringsAsFactors = FALSE)))
+.phdf <- dedup_combined(.phdf, dataset_col = "dataset", id_col = "id")
 .phdf$risk_z <- .phdf$risk_score / sd(.phdf$risk_score)
 .phz <- survival::cox.zph(
   survival::coxph(survival::Surv(time, event) ~ risk_z + strata(dataset), data = .phdf))

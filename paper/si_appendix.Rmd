@@ -1014,6 +1014,81 @@ cowplot::ggdraw() + cowplot::draw_image(
 ```
 
 
+# Stability of the recovered gene programs
+
+```{r program-stability, echo=FALSE, message=FALSE, warning=FALSE}
+.ps  <- read_result("program_stability_stats")
+.pe  <- read_result("consensus_endpoint_stats")
+.pj  <- .ps$pairwise$top_jaccard[, "median"]      # restart vs restart
+.pl  <- .ps$pairwise$loading[, "median"]
+.ci  <- .ps$cindex
+.ej  <- .pe$vs_reported$top_jaccard[, "median"]   # consensus fit vs reported basis
+.el  <- .pe$vs_reported$loading[, "median"]
+.hl  <- .pe$half_vs_half$loading[, "median"]
+.hs  <- .pe$half_vs_half$score[, "median"]
+.rng <- function(v) sprintf("%.2f--%.2f", min(v), max(v))
+```
+
+The previous section documents that the optimizer converges. It does not
+establish that the programs it converges to are the same ones each time, and
+that is the property the manuscript relies on when it applies a frozen
+decomposition across cohorts. Because we raise the non-identifiability of
+reconstruction-based factorization as a limitation of unsupervised approaches,
+the same standard should be applied here. We therefore measured stability at the
+level of the recovered programs rather than the objective, using the same
+$R = `r .ps$meta$n_restarts`$ cached initializations (\texttt{code/20},
+\texttt{code/21}). No model was refitted for the restart analysis.
+
+**Individual restarts are highly dispersed.** Comparing pairs of independent
+random restarts, and matching their columns one to one by absolute Spearman
+correlation of gene loadings, the median overlap between the top
+$`r .ps$meta$ntop`$ genes of matched programs was
+$`r sprintf("%.2f", median(.pj))`$ by Jaccard index, against a chance baseline of
+$`r sprintf("%.3f", .ps$meta$jaccard_chance)`$ for two independent draws of that
+size from `r format(.ps$meta$n_genes, big.mark=",")` genes. Matched gene-loading
+correlations were moderate (`r .rng(.pl)` across the three programs). Over the
+same runs, training concordance was nearly constant (median
+$`r sprintf("%.3f", .ci["median"])`$, standard deviation
+$`r sprintf("%.3f", .ci["sd"])`$). Near-identical predictive performance from
+bases that share little gene membership is the signature of a non-identifiable
+objective, and it is precisely why the reported model is not a single run.
+
+**The reported procedure is reproducible.** The reported basis is obtained by
+aggregating restarts into a consensus initialization and then fitting from it.
+To test whether that procedure returns the same programs, we partitioned the
+cached restarts into two disjoint halves, built a consensus initialization from
+each half independently, fitted from each at the production settings, and
+compared the results (`r .pe$meta$n_splits` random splits). Two independently
+seeded consensus fits agreed closely with each other (gene-loading correlation
+`r .rng(.hl)`, patient-score correlation `r .rng(.hs)`), and each agreed still
+more closely with the reported basis (gene-loading correlation `r .rng(.el)`,
+top-$`r .ps$meta$ntop`$ Jaccard `r .rng(.ej)`). Splitting the restarts halves the
+number aggregated relative to the reported procedure, so these figures are
+conservative.
+
+The two results should be read together. The optimizer alone is not
+identifiable, and the consensus step is what makes the reported decomposition a
+stable object rather than one draw from a wide distribution. Reproducibility
+claims in this manuscript refer to that end-to-end procedure.
+
+**Stability under data perturbation is a separate and weaker property.** The
+analyses above vary the initialization while holding the data fixed. Refitting
+on repeated 80\% subsamples of the training cohort and comparing top-100 gene
+sets instead gives a mean pairwise Jaccard of
+$`r sprintf("%.2f", read_result("desurv_vs_supervised_stats")$stability[["DeSurv (D1)"]])`$
+for DeSurv, against
+$`r sprintf("%.2f", read_result("desurv_vs_supervised_stats")$stability[["Cox-PLS"]])`$
+for Cox partial least squares,
+$`r sprintf("%.2f", read_result("desurv_vs_supervised_stats")$stability[["Supervised PCA"]])`$
+for supervised principal components and
+$`r sprintf("%.2f", read_result("desurv_vs_supervised_stats")$stability[["Sparse Cox"]])`$
+for sparse Cox. DeSurv is mid-range. This comparison favours dense methods by
+construction, because a score that spreads weight across many genes has a more
+stable top-100 list than one built from a selective basis, as the sparse Cox
+value illustrates. We report it because gene-level resampling stability is a
+reasonable thing for a reader to ask about, not because it is the property the
+frozen-program argument rests on.
+
 # Simulation results under null and mixed scenarios
 
 To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the prognostic scenario (main text Fig. \ref{fig:sim}), prognostic programs explained low variance relative to outcome-neutral background signals, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, survival depended on 300 genes per lethal factor, of which 50% were factor-specific markers and 50% were background genes with loadings shared across all factors. All scenarios used $G = 3{,}000$ genes, $N = 200$ samples, $K = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Materials and Methods). Performance was evaluated using cross-validated concordance index (C-index), precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
@@ -1221,7 +1296,7 @@ Accept (metastatic) & `r .os("Accept","D1","marginal")`  & `r .os("Accept","D2",
 \end{tabular}
 \end{table}
 
-The proCAF stromal program $D_2$ was protective in all three cohorts (both marginally and after adjustment, with significance reached in Linehan), with a consistent direction across the independent settings and chemotherapy backbones; it was significant in Linehan and non-significant but directionally concordant in the metastatic cohorts (Accept and Rash). Because $D_2$ is stromal and not strongly collinear with the classifiers, its association was not an artifact of adjustment: in Linehan it was significant both before and after adjustment, and across all three cohorts the adjusted estimate strengthened rather than attenuated relative to the marginal one, indicating that the $D_2$ association was not explained by PurIST or DeCAF adjustment. $D_1$ was prognostic in the less-advanced Linehan cohort (marginal HR `r sub(",.*","",.os("Linehan","D1","marginal"))`) but not in the metastatic cohorts, a setting-dependence of the basal--classical axis itself (the same attenuation is seen for the PurIST, Moffitt and Bailey classifiers in these cohorts) rather than a failure of $D_1$. $D_3$ (basal-like) was not associated with overall survival in any treated cohort, consistent with the basal--classical contrast residing in $D_1$.
+The proCAF stromal program $D_2$ was protective in all three cohorts (both marginally and after adjustment, with significance reached in Linehan), with a consistent direction across the independent settings and chemotherapy backbones; it was significant in Linehan and non-significant but directionally concordant in the metastatic cohorts (Accept and Rash). Because $D_2$ is stromal and not strongly collinear with the classifiers, its association was not an artifact of adjustment: in Linehan it was significant both before and after adjustment, and across all three cohorts the adjusted estimate strengthened rather than attenuated relative to the marginal one, indicating that the $D_2$ association was not explained by PurIST or DeCAF adjustment. $D_1$ was prognostic in the less-advanced Linehan cohort (marginal HR `r sub(",.*","",.os("Linehan","D1","marginal"))`) but not in the metastatic cohorts, consistent with attenuation of the basal--classical axis itself with advancing stage rather than a failure of $D_1$, since PurIST, Moffitt and Bailey show the same attenuation in these cohorts. This reading depends on the reporting convention set out above, and we state the dependence rather than leave it implicit. Under classifier adjustment the pattern reverses, with Linehan $D_1$ attenuating to `r .os("Linehan","D1","adjusted")` and Rash $D_1$ strengthening to `r .os("Rash","D1","adjusted")`, while Accept remains null in both models. We report $D_1$ marginally because it is collinear with PurIST in these cohorts, so the adjusted estimate removes much of the axis it is meant to measure, but neither convention supports a claim stronger than setting-dependence. $D_3$ (basal-like) was not associated with overall survival in any treated cohort, consistent with the basal--classical contrast residing in $D_1$.
 
 \subsection{Treatment-associated change in D2}
 

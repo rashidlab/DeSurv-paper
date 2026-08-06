@@ -24,8 +24,17 @@ CLAUDE.md
 CLAUDE.local.md
 .claudeignore
 
-# Internal review docs (kept local; not for public archive)
-docs/
+# Internal review docs (kept local; not for public archive).
+# This repository IS the public reproducibility archive cited in the paper and
+# deposited at Zenodo, so anything tracked here becomes public. Keep out review
+# notes, revision plans, compliance audits, and the cover letter, which names
+# suggested referees and is confidential editorial correspondence.
+# (use docs/* not docs/ : git cannot re-include a file whose parent dir is excluded)
+docs/*
+# Exceptions: reporting deliverables that Nature publishes alongside the paper
+# and that belong in the reproducibility record.
+!docs/reporting_summary_filled.md
+!docs/tripod_checklist.md
 literature/
 
 # Design-handoff snapshots. These are point-in-time COPIES of figures and

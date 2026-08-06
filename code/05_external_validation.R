@@ -83,11 +83,22 @@ compute_val_cindex <- function(fit, data_val_list, ntop = NULL) {
 }
 
 # ── Helper: extract latent scores for validation ─────────────────────────
+# Projection onto the trained programs. The `ntop` argument was previously
+# accepted and silently ignored, so the latent scores, and therefore the pooled
+# hazard ratios, Table 1, the PH diagnostic and the downstream analyses in
+# code/14, code/17 and code/18, were computed on the FULL W while Methods states
+# the projection uses the truncated basis. It now truncates, using the same
+# union-of-top-genes rule as compute_val_cindex() above, so both display paths
+# share one convention.
 extract_val_latent <- function(fit, data_val_list, ntop = NULL) {
+  keep_genes <- if (is.null(ntop)) rownames(fit$W) else {
+    unique(unlist(DeSurv::desurv_get_top_genes(fit$W, ntop)$top_genes))
+  }
   lapply(data_val_list, function(dv) {
     keep <- dv$sampInfo$keep == 1
     X_keep <- dv$ex[, keep, drop = FALSE]
-    Z <- t(X_keep) %*% fit$W
+    g <- intersect(rownames(X_keep), keep_genes)
+    Z <- t(X_keep[g, , drop = FALSE]) %*% fit$W[g, , drop = FALSE]
     lp <- as.numeric(Z %*% fit$beta)
     list(
       dataset = dv$dataname,
@@ -121,7 +132,7 @@ val_cindex_std_desurvk <- cache_or_compute("val_cindex_std_desurvk_tcgacptac", {
 })
 
 val_latent_std_desurvk <- cache_or_compute("val_latent_std_desurvk_tcgacptac", {
-  extract_val_latent(fit_std_desurvk, data_val_filtered)
+  extract_val_latent(fit_std_desurvk, data_val_filtered, ntop = ntop_value)
 })
 
 # ── Standard NMF at elbow k validation ───────────────────────────────────
@@ -140,7 +151,7 @@ val_cindex_desurv_alpha0 <- cache_or_compute("val_cindex_desurv_alpha0_tcgacptac
 })
 
 val_latent_desurv_alpha0 <- cache_or_compute("val_latent_desurv_alpha0_tcgacptac", {
-  extract_val_latent(tar_fit_desurv_alpha0, data_val_filtered_alpha0)
+  extract_val_latent(tar_fit_desurv_alpha0, data_val_filtered_alpha0, ntop = ntop_value)
 })
 
 message("\n  Validation C-index summary:")

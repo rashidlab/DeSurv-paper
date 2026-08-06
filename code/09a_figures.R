@@ -218,8 +218,8 @@ saveRDS(fig_gene_overlap_heatmap_desurv_alpha0,
         file.path(RESULTS_DIR, "fig_gene_overlap_heatmap_desurv_alpha0_tcgacptac.rds"))
 
 # ── HR forest plot ────────────────────────────────────────────────────────
-desurv_df <- compute_hrs(data_val_filtered, tar_fit_desurv, "DeSurv")
-nmf_df    <- compute_hrs(data_val_filtered, fit_std_desurvk, "NMF")
+desurv_df <- compute_hrs(data_val_filtered, tar_fit_desurv, "DeSurv", ntop = ntop_value)
+nmf_df    <- compute_hrs(data_val_filtered, fit_std_desurvk, "NMF", ntop = ntop_value)
 
 df <- rbind(desurv_df, nmf_df)
 pd <- position_dodge(width = 0.6)

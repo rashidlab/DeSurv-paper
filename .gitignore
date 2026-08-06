@@ -27,3 +27,15 @@ CLAUDE.local.md
 # Internal review docs (kept local; not for public archive)
 docs/
 literature/
+
+# Design-handoff snapshots. These are point-in-time COPIES of figures and
+# figure code prepared for an external designer, not sources of truth. They go
+# stale as soon as the pipeline changes (the 2026-07-30 bundle still carries the
+# rank-biserial Fig 2 apparatus reverted in 21c0724, and a pre-truncation
+# compute_hrs), so tracking them creates a second, divergent copy of live code.
+# Regenerate before sending; never commit.
+figures/claude_design_handoff/
+figures/claude_design_handoff.zip
+# Local preview byproducts of code/util_fig2_standalone.R
+figures/standalone_preview/*-1.png
+figures/standalone_preview/fig_treated_context_preview.pdf

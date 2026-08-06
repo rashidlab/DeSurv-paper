@@ -306,11 +306,18 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
   list(plot = pheat, legend = legend_gg)
 }
 
-compute_hrs = function(data_val_filtered,tar_fit_desurv,method){
+# Per-cohort, per-factor HRs for the Fig 3a forest plot.
+# `ntop` truncates the basis to the union of each factor's top genes, matching
+# extract_val_latent() and compute_val_cindex() in code/05. Passing NULL keeps
+# the full W, which is what this function did unconditionally before and which
+# left the forest plot on a different basis from the pooled HRs beside it.
+compute_hrs = function(data_val_filtered,tar_fit_desurv,method,ntop=NULL){
   df=list()
+  basis_genes = if (is.null(ntop)) rownames(tar_fit_desurv$W) else
+    unique(unlist(get_top_genes(tar_fit_desurv$W, ntop)$top_genes))
   for(i in 1:length(data_val_filtered)){
     dat = data_val_filtered[[i]]
-    keep = intersect(rownames(dat$ex),rownames(tar_fit_desurv$W))
+    keep = intersect(intersect(rownames(dat$ex),rownames(tar_fit_desurv$W)), basis_genes)
     W=tar_fit_desurv$W[keep,]
     X=dat$ex[keep,]
     

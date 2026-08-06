@@ -1,6 +1,6 @@
-# Survival-Guided Matrix Factorization Identifies Reproducible Prognostic Programs in Pancreatic Cancer
+# Survival-supervised deconvolution identifies a replicable tumor-stroma prognostic architecture in pancreatic cancer
 
-**Replication Materials for Young et al., *Proceedings of the National Academy of Sciences***
+**Replication materials for Young et al. (manuscript under review).**
 
 This repository contains all code, configuration, and manuscript source
 needed to reproduce every figure, table, and numerical result in the paper.
@@ -150,26 +150,54 @@ dynamically from pre-computed RDS objects via inline R code.
 
 ### Main Manuscript Figures
 
-| Figure | Content | Generation Script |
-|--------|---------|-------------------|
-| 1 | Model schematic | Static (`figures/model_schematic_final.pdf`) |
-| 2 | Simulation results | `code/09c_sim_figures.R` |
-| 3 | DeSurv subtypes + survival | `code/09a_figures.R` |
-| 4 | External validation | `code/09a_figures.R` |
+| Figure | Content | Source |
+|--------|---------|--------|
+| 1 | DeSurv framework schematic | Static asset (`figures/model_schematic_final.pdf`) |
+| 2 | Factor structure in PDAC: variance share vs survival contribution | `code/09a_figures.R`, panels assembled in `paper/04_results_REVISED.Rmd` |
+| 3 | External validation across five datasets | `code/09a_figures.R`, panels assembled in `paper/04_results_REVISED.Rmd` |
+| 4 | Simulation recovery of prognostic programs | `code/09c_sim_figures.R`, panels assembled in `paper/04_results_REVISED.Rmd` |
+| 5 | Transportability into independently treated cohorts | `code/util_fig_treated_context.R` (writes `figures/fig_treated_context.pdf`) |
 
 ### SI Appendix Figures
 
-| Figure | Content | Generation Script |
-|--------|---------|-------------------|
-| S1 | BO convergence | `code/09b_si_figures.R` |
-| S2 | NMF diagnostics (cophenetic, dispersion) | `code/09b_si_figures.R` |
-| S3 | CV C-index across factorization rank | `code/09b_si_figures.R` |
-| S4 | Gene program heatmaps (k=3, k=5, k=7) | `code/09b_si_figures.R` |
-| S5 | Variational survival curves | `code/09b_si_figures.R` |
-| S6 | Cutpoint analysis | `code/08_cutpoint_analysis.R` |
-| S7 | Kaplan-Meier curves — external validation | `code/09b_si_figures.R` |
-| S8 | Subtype overlap with molecular subtypes | `code/09b_si_figures.R` |
-| S9 | Simulation results (null/mixed scenarios) | `code/09c_sim_figures.R` |
+| Figure | Content | Source |
+|--------|---------|--------|
+| S1 | Bayesian-optimization tuning surface | `code/09c_sim_figures.R` |
+| S2 | Independent supervised methods recover the D1 axis | `code/15_supervised_recovery.R`, assembled in `paper/si_appendix.Rmd` |
+| S3 | Empirical optimization-stability diagnostic | `code/09c_sim_figures.R` |
+| S4 | Null and mixed simulation scenarios | `code/09c_sim_figures.R` |
+| S5 | Training and external C-index vs factorization rank | `code/06_cv_grid.R` + `code/09b_si_figures.R` |
+| S6 | Standard unsupervised NMF rank-selection heuristics | `code/09b_si_figures.R` |
+| S7 | Cutpoint selection and Kaplan--Meier validation | `code/09b_si_figures.R` |
+| S8 | Gene-program correspondence for standard NMF at k = 7 | `code/09b_si_figures.R` |
+
+### Additional Analyses (steps 11-21)
+
+Steps 01-10 build the primary pipeline and render the manuscript. The
+analyses below were added during revision and produce results reported in
+the main text and Supplementary Information. Each reads the cached fits
+from steps 02-05 and can be run independently.
+
+| Script | Produces |
+|--------|----------|
+| `code/11_treated_cohort_analysis.R` | Transportability into treated cohorts (Figure 5) |
+| `code/14_d1_variance_partition.R` | Variance in D1 explained by PurIST and DeCAF |
+| `code/15_supervised_recovery.R` | Recovery of the D1 axis by independent supervised methods (Figure S2) |
+| `code/16_desurv_vs_supervised.R` | DeSurv versus supervised-only comparators |
+| `code/17_brier_metrics.R` | Proper-scoring and PH-aware sensitivity metrics |
+| `code/18_clinical_adjustment.R` | Clinical-covariate and tumor-purity adjustment |
+| `code/19_desurv_vs_supervised_tuned.R` | Independently tuned comparators and compartment attribution |
+| `code/20_program_stability.R` | Restart-to-restart stability of the recovered programs |
+| `code/21_consensus_endpoint.R` | Reproducibility of the consensus fit across independent seed blocks |
+
+`code/13_spatial_cooccurrence.R`, `code/13c_spatial_deconvolution.R` and
+`code/13d_spatial_deconv_verify.R` implement a spatial validation of the
+D1 tumor-stroma coupling that was **run and then withdrawn**: multicellular
+spatial spots mix the compartments the programs are meant to separate, so
+the analysis could not support the claim. The scripts are retained for
+transparency. No result from them appears in the manuscript or the
+Supplementary Information, and they are not invoked by the `Makefile` or
+`run_pipeline.R`.
 
 ## Repository Structure
 
@@ -252,19 +280,19 @@ repository. See `data/README.md` for dataset provenance.
 | Moffitt | Validation | GEO [GSE71729](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE71729) |
 | Puleo | Validation | ArrayExpress [E-MTAB-6134](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6134/) |
 | Dijk | Validation | ArrayExpress [E-MTAB-6830](https://www.ebi.ac.uk/arrayexpress/experiments/E-MTAB-6830/) |
-| PACA-AU (array) | Validation | ICGC EGA [EGAS00001000154](https://ega-archive.org/studies/EGAS00001000154) |
-| PACA-AU (seq) | Validation | ICGC EGA [EGAS00001000154](https://ega-archive.org/studies/EGAS00001000154) |
+| PACA-AU (array) | Validation | ICGC, publicly available at GEO [GSE36924](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE36924) |
+| PACA-AU (seq) | Validation | ICGC EGA [EGAS00001000154](https://ega-archive.org/studies/EGAS00001000154), controlled access |
 
 ## Citation
 
 ```bibtex
-@article{young2025desurv,
-  title   = {Survival-Guided Matrix Factorization Identifies Reproducible
-             Prognostic Programs in Pancreatic Cancer},
+@unpublished{young2026desurv,
+  title   = {Survival-supervised deconvolution identifies a replicable
+             tumor-stroma prognostic architecture in pancreatic cancer},
   author  = {Young, Amber M. and Yurovsky, Alisa and Peng, Xianlu Laura and
              Li, Didong and Yeh, Jen Jen and Rashid, Naim U.},
-  journal = {Proceedings of the National Academy of Sciences},
-  year    = {2025}
+  year    = {2026},
+  note    = {Manuscript under review}
 }
 ```
 

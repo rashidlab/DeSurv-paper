@@ -415,3 +415,11 @@ knitr::include_graphics(file.path("..", "figures", "fig2_tcgacptac.pdf"))
 
 ```
 
+## Frozen programs remain associated with outcome in independently treated cohorts {.unnumbered}
+
+The programs above were learned in treatment-naive, non-metastatic disease. Projected without retraining into independently treated PDAC cohorts, the survival-aligned D1 program remained associated with overall survival in treated metastatic disease under an arm-stratified analysis, and the proCAF-like D2 program increased after treatment (Fig.\ \ref{fig:treated}; Supplementary Information, Translational transportability).
+
+```{r fig-treated, fig.cap = "Transportability of the frozen DeSurv programs into independently treated PDAC cohorts. (a) Prognostic transportability of D1 in treated metastatic PDAC. Forest plot of hazard ratios per SD of the frozen D1 score within each O'Kane/COMPASS treatment arm (FOLFIRINOX, gemcitabine/nab-paclitaxel [GA], and GA/experimental); the diamond is the common association from an arm-stratified Cox model with treatment-specific baseline hazards (not a pooled-arm estimate). D1 was protective in all three arms with no evidence of heterogeneity by treatment arm (interaction $P=0.40$). (b) The proCAF program D2 before and after treatment in paired Linehan biopsies (paired Wilcoxon test). (c) Per-cohort overall-survival hazard ratios per SD for each program in the bulk treated cohorts (Linehan, Rash, Accept); D1 and D3 are marginal, D2 is adjusted for PurIST and DeCAF. Error bars denote 95\\% confidence intervals. Because treatment, stage and cohort were not independently varied, these analyses establish prognostic and biological transportability rather than treatment-predictive effects. \\label{fig:treated}", fig.env='figure*', fig.pos='t', fig.width=7.2, fig.height=6, out.width='\\textwidth'}
+cowplot::ggdraw() + cowplot::draw_image(magick::image_read("figures/fig_treated_context.pdf", density = 300))
+```
+

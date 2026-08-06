@@ -70,7 +70,7 @@ pC <- ggplot(long, aes(time, D2, group = pair)) +
   theme_classic(base_size = 9) + theme(plot.title = element_text(size = 8.5, face = "bold"))
 
 ## --- compose (reading order A/B/C): A O'Kane | B paired on top, C bulk bottom
-top <- plot_grid(pA, pC, ncol = 2, labels = c("A", "B"), label_size = 12, rel_widths = c(1.2, 0.8))
-fig <- plot_grid(top, pB, nrow = 2, labels = c("", "C"), label_size = 12, rel_heights = c(1, 0.62))
+top <- plot_grid(pA, pC, ncol = 2, labels = c("a", "b"), label_size = 12, rel_widths = c(1.2, 0.8))
+fig <- plot_grid(top, pB, nrow = 2, labels = c("", "c"), label_size = 12, rel_heights = c(1, 0.62))
 ggsave("figures/fig_treated_context.pdf", fig, width = 7.2, height = 6)
 cat("Wrote figures/fig_treated_context.pdf (S13: A O'Kane per-arm, B paired D2, C bulk forest)\n")

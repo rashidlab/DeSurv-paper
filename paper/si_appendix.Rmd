@@ -937,6 +937,23 @@ Validation-cohort expression enters only at scoring, a fixed-basis projection
 validation-cohort survival outcomes were used only for the final, out-of-sample
 performance evaluation.
 
+\subsection*{Variance partition of the D1 score}
+
+The main text reports the fraction of the D1 score's variance explained by the
+binary PurIST and DeCAF classifications (\texttt{code/14}). D1 scores are first
+standardized within cohort, and an ordinary least-squares model is then fitted
+with cohort as a fixed effect together with PurIST, DeCAF and their interaction.
+The quantity reported is the ordinary $R^2$ of that model, not the adjusted
+$R^2$; on $n = 570$ with eight estimated parameters the adjusted value is about
+one percentage point lower. Because the scores are standardized within cohort
+before fitting, the cohort main effect absorbs essentially no variance, so the
+within-cohort normalization of the reported statistic is a formality rather than
+a correction. The interaction term contributes negligibly, so the additive and
+interaction models give the same figure to the reported precision. Prognostic
+increments over the classifiers are assessed separately, by a partial
+likelihood-ratio test and the change in concordance from adding D1 to a
+cohort-stratified Cox model containing both classifiers.
+
 \subsection*{Adjustment for clinical covariates and tumor purity}
 
 ```{r clinical-adj, echo=FALSE, results='asis', message=FALSE, warning=FALSE}

@@ -71,7 +71,23 @@ projection_r2 <- function(src_W, basis_W) {
 }
 
 # ── §6 Overall whole-matrix reconstruction R^2 ──────────────────────────────
+# NOTE ON THE DENOMINATOR. This uses the UNCENTERED total sum of squares,
+# sum(X^2). X is the within-sample rank matrix, whose entries run 1..p with
+# grand mean p/2, so the grand mean alone accounts for about 75% of sum(X^2)
+# and any nonnegative low-rank fit scores high by construction. The uncentered
+# value is not comparable to an ordinary regression R^2 and must not be read as
+# "fraction of expression variation explained". Report it alongside the
+# centered version below rather than on its own.
 overall_recon_r2 <- function(W, H, X) {
   W <- as.matrix(W); H <- as.matrix(H); X <- as.matrix(X)
   1 - sum((X - W %*% H)^2) / sum(X^2)
+}
+
+# Conventional mean-centered R^2: residual sum of squares against the total sum
+# of squares about the grand mean. This is what a reader assumes on seeing
+# "R^2", and it is the definition to quote when stating how much reconstruction
+# fidelity is given up.
+overall_recon_r2_centered <- function(W, H, X) {
+  W <- as.matrix(W); H <- as.matrix(H); X <- as.matrix(X)
+  1 - sum((X - W %*% H)^2) / sum((X - mean(X))^2)
 }

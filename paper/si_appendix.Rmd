@@ -773,27 +773,40 @@ retained; the principal reorganization is that the DeSurv basis resolves tumor
 signal into basal- and classical-aligned programs while reconstructing the
 exocrine factor (N2) less well ($R^2 = `r sprintf("%.2f", .r2_N[2])`$).
 
-At the whole-matrix level, this reorganization costs little reconstruction fidelity (Table \ref{tab:overall-r2}).
+```{r overall-r2-compute, echo=FALSE, message=FALSE, warning=FALSE}
+# Computed before the prose below so both the sentence and the table read the
+# same objects. Two denominators: see R/reconstruction_helpers.R.
+.X <- as.matrix(read_result("tar_data_filtered_tcgacptac")$ex)
+.r2u <- c(overall_recon_r2(.fit_n$W, .fit_n$H, .X),
+          overall_recon_r2(.fit_d$W, .fit_d$H, .X))
+.r2c <- c(overall_recon_r2_centered(.fit_n$W, .fit_n$H, .X),
+          overall_recon_r2_centered(.fit_d$W, .fit_d$H, .X))
+.gap_u <- 100 * (.r2u[1] - .r2u[2]); .gap_c <- 100 * (.r2c[1] - .r2c[2])
+```
+
+At the whole-matrix level, this reorganization carries a real but bounded reconstruction cost (Table \ref{tab:overall-r2}): on the conventional centered $R^2$, DeSurv reconstructs `r sprintf("%.2f", .r2c[2])` of the analysis matrix against `r sprintf("%.2f", .r2c[1])` for unsupervised NMF, a difference of `r sprintf("%.1f", .gap_c)` percentage points.
 
 ```{r tab-overall-r2, echo=FALSE, results='asis'}
-.X <- as.matrix(read_result("tar_data_filtered_tcgacptac")$ex)
 .or <- data.frame(
   Model = c("NMF ($k = 3$)", "DeSurv ($k = 3$)"),
-  R2 = sprintf("%.3f", c(overall_recon_r2(.fit_n$W, .fit_n$H, .X),
-                         overall_recon_r2(.fit_d$W, .fit_d$H, .X))),
-  Resid = sprintf("%.3f", c(1 - overall_recon_r2(.fit_n$W, .fit_n$H, .X),
-                            1 - overall_recon_r2(.fit_d$W, .fit_d$H, .X))),
+  R2c = sprintf("%.3f", .r2c),
+  R2u = sprintf("%.3f", .r2u),
+  Resid = sprintf("%.3f", 1 - .r2c),
   stringsAsFactors = FALSE)
-colnames(.or) <- c("Model", "Reconstruction $R^2$", "Residual fraction")
+colnames(.or) <- c("Model", "Centered $R^2$", "Uncentered $R^2$", "Residual fraction (centered)")
 knitr::kable(.or, format = "latex", escape = FALSE, booktabs = TRUE,
-  caption = "Whole-matrix reconstruction $R^2$ for unsupervised NMF versus DeSurv at $k = 3$. DeSurv sacrifices only $\\approx 1.5$ percentage points of reconstruction $R^2$ to gain its prognostic structure. \\label{tab:overall-r2}") |>
+  caption = sprintf("Whole-matrix reconstruction $R^2$ across the 1,970-gene analysis matrix for unsupervised NMF versus DeSurv at $k = 3$. Two denominators are shown. The centered $R^2$ is the conventional definition, taken about the grand mean, and is the one to read as fraction of variation reconstructed. The uncentered $R^2$ divides by $\\sum X^2$; because the analysis matrix holds within-sample ranks with grand mean $p/2$, the mean alone accounts for about 75\\%% of that denominator, so uncentered values are high for any nonnegative low-rank fit and are reported only for comparability with the code. On the centered definition DeSurv gives up %.1f percentage points of reconstruction relative to NMF (%.1f on the uncentered scale). \\label{tab:overall-r2}", .gap_c, .gap_u)) |>
   kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
-DeSurv gives up only about $1.5$ percentage points of reconstruction $R^2$
-relative to unsupervised NMF (Table \ref{tab:overall-r2}) --- very little
-reconstruction fidelity is sacrificed in exchange for the prognostic
-reorganization documented above.
+The reorganization therefore has a real price. On the uncentered scale used by
+the reconstruction helper the gap is only $`r sprintf("%.1f", .gap_u)`$
+percentage points, but that scale flatters any nonnegative low-rank fit to a
+rank matrix, and on the conventional centered definition DeSurv gives up
+$`r sprintf("%.1f", .gap_c)`$ percentage points of reconstruction $R^2$
+relative to unsupervised NMF (Table \ref{tab:overall-r2}), a relative loss of
+about $`r sprintf("%.0f", 100 * .gap_c / (100 * .r2c[1]))`$\%. We report the
+centered figure in the main text.
 
 \subsection{The D1 axis is recovered by survival supervision, not by DeSurv specifically}
 

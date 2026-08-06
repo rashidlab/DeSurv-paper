@@ -1,6 +1,6 @@
 ---
 title: "Supplementary Information"
-subtitle: "Survival-supervised deconvolution identifies a reproducible tumor--stroma prognostic axis in pancreatic cancer"
+subtitle: "Survival-supervised deconvolution identifies a replicable tumor--stroma prognostic architecture in pancreatic cancer"
 author: Amber M. Young, Alisa Yurovsky, Xianlu Laura Peng, Jen Jen Yeh, Didong Li, Naim U. Rashid
 header-includes:
 - \providecommand{\pandocbounded}[1]{#1}

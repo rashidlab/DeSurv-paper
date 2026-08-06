@@ -30,7 +30,7 @@
 # relies on.
 # ---------------------------------------------------------------------------
 
-N_SPLITS <- as.integer(Sys.getenv("ENDPOINT_SPLITS", "6"))
+N_SPLITS <- as.integer(Sys.getenv("ENDPOINT_SPLITS", "8"))
 NTOP     <- 270L
 
 .lib45 <- "/home/naimrashid/R/x86_64-pc-linux-gnu-library/4.5"
@@ -47,8 +47,12 @@ gn   <- rownames(ref$W)
 k    <- as.integer(prm$k)
 X    <- dat$ex; y <- dat$sampInfo$time; d <- dat$sampInfo$event
 
-RUN_TOL   <- 1e-7
-RUN_MAXIT <- 3000L
+# Convergence settings MUST match the non-quick branch of code/04_fit_models.R
+# (lines 36-37), because the object being validated here is the basis that path
+# produced. An earlier version used tol = 1e-9 / maxit = 3000, which compared the
+# reported basis against fits made by a different procedure.
+RUN_TOL   <- 1e-5    # code/04 non-quick; desurv_fit receives tol = RUN_TOL / 100 = 1e-7
+RUN_MAXIT <- 4000L   # code/04 non-quick
 
 ## --- helpers (same conventions as code/20) ---------------------------------
 
@@ -76,7 +80,9 @@ match_cols <- function(Wa, Wb) {
     sum(C[cbind(seq_len(ncol(Wa)), p)]), numeric(1)))]])
 }
 
-# consensus initialization -> final fit, mirroring code/04_fit_models.R
+# consensus initialization -> final fit. Mirrors consensus_and_fit() in
+# code/04_fit_models.R: same desurv_consensus_seed call, same min_frequency rule,
+# same hyperparameters, and the same tol/maxit (see RUN_TOL above).
 consensus_fit <- function(idx) {
   init <- DeSurv::desurv_consensus_seed(
     fits = fits[idx], X = X, ntop = NTOP, k = k,
@@ -138,7 +144,11 @@ summarise <- function(m) t(apply(m, 2, function(v) {
 consensus_endpoint_stats <- list(
   meta = list(n_splits = N_SPLITS, block_size = floor(length(ok) / 2), k = k,
               ntop = NTOP, design = "split-half of 100 cached restarts",
-              caveat = "halves R relative to the reported R=100 procedure"),
+              caveat = "halves R relative to the reported R=100 procedure",
+              # convergence provenance: these must equal code/04's non-quick branch
+              run_tol = RUN_TOL, run_maxit = RUN_MAXIT,
+              tol_passed_to_desurv_fit = RUN_TOL / 100,
+              matches_code04_nonquick = (RUN_TOL == 1e-5 && RUN_MAXIT == 4000L)),
   half_vs_half = list(loading = summarise(load_m), score = summarise(score_m),
                       top_jaccard = summarise(jac_m)),
   vs_reported  = list(loading = summarise(ref_load), top_jaccard = summarise(ref_jac)),

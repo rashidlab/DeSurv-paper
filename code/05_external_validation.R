@@ -154,6 +154,42 @@ val_latent_desurv_alpha0 <- cache_or_compute("val_latent_desurv_alpha0_tcgacptac
   extract_val_latent(tar_fit_desurv_alpha0, data_val_filtered_alpha0, ntop = ntop_value)
 })
 
+# ── Fair matched-rank comparator (alpha = 0 at DeSurv's k) validation ────
+# Same ngene and the same rank-transformed validation data, so reuse. Scored on
+# DeSurv's ntop support so every column of the SI comparison table shares one
+# projection support, which is what that table's caption asserts.
+tar_fit_desurv_a0k3    <- load_precomputed("tar_fit_desurv_a0k3_tcgacptac")
+tar_fit_desurv_a0k3pin <- load_precomputed("tar_fit_desurv_a0k3pin_tcgacptac")
+tar_params_best_a0k3   <- load_precomputed("tar_params_best_a0k3_tcgacptac")
+
+val_cindex_desurv_a0k3 <- cache_or_compute("val_cindex_desurv_a0k3_tcgacptac", {
+  compute_val_cindex(tar_fit_desurv_a0k3, data_val_filtered, ntop = ntop_value)
+})
+
+val_latent_desurv_a0k3 <- cache_or_compute("val_latent_desurv_a0k3_tcgacptac", {
+  extract_val_latent(tar_fit_desurv_a0k3, data_val_filtered, ntop = ntop_value)
+})
+
+# Secondary: score the comparator on ITS OWN BO-selected ntop, so the result
+# cannot be attributed to having been scored on the supervised model's support.
+ntop_a0k3_own <- if (!is.null(tar_params_best_a0k3$ntop) && !is.na(tar_params_best_a0k3$ntop)) {
+  as.integer(round(tar_params_best_a0k3$ntop))
+} else {
+  ntop_value
+}
+val_cindex_desurv_a0k3_ownntop <- cache_or_compute("val_cindex_desurv_a0k3_ownntop_tcgacptac", {
+  compute_val_cindex(tar_fit_desurv_a0k3, data_val_filtered, ntop = ntop_a0k3_own)
+})
+
+# Hyperparameter-pinned sensitivity (alpha = 0, DeSurv's own lambda/nu/ntop).
+val_cindex_desurv_a0k3pin <- cache_or_compute("val_cindex_desurv_a0k3pin_tcgacptac", {
+  compute_val_cindex(tar_fit_desurv_a0k3pin, data_val_filtered, ntop = ntop_value)
+})
+
+val_latent_desurv_a0k3pin <- cache_or_compute("val_latent_desurv_a0k3pin_tcgacptac", {
+  extract_val_latent(tar_fit_desurv_a0k3pin, data_val_filtered, ntop = ntop_value)
+})
+
 message("\n  Validation C-index summary:")
 print(val_cindex_desurv)
 

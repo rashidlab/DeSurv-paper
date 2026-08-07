@@ -1,6 +1,25 @@
 #!/usr/bin/env Rscript
 # 13_spatial_cooccurrence.R
-# ---------------------------------------------------------------------------
+# ===========================================================================
+# !! RETRACTED -- DO NOT CITE THIS SCRIPT'S RESULT. !!
+#
+# The permutation P = 0.0005 adjacency result produced below did NOT replicate.
+# Re-testing the same question with reference-based NNLS deconvolution against
+# the Elyada reference (code/13c_spatial_deconvolution.R) found NO Classical ~
+# restCAF spatial association (adjacency gap -0.018, P = 0.23; spot-level rho in
+# the wrong direction), and the DeCAF-relabelled verification
+# (code/13d_spatial_deconv_verify.R) was weak and inconsistent across sections.
+# Median per-spot dropout of ~73% makes the marker-based compartment calls this
+# script relies on unreliable; the deconvolution result supersedes it.
+#
+# NOTHING from this script appears in the manuscript or the SI. It is retained
+# only as documentation of a negative result. The manuscript claims the
+# tumour-stroma architecture as bulk cross-patient covariation, explicitly NOT
+# as cellular co-expression or spatial adjacency. The optimistic claims in the
+# original header below ("well powered", "dropout-robust") are what the
+# reanalysis overturned; they are left in place so the record is legible.
+# ===========================================================================
+# ORIGINAL HEADER (historical):
 # SPATIAL validation of the D1 tumour-stroma coupling (Nature Cancer).
 #
 # The coupling is a tissue-architecture phenomenon, validated at spot resolution.

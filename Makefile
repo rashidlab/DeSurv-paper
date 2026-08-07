@@ -39,6 +39,9 @@ RSCRIPT ?= Rscript
 from-precomputed: paper
 
 # ── Quick mode (smoke test) ───────────────────────────────────────────────
+check-terms:
+	$(RSCRIPT) code/util_check_first_use.R
+
 quick:
 	DESURV_QUICK=TRUE DESURV_NCORES=1 $(RSCRIPT) code/01_install.R
 	DESURV_QUICK=TRUE DESURV_NCORES=1 $(RSCRIPT) code/02_load_data.R

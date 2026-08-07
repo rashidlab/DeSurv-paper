@@ -85,6 +85,32 @@ p_adj  <- s1$coefficients["D1z","Pr(>|z|)"]
 sm <- summary(mm); hr_marg <- sm$conf.int["D1z", c("exp(coef)","lower .95","upper .95")]
 c_m0 <- summary(m0)$concordance["C"]; c_m1 <- summary(m1)$concordance["C"]
 
+## ---------------------------------------------------------------------------
+## (B2) Is D1 merely a smoothed coding of the four PurIST x DeCAF subtype cells?
+##      (B) adjusts for the classifiers ADDITIVELY, which leaves open the
+##      reductionist reading that D1 is the classical-and-restCAF cell of a 2x2.
+##      Test it directly: add D1 to a model that already contains the
+##      interaction, and separately to the saturated 4-level categorical coding
+##      (which is the same model, reparameterised, and so must agree exactly).
+## ---------------------------------------------------------------------------
+mi0 <- coxph(Surv(time,event) ~ PurIST * DeCAF + strata(dataset), data = df)
+mi1 <- coxph(Surv(time,event) ~ D1z + PurIST * DeCAF + strata(dataset), data = df)
+lri <- anova(mi0, mi1)
+si1 <- summary(mi1)
+hr_adj_i <- si1$conf.int["D1z", c("exp(coef)","lower .95","upper .95")]
+# the interaction term's own contribution, i.e. does the JOINT classification
+# add anything over the additive one
+si0     <- summary(mi0)
+int_row <- grep(":", rownames(si0$coefficients), value = TRUE)[1]
+int_hr  <- unname(si0$conf.int[int_row, "exp(coef)"])
+int_p   <- unname(si0$coefficients[int_row, "Pr(>|z|)"])
+
+# saturated 4-cell sensitivity (reparameterisation check)
+df$pd_cell <- factor(paste(df$PurIST, df$DeCAF, sep = "."))
+mc0 <- coxph(Surv(time,event) ~ pd_cell + strata(dataset), data = df)
+mc1 <- coxph(Surv(time,event) ~ D1z + pd_cell + strata(dataset), data = df)
+lrc <- anova(mc0, mc1)
+
 res <- list(
   meta = list(n = nrow(df), n_events = sum(df$event), n_cohorts = length(unique(df$dataset))),
   variance = list(R2_base=R2_base, R2_purist=R2_pur, R2_decaf=R2_dec, R2_pd=R2_pd, R2_full=R2_full,
@@ -94,7 +120,15 @@ res <- list(
   prognosis = list(d1_adj_hr=unname(hr_adj[1]), d1_adj_lo=unname(hr_adj[2]), d1_adj_hi=unname(hr_adj[3]),
                    d1_adj_p=p_adj, d1_marg_hr=unname(hr_marg[1]), d1_marg_lo=unname(hr_marg[2]),
                    d1_marg_hi=unname(hr_marg[3]), lr_chisq=lr_chisq, lr_p=lr_p,
-                   c_base=unname(c_m0), c_with_d1=unname(c_m1), c_gain=unname(c_m1 - c_m0)))
+                   c_base=unname(c_m0), c_with_d1=unname(c_m1), c_gain=unname(c_m1 - c_m0)),
+  interaction = list(int_hr = int_hr, int_p = int_p,
+                     d1_hr = unname(hr_adj_i[1]), d1_lo = unname(hr_adj_i[2]),
+                     d1_hi = unname(hr_adj_i[3]),
+                     d1_p  = unname(si1$coefficients["D1z","Pr(>|z|)"]),
+                     lr_chisq = lri$Chisq[2], lr_p = lri$`Pr(>|Chi|)`[2],
+                     c_base = unname(summary(mi0)$concordance["C"]),
+                     c_with_d1 = unname(si1$concordance["C"]),
+                     cell_lr_chisq = lrc$Chisq[2], cell_lr_p = lrc$`Pr(>|Chi|)`[2]))
 saveRDS(res, "results/d1_variance_partition_stats.rds")
 
 fp <- function(p) ifelse(p<1e-4,"< 0.0001",sprintf("%.4f",p))
@@ -111,4 +145,14 @@ cat(sprintf("    D1 marginal HR per SD     : %.2f (%.2f-%.2f)\n", hr_marg[1],hr_
 cat(sprintf("    D1 adjusted HR per SD     : %.2f (%.2f-%.2f), p %s\n", hr_adj[1],hr_adj[2],hr_adj[3], fp(p_adj)))
 cat(sprintf("    partial LR chi-sq (1 df)  : %.1f, p %s\n", lr_chisq, fp(lr_p)))
 cat(sprintf("    C-index: PurIST+DeCAF %.3f -> +D1 %.3f  (gain %+.3f)\n", c_m0, c_m1, c_m1-c_m0))
+cat("\n(B2) D1 beyond the JOINT (interaction) PurIST x DeCAF classification:\n")
+cat(sprintf("    PurIST x DeCAF term itself: HR %.2f, p %s\n", int_hr, fp(int_p)))
+cat(sprintf("    D1 adjusted HR per SD     : %.2f (%.2f-%.2f), p %s\n",
+            hr_adj_i[1], hr_adj_i[2], hr_adj_i[3], fp(res$interaction$d1_p)))
+cat(sprintf("    partial LR chi-sq (1 df)  : %.2f, p %s\n",
+            res$interaction$lr_chisq, fp(res$interaction$lr_p)))
+cat(sprintf("    C-index: joint %.3f -> +D1 %.3f\n",
+            res$interaction$c_base, res$interaction$c_with_d1))
+cat(sprintf("    4-cell saturated check    : LR chi-sq %.2f, p %s (must match)\n",
+            res$interaction$cell_lr_chisq, fp(res$interaction$cell_lr_p)))
 cat("\nSaved -> results/d1_variance_partition_stats.rds\n")

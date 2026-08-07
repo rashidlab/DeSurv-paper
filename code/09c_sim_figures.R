@@ -99,39 +99,39 @@ message("Saved fig2_tcgacptac.pdf")
 # main-text panel; relocate it to the SI (model-selection sensitivity) in a follow-up.
 
 # ── SI S1: Convergence trajectories ──────────────────────────────────────
+# Earlier versions plotted five randomly chosen initializations on a linear
+# 10^-5 scale. That was misleading in two ways, both raised by the PI: the
+# five curves were not representative (across all 100 runs the final relative
+# decrease spans roughly three orders of magnitude, so a different five produce
+# a completely different-looking panel and y-range), and a linear axis cannot
+# display that spread. We therefore plot ALL runs on a log axis, which shows
+# the monotone decrease and the true between-initialization variability at once.
 desurv_seed_fits <- load_precomputed("desurv_seed_fits_tcgacptac")
-set.seed(147)
-seeds       <- sample(seq_along(desurv_seed_fits$fits), 5, replace = FALSE)
-seed_labels <- setNames(paste0("Init ", seq_along(seeds)), as.character(seeds))
 
-lossit <- dplyr::bind_rows(lapply(seeds, function(i) {
-  loss_vec <- desurv_seed_fits$fits[[i]]$lossit
-  data.frame(lossit  = loss_vec,
-             slossit = desurv_seed_fits$fits[[i]]$slossit,
-             nlossit = desurv_seed_fits$fits[[i]]$nlossit,
-             iter    = seq_along(loss_vec), init = i)
+lossit <- dplyr::bind_rows(lapply(seq_along(desurv_seed_fits$fits), function(i) {
+  v <- desurv_seed_fits$fits[[i]]$lossit
+  data.frame(iter = seq_along(v), init = i,
+             rel_dec = (v[1] - v) / v[1])
 })) |>
-  dplyr::filter(iter < 5000) |>
-  dplyr::group_by(init) |>
-  dplyr::arrange(iter) |>
-  dplyr::mutate(rel_delta_loss = lossit / dplyr::first(lossit),
-                init_label = seed_labels[as.character(init)]) |>
-  dplyr::filter(!is.na(rel_delta_loss))
+  dplyr::filter(iter < 5000, rel_dec > 0)
+
+.med <- dplyr::group_by(lossit, iter) |>
+  dplyr::summarise(rel_dec = median(rel_dec), .groups = "drop") |>
+  dplyr::filter(iter <= median(sapply(desurv_seed_fits$fits, function(x) length(x$lossit))))
 
 ggsave(
   file.path(FIGURE_DIR, "si_fig_converge_tcgacptac.pdf"),
-  # The normalized loss sits at 0.99993-1.0 (reconstruction-dominated total),
-  # so the raw curve looks flat. Plot the relative DECREASE from the initial
-  # value, (loss_0 - loss_t)/loss_0, on a x10^-5 scale (same quantity, readable).
-  ggplot(lossit, aes(y = 1 - rel_delta_loss, x = iter, color = init_label)) +
-    geom_line(linewidth = 0.6) +
-    scale_color_manual(values = desurv_discrete()) +
-    scale_y_continuous(labels = function(y) formatC(y * 1e5, format = "f", digits = 1)) +
+  ggplot(lossit, aes(x = iter, y = rel_dec, group = init)) +
+    geom_line(linewidth = 0.25, alpha = 0.30, colour = "grey45") +
+    geom_line(data = .med, aes(group = 1), linewidth = 0.9, colour = "#2C6FBB") +
+    scale_y_log10(labels = function(y) formatC(y, format = "e", digits = 0)) +
+    annotation_logticks(sides = "l", size = 0.2) +
     labs(x = "Iteration",
-         y = expression("Relative decrease in objective (" * 10^{-5} * ")"),
-         color = "Initialization") +
+         y = expression("Relative decrease in objective, " * (l[0] - l[t]) / l[0]),
+         caption = paste0("All ", length(desurv_seed_fits$fits),
+                          " initializations (grey); median trajectory (blue)")) +
     theme_nature(),
-  width = 5, height = 3
+  width = 5, height = 3.2
 )
 message("Saved si_fig_converge_tcgacptac.pdf")
 

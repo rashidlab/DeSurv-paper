@@ -124,9 +124,22 @@ for (ds in names(score_list)) {
   m_unadj <- fit_hr(df, character(0))
   m_full  <- if (length(clin_covs)) fit_hr(df, clin_covs) else NULL
   m_pur   <- if ("purity" %in% avail) fit_hr(df, "purity") else NULL
+  # Correlation of the scores themselves with tumor purity. The HR comparison
+  # above shows the ASSOCIATION is not driven by purity; this shows how far the
+  # SCORE tracks purity in the first place, which is the more direct question.
+  m_purcor <- NULL
+  if ("purity" %in% avail) {
+    ok <- is.finite(df$purity)
+    m_purcor <- list(
+      n     = sum(ok),
+      D1    = suppressWarnings(cor(df$D1[ok],   df$purity[ok], method = "spearman")),
+      D1_p  = suppressWarnings(cor.test(df$D1[ok], df$purity[ok], method = "spearman")$p.value),
+      risk  = suppressWarnings(cor(df$risk[ok], df$purity[ok], method = "spearman")))
+  }
   rows[[ds]] <- list(dataset=ds, n=nrow(sc), matched_clinical=matched,
                      covariates_available=avail, unadjusted=m_unadj,
-                     clinical_adjusted=m_full, purity_adjusted=m_pur)
+                     clinical_adjusted=m_full, purity_adjusted=m_pur,
+                     purity_cor=m_purcor)
 }
 
 saveRDS(rows, "results/desurv_clinical_adjustment.rds")

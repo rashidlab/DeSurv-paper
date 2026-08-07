@@ -6,7 +6,6 @@
 #   A: O'Kane/COMPASS prognostic transportability of D1 in treated metastatic
 #      PDAC -- per ACTUAL treatment arm (FFX, GA, GA/experimental; never pooled)
 #      plus the arm-stratified common estimate (diamond).
-#   B: Linehan/Rash/Accept bulk treated-cohort program associations with OS
 #      (D1 marginal, D2 adjusted for PurIST+DeCAF, D3 marginal).
 #   C: Linehan paired pre/post biopsies -- D2 (proCAF) change after treatment.
 # ---------------------------------------------------------------------------
@@ -37,32 +36,41 @@ pA <- ggplot(dfA, aes(hr, label)) +
 
 ## --- Panel B: bulk cohorts, D1 marginal / D2 adjusted / D3 marginal --------
 os <- t$os
-selB <- rbind(os[os$program == "D1" & os$model == "marginal", ],
-              os[os$program == "D2" & os$model == "adjusted", ],
-              os[os$program == "D3" & os$model == "marginal", ])
-selB$cohort  <- factor(selB$cohort, levels = rev(c("Linehan", "Rash", "Accept")))
-selB$program <- factor(selB$program, levels = c("D1", "D2", "D3"),
-                       labels = c("D1 (marginal)", "D2 (adjusted)", "D3 (marginal)"))
-pB <- ggplot(selB, aes(hr, cohort)) +
-  geom_vline(xintercept = 1, linetype = "dashed", colour = "grey60") +
-  geom_errorbar(aes(xmin = lo, xmax = hi), orientation = "y", width = 0.2, linewidth = 0.4) +
-  geom_point(size = 2, colour = blue) +
-  facet_wrap(~program, nrow = 1) +
-  scale_x_log10() +
-  labs(x = "Hazard ratio per SD (95% CI)", y = NULL,
-       title = "Bulk treated cohorts (Linehan, Rash, Accept): program associations with overall survival") +
-  theme_bw(base_size = 9) +
-  theme(plot.title = element_text(size = 8.5, face = "bold"), panel.grid.minor = element_blank(),
-        strip.background = element_rect(fill = "grey92", colour = NA))
+## PANEL B (bulk trial x arm survival forest) REMOVED, 2026-08-06.
+## Rationale. The treated section had three components of very unequal quality:
+##   (i)  O'Kane D1 transportability -- arm-stratified WITHIN one cohort, clean;
+##   (ii) paired pre/post D2 -- within-patient, clean, and a statement about
+##        program LEVELS, not about survival;
+##   (iii) the bulk trial x arm survival forest -- 7 cells of 14-52 patients,
+##        nothing surviving BH correction.
+## Only (iii) produced a D2 survival claim in treated disease, and that claim
+## formally contradicts the untreated validation: D2 is a well-powered null
+## untreated (HR 1.02, 0.92-1.12, n=570/388 events) but protective treated
+## (HR 0.76, 0.63-0.91, strata = trial x arm), differing at P = 0.0065. The
+## mundane alternative -- resected untreated versus biopsy treated tissue
+## differing in tumour/stroma content -- cannot be excluded, because neither
+## treated cohort carries a purity field. D2 also has an elastic-net coefficient
+## of exactly zero in the trained model, so a D2 survival claim is the most
+## exposed statement available. Dropping (iii) removes the contradiction at its
+## source instead of arguing it away. (i) and (ii) are retained and neither
+## conflicts with the untreated results: D1 attenuates (P = 0.073, n.s.), which
+## is the stage attenuation PurIST/Moffitt/Bailey also show.
+## The underlying analysis is retained in code/24_treated_arm_level.R and
+## results/treated_arm_level_stats.rds as reviewer-response material.
 
 ## --- Panel C: Linehan paired pre/post D2 ----------------------------------
 pp <- t$paired$points
 long <- data.frame(pair = rep(seq_len(nrow(pp)), 2),
                    time = factor(rep(c("Pre", "Post"), each = nrow(pp)), levels = c("Pre", "Post")),
                    D2 = c(pp$D2_pre, pp$D2_post))
+# PI asked for the mean trajectory to be drawn over the per-patient lines.
+mn <- data.frame(time = factor(c("Pre", "Post"), levels = c("Pre", "Post")),
+                 D2   = c(mean(pp$D2_pre), mean(pp$D2_post)))
 pC <- ggplot(long, aes(time, D2, group = pair)) +
-  geom_line(alpha = 0.35, colour = "grey40") +
-  geom_point(alpha = 0.65, size = 1.4, colour = blue) +
+  geom_line(alpha = 0.30, colour = "grey55") +
+  geom_point(alpha = 0.55, size = 1.3, colour = blue) +
+  geom_line(data = mn, aes(group = 1), colour = "#B2182B", linewidth = 1.4) +
+  geom_point(data = mn, aes(group = 1), colour = "#B2182B", size = 2.6) +
   annotate("text", x = 0.7, y = max(long$D2), hjust = 0, vjust = 1, size = 2.9,
            label = sprintf("paired Wilcoxon\nP = %.3f, n = %d", t$paired$wilcox_p, nrow(pp))) +
   labs(x = NULL, y = "D2 (proCAF) score (z)",
@@ -70,7 +78,6 @@ pC <- ggplot(long, aes(time, D2, group = pair)) +
   theme_classic(base_size = 9) + theme(plot.title = element_text(size = 8.5, face = "bold"))
 
 ## --- compose (reading order A/B/C): A O'Kane | B paired on top, C bulk bottom
-top <- plot_grid(pA, pC, ncol = 2, labels = c("a", "b"), label_size = 12, rel_widths = c(1.2, 0.8))
-fig <- plot_grid(top, pB, nrow = 2, labels = c("", "c"), label_size = 12, rel_heights = c(1, 0.62))
-ggsave("figures/fig_treated_context.pdf", fig, width = 7.2, height = 6)
-cat("Wrote figures/fig_treated_context.pdf (Fig. 5: a O'Kane per-arm, b paired D2, c bulk forest)\n")
+fig <- plot_grid(pA, pC, ncol = 2, labels = c("a", "b"), label_size = 12, rel_widths = c(1.2, 0.8))
+ggsave("figures/fig_treated_context.pdf", fig, width = 7.2, height = 3.4)
+cat("Wrote figures/fig_treated_context.pdf (Fig. 5: a OKane arm-stratified D1, b paired D2)\n")

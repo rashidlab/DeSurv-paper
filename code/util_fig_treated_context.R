@@ -1,13 +1,14 @@
 #!/usr/bin/env Rscript
 # ---------------------------------------------------------------------------
-# Generates figures/fig_treated_context.pdf (manuscript Fig. 5, \label{fig:treated}):
-# a three-panel translational figure built entirely from the tracked cache
+# Generates figures/fig_treated_context.pdf (manuscript Fig. 4, \label{fig:treated}):
+# a two-panel translational figure built entirely from the tracked cache
 # results/treated_cohort_stats.rds (no restricted data needed here).
-#   A: O'Kane/COMPASS prognostic transportability of D1 in treated metastatic
+#   a: O'Kane/COMPASS prognostic transportability of D1 in treated metastatic
 #      PDAC -- per ACTUAL treatment arm (FFX, GA, GA/experimental; never pooled)
 #      plus the arm-stratified common estimate (diamond).
-#      (D1 marginal, D2 adjusted for PurIST+DeCAF, D3 marginal).
-#   C: Linehan paired pre/post biopsies -- D2 (proCAF) change after treatment.
+#   b: Linehan paired pre/post biopsies -- D2 (proCAF) change after treatment.
+# The former Panel B (bulk trial x arm survival forest) was removed; see the
+# rationale block below.
 # ---------------------------------------------------------------------------
 suppressMessages({ library(ggplot2); library(cowplot) })
 
@@ -35,7 +36,6 @@ pA <- ggplot(dfA, aes(hr, label)) +
   theme(plot.title = element_text(size = 8.5, face = "bold"), axis.text.y = element_text(size = 8))
 
 ## --- Panel B: bulk cohorts, D1 marginal / D2 adjusted / D3 marginal --------
-os <- t$os
 ## PANEL B (bulk trial x arm survival forest) REMOVED, 2026-08-06.
 ## Rationale. The treated section had three components of very unequal quality:
 ##   (i)  O'Kane D1 transportability -- arm-stratified WITHIN one cohort, clean;
@@ -77,7 +77,7 @@ pC <- ggplot(long, aes(time, D2, group = pair)) +
        title = "Linehan paired biopsies:\nD2 change after treatment") +
   theme_classic(base_size = 9) + theme(plot.title = element_text(size = 8.5, face = "bold"))
 
-## --- compose (reading order A/B/C): A O'Kane | B paired on top, C bulk bottom
+## --- compose: a O'Kane arm-level forest | b Linehan paired pre/post ---------
 fig <- plot_grid(pA, pC, ncol = 2, labels = c("a", "b"), label_size = 12, rel_widths = c(1.2, 0.8))
 ggsave("figures/fig_treated_context.pdf", fig, width = 7.2, height = 3.4)
-cat("Wrote figures/fig_treated_context.pdf (Fig. 5: a OKane arm-stratified D1, b paired D2)\n")
+cat("Wrote figures/fig_treated_context.pdf (Fig. 4: a OKane arm-stratified D1, b paired D2)\n")

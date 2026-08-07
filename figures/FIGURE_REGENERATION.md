@@ -1,5 +1,16 @@
 # Main-figure regeneration instructions (Nature Cancer resubmission)
 
+> **STALE (Aug 2026).** This file describes a figure redesign that has since been
+> completed differently, so treat it as history, not instructions. Two things in
+> particular no longer hold. (1) **Figure numbering shifted**: the treated-cohort
+> figure is now Fig. 4 and the simulations figure is now Fig. 5, because the
+> treated section was merged into the external-validation section. References to
+> "Fig 4 (simulations)" below mean what is now Fig. 5. (2) **Fig. 3 panel C no
+> longer exists**: the dichotomized-risk-group KM panel was removed (see
+> docs/LESSONS.md L7) and the supervised-score heatmap is now panel b, so the
+> "3C" instructions below are superseded. Current mapping of figure number to
+> source file is in the table below, which is still correct.
+
 The Results text was restructured (branch `naim/nature-resubmission`, commits `d2911ba`, `dc44361`)
 into: **learn → discover → validate → distinguish → explain**. The prose now references figure
 panels that the current figure PDFs do not yet contain. This file specifies every figure change so

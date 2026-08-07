@@ -43,7 +43,7 @@ alt_plots   <- sim_figs_by_scenario[[which(scenario_ids == "R0_easy"  & analysis
 null_plots  <- sim_figs_by_scenario[[which(scenario_ids == "R00_null" & analysis_ids == "bo_tune_ntop")]]
 mixed_plots <- sim_figs_by_scenario[[which(scenario_ids == "R_mixed"  & analysis_ids == "bo_tune_ntop")]]
 
-# ── SI: BO tuning surface (relocated from the old main-text Fig 4D) ───────
+# ── SI: BO tuning surface (relocated out of the main-text simulations figure) ───────
 # GP-predicted CV C-index over factorization rank (k) x supervision strength;
 # a model-selection sensitivity display, now an SI figure rather than main text.
 fig_bo_heat <- load_precomputed("fig_bo_heat_tcgacptac") +
@@ -95,7 +95,7 @@ ggsave(file.path(FIGURE_DIR, "fig2_tcgacptac.pdf"),
        plot_grid(upper, lower, nrow = 2),
        width = 6.5, height = 6)
 message("Saved fig2_tcgacptac.pdf")
-# NOTE: the k x alpha BO tuning surface (fig_bo_heat, former Fig 4D) is no longer a
+# NOTE: the k x alpha BO tuning surface (fig_bo_heat) is no longer a
 # main-text panel; relocate it to the SI (model-selection sensitivity) in a follow-up.
 
 # ── SI S1: Convergence trajectories ──────────────────────────────────────

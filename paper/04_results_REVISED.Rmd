@@ -165,7 +165,7 @@ source("R/get_top_genes.R")
 # in. rho_excl is the self-correlation sensitivity with GATA6 removed from its
 # own projection support (see code/11).
 
-# Treated-cohort quantitative results reported in the Fig. 5 caption: the
+# Treated-cohort quantitative results reported in the Fig. 4 caption: the
 # O'Kane/COMPASS arm-stratified common association (panel a), the paired
 # post-treatment D2 shift (panel b), and the between-cohort heterogeneity of D1
 # and the paired post-treatment D2 shift (panel b).

@@ -1,5 +1,16 @@
 # Longleaf figure-regeneration run-book (Nature Cancer resubmission)
 
+> **STALE (Aug 2026).** This file describes a figure redesign that has since been
+> completed differently, so treat it as history, not instructions. Two things in
+> particular no longer hold. (1) **Figure numbering shifted**: the treated-cohort
+> figure is now Fig. 4 and the simulations figure is now Fig. 5, because the
+> treated section was merged into the external-validation section. References to
+> "Fig 4 (simulations)" below mean what is now Fig. 5. (2) **Fig. 3 panel C no
+> longer exists**: the dichotomized-risk-group KM panel was removed (see
+> docs/LESSONS.md L7) and the supervised-score heatmap is now panel b, so the
+> "3C" instructions below are superseded. Current mapping of figure number to
+> source file is in the table below, which is still correct.
+
 The cached model store lives in the **flat `results/` directory** (`RESULTS_DIR <- "results"`,
 `code/00_helpers.R:28` — the `results/precomputed/` path in the stale CLAUDE.md doc is not used).
 The `DeSurv-paper-clean` checkout on this machine **already contains that store** (59 `.rds`), so

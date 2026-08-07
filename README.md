@@ -180,7 +180,7 @@ from steps 02-05 and can be run independently.
 
 | Script | Produces |
 |--------|----------|
-| `code/11_treated_cohort_analysis.R` | Transportability into treated cohorts (Figure 5) |
+| `code/11_treated_cohort_analysis.R` | Transportability into treated cohorts (Figure 4) |
 | `code/14_d1_variance_partition.R` | Variance in D1 explained by PurIST and DeCAF |
 | `code/15_supervised_recovery.R` | Recovery of the D1 axis by independent supervised methods (Figure S2) |
 | `code/16_desurv_vs_supervised.R` | DeSurv versus supervised-only comparators |

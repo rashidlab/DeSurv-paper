@@ -559,16 +559,24 @@ fig_supcorr_hm <- ggplot(.hm_df, aes(program, method, fill = r)) +
   geom_text(aes(label = sprintf("%.2f", r)), size = km_text_size / ggplot2::.pt) +
   scale_fill_gradient(low = "#f7fbff", high = desurv_accent, limits = c(0, 1),   # |r| ramp anchored on DeSurv blue
                       name = expression("|" * italic(r) * "|")) +
-  labs(x = NULL, y = NULL, title = "Supervised score vs DeSurv program") +
+  labs(x = NULL, y = NULL, title = "Supervised score vs\nDeSurv program") +
   theme_pnas +
   theme(plot.title = element_text(size = 9), axis.text = element_text(size = km_text_size),
         legend.position = "right", legend.key.width = unit(8, "pt"))
 
+# Panel b was previously a dichotomized-risk-group KM curve. It was removed
+# because the cutpoint it displayed is not reproducible: run_cv_grid_point()
+# passes `seed` to desurv_fit() but also parallel_init = TRUE, and the forked
+# initialization workers do not inherit a reproducible RNG stream, so identical
+# calls select z-cutpoints anywhere in 0.8-2.0 and high-risk fractions from
+# 5% to 33%. The validation conclusion never depended on it (the continuous
+# linear predictor and the per-factor HRs carry it), so the panel was dropped
+# rather than re-derived. See docs/LESSONS.md.
 km_block_4 <- plot_grid(
-  stack_surv(fig_median_survival_desurv, "DeSurv"),
-  ggdraw(km_legend_grob),
-  fig_supcorr_hm,
-  nrow = 3, labels = c("b", "", "c"), label_size = 12, rel_heights = c(5, 0.6, 4.2)
+  NULL,
+  plot_grid(fig_supcorr_hm, labels = "b", label_size = 12),
+  NULL,
+  nrow = 3, rel_heights = c(1.0, 2.6, 1.0)
 )
 ggsave(
   file.path(FIGURE_DIR, "fig4_tcgacptac.pdf"),

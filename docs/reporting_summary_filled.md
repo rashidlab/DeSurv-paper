@@ -89,7 +89,7 @@ For all statistical analyses, confirm the following are reported:
 - **Ethics oversight:** Secondary analysis of de-identified human data. Public/controlled-
   access transcriptomic cohorts required no new IRB approval for this analysis; controlled-
   access data (PACA-AU via EGA) were used under the repository's access terms. The
-  restricted clinical-trial cohorts (COMPASS/O'Kane, Rash-Accept, Linehan) were obtained
+  restricted clinical-trial cohorts (COMPASS/O'Kane, Linehan) were obtained
   from the study investigators under data-use agreements, subject to the governing trial
   consents and institutional approvals held by those studies. Appropriate ethics approval
   and informed consent were obtained by each originating study, as reported in their
@@ -97,8 +97,7 @@ For all statistical analyses, confirm the following are reported:
 
 ### Clinical data
 - **Study protocol / registration:** The treated-cohort data derive from previously
-  reported clinical trials and cohorts (COMPASS/O'Kane; the Rash and Accept gemcitabine-
-  backbone trials; the Linehan FOLFIRINOX +/- CCR2-inhibitor cohort). Trial design and
+  reported clinical trials and cohorts (COMPASS/O'Kane; the Linehan FOLFIRINOX +/- CCR2-inhibitor cohort). Trial design and
   registration are in the respective primary publications, which are cited. We conducted
   a retrospective secondary analysis; no new trial was run.
 - **Data collection / outcomes:** Overall survival (and progression-free survival where
@@ -123,8 +122,7 @@ A full data availability statement is in the manuscript. Summary: TCGA-PAAD and 
 (NCI Genomic Data Commons); Dijk (ArrayExpress E-MTAB-6830); Puleo (ArrayExpress
 E-MTAB-6134); Moffitt (GEO GSE71729); PACA-AU array (GEO GSE36924) and RNA-seq (EGA
 EGAS00001000154, controlled access). Molecular classifications (PurIST, DeCAF) for
-validation cohorts were compiled for the DeCAF study. The treated cohorts (Rash-Accept,
-Linehan) and COMPASS/O'Kane are restricted-access clinical-trial datasets available from
+validation cohorts were compiled for the DeCAF study. The Linehan cohort and COMPASS/O'Kane are restricted-access clinical-trial datasets available from
 the study investigators under a data-use agreement; derived per-cohort summary statistics
 are provided in the reproducibility repository (results/treated_cohort_stats.rds) so every
 reported value can be verified without redistributing restricted data.

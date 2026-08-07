@@ -191,13 +191,27 @@ from steps 02-05 and can be run independently.
 | `code/21_consensus_endpoint.R` | Reproducibility of the consensus fit across independent seed blocks |
 
 `code/13_spatial_cooccurrence.R`, `code/13c_spatial_deconvolution.R` and
-`code/13d_spatial_deconv_verify.R` implement a spatial validation of the
-D1 tumor-stroma coupling that was **run and then withdrawn**: multicellular
-spatial spots mix the compartments the programs are meant to separate, so
-the analysis could not support the claim. The scripts are retained for
-transparency. No result from them appears in the manuscript or the
-Supplementary Information, and they are not invoked by the `Makefile` or
-`run_pipeline.R`.
+`code/13d_spatial_deconv_verify.R` implement a spatial test of whether the
+D1 tumor-stroma architecture has a within-tumor spatial correlate. It was
+**run and then withdrawn, because the result did not replicate under a more
+robust method.** The initial marker-based adjacency analysis (`code/13`)
+found classical epithelium bordering restCAF-like stroma at within-section
+permutation *P* = 0.0005. Because multicellular spatial spots mix the
+compartments the programs are meant to separate, that marker-based call was
+then re-tested by reference-based NNLS deconvolution against the Elyada
+reference (`code/13c`), which showed **no such spatial association**
+(adjacency gap -0.018, *P* = 0.23, with the spot-level correlation in the
+wrong direction). A DeCAF-relabelled verification (`code/13d`) was weak and
+inconsistent across sections. Median per-spot dropout of roughly 73% makes
+the original marker calls unreliable, and we treat the deconvolution result
+as the more trustworthy of the two.
+
+The scripts and their cached outputs (`results/spatial_*.rds`) are retained
+deliberately, as documentation of a negative result. **No result from them
+appears in the manuscript or the Supplementary Information**, they are not
+invoked by the `Makefile` or `run_pipeline.R`, and the tumor-stroma
+architecture is claimed in the paper only as bulk cross-patient covariation,
+explicitly not as cellular co-expression or spatial adjacency.
 
 ## Repository Structure
 

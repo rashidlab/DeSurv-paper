@@ -180,17 +180,40 @@ tar_tops_std_elbowk    <- get_top_genes(W = fit_std_elbowk$W, ntop = ntop_value)
 tar_fit_desurv_alpha0 <- load_precomputed("tar_fit_desurv_alpha0_tcgacptac")
 tar_tops_desurv_alpha0 <- get_top_genes(W = tar_fit_desurv_alpha0$W, ntop = ntop_value)
 
+# Panels a/b of the main factor-structure figure display an IDENTICAL row set:
+# the union of reference programs passing the r > 0.2 display threshold in
+# either method, ordered once (average-linkage clustering on the concatenated
+# correlation profiles) and imposed on both panels. With per-panel filtering, a
+# row's absence from one panel could mean "filtered from display" rather than
+# "not correlated", which misreads as evidence.
+hm_mat_desurv <- make_gene_overlap_heatmap(
+      tar_fit_desurv, tar_tops_desurv$top_genes, top_genes, return_matrix = TRUE
+    )
+hm_mat_std    <- make_gene_overlap_heatmap(
+      fit_std_desurvk, tar_tops_std_desurvk$top_genes, top_genes, return_matrix = TRUE
+    )
+rows_union <- union(hm_mat_desurv$keep, hm_mat_std$keep)
+rows_comb  <- cbind(hm_mat_desurv$cor_mat[rows_union, , drop = FALSE],
+                    hm_mat_std$cor_mat[rows_union, , drop = FALSE])
+# A program with no genes in one method's displayed gene space has an
+# uncomputable (NA) correlation there; it is drawn as an NA cell in that panel,
+# and for ordering purposes only the NA is treated as 0.
+rows_comb[is.na(rows_comb)] <- 0
+rows_shared <- rows_union[stats::hclust(stats::dist(rows_comb), method = "average")$order]
+
 # DeSurv heatmap
 fig_gene_overlap_heatmap_desurv <- make_gene_overlap_heatmap(
       tar_fit_desurv, tar_tops_desurv$top_genes, top_genes,
-      factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7
+      factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7,
+      rows_show = rows_shared
     )
 
 
 # Standard NMF at DeSurv k heatmap
 fig_gene_overlap_heatmap_std_desurvk <- make_gene_overlap_heatmap(
       fit_std_desurvk, tar_tops_std_desurvk$top_genes, top_genes,
-      factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7
+      factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7,
+      rows_show = rows_shared
     )
 
 

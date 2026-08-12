@@ -310,29 +310,28 @@
 
 % Checked 2026-08-05 (Crossref + web): no peer-reviewed version located; still a
 % HAL preprint. Re-check at submission if materially later than this date.
-@misc{le2025survnmf,
+% @article with a "Preprint at <URL>" journal field so the preprint status and
+% locator actually render under nature.csl (Nature's own preprint format);
+% pandoc's bibtex->CSL conversion silently drops @misc howpublished/url, which
+% left this reference rendering as bare title + year.
+@article{le2025survnmf,
   title={SurvNMF: Non-Negative Matrix Factorization supervised for survival data analysis},
   author={Le Goff, Vincent and Guillemot, Vincent and Philippe, Cathy and Deleuze, Jean-Fran{\c{c}}ois and Le Floch, Edith and Gloaguen, Arnaud},
   year={2025},
-  howpublished={HAL [Preprint], hal-04975434v1},
-  institution={Institut Pasteur and CEA, Centre National de Recherche en G\'enomique Humaine},
-  url={https://hal.science/hal-04975434v1},
-  note={Preprint, accessed 5 August 2026}
+  journal={Preprint at https://hal.science/hal-04975434},
+  note={HAL preprint hal-04975434v1, accessed 5 August 2026}
 }
 
 % Checked 2026-08-05 (Crossref + web): no peer-reviewed version located; still an
 % arXiv preprint. Entry type corrected from @article, which had no journal field
 % and would render without a venue.
-@misc{huang2020low,
+% Same rendering fix as le2025survnmf above.
+@article{huang2020low,
   title={Low-rank reorganization via proportional hazards non-negative matrix factorization unveils survival associated gene clusters},
   author={Huang, Zhi and Salama, Paul and Shao, Wei and Zhang, Jie and Huang, Kun},
   year={2020},
-  eprint={2008.03776},
-  archivePrefix={arXiv},
-  primaryClass={cs.LG},
-  howpublished={arXiv:2008.03776 [cs.LG]},
-  url={https://arxiv.org/abs/2008.03776},
-  note={Preprint, accessed 5 August 2026}
+  journal={Preprint at https://arxiv.org/abs/2008.03776},
+  note={arXiv:2008.03776 [cs.LG], accessed 5 August 2026}
 }
 
 @inproceedings{donoho2004nmf,

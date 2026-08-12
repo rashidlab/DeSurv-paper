@@ -589,6 +589,7 @@ for the validation cohorts were originally compiled for the DeCAF study
 (Peng et al. 2026). Events denotes the number of overall-survival events (deaths) with the corresponding event rate; outcome frequency was lower and more homogeneous in the training cohorts (`r .coh$train_lo`--`r .coh$train_hi`\%) than across the validation cohorts (`r .coh$val_lo`--`r .coh$val_hi`\%, pooled `r .coh$val_pooled`\%), a case-mix difference relevant to the interpretation of external-validation performance.}
 \label{tab:cohorts}
 \footnotesize
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{llrrllll}
 \toprule
 Cohort & Platform & $N$ & Events & Role & Accession & Metadata & Reference \\
@@ -606,7 +607,8 @@ Puleo            & Microarray & `r .coh$N[["Puleo_array"]]` & `r .coh$cell[["Pul
 \multicolumn{2}{l}{Validation platform profiles total} & `r .coh$N[["val_tot"]]` & `r .coh$cell[["val_tot"]]` & & & & \\
 \multicolumn{2}{l}{Combined unique-patient validation set} & `r .coh$comb_N` & `r .coh$comb_cell` & & & & \\
 \bottomrule
-\end{tabular}
+\end{tabular}%
+}
 
 {\footnotesize PACA-AU contains 46 patients profiled on both the array and RNA-seq platforms; combined (pooled) analyses represent each patient once, retaining the RNA-seq profile for duplicated patients, consistent with the DeCAF preprocessing rule. Platform-specific per-dataset analyses retain both records.}
 \end{table}
@@ -834,7 +836,7 @@ survival supervision shared across methods, consistent with its being
 unreconstructable from the unsupervised NMF basis (Table \ref{tab:projection-r2})
 and with standard NMF's failure to enrich for the proCAF stroma at matched rank, and not an idiosyncrasy of the DeSurv algorithm.
 
-```{r fig-suprec, echo=FALSE, fig.width = 8, fig.height = 3.6, fig.cap = "Independent survival-supervised methods recover the D1 axis; an unsupervised method does not. (A) Absolute correlation (across training-cohort patients) of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox all recover D1 (green), whereas the leading unsupervised principal component does not (grey). (B) Sample-level agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \\label{fig:suprec}", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
+```{r fig-suprec, echo=FALSE, fig.width = 8, fig.height = 3.6, fig.cap = "Independent survival-supervised methods recover the D1 axis; an unsupervised method does not. (a) Absolute correlation (across training-cohort patients) of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox all recover D1 (green), whereas the leading unsupervised principal component does not (grey). (b) Sample-level agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \\label{fig:suprec}", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
 knitr::include_graphics(file.path("..", "figures", "fig_supervised_recovery.pdf"), error = FALSE)
 ```
 
@@ -1228,7 +1230,7 @@ cindex_wide <- fmt_cindex(val_cindex_desurv_tcgacptac, "DeSurv (K=3)") %>%
 knitr::opts_current$set(label = "tab-cindex-comparison-auto")
 kable(cindex_wide, format = "latex", booktabs = TRUE, linesep = "", escape = FALSE,
       caption = "External validation C-index by method and cohort. DeSurv at BO-selected rank ($k = 3$) is compared with standard NMF at matched rank ($k = 3$), elbow-selected rank ($k = 5$) and BO-selected rank ($k = 7$, $\\alpha = 0$), and with a matched-budget unsupervised control at $k = 3$. The unsupervised columns are not all produced by one implementation: $k = 3$ (Std NMF) and $k = 5$ are Lee multiplicative NMF (\\texttt{NMF::nmf}), whereas the matched-budget $k = 3$ column and the $k = 7$ column are the DeSurv optimizer run at $\\alpha = 0$ with the same consensus initialization as the supervised model. The matched-budget column is the tuning-budget control: it holds rank, optimizer, consensus initialization and Bayesian-optimization budget fixed and varies only supervision, and it does not improve on \\texttt{NMF::nmf} at the same rank. Higher values indicate better discrimination. All columns are scored on the same union-of-top-genes support ($n_{\\text{top}} = 270$). \\label{tab:tab-cindex-comparison}") |>
-  kable_styling(latex_options = c("HOLD_position"), font_size = 9)
+  kable_styling(latex_options = c("HOLD_position", "scale_down"))
 ```
 
 ```{r a0k3-control, echo=FALSE, message=FALSE, warning=FALSE}

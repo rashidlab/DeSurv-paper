@@ -135,32 +135,11 @@ cat(sprintf("Sparse Cox selected %d genes.\n", n_sparse))
 cat("\nSaved -> results/supervised_recovery_stats.rds\n")
 
 ## ===========================================================================
-## Figure (self-contained producer for figures/fig_supervised_recovery.pdf)
+## Figure
 ## ===========================================================================
-sc <- res$scores
-pdf("figures/fig_supervised_recovery.pdf", width = 9, height = 4.2)
-par(mfrow = c(1, 2), mar = c(6.5, 4.5, 3.6, 1.2), mgp = c(2.5, 0.7, 0))
-# A: |cor with D1| per method
-cols <- ifelse(tab$supervised, "#1B7837", "#999999")
-bp <- barplot(abs(tab$score_cor_D1), col = cols, border = "grey25", ylim = c(0, 1),
-              ylab = "| correlation with DeSurv D1 |",
-              main = "A  Recovery of the D1 coupling axis", xaxt = "n")
-axis(1, at = bp, labels = FALSE)
-text(bp, par("usr")[3] - 0.04, labels = tab$method, srt = 35, adj = 1, xpd = TRUE, cex = 0.9)
-abline(h = 0)
-text(bp, abs(tab$score_cor_D1) + 0.04, sprintf("%.2f", abs(tab$score_cor_D1)), cex = 0.9)
-legend("topleft", c("survival-supervised", "unsupervised"),
-       fill = c("#1B7837", "#999999"), bty = "n", cex = 0.85)
-# B: per-patient agreement -- supervised recovers (Cox-PLS), unsupervised misses (PC1)
-plot(sc$D1, sc$CoxPLS, pch = 19, col = "#1B783799", cex = 0.7,
-     xlab = "DeSurv D1 score (per patient)", ylab = "Competing-method score",
-     main = "B  Per-patient agreement with D1", ylim = range(c(sc$CoxPLS, sc$PC1)))
-points(sc$D1, sc$PC1, pch = 19, col = "#99999999", cex = 0.7)
-abline(lm(CoxPLS ~ D1, data = sc), col = "#1B7837", lwd = 2)
-abline(lm(PC1 ~ D1, data = sc), col = "#666666", lwd = 2, lty = 2)
-legend("topleft", bty = "n", cex = 0.85,
-  legend = c(sprintf("Cox-PLS (supervised): r = %.2f", abs(tab$score_cor_D1[tab$method == "Cox-PLS"])),
-             sprintf("Unsup. PC1: r = %.2f", abs(tab$score_cor_D1[tab$method == "Unsupervised PCA"]))),
-  col = c("#1B7837", "#666666"), pch = 19)
-invisible(dev.off())
-cat("Saved -> figures/fig_supervised_recovery.pdf\n")
+## Drawing code lives in code/util_fig_supervised_recovery.R, which reads the
+## stats saved above from results/supervised_recovery_stats.rds. Kept separate
+## so the figure can be redrawn without re-running this analysis (whose
+## cross-validated fits are not seeded and whose stats file this script
+## overwrites unconditionally).
+source("code/util_fig_supervised_recovery.R")

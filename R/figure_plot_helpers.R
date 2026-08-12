@@ -138,7 +138,14 @@ extract_gp_curve_maxed <- function(bo_results, ci_level = 0.95,
   )
 }
 
-make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_labels = NULL, title = NULL, fontsize_row = 6){
+make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_labels = NULL, title = NULL, fontsize_row = 6,
+                                     rows_show = NULL, return_matrix = FALSE){
+  # rows_show: raw reference-program names (pre-label-formatting) to display, in
+  #   the given order, bypassing the per-panel r > 0.2 threshold. Used to show an
+  #   identical row set in panels compared side by side, so a row's absence means
+  #   low correlation rather than per-panel display filtering.
+  # return_matrix: return the full correlation/FDR matrices and the names passing
+  #   the display threshold, instead of a plot (used to build the shared row set).
 
   if (is.null(top_genes_ref) || !length(top_genes_ref)) {
     stop("Reference gene signatures are missing.")
@@ -222,10 +229,20 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
   keep <- vapply(seq_len(nrow(cor_mat)), function(j) {
     !any(is.na(cor_mat[j, ])) & sum(cor_mat[j,]>.2) > 0#& sum(p_mat_adj[j, ] < 0.1) > 0
   }, logical(1))
-  mat <- cor_mat[which(keep), , drop = FALSE]
-  p_mat_adj = p_mat_adj[which(keep),,drop=FALSE]
+  if (return_matrix) {
+    return(list(cor_mat = cor_mat, p_mat_adj = p_mat_adj,
+                keep = rownames(cor_mat)[keep]))
+  }
+  if (!is.null(rows_show)) {
+    sel <- intersect(rows_show, rownames(cor_mat))
+    mat <- cor_mat[sel, , drop = FALSE]
+    p_mat_adj <- p_mat_adj[sel, , drop = FALSE]
+  } else {
+    mat <- cor_mat[which(keep), , drop = FALSE]
+    p_mat_adj = p_mat_adj[which(keep),,drop=FALSE]
+  }
   sig = matrix("",nrow=nrow(mat),ncol=ncol(mat))
-  sig[p_mat_adj < .1] = "*"
+  sig[!is.na(p_mat_adj) & p_mat_adj < .1] = "*"
 
   # Format row labels: "GROUP_SubtypeName" -> "GROUP: Subtype Name"
   rownames(mat) <- vapply(rownames(mat), function(x) {
@@ -242,8 +259,7 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
   label_overrides <- c(
     "DECODER: Classical Tumor"  = "DECODER: Classical tumor",
     "DECODER: Basal Tumor"      = "DECODER: Basal-like tumor",
-    "Puleo: Pure Basal-like"    = "Puleo Basal-like",
-    "Puleo: tumor Basal-like"   = "Puleo: Basal-like",
+    "Puleo: tumor Basal-like"   = "Puleo: Basal-like tumor",
     "Puleo: tumor Classical"    = "Puleo: Immune Classical"
   )
   hits <- match(rownames(mat), names(label_overrides))
@@ -258,6 +274,9 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
   ph_args <- list(
     mat = mat,
     cluster_cols = FALSE,
+    # A caller-supplied row set arrives already ordered (jointly across the
+    # panels being compared); re-clustering per panel would break that order.
+    cluster_rows = is.null(rows_show),
     color = my_colors,
     breaks = seq(-0.5, 0.5, length.out = 101),
     fontsize = 6,

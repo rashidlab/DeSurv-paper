@@ -8,8 +8,20 @@
 > "Fig 4 (simulations)" below mean what is now Fig. 5. (2) **Fig. 3 panel C no
 > longer exists**: the dichotomized-risk-group KM panel was removed (see
 > docs/LESSONS.md L7) and the supervised-score heatmap is now panel b, so the
-> "3C" instructions below are superseded. Current mapping of figure number to
-> source file is in the table below, which is still correct.
+> "3C" instructions below are superseded. **The mapping tables below are also wrong**
+> (`FIGURE_REGENERATION.md` names `code/09a_figures.R` for the simulations figure,
+> which is built by `code/09c_sim_figures.R`, and neither table lists the treated
+> figure). The verified current mapping is:
+>
+> | Figure | Asset | Script |
+> |---|---|---|
+> | 1 (schema) | `figures/model_schematic_final.pdf` | manual (PowerPoint) |
+> | 2 (factor structure) | `figures/fig3_tcgacptac.pdf` | `code/09a_figures.R` |
+> | 3 (external validation) | `figures/fig4_tcgacptac.pdf` | `code/09a_figures.R` |
+> | 4 (treated cohorts) | `figures/fig_treated_context.pdf` | `code/util_fig_treated_context.R` |
+> | 5 (simulations) | `figures/fig2_tcgacptac.pdf` | `code/09c_sim_figures.R` |
+>
+> Note the asset filenames are permuted against the figure numbers.
 
 The cached model store lives in the **flat `results/` directory** (`RESULTS_DIR <- "results"`,
 `code/00_helpers.R:28` — the `results/precomputed/` path in the stale CLAUDE.md doc is not used).

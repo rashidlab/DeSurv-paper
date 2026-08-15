@@ -43,6 +43,10 @@ def strip_markup(text: str) -> str:
     """Reduce Rmd/LaTeX markup to plain prose without changing sentence count."""
     text = re.sub(r"`r [^`]*`", "<VAL>", text)          # inline R -> single token
     text = re.sub(r"\$[^$]*\$", "<MATH>", text)          # inline math -> single token
+    # Citation groups collapse to one token. Left expanded, a five-key group
+    # adds five words to the count and can trip the length thresholds this
+    # tool exists to audit; the reader sees one superscript run, not five words.
+    text = re.sub(r"\[[^\]]*@[^\]]*\]", "<CITE>", text)
     text = re.sub(r"\\ref\{[^}]*\}", "<REF>", text)
     text = re.sub(r"\\label\{[^}]*\}", "", text)
     text = re.sub(r"\\[a-zA-Z]+\s*", " ", text)          # residual LaTeX commands

@@ -39,6 +39,38 @@ CLAUSE_MARKERS = re.compile(
 )
 
 
+# LaTeX environments whose BODY is not prose. The original version skipped only
+# the \begin and \end lines, which is why si_appendix.Rmd reported 46 \State
+# pseudocode lines and every display-math body as prose paragraphs.
+SKIP_ENVS = {
+    "equation", "align", "gather", "multline", "eqnarray", "displaymath",
+    "algorithmic", "algorithm", "tabular", "tabularx", "table", "figure",
+    "verbatim", "lstlisting", "array", "cases", "split", "pmatrix", "bmatrix",
+}
+ENV_BEGIN = re.compile(r"\\begin\{([a-zA-Z]+)\*?\}")
+ENV_END = re.compile(r"\\end\{([a-zA-Z]+)\*?\}")
+
+# Structural lines that are not prose. \part was absent, so
+# "\part{Supplementary Methods}" survived as a two-word prose paragraph reading
+# "{Supplementary Methods}"; the pseudocode and float-furniture commands were
+# absent for the same reason.
+STRUCT_PREFIXES = (
+    "#", "<!--",
+    "\\part", "\\chapter", "\\section", "\\subsection", "\\subsubsection",
+    "\\paragraph", "\\begin", "\\end",
+    "\\toprule", "\\midrule", "\\bottomrule", "\\addlinespace", "\\hline",
+    "\\cmidrule", "\\multicolumn", "\\caption", "\\label", "\\centering",
+    "\\listoftables", "\\listoffigures", "\\tableofcontents",
+    "\\newpage", "\\clearpage", "\\pagebreak", "\\maketitle", "\\appendix",
+    "\\phantomsection", "\\addcontentsline",
+    "\\input", "\\include", "\\includegraphics", "\\vspace", "\\hspace",
+    "\\State", "\\Statex", "\\Require", "\\Ensure", "\\While", "\\EndWhile",
+    "\\For", "\\EndFor", "\\If", "\\ElsIf", "\\Else", "\\EndIf",
+    "\\Function", "\\EndFunction", "\\Procedure", "\\EndProcedure",
+    "\\Return", "\\Comment", "\\Repeat", "\\Until",
+)
+
+
 def strip_markup(text: str) -> str:
     """Reduce Rmd/LaTeX markup to plain prose without changing sentence count."""
     text = re.sub(r"`r [^`]*`", "<VAL>", text)          # inline R -> single token
@@ -56,10 +88,23 @@ def strip_markup(text: str) -> str:
 
 
 def paragraphs(path: str):
-    """Yield (line_no, raw_text) for prose paragraphs, skipping code chunks."""
-    out, buf, start, in_chunk, in_comment = [], [], None, False, False
-    for i, raw in enumerate(open(path, encoding="utf-8"), 1):
+    """Yield (line_no, raw_text) for prose paragraphs, skipping code chunks,
+    YAML front matter, display math, and non-prose LaTeX environment bodies."""
+    out, buf, start = [], [], None
+    in_chunk = in_comment = in_yaml = in_display = False
+    env_depth = 0
+    lines = open(path, encoding="utf-8").readlines()
+    # YAML front matter: only when the very first line opens it. si_appendix.Rmd
+    # and paper.Rmd both have one; the child .Rmd files do not.
+    if lines and lines[0].strip() == "---":
+        in_yaml = True
+
+    for i, raw in enumerate(lines, 1):
         line = raw.rstrip("\n")
+        if in_yaml:
+            if i > 1 and line.strip() in ("---", "..."):
+                in_yaml = False
+            continue
         if line.startswith("```"):
             in_chunk = not in_chunk
             continue
@@ -74,12 +119,32 @@ def paragraphs(path: str):
         if line.lstrip().startswith("<!--") and "-->" not in line:
             in_comment = True
             continue
+
         stripped = line.strip()
-        # Section headers and pure-LaTeX structural lines are not prose.
-        is_struct = stripped.startswith(("#", "\\section", "\\subsection", "\\begin",
-                                         "\\end", "\\bottomrule", "\\midrule",
-                                         "\\toprule", "\\addlinespace", "<!--"))
-        if not stripped or is_struct:
+
+        # $$ display math, which may span lines.
+        if stripped.startswith("$$"):
+            if stripped.count("$$") == 1:
+                in_display = not in_display
+            continue
+        if in_display:
+            continue
+
+        # Environment BODIES, not just their delimiters. Tracked by depth so a
+        # nested align inside an algorithm does not close the outer one early.
+        if env_depth:
+            if ENV_END.search(line) and ENV_END.search(line).group(1) in SKIP_ENVS:
+                env_depth -= 1
+            continue
+        m = ENV_BEGIN.search(line)
+        if m and m.group(1) in SKIP_ENVS:
+            env_depth += 1
+            if buf:
+                out.append((start, " ".join(buf)))
+                buf, start = [], None
+            continue
+
+        if not stripped or stripped.startswith(STRUCT_PREFIXES):
             if buf:
                 out.append((start, " ".join(buf)))
                 buf, start = [], None
@@ -113,8 +178,69 @@ def sentences(text: str):
     return merged
 
 
+# Fixture reproducing the three incidents this tool has actually mis-reported on
+# si_appendix.Rmd: YAML front matter counted as a prose paragraph, \part
+# surviving as "{Supplementary Methods}", and algorithmic/equation BODIES
+# counted as prose because only the \begin and \end lines were skipped.
+# Perturbation is written from the incidents, not from whatever breaks easiest.
+SELFTEST = '''---
+title: "Supplementary Information"
+output: pdf_document
+---
+
+\\listoftables
+\\newpage
+
+\\part{Supplementary Methods}
+
+\\section{Model details}
+This is the only real prose paragraph in the fixture. It has two sentences.
+
+\\begin{algorithm}
+\\begin{algorithmic}
+\\Require Expression matrix and survival outcomes
+\\State Initialize W and H nonnegatively
+\\Ensure Fitted gene programs
+\\end{algorithmic}
+\\end{algorithm}
+
+\\begin{equation}
+\\mathcal{L} = (1-\\alpha)\\,\\mathcal{L}_{\\mathrm{NMF}} - \\alpha\\,\\mathcal{L}_{\\mathrm{Cox}}
+\\end{equation}
+'''
+
+
+def selftest() -> int:
+    import tempfile, os
+    fd, path = tempfile.mkstemp(suffix=".Rmd")
+    with os.fdopen(fd, "w") as fh:
+        fh.write(SELFTEST)
+    try:
+        paras = paragraphs(path)
+    finally:
+        os.unlink(path)
+    ok = True
+    if len(paras) != 1:
+        print(f"FAIL: expected 1 prose paragraph, got {len(paras)}")
+        for ln, txt in paras:
+            print(f"  L{ln}: {strip_markup(txt)[:70]}")
+        ok = False
+    elif "only real prose paragraph" not in paras[0][1]:
+        print(f"FAIL: wrong paragraph captured: {paras[0][1][:70]}")
+        ok = False
+    else:
+        nw = len(strip_markup(paras[0][1]).split())
+        if nw != 14:
+            print(f"FAIL: expected 14 words, got {nw}")
+            ok = False
+    print("selftest: PASS" if ok else "selftest: FAIL")
+    return 0 if ok else 1
+
+
 def main():
     ap = argparse.ArgumentParser()
+    if "--selftest" in sys.argv:
+        sys.exit(selftest())
     ap.add_argument("file")
     ap.add_argument("--start", type=int, default=1, help="first paragraph (1-based)")
     ap.add_argument("--batch", type=int, default=10, help="paragraphs per batch")

@@ -48,3 +48,6 @@ figures/claude_design_handoff.zip
 # Local preview byproducts of code/util_fig2_standalone.R
 figures/standalone_preview/*-1.png
 figures/standalone_preview/fig_treated_context_preview.pdf
+
+# Python bytecode from the prose-pass utilities in code/
+__pycache__/

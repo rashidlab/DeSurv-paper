@@ -23,8 +23,26 @@ args <- commandArgs(trailingOnly = TRUE)
 pdf  <- if (length(args)) args[1] else "paper/paper.pdf"
 if (!file.exists(pdf)) stop("no such PDF: ", pdf, call. = FALSE)
 
-txt <- paste(system2("pdftotext", c(shQuote(pdf), "-"), stdout = TRUE), collapse = "\n")
+.lines <- system2("pdftotext", c(shQuote(pdf), "-"), stdout = TRUE)
+# Drop standalone page numbers before matching. pdftotext emits each page number
+# as its own line, so when a sentence straddles a page break the number lands in
+# the middle of the running text and defeats fixed-string matching.
+# Real incident 2026-08-15: a prose edit moved the "gene program" definition
+# across a page boundary, rendering as "interpretable gene programs: weighted /
+# 1 / sets of co-varying genes", and this script reported a FAIL for a
+# definition that was present and correctly placed. A false FAIL is not benign
+# here: the script's own message invites the reader to edit DEFINED instead,
+# which would silently retire the check.
+# Order matters: strip the form feed FIRST, because pdftotext glues it to the
+# first word of the next page ("\fsets of co-varying genes") and can also glue
+# it to the page number itself.
+.lines <- gsub("\f", "", .lines)
+.lines <- .lines[!grepl("^\\s*[0-9]{1,3}\\s*$", .lines)]
+txt <- paste(.lines, collapse = "\n")
 txt <- gsub("[ \t]*\n[ \t]*", " ", txt)
+# Removing the page-number line leaves a blank line behind, which collapses to a
+# double space and breaks fixed-string matching just as the form feed did.
+txt <- gsub("[ \t]{2,}", " ", txt)
 
 # Main text only: Introduction through Discussion. Hard-stop at References, or
 # reference titles leak in and produce false flags.

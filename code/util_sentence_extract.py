@@ -130,15 +130,21 @@ def paragraphs(path: str):
         if in_display:
             continue
 
-        # Environment BODIES, not just their delimiters. Tracked by depth so a
-        # nested align inside an algorithm does not close the outer one early.
+        # Environment BODIES, not just their delimiters.
+        # Depth counts EVERY nested environment, not only those in SKIP_ENVS.
+        # Filtering the nested ones by SKIP_ENVS meant \begin{table} was closed
+        # by the inner \end{tabular}, leaking the rest of the float into prose:
+        # si_appendix.Rmd:611-615 surfaced as two junk paragraphs ("}" and the
+        # PACA-AU table note). Counting occurrences rather than testing for one
+        # match also handles a float opened and closed on a single line.
         if env_depth:
-            if ENV_END.search(line) and ENV_END.search(line).group(1) in SKIP_ENVS:
-                env_depth -= 1
+            env_depth = max(0, env_depth + len(ENV_BEGIN.findall(line))
+                                         - len(ENV_END.findall(line)))
             continue
         m = ENV_BEGIN.search(line)
         if m and m.group(1) in SKIP_ENVS:
-            env_depth += 1
+            env_depth = max(0, len(ENV_BEGIN.findall(line))
+                               - len(ENV_END.findall(line)))
             if buf:
                 out.append((start, " ".join(buf)))
                 buf, start = [], None
@@ -207,6 +213,13 @@ This is the only real prose paragraph in the fixture. It has two sentences.
 \\begin{equation}
 \\mathcal{L} = (1-\\alpha)\\,\\mathcal{L}_{\\mathrm{NMF}} - \\alpha\\,\\mathcal{L}_{\\mathrm{Cox}}
 \\end{equation}
+
+\\begin{table}
+\\begin{tabular}{ll}
+Cohort & N \\\\
+\\end{tabular}
+{\\footnotesize A table note that must not be counted as prose.}
+\\end{table}
 '''
 
 

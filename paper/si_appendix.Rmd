@@ -485,7 +485,8 @@ optimal configuration. When fold-level standard errors are available, we apply
 a one-standard-error rule for $k$, selecting the smallest rank whose mean
 performance lies within one standard error of the best. The final DeSurv model
 is refit at the selected parameters using the consensus-based initialization
-described above, and the BO-chosen $n_{\text{top}}$ (when tuned) is used to
+(Consensus initialization for the final model), and the BO-chosen
+$n_{\text{top}}$ (when tuned) is used to
 truncate each program for downstream analysis.
 
 The parameter $n_{\text{top}}$ controls which genes enter the survival linear predictor. After factorization, each sample's score for factor $j$ is computed as $\widetilde{W}_j^\top x$, where $\widetilde{W}_j$ retains only the $n_{\text{top}}$ genes with the largest factor-specificity scores $s_{ij}$ (Supplementary Information, Section \ref{sec:gene-program-correlation}); genes outside this set still shape the factorization but do not enter the linear predictor. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. When $\alpha = 0$ (no survival supervision), gene selection and survival outcomes are decoupled.

@@ -337,10 +337,12 @@ invertible matrix \(R\) with \(W R \ge 0\) and \(R^{-1} H \ge 0\), the factoriza
 reconstruction error, yielding multiple valid solutions
 [@donoho2004nmf; @laurberg2008uniqueness; @gillis2014nmf]. Although normalizing
 columns of \(W\) or rows of \(H\) resolves the trivial scaling ambiguity,
-nonnegative mixing transformations persist, and empirical studies consistently
-show that the sample-loading matrix \(H\) is more sensitive to initialization
-and local minima than the program matrix \(W\)
-[@brunet2004metagenes; @kim2007sparse; @gillis2012accelerated].
+nonnegative mixing transformations persist, so factorizations started from
+different initializations need not agree
+[@brunet2004metagenes; @kim2007sparse; @gillis2012accelerated]. This applies to
+DeSurv as well: individual restarts of the reported model are dispersed, which
+is why the final fit is obtained by a consensus procedure over many restarts
+(Stability of the recovered gene programs).
 
 In DeSurv, survival supervision enters through the projection $Z = W^\top X$ in the partial log-likelihood, so that the gradient of the DeSurv loss with respect to the programs is
 \[
@@ -352,10 +354,9 @@ prognostic structure, favoring programs enriched for survival-relevant variation
 
 By contrast, if supervision were applied to the sample loadings \(H\), the model
 could reduce the Cox loss by redistributing patient-specific coefficients while
-leaving the gene-level programs \(W\) nearly unchanged, a behavior documented in
-multiple supervised variants of NMF and supervised topic models, where
-supervision applied only to the coefficient matrix modifies \(H\) but not the
-basis \(W\) [@cai2011graph; @blei2007slda].
+leaving the gene-level programs \(W\) nearly unchanged, a behavior documented for
+supervised topic models, where supervision applied only to the coefficient
+matrix modifies \(H\) but not the basis \(W\) [@blei2007slda].
 
 Supervising \(W\) also provides a practical advantage for **portability**:
 because \(W\) defines gene-level programs, new samples can be embedded by the
@@ -366,9 +367,8 @@ loadings for external datasets would require solving a nonnegative least-squares
 reproducibility.
 
 Together, these considerations motivate supervising through \(W\), which shapes
-the gene programs toward prognostic directions, stabilizes solutions across
-initializations, and yields biologically interpretable signatures that
-generalize across cohorts.
+the gene programs toward prognostic directions and yields biologically
+interpretable signatures that generalize across cohorts.
 
 
 \section{Cross-validation procedure}
@@ -806,7 +806,7 @@ relative to unsupervised NMF (Table \ref{tab:overall-r2}), a relative loss of
 about $`r sprintf("%.0f", 100 * .gap_c / (100 * .r2c[1]))`$\%. We report the
 centered figure in the main text.
 
-\subsection{The D1 axis is recovered by survival supervision, not by DeSurv specifically}
+\subsection{The D1 axis is not specific to DeSurv}
 
 ```{r suprec-stats, echo=FALSE, message=FALSE, warning=FALSE}
 load_result("supervised_recovery_stats")
@@ -1136,7 +1136,7 @@ frozen-program argument rests on.
 
 # Simulation results under null and mixed scenarios
 
-To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the prognostic scenario (main text Fig. \ref{fig:sim}), prognostic programs explained low variance relative to outcome-neutral background signals, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, survival depended on 300 genes per lethal factor, of which 50% were factor-specific markers and 50% were background genes with loadings shared across all factors. All scenarios used $G = 3{,}000$ genes, $N = 200$ samples, $K = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Materials and Methods). Performance was evaluated using cross-validated concordance index (C-index), precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
+To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the prognostic scenario (main text Fig. \ref{fig:sim}), prognostic programs explained low variance relative to outcome-neutral background signals, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, survival depended on 300 genes per lethal factor, of which 50% were factor-specific markers and 50% were background genes with loadings shared across all factors. All scenarios used $G = 3{,}000$ genes, $N = 200$ samples, $K = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Methods). Performance was evaluated using cross-validated concordance index (C-index), precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
 
 ```{r si-null-alpha, echo=FALSE}
 load_result("sim_figs_by_scenario")

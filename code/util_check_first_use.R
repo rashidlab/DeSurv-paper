@@ -60,7 +60,7 @@ body <- substr(txt, i0, if (length(i1)) max(i1) else lim)
 # ── Terms whose definition is enforced: term -> required phrase near first use ──
 DEFINED <- c(
   "gene program"             = "weighted sets of co-varying genes",
-  "frozen"                   = "are held fixed, or frozen",
+  "frozen"                   = "held fixed, or frozen",
   "representation"           = "together form a representation of the tumor transcriptome",
   "reconstruction error"      = "the mismatch between the measured expression matrix",
   "rank"                      = "the number of programs the factorization extracts",

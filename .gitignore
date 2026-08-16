@@ -51,3 +51,7 @@ figures/standalone_preview/fig_treated_context_preview.pdf
 
 # Python bytecode from the prose-pass utilities in code/
 __pycache__/
+
+# DOCX conversion scratch (regenerate with code/util_knit_to_docx.py)
+paper/.docx_media/
+paper/*.docx.md

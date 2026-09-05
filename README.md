@@ -301,7 +301,7 @@ repository. See `data/README.md` for dataset provenance.
 
 ```bibtex
 @unpublished{young2026desurv,
-  title   = {DeSurv, a survival-supervised matrix factorization, identifies a
+  title   = {{DeSurv}, a survival-supervised matrix factorization, identifies a
              replicable tumor-stroma prognostic architecture in pancreatic cancer},
   author  = {Young, Amber M. and Yurovsky, Alisa and Peng, Xianlu Laura and
              Li, Didong and Yeh, Jen Jen and Rashid, Naim U.},

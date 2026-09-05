@@ -121,7 +121,7 @@ nmf_n2_dl           <- round(nmf_n2$delta_loglik, 2)
 # ── Whole-matrix reconstruction R^2, centered denominator ────────────────────
 # The cached helper reports an UNCENTERED R^2 on a rank matrix, where the grand
 # mean alone carries ~75% of the denominator. Quote the conventional centered
-# value in prose (see R/reconstruction_helpers.R and SI Table S3).
+# value in prose (see R/reconstruction_helpers.R and SI Table \ref{tab:overall-r2}).
 source("R/reconstruction_helpers.R")
 .Xr2      <- as.matrix(read_result("tar_data_filtered_tcgacptac")$ex)
 .fit_d_r2 <- read_result("tar_fit_desurv_tcgacptac")

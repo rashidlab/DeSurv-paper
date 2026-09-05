@@ -5,6 +5,7 @@ author: Amber M. Young, Alisa Yurovsky, Xianlu Laura Peng, Jen Jen Yeh, Didong L
 header-includes:
 - \providecommand{\pandocbounded}[1]{#1}
 - \usepackage{booktabs}
+- \usepackage{array}
 - \usepackage{longtable}
 - \usepackage{multirow}
 - \usepackage{float}
@@ -369,6 +370,68 @@ reproducibility.
 Supervising through \(W\) therefore shapes the gene programs toward prognostic
 directions and yields biologically interpretable signatures that generalize
 across cohorts.
+
+Supplementary Table \ref{tab:architecture} places DeSurv beside the unsupervised
+factorization it extends, the two published survival-supervised factorizations,
+and the two conventional supervised predictors used as comparators, by where
+survival enters each method, what object is learned, and what must happen when
+a new sample arrives. It records architecture only; it does not rank the methods.
+
+```{r tab-architecture, echo=FALSE, results='asis'}
+# Every cell is sourced: DeSurv, standard NMF, supervised PCA and penalized Cox
+# from this manuscript's Methods; CoxNMF from its published objective
+# (arXiv 2008.03776v2, Objective Function section, verified 2026-08-15);
+# SurvNMF from its full text (HAL hal-04975434, JdS 2025, verified 2026-09-05).
+# Where a source does not describe a behaviour the cell says so; a consequence
+# of an objective is stated as an inference in the table note, never as a cell.
+.arch <- data.frame(
+  Method = c("Standard NMF", "DeSurv (this work)", "CoxNMF", "SurvNMF",
+             "Supervised principal components", "Penalized Cox regression"),
+  `Learned representation` = c(
+    "Gene programs $W$ and sample loadings $H$",
+    "Gene programs $W$, sample loadings $H$ and Cox coefficients $\\beta$ on $Z = W^\\top X$",
+    "Basis $W$ (genes) and coefficients $H$ (samples), with Cox coefficients $\\beta$ on $H$",
+    "Sample-side latent matrix and feature matrix (the former is denoted $W$ in SurvNMF's transposed notation; full text)",
+    "Principal components of genes passing a univariate Cox score threshold",
+    "One coefficient vector over genes (a single linear predictor)"),
+  `Where survival enters` = c(
+    "Not in the factorization; Cox fitted afterwards on projected scores (Methods)",
+    "Cox partial likelihood on $Z = W^\\top X$; its gradient acts on $W$ (Methods)",
+    "Cox partial likelihood whose covariates are the columns of $H$ (published objective)",
+    "Cox model fitted jointly on the sample-side latent matrix (full text)",
+    "Gene screening by Cox score before the components are formed (Methods)",
+    "Directly: the objective is the penalized Cox likelihood (Methods)"),
+  `Gene-program basis directly supervised?` = c(
+    "No", "Yes", "No: the Cox term does not depend on $W$ (published objective)",
+    "No: the Cox term is on the sample side (full text)",
+    "No: components are unsupervised on the screened genes", "No gene programs are learned"),
+  `New-sample scoring` = c(
+    "In this study, projection onto the fixed $W$, as for DeSurv (Methods)",
+    "Projection $Z = \\widetilde{W}^\\top X_{\\text{new}}$ with $\\widetilde{W}$ frozen (Methods)",
+    "Not described in the source",
+    "Held-out loadings re-solved by constrained least squares (HALS) with the feature matrix fixed (full text)",
+    "Fixed linear map over the screened genes (Methods)",
+    "Fixed linear predictor (Methods)"),
+  `External latent-variable re-estimation?` = c(
+    "No (projection)", "No", "Not described in the source",
+    "Yes, for held-out samples; reported for simulated data only (full text)",
+    "No", "No"),
+  check.names = FALSE, stringsAsFactors = FALSE)
+knitr::kable(.arch, format = "latex", escape = FALSE, booktabs = TRUE,
+  align = "llllll",
+  caption = paste0(
+    "Where survival supervision enters, and what a new sample requires, for DeSurv and five comparators. ",
+    "Cells for DeSurv, standard NMF, supervised principal components and penalized Cox regression are taken from the Methods of this manuscript; ",
+    "CoxNMF cells from its published objective function and SurvNMF cells from its full text; both works are cited in Methods, Hyperparameter selection and cross-validation. ",
+    "``Not described in the source'' means the cited work does not state the behaviour; no cell is inferred. ",
+    "The table records architecture and does not rank the methods. ",
+    "Note: CoxNMF does not describe a procedure for scoring new samples. The implication that sample-side loadings would need to be obtained for new samples ",
+    "follows from its published objective and is an inference, not a reported implementation. ",
+    "\\label{tab:architecture}")) |>
+  kableExtra::kable_styling(latex_options = c("HOLD_position", "scale_down"), font_size = 9) |>
+  kableExtra::column_spec(1, width = "2.2cm") |>
+  kableExtra::column_spec(2:6, width = "4.1cm")
+```
 
 
 \section{Cross-validation procedure}

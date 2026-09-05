@@ -314,12 +314,20 @@
 % locator actually render under nature.csl (Nature's own preprint format);
 % pandoc's bibtex->CSL conversion silently drops @misc howpublished/url, which
 % left this reference rendering as bare title + year.
+% Verified against full text 2026-09-05 (HAL PDF, 7 pp., a Journees de Statistique
+% 2025 submission; the deposited file is Soumission_JDS_2025-9.pdf and each page is
+% footed "JdS2025"). Notation is transposed relative to this manuscript and to
+% CoxNMF: X is n x p, W is n x K (samples x factors) and H is p x K (features x
+% factors), with X ~ W H^T. The Cox term is fit on W, the sample-side latent
+% matrix. Held-out samples are scored by first estimating W_test under a
+% least-squares criterion with the same constraints via HALS, then applying the
+% fitted beta. No software repository or package is named in the paper.
 @article{le2025survnmf,
   title={SurvNMF: Non-Negative Matrix Factorization supervised for survival data analysis},
   author={Le Goff, Vincent and Guillemot, Vincent and Philippe, Cathy and Deleuze, Jean-Fran{\c{c}}ois and Le Floch, Edith and Gloaguen, Arnaud},
   year={2025},
   journal={Preprint at https://hal.science/hal-04975434},
-  note={HAL preprint hal-04975434v1, accessed 5 August 2026}
+  note={HAL preprint hal-04975434v1, accessed 5 August 2026; full text verified 5 September 2026}
 }
 
 % Checked 2026-08-05 (Crossref + web): no peer-reviewed version located; still an

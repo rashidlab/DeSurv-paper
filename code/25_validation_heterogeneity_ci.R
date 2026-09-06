@@ -184,9 +184,19 @@ I2    <- max(0, (Q - Q_df) / Q)
 .ph_df <- d
 .ph_df$risk_z <- .ph_df$risk_score / sd(.ph_df$risk_score)
 .phz <- cox.zph(coxph(Surv(time, event) ~ risk_z + strata(dataset), data = .ph_df))
+# Direction of the departure: slope of the scaled Schoenfeld residual (the
+# time-varying coefficient estimate) against the transformed time axis used by
+# cox.zph. A negative slope for a positive coefficient means the association
+# attenuates over follow-up; the SI and main text state that direction, so it
+# is cached here rather than asserted from memory.
+.ph_slope <- unname(coef(lm(.phz$y[, 1] ~ .phz$x))[2])
+.ph_coef  <- unname(coef(coxph(Surv(time, event) ~ risk_z + strata(dataset), data = .ph_df))["risk_z"])
 ph <- list(chisq = unname(.phz$table["GLOBAL", "chisq"]),
            df    = unname(.phz$table["GLOBAL", "df"]),
-           p     = unname(.phz$table["GLOBAL", "p"]))
+           p     = unname(.phz$table["GLOBAL", "p"]),
+           slope_time = .ph_slope, coef_risk = .ph_coef,
+           direction = if (sign(.ph_slope) != sign(.ph_coef)) "attenuating" else "strengthening",
+           transform = .phz$transform)
 if (!isTRUE(all.equal(round(ph$chisq, 1), 14.7)) || ph$df != 1)
   stop(sprintf("PH diagnostic no longer matches the SI (chisq %.2f on %g df); reconcile before shipping.",
                ph$chisq, ph$df))

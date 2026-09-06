@@ -958,7 +958,7 @@ By contrast, the leading \emph{unsupervised} direction
 ($|r| = `r sprintf("%.2f", .srcor("Unsupervised PCA"))`$) and instead tracked the
 high-variance D2/D3 stroma--basal axis. This D1 axis is thus shared across survival-supervised methods, not an idiosyncrasy of the DeSurv
 algorithm. Two further observations agree: D1 is unreconstructable from the
-unsupervised NMF basis (Table \ref{tab:projection-r2}), and Lee NMF at matched rank does not recover the restCAF and iCAF marker genes that appear among D1's defining genes (Stromal resolution: which reference programs are recovered from bulk).
+unsupervised NMF basis (Table \ref{tab:projection-r2}), and Lee NMF at matched rank does not recover the restCAF and iCAF marker genes that appear among DeSurv's defining genes (Stromal resolution: which reference programs are recovered from bulk).
 
 ```{r fig-suprec, echo=FALSE, fig.width = 8, fig.height = 3.6, fig.cap = "Independent survival-supervised methods recover the D1 axis; an unsupervised method does not. (a) Absolute correlation (across training-cohort patients) of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox all recover D1 (green), whereas the leading unsupervised principal component does not (grey). (b) Sample-level agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \\label{fig:suprec}", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
 knitr::include_graphics(file.path("..", "figures", "fig_supervised_recovery.pdf"), error = FALSE)
@@ -1040,9 +1040,10 @@ rather than higher predictive accuracy.
 .ph_chisq <- .ph_cache$chisq
 .ph_df    <- .ph_cache$df
 .ph_p     <- .ph_cache$p
+.ph_slope <- .ph_cache$slope_time
 ```
 
-Because the pooled hazard ratio assumes proportional hazards, we tested the scaled Schoenfeld residuals of the stratified validation model ($\mathrm{Surv}(t,\delta) \sim \text{risk\_z} + \mathrm{strata}(\text{dataset})$) with \texttt{survival::cox.zph}. The proportional-hazards assumption was not supported for the standardized DeSurv linear predictor ($\chi^2 = `r sprintf("%.1f", .ph_chisq)`$, $\mathrm{df} = `r .ph_df`$, $P = `r sprintf("%.1e", .ph_p)`$), with the score's association with survival attenuating over follow-up. The reported pooled hazard ratio is therefore a time-averaged summary of that association, not a constant multiplicative effect. The horizon-integrated proper-scoring (IBS/IPA) sensitivity above complements it, integrating prediction accuracy over each cohort's event-time horizon (to the 80th percentile of event times) rather than through a single hazard-ratio summary.
+Because the pooled hazard ratio assumes proportional hazards, we tested the scaled Schoenfeld residuals of the stratified validation model ($\mathrm{Surv}(t,\delta) \sim \text{risk\_z} + \mathrm{strata}(\text{dataset})$) with \texttt{survival::cox.zph}. The proportional-hazards assumption was not supported for the standardized DeSurv linear predictor ($\chi^2 = `r sprintf("%.1f", .ph_chisq)`$, $\mathrm{df} = `r .ph_df`$, $P = `r sprintf("%.1e", .ph_p)`$), with the association attenuating over follow-up (the scaled Schoenfeld residuals, an estimate of the time-varying coefficient, decline with Kaplan--Meier-transformed time, slope $`r sprintf("%.2f", .ph_slope)`$, against a positive coefficient). The reported pooled hazard ratio is therefore a time-averaged summary of that association, not a constant multiplicative effect. The horizon-integrated proper-scoring (IBS/IPA) sensitivity above complements it, integrating prediction accuracy over each cohort's event-time horizon (to the 80th percentile of event times) rather than through a single hazard-ratio summary.
 
 \subsection*{Between-cohort heterogeneity and C-index confidence intervals}
 
@@ -1301,7 +1302,13 @@ null_alpha <- with(sim_figs_by_scenario[[null_i]]$k_hist$data, alpha[method == "
 null_alpha_n <- length(null_alpha); null_alpha_median <- median(null_alpha)
 null_alpha_q1 <- quantile(null_alpha, .25); null_alpha_q3 <- quantile(null_alpha, .75)
 null_alpha_min <- min(null_alpha); null_alpha_max <- max(null_alpha)
+prim_i <- which(sids == "R0_easy" & aids == "bo_tune_ntop")[1]
+.prim_d <- sim_figs_by_scenario[[prim_i]]$k_hist$data
+.prim_prec <- tapply(.prim_d$precision, .prim_d$method, median, na.rm = TRUE)
+.prim_rec  <- tapply(.prim_d$marker_recall_all, .prim_d$method, median, na.rm = TRUE)
 ```
+
+In the prognostic scenario, median matched-factor precision was `r sprintf("%.2f", .prim_prec[["DeSurv"]])` for DeSurv versus `r sprintf("%.2f", .prim_prec[["NMF"]])` for unsupervised NMF, and global marker recall, the fraction of the survival-driving marker genes recovered anywhere in the union of all learned factors' top-$n_{\text{top}}$ gene sets, was `r sprintf("%.2f", .prim_rec[["DeSurv"]])` versus `r sprintf("%.2f", .prim_rec[["NMF"]])`. Recall does not depend on which learned factor carries the genes or on the selected signature size of a single factor, and complements the matched-factor precision reported in main-text Fig. \ref{fig:sim}.
 
 Under the null scenario (Fig. \ref{fig:sim-null-mixed}a--b), DeSurv showed no advantage over unsupervised NMF ($\alpha = 0$): both methods yielded C-index values near 0.5, and selected ranks concentrated at low values (NMF favoring $k = 2$), consistent with the absence of survival signal. DeSurv therefore showed no out-of-sample prognostic discrimination when no survival signal existed. Because the survival objective is uninformative under the null, the cross-validated concordance is essentially flat in $\alpha$ and the Bayesian-optimized supervision strength is unidentified, dispersing across its admissible range rather than concentrating near zero (median $\alpha = `r round(null_alpha_median, 2)`$, IQR $`r round(null_alpha_q1, 2)`$--$`r round(null_alpha_q3, 2)`$; range $`r round(null_alpha_min, 2)`$--$`r round(null_alpha_max, 2)`$ across `r null_alpha_n` replicates). The null-scenario specificity thus reflects the flat concordance surface itself, not the optimizer driving $\alpha$ to zero.
 

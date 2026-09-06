@@ -373,7 +373,7 @@ In DeSurv, survival supervision enters through the projection $Z = W^\top X$ in 
 \[
 \nabla \mathcal{L} = (1-\alpha) \nabla_W \mathcal{L}_{\mathrm{NMF}}(W,H) - \alpha\nabla_W \mathcal{L}_{\mathrm{Cox}}(W,\beta),
 \]
-and therefore the update rule for $W$ as in Equation \ref{eqn:W_update} relies on both the reconstruction term and the supervision term. As such, the gene-program definitions are directly shaped by their association with survival. This term biases the updates toward the survival gradient.
+and accordingly the update for $W$ in Equation \ref{eqn:W_update} relies on both the reconstruction term and the supervision term. As such, the gene-program definitions are directly shaped by their association with survival. The supervision term therefore shifts the update toward the survival gradient.
 
 By contrast, if supervision were applied to the sample loadings \(H\), the model
 could reduce the Cox loss by redistributing patient-specific coefficients while
@@ -382,8 +382,7 @@ supervised topic models, where supervision applied only to the coefficient
 matrix modifies \(H\) but not the basis \(W\) [@blei2007slda].
 
 Supervising \(W\) also provides a practical advantage for **portability**:
-because \(W\) defines gene-level programs, new samples can be embedded by the
-closed-form projection \(Z_{\text{new}} = W^\top X_{\text{new}}\). Supervising \(H\)
+because \(W\) defines gene-level programs, new samples can be scored directly by the projection \(Z_{\text{new}} = W^\top X_{\text{new}}\). Supervising \(H\)
 would not yield such a mapping: obtaining sample loadings for external datasets
 would require an additional sample-specific estimation step, a nonnegative least-squares (NNLS) problem for each new sample.
 
@@ -955,7 +954,7 @@ By contrast, the leading \emph{unsupervised} direction
 (the first principal component, a variance-dominant unsupervised direction) was only weakly correlated with D1
 ($|r| = `r sprintf("%.2f", .srcor("Unsupervised PCA"))`$) and instead tracked the
 high-variance D2/D3 stroma--basal axis. This D1 axis is thus shared across survival-supervised methods, not an idiosyncrasy of the DeSurv
-algorithm. Two further observations agree: D1 is unreconstructable from the
+algorithm. Two additional findings are consistent with this conclusion: D1 is unreconstructable from the
 unsupervised NMF basis (Table \ref{tab:projection-r2}), and Lee NMF at matched rank does not recover the restCAF and iCAF marker genes that appear among DeSurv's defining genes (Stromal resolution: which reference programs are recovered from bulk).
 
 ```{r fig-suprec, echo=FALSE, fig.width = 8, fig.height = 3.6, fig.cap = "Independent survival-supervised methods recover the D1 axis; an unsupervised method does not. (a) Absolute correlation (across training-cohort patients) of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox all recover D1 (green), whereas the leading unsupervised principal component does not (grey). (b) Sample-level agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \\label{fig:suprec}", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
@@ -975,7 +974,7 @@ load_result("desurv_vs_supervised_tuned")
 
 \subsection{Robustness to tuned supervised comparators and compartment attribution}
 
-The recovery above establishes the D1 axis as a survival-associated expression direction shared across supervised methods; here we ask what DeSurv adds beyond recovering it, using canonical, independently tuned comparators in place of the simple single-component versions above: supervised principal components (\texttt{superpc}; Bair--Tibshirani, with cross-validated screening threshold and component number) and penalized (lasso) Cox (\texttt{glmnet}, a single $\lambda_{\min}$ model). Cox partial least squares was not re-run in this pass, as a validated multi-component implementation was unavailable in our environment; the two canonical methods are sufficient. Every method began from the same 1,970-gene training-only expression/variance universe and performed its own feature selection; DeSurv was scored with its Bayesian-optimization-selected top-270-per-factor programs; all scoring used the frozen, rank-transformed transfer with no validation refitting.
+The analyses above establish D1 as a survival-associated expression direction shared across supervised methods; here we ask what DeSurv adds beyond recovering that direction, using canonical, independently tuned comparators in place of the simple single-component versions above: supervised principal components (\texttt{superpc}; Bair--Tibshirani, with cross-validated screening threshold and component number) and penalized (lasso) Cox (\texttt{glmnet}, a single $\lambda_{\min}$ model). Cox partial least squares was not included in this comparison because a validated multi-component implementation was unavailable in our environment. All methods used the same 1,970-gene universe selected from the training data by expression and variance and performed its own feature selection; DeSurv was scored with its Bayesian-optimization-selected top-270-per-factor programs; all scoring used the frozen, rank-transformed transfer with no validation refitting.
 
 External discrimination was similar: the pooled frozen-transfer C-index was $`r .stvp("DeSurv full LP")`$ for the DeSurv linear predictor, $`r .stvp("Supervised PCA")`$ for supervised PCA, and $`r .stvp("Sparse Cox")`$ for penalized Cox. Consistent with the score-level recovery above, both tuned methods aligned with the D1 direction (training $|r| = `r .stva("Sparse Cox","D1")`$ for penalized Cox and $`r .stva("Supervised PCA","D1")`$ for supervised PCA) and with the DeSurv linear predictor ($|r| = `r .stva("Sparse Cox","fullLP")`$ for penalized Cox and $`r .stva("Supervised PCA","fullLP")`$ for supervised PCA), but were only weakly correlated with the activated-stroma/proCAF program D2 ($|r| = `r .stva("Sparse Cox","D2")`$ for penalized Cox and $`r .stva("Supervised PCA","D2")`$ for supervised PCA): a single supervised risk axis captures the dominant tumour-axis signal but not the separate stromal program.
 
@@ -999,8 +998,7 @@ recalibrating only its scalar slope and baseline hazard
 within each cohort and scoring over that cohort's follow-up. For a single
 time-invariant risk score under proportional hazards the monotone score-to-survival
 map preserves the concordance ordering, so Antolini's time-dependent concordance
-coincides with Harrell's C; the additive quantity is therefore the proper score, not
-a second concordance.
+coincides with Harrell's C; the additional performance measure is therefore the proper score rather than a second concordance statistic.
 
 Across the `r nrow(.br$per_cohort)` cohorts the DeSurv predictor achieved an
 event-weighted integrated Brier score of `r sprintf("%.3f", .brp["ibs"])` versus
@@ -1012,7 +1010,7 @@ cohort's IBS is integrated over its own event-time horizon, this pooled value is
 descriptive event-weighted summary rather than a single common-horizon proper score,
 and the per-cohort IPA range is the more directly interpretable quantity.
 
-Two caveats bound this analysis. First, the recalibration
+Two caveats limit the interpretation of this analysis. First, the recalibration
 step estimates both the scalar slope and the baseline hazard from each cohort's
 own outcomes, so unlike the C-index and hazard-ratio analyses, which use a fully
 frozen predictor, this sensitivity evaluates the transported score direction
@@ -1349,7 +1347,7 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 # Factor structure of the rank-optimized unsupervised control ($k = 7$)
 
-Throughout the main text, both DeSurv and Lee NMF were fit at the same rank ($k = 3$), enabling a controlled comparison of the effect of survival supervision on factor structure. When the unsupervised limit of the same pipeline selects its own rank, Bayesian optimization at $\alpha = 0$ selects $k = 7$ (the rank-optimized unsupervised control), whereas the one-standard-error rule applied to the supervised DeSurv BO results selects $k = 3$. We examine here the NMF factor structure at this independently selected $k = 7$ to characterize how the additional factors relate to established programs when supervision is absent (Fig. \ref{fig:fig-nmf-k7-heatmap}).
+Throughout the main text, both DeSurv and Lee NMF were fit at the same rank ($k = 3$), enabling a controlled comparison of the effect of survival supervision on factor structure. When the unsupervised limit of the same pipeline selects its own rank, Bayesian optimization at $\alpha = 0$ selects $k = 7$ (the rank-optimized unsupervised control), whereas the one-standard-error rule applied to the supervised DeSurv BO results selects $k = 3$. We therefore examine the factor structure of this independently selected $k = 7$ solution to characterize how the additional factors relate to established programs when supervision is absent (Fig. \ref{fig:fig-nmf-k7-heatmap}).
 
 At BO-selected $k = 7$ under $\alpha = 0$ (Fig. \ref{fig:fig-nmf-k7-heatmap}), the rank-optimized unsupervised control corresponds to a broader set of PDAC gene signatures than the matched-rank $k = 3$ solution, with some programs represented by more than one factor; Supplementary Fig. \ref{fig:fig-rpm} quantifies the accompanying changes in coverage and multiplicity.
 
@@ -1415,7 +1413,7 @@ cindex_wide <- fmt_cindex(val_cindex_desurv_tcgacptac, "DeSurv (K=3)") %>%
 # the explicit one nor is silently relied upon in its place.
 knitr::opts_current$set(label = "tab-cindex-comparison-auto")
 kable(cindex_wide, format = "latex", booktabs = TRUE, linesep = "", escape = FALSE,
-      caption = "External validation C-index by method and cohort. DeSurv at the one-standard-error-selected rank ($k = 3$) is compared with Lee NMF at matched rank ($k = 3$) and at elbow-selected rank ($k = 5$), with the matched-budget unsupervised control ($k = 3$, $\\alpha = 0$) and with the rank-optimized unsupervised control ($k = 7$, $\\alpha = 0$). The unsupervised columns are not all produced by one implementation: the two Lee NMF columns are \\texttt{NMF::nmf}, whereas the two controls are the DeSurv optimizer run at $\\alpha = 0$ with the same consensus-initialization procedure as the supervised model. The matched-budget column is the tuning-budget control: it holds rank, optimizer, consensus-initialization procedure and Bayesian-optimization budget fixed, re-optimizes the remaining hyperparameters with $\\alpha$ fixed at 0, and thereby varies only supervision, and it does not improve on \\texttt{NMF::nmf} at the same rank. Higher values indicate better discrimination. All columns are scored on the same union-of-top-genes support ($n_{\\text{top}} = 270$). \\label{tab:tab-cindex-comparison}") |>
+      caption = "External validation C-index by method and cohort. DeSurv at the one-standard-error-selected rank ($k = 3$) is compared with Lee NMF at matched rank ($k = 3$) and at elbow-selected rank ($k = 5$), with the matched-budget unsupervised control ($k = 3$, $\\alpha = 0$) and with the rank-optimized unsupervised control ($k = 7$, $\\alpha = 0$). The unsupervised columns are not all produced by one implementation: the two Lee NMF columns are \\texttt{NMF::nmf}, whereas the two controls are the DeSurv optimizer run at $\\alpha = 0$ with the same consensus-initialization procedure as the supervised model. The matched-budget column is the tuning-budget control: it holds rank, optimizer, consensus-initialization procedure and Bayesian-optimization budget fixed while re-optimizing the remaining hyperparameters with $\\alpha = 0$. It therefore varies only supervision and does not improve on \\texttt{NMF::nmf} at the same rank. Higher values indicate better discrimination. All columns are scored on the same union-of-top-genes support ($n_{\\text{top}} = 270$). \\label{tab:tab-cindex-comparison}") |>
   kable_styling(latex_options = c("HOLD_position", "scale_down"))
 ```
 
@@ -1521,8 +1519,7 @@ same rank, while still recovering D2
 likewise no better than \texttt{NMF::nmf} at $k = 3$
 (Table \ref{tab:tab-cindex-comparison}). A sensitivity analysis holding the
 supervised model's own $\lambda$, $\xi$ and $n_{\text{top}}$ fixed and varying
-only $\alpha$ gave the same conclusion. Matching the tuning budget therefore
-does not close the representational gap, which supports supervision, rather than tuning effort alone, as the source of the reorganization reported in the main text.
+only $\alpha$ gave the same conclusion. Matching the tuning budget therefore does not close the representational gap, supporting survival supervision rather than tuning effort alone as the source of the reorganization reported in the main text.
 
 Lee NMF at elbow-selected $k = 5$ and the rank-optimized unsupervised control at $k = 7$ both substantially improve over Lee NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}); additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, the rank-optimized control matches or exceeds DeSurv's per-cohort C-index in most cohorts, indicating that unsupervised factorization can approach supervised concordance given enough factors. This comes at the cost of a less parsimonious factorization: the $k = 7$ control represents a broader set of established programs across seven factors (Fig. \ref{fig:fig-nmf-k7-heatmap}; Supplementary Fig. \ref{fig:fig-rpm}) rather than concentrating the prognostic signal in three programs. The DeSurv linear predictor, by contrast, retains significant prognostic value after adjustment for established classifiers with only three factors (main-text Table \ref{tab:hr-adjusted}).
 
@@ -1607,13 +1604,13 @@ load_result("treated_cohort_stats")
 
 The programs were learned in treatment-naive, non-metastatic PDAC, the setting in which the gene-program matrix $W$ and Cox coefficients $\beta$ were trained. As a translational test we projected the fixed programs, without retraining, into independently treated PDAC and asked whether they retained clinically relevant associations. We used two resources. First, the O'Kane/COMPASS cohort of treated metastatic PDAC (laser-capture microdissected and therefore epithelial-enriched), which supports a transportability test of the tumor-associated $D_1$ direction under a model stratified by treatment arm (Fig.\ \ref{fig:treated}a). Second, the borderline-resectable / locally advanced Linehan cohort, in which paired pre- and post-treatment biopsies allow a within-patient test of whether the stromal $D_2$ program changes with therapy (Fig.\ \ref{fig:treated}b).
 
-Both are analysed within a single cohort; no estimate is pooled across cohorts. Within O'Kane/COMPASS, arm-specific estimates are reported alongside a common $D_1$ slope from a Cox model stratified by treatment arm, which allows arm-specific baseline hazards. The elastic-net penalty shrank the trained survival coefficient for $D_2$ to exactly zero in the treatment-naive model (an estimated selection outcome, not an imposed constraint), so the paired analysis is reported as a change in program level and not as evidence that $D_2$ predicts survival.
+Each analysis is confined to a single cohort; no estimate is pooled across cohorts. Within O'Kane/COMPASS, arm-specific estimates are reported alongside a common $D_1$ slope from a Cox model stratified by treatment arm, which allows arm-specific baseline hazards. The elastic-net penalty shrank the trained survival coefficient for $D_2$ to exactly zero in the treatment-naive model (an estimated selection outcome, not an imposed constraint), so the paired analysis is reported as a change in program level and not as evidence that $D_2$ predicts survival.
 
 
 
 \subsection{Prognostic transportability of D1 in treated metastatic disease}
 
-To evaluate transportability in treated metastatic disease while retaining treatment-arm structure, we projected the frozen DeSurv programs into the O'Kane/COMPASS cohort and first estimated $D_1$ associations separately within each arm. Higher $D_1$ scores were associated with lower hazard in the same direction in FOLFIRINOX (HR per SD `r .oka("FFX")`), gemcitabine/nab-paclitaxel (HR `r .oka("GA")`) and the GA/experimental arm (HR `r .oka("GA/experimental")`; Fig.\ \ref{fig:treated}a). An arm-stratified Cox model allowing treatment-specific baseline hazards yielded a common association of HR `r sprintf("$%.2f$ ($%.2f$--$%.2f$)", .tcs$okane$stratified["hr"], .tcs$okane$stratified["lo"], .tcs$okane$stratified["hi"])` ($P = `r .pfmt(.tcs$okane$stratified["p"])`$; `r .tcs$okane$n` patients, `r .tcs$okane$events` deaths), with no evidence of heterogeneity across treatment arms (interaction $P = `r sprintf("%.2f", .tcs$okane$interaction_p)`$). Because these specimens were epithelial-enriched by laser-capture microdissection, this analysis specifically tests transportability of the tumor-associated $D_1$ direction rather than the stromal programs.
+To evaluate transportability in treated metastatic disease while retaining treatment-arm structure, we projected the frozen DeSurv programs into the O'Kane/COMPASS cohort and first estimated $D_1$ associations separately within each arm. Higher $D_1$ scores had protective point estimates in all three treatment arms: FOLFIRINOX (HR per SD `r .oka("FFX")`), gemcitabine/nab-paclitaxel (HR `r .oka("GA")`) and the GA/experimental arm (HR `r .oka("GA/experimental")`; Fig.\ \ref{fig:treated}a). An arm-stratified Cox model allowing treatment-specific baseline hazards yielded a common association of HR `r sprintf("$%.2f$ ($%.2f$--$%.2f$)", .tcs$okane$stratified["hr"], .tcs$okane$stratified["lo"], .tcs$okane$stratified["hi"])` ($P = `r .pfmt(.tcs$okane$stratified["p"])`$; `r .tcs$okane$n` patients, `r .tcs$okane$events` deaths), with no evidence of heterogeneity across treatment arms (interaction $P = `r sprintf("%.2f", .tcs$okane$interaction_p)`$). Because these specimens were epithelial-enriched by laser-capture microdissection, this analysis specifically tests transportability of the tumor-associated $D_1$ direction rather than the stromal programs.
 
 \subsection{Treatment-associated change in D2}
 
@@ -1621,4 +1618,4 @@ In the `r .tcs$paired$n` Linehan patients with paired pre- and post-treatment bi
 
 \subsection{Caveats}
 
-These analyses are exploratory and prognostic, not predictive: treatment, stage and cohort are confounded, the treated cohorts are modestly sized, and no analysis plan was preregistered. Each analysis is confined to a single cohort; nothing is pooled across cohorts, and the O'Kane/COMPASS common slope is shared across arms and estimated with arm-specific baseline hazards; it is not a pooled estimate across cohorts. We do not test a survival association for $D_2$ in the paired bulk-treatment cohort; the O'Kane/COMPASS specimens are laser-capture epithelium, not bulk tissue. Robust treated-cohort validation, and any assessment of whether the programs predict differential treatment benefit, will require larger harmonized series with adequately powered treatment-by-program interaction analyses.
+These analyses are exploratory and prognostic, not predictive: treatment, stage and cohort are confounded, the treated cohorts are modestly sized, and no analysis plan was preregistered. Each analysis is confined to a single cohort; nothing is pooled across cohorts, and the O'Kane/COMPASS common slope is estimated from a model with arm-specific baseline hazards; it is not a pooled estimate across cohorts. We do not test a survival association for $D_2$ in the paired bulk-treatment cohort; the O'Kane/COMPASS specimens are laser-capture epithelium, not bulk tissue. Robust treated-cohort validation, and any assessment of whether the programs predict differential treatment benefit, will require larger harmonized series with adequately powered treatment-by-program interaction analyses.

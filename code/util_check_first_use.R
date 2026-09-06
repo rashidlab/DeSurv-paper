@@ -89,11 +89,22 @@ ACCEPTED <- c(
 fail <- character(0)
 cat("\n=== FIRST-USE CHECK (Introduction through Discussion) ===\n\n")
 
+# pdftotext deletes a hyphen that falls at a line end and joins the halves
+# ("co-varying" -> "covarying", "reconstruction-driven" -> "reconstructiondriven").
+# Real incident 2026-09-06: a prose edit reflowed the Introduction so that
+# "co-varying" broke across lines, and the "gene program" definition reported a
+# FAIL although it was present and unchanged. Same family as the page-number
+# and form-feed artifacts above. Hyphens are therefore removed from BOTH the
+# rendered text and the enforced phrases before matching; positions are taken
+# from the hyphen-free text so the window stays aligned.
+nohy   <- function(x) gsub("-", "", x, fixed = TRUE)
+body_n <- nohy(body)
+
 for (tm in names(DEFINED)) {
-  m <- regexpr(tm, body, ignore.case = TRUE)
+  m <- regexpr(nohy(tm), body_n, ignore.case = TRUE)
   if (m < 0) { cat(sprintf("[skip] %-26s not present in main text\n", tm)); next }
-  win <- substr(body, max(1, m - 240), min(nchar(body), m + 320))
-  if (grepl(DEFINED[[tm]], win, fixed = TRUE)) {
+  win <- substr(body_n, max(1, m - 240), min(nchar(body_n), m + 320))
+  if (grepl(nohy(DEFINED[[tm]]), win, fixed = TRUE)) {
     cat(sprintf("[ok  ] %-26s defined at first use\n", tm))
   } else {
     cat(sprintf("[FAIL] %-26s definition MISSING at first use\n         expected: \"%s\"\n         context : ...%s...\n",
@@ -102,7 +113,7 @@ for (tm in names(DEFINED)) {
   }
 }
 for (tm in names(ACCEPTED)) {
-  if (regexpr(tm, body, ignore.case = TRUE) > 0)
+  if (regexpr(nohy(tm), body_n, ignore.case = TRUE) > 0)
     cat(sprintf("[accepted] %-22s %s\n", tm, ACCEPTED[[tm]]))
 }
 

@@ -123,7 +123,9 @@ summarize_multiplicity <- function(W, ntop = ntop_value) {
   multiplicity <- if (coverage > 0) edges / coverage else NA_real_
 
   list(coverage = coverage, edges = edges, multiplicity = multiplicity,
-       n_factors = ncol(W), universe_size = nrow(cor_mat), cor_mat = cor_mat)
+       max_rho = max(cor_mat, na.rm = TRUE),   # largest signed rho over programs x factors
+       n_factors = ncol(W), universe_size = nrow(cor_mat), cor_mat = cor_mat,
+       ref_sigs = hm$ref_sigs)
 }
 
 # Reference-program universe size is fixed by top_genes/the renaming+dedup
@@ -152,7 +154,8 @@ for (k_i in k_grid) {
   universe_sizes <- c(universe_sizes, m_un$universe_size)
   per_config_rows[[length(per_config_rows) + 1]] <- data.frame(
     k = k_i, alpha = 0, arm = "unsupervised",
-    coverage = m_un$coverage, edges = m_un$edges, multiplicity = m_un$multiplicity
+    coverage = m_un$coverage, edges = m_un$edges, multiplicity = m_un$multiplicity,
+    max_rho = m_un$max_rho
   )
 
   # Supervised arm: best alpha by mean CV C-index at this k (same convention
@@ -179,7 +182,8 @@ for (k_i in k_grid) {
   universe_sizes <- c(universe_sizes, m_sup$universe_size)
   per_config_rows[[length(per_config_rows) + 1]] <- data.frame(
     k = k_i, alpha = best_alpha_k, arm = "supervised",
-    coverage = m_sup$coverage, edges = m_sup$edges, multiplicity = m_sup$multiplicity
+    coverage = m_sup$coverage, edges = m_sup$edges, multiplicity = m_sup$multiplicity,
+    max_rho = m_sup$max_rho
   )
 }
 
@@ -225,7 +229,24 @@ metadata <- list(
   top_genes_source        = top_genes_path
 )
 
-out <- list(per_config = per_config, anchors = anchors, metadata = metadata)
+# ── Reference universe as actually used (renamed, de-duplicated inside the
+#    helper), for the SI table: raw name, display label, source group, gene
+#    count, and how many of those genes are in the 1,970-gene analysis set. ──
+analysis_genes <- rownames(load_precomputed("tar_data_filtered_tcgacptac")$ex)
+ref_sigs <- m_desurv_k3$ref_sigs
+stopifnot(length(ref_sigs) == unique(universe_sizes),
+          identical(names(ref_sigs), rownames(m_desurv_k3$cor_mat)))
+universe <- data.frame(
+  raw_name        = names(ref_sigs),
+  display_label   = format_reference_labels(names(ref_sigs)),
+  source_group    = sub("_.*$", "", names(ref_sigs)),
+  n_genes         = unname(lengths(ref_sigs)),
+  n_in_analysis   = unname(vapply(ref_sigs, function(g) sum(g %in% analysis_genes), integer(1))),
+  stringsAsFactors = FALSE)
+stopifnot("display labels are not unique" = !any(duplicated(universe$display_label)))
+
+out <- list(per_config = per_config, anchors = anchors, metadata = metadata,
+            universe = universe)
 saveRDS(out, file.path(RESULTS_DIR, "reference_program_multiplicity.rds"))
 message(sprintf("Saved %s", file.path(RESULTS_DIR, "reference_program_multiplicity.rds")))
 

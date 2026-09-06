@@ -138,6 +138,34 @@ extract_gp_curve_maxed <- function(bo_results, ci_level = 0.95,
   )
 }
 
+# Display label for a raw reference-program name ("GROUP_SubtypeName" ->
+# "GROUP: Subtype Name"), with explicit overrides where the automatic form is
+# wrong. Used by make_gene_overlap_heatmap() (Fig. 2, Figs S6-S8) and by
+# code/24 for the SI reference-universe table.
+# NOTE the two Puleo tumor-compartment signatures (Puleo_tumor_*) are distinct
+# from the five Puleo whole-tumor components (Puleo_*); an earlier override
+# mislabelled Puleo_tumor_Classical as "Immune Classical".
+format_reference_labels <- function(x) {
+  out <- vapply(x, function(v) {
+    idx <- regexpr("_", v)
+    if (idx == -1L) return(v)
+    group <- substr(v, 1, idx - 1L)
+    sub   <- substr(v, idx + 1L, nchar(v))
+    sub   <- gsub("_", " ", sub)
+    sub   <- gsub("([a-z])([A-Z][a-z])", "\\1 \\2", sub)
+    paste0(group, ": ", sub)
+  }, character(1))
+  label_overrides <- c(
+    "DECODER: Classical Tumor"  = "DECODER: Classical tumor",
+    "DECODER: Basal Tumor"      = "DECODER: Basal-like tumor",
+    "Puleo: tumor Basal-like"   = "Puleo: Basal-like tumor",
+    "Puleo: tumor Classical"    = "Puleo: Classical tumor"
+  )
+  hits <- match(out, names(label_overrides))
+  out[!is.na(hits)] <- label_overrides[hits[!is.na(hits)]]
+  unname(out)
+}
+
 make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_labels = NULL, title = NULL, fontsize_row = 6,
                                      rows_show = NULL, return_matrix = FALSE){
   # rows_show: raw reference-program names (pre-label-formatting) to display, in
@@ -231,7 +259,8 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
   }, logical(1))
   if (return_matrix) {
     return(list(cor_mat = cor_mat, p_mat_adj = p_mat_adj,
-                keep = rownames(cor_mat)[keep]))
+                keep = rownames(cor_mat)[keep],
+                ref_sigs = ref_sigs))   # the renamed, de-duplicated reference universe
   }
   if (!is.null(rows_show)) {
     sel <- intersect(rows_show, rownames(cor_mat))
@@ -244,26 +273,9 @@ make_gene_overlap_heatmap = function(fit_desurv, tops, top_genes_ref, factor_lab
   sig = matrix("",nrow=nrow(mat),ncol=ncol(mat))
   sig[!is.na(p_mat_adj) & p_mat_adj < .1] = "*"
 
-  # Format row labels: "GROUP_SubtypeName" -> "GROUP: Subtype Name"
-  rownames(mat) <- vapply(rownames(mat), function(x) {
-    idx <- regexpr("_", x)
-    if (idx == -1L) return(x)
-    group <- substr(x, 1, idx - 1L)
-    sub   <- substr(x, idx + 1L, nchar(x))
-    sub   <- gsub("_", " ", sub)
-    sub   <- gsub("([a-z])([A-Z][a-z])", "\\1 \\2", sub)
-    paste0(group, ": ", sub)
-  }, character(1))
-
-  # Explicit label overrides where auto-formatting doesn't produce the desired name
-  label_overrides <- c(
-    "DECODER: Classical Tumor"  = "DECODER: Classical tumor",
-    "DECODER: Basal Tumor"      = "DECODER: Basal-like tumor",
-    "Puleo: tumor Basal-like"   = "Puleo: Basal-like tumor",
-    "Puleo: tumor Classical"    = "Puleo: Immune Classical"
-  )
-  hits <- match(rownames(mat), names(label_overrides))
-  rownames(mat)[!is.na(hits)] <- label_overrides[hits[!is.na(hits)]]
+  # Display labels: shared with code/24 (reference-universe table) so the
+  # figures and the SI table cannot drift apart.
+  rownames(mat) <- format_reference_labels(rownames(mat))
 
   colnames(mat) = paste0("F",1:ncol(mat))
   if (!is.null(factor_labels) && length(factor_labels) == ncol(mat)) {

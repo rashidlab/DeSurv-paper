@@ -644,9 +644,9 @@ required no additional dataset-specific filtering beyond survival QC.
 Across cohorts, samples without valid survival outcomes (nonpositive time,
 missing time, or missing event indicator) were removed. Expression matrices
 were analyzed on a log scale: RNA-seq cohorts as log$_2$(TPM + 1); microarray cohorts in platform-normalized log-scale intensities. For each training cohort (TCGA-PAAD and CPTAC) separately, genes were ranked
-by mean expression and by variance independently; the 3,000 genes with the
-lowest sum of these two ranks were retained, selecting genes that are both
-highly expressed and highly variable.
+in descending order of mean expression and, independently, of variance; the
+3,000 genes with the lowest sum of these two ranks were retained, selecting
+genes that are both highly expressed and highly variable.
 The intersection of these two gene sets yielded 1,970 genes used for model
 training. Validation datasets were restricted to this same 1,970-gene set.
 

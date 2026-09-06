@@ -410,7 +410,7 @@ plot_3e <- ggplot(.g6$points, aes(x = factor(gata6), y = D1)) +
   geom_boxplot(outlier.shape = NA, width = 0.6, fill = "grey92", linewidth = 0.3) +
   geom_jitter(width = 0.12, height = 0, size = 1.3, alpha = 0.75, colour = desurv_accent) +
   annotate("text", x = 0.6, y = max(.g6$points$D1), hjust = 0, vjust = 1, size = 2.9,
-           label = sprintf("Spearman~italic(r)==%.2f", .g6$rho), parse = TRUE) +
+           label = sprintf("Spearman~rho==%.2f", .g6$rho), parse = TRUE) +
   annotate("text", x = 0.6, y = max(.g6$points$D1) - 0.45, hjust = 0, vjust = 1, size = 2.9,
            label = sprintf("italic(P)<0.001*','~n==%d", .g6$n), parse = TRUE) +
   labs(x = "GATA6 RNA-ISH level", y = "DeSurv D1 score (z)") +
@@ -568,7 +568,7 @@ km_legend_gg   <- ggplotGrob(km_legend_plot)
 km_legend_grob <- km_legend_gg$grobs[
   sapply(km_legend_gg$grobs, function(x) x$name) == "guide-box"][[1]]
 
-## Fig 3C: tuned supervised scores vs DeSurv programs (|Spearman r|; axis_decomposition cache)
+## Fig 3C: tuned supervised scores vs DeSurv programs (|Pearson r|; axis_decomposition cache)
 .axd <- readRDS("results/desurv_vs_supervised_tuned.rds")$axis_decomposition
 .hm_df <- data.frame(
   method  = factor(rep(c("Supervised PCA", "Penalized Cox"), each = 3),

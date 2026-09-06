@@ -976,9 +976,9 @@ load_result("desurv_vs_supervised_tuned")
 
 The analyses above establish D1 as a survival-associated expression direction shared across supervised methods; here we ask what DeSurv adds beyond recovering that direction, using canonical, independently tuned comparators in place of the simple single-component versions above: supervised principal components (\texttt{superpc}; Bair--Tibshirani, with cross-validated screening threshold and component number) and penalized (lasso) Cox (\texttt{glmnet}, a single $\lambda_{\min}$ model). Cox partial least squares was not included in this comparison because a validated multi-component implementation was unavailable in our environment. All methods used the same 1,970-gene universe selected from the training data by expression and variance and performed its own feature selection; DeSurv was scored with its Bayesian-optimization-selected top-270-per-factor programs; all scoring used the frozen, rank-transformed transfer with no validation refitting.
 
-External discrimination was similar: the pooled frozen-transfer C-index was $`r .stvp("DeSurv full LP")`$ for the DeSurv linear predictor, $`r .stvp("Supervised PCA")`$ for supervised PCA, and $`r .stvp("Sparse Cox")`$ for penalized Cox. Consistent with the score-level recovery above, both tuned methods aligned with the D1 direction (training $|r| = `r .stva("Sparse Cox","D1")`$ for penalized Cox and $`r .stva("Supervised PCA","D1")`$ for supervised PCA) and with the DeSurv linear predictor ($|r| = `r .stva("Sparse Cox","fullLP")`$ for penalized Cox and $`r .stva("Supervised PCA","fullLP")`$ for supervised PCA), but were only weakly correlated with the activated-stroma/proCAF program D2 ($|r| = `r .stva("Sparse Cox","D2")`$ for penalized Cox and $`r .stva("Supervised PCA","D2")`$ for supervised PCA): a single supervised risk axis captures the dominant tumour-axis signal but not the separate stromal program.
+External discrimination was similar: the pooled frozen-transfer C-index was $`r .stvp("DeSurv full LP")`$ for the DeSurv linear predictor, $`r .stvp("Supervised PCA")`$ for supervised PCA, and $`r .stvp("Sparse Cox")`$ for penalized Cox. Consistent with the score-level recovery above, both tuned methods aligned with the D1 direction (training $|r| = `r .stva("Sparse Cox","D1")`$ for penalized Cox and $`r .stva("Supervised PCA","D1")`$ for supervised PCA) and with the DeSurv linear predictor ($|r| = `r .stva("Sparse Cox","fullLP")`$ for penalized Cox and $`r .stva("Supervised PCA","fullLP")`$ for supervised PCA), but were only weakly correlated with the activated-stroma/proCAF program D2 ($|r| = `r .stva("Sparse Cox","D2")`$ for penalized Cox and $`r .stva("Supervised PCA","D2")`$ for supervised PCA): a single supervised risk axis captures the dominant tumor-axis signal but not the separate stromal program.
 
-The compartment attribution made this explicit. Because D1 runs from a classical-tumour, restraining-stroma protective pole to a basal-like high-risk pole, a sparse supervised risk score aligned with D1 is naturally composed of basal-like tumour markers. Accordingly, across `r .stvns` cross-validation seeds the genes selected by both methods were reproducibly enriched (hypergeometric $P < 0.01$) for the basal-like tumour program (in `r .stvhit("Sparse Cox")`/`r .stvns` seeds for penalized Cox and `r .stvhit("Supervised PCA")`/`r .stvns` for supervised PCA) and in no seed for the activated-stroma/proCAF, restraining-stroma, immune, or exocrine compartments. The supervised risk scores did nonetheless retain some stromal signal: each correlated modestly with an external activated-stroma/proCAF signature ($|r| = `r .stvc("Sparse Cox")`$ for penalized Cox and $`r .stvc("Supervised PCA")`$ for supervised PCA), but well below DeSurv's D2 program ($|r| = `r .stvc("DeSurv D2 (proCAF factor)")`$), which tracks that signature directly.
+The compartment attribution made this explicit. Because D1 runs from a classical-tumor, restraining-stroma protective pole to a basal-like high-risk pole, a sparse supervised risk score aligned with D1 is naturally composed of basal-like tumor markers. Accordingly, across `r .stvns` cross-validation seeds the genes selected by both methods were reproducibly enriched (hypergeometric $P < 0.01$) for the basal-like tumor program (in `r .stvhit("Sparse Cox")`/`r .stvns` seeds for penalized Cox and `r .stvhit("Supervised PCA")`/`r .stvns` for supervised PCA) and in no seed for the activated-stroma/proCAF, restraining-stroma, immune, or exocrine compartments. The supervised risk scores did nonetheless retain some stromal signal: each correlated modestly with an external activated-stroma/proCAF signature ($|r| = `r .stvc("Sparse Cox")`$ for penalized Cox and $`r .stvc("Supervised PCA")`$ for supervised PCA), but well below DeSurv's D2 program ($|r| = `r .stvc("DeSurv D2 (proCAF factor)")`$), which tracks that signature directly.
 
 The supervised risk scores retained modest stromal signal but did not resolve it as a distinct program. DeSurv instead placed the dominant survival-associated direction within a three-program representation containing separately measurable classical/restCAF-like, proCAF-like and basal-like programs. Thus, the distinction is representational: DeSurv preserves stromal context as an explicit program even when that program does not contribute independently to the fitted linear predictor.
 
@@ -1020,7 +1020,7 @@ cross-validation or resampling, so the reported IBS and IPA are apparent
 in-sample values and are optimistic. Both caveats weaken the evidentiary value of the apparent improvement, because in-sample recalibration is optimistically biased, and the improvement is already small. This
 modest proper-score improvement over the null is consistent with the moderate
 discrimination (C $= `r sprintf("%.2f", .brp["cindex"])`$) and with DeSurv's
-contribution being a separately resolved tumour- and stroma-associated decomposition
+contribution being a separately resolved tumor- and stroma-associated decomposition
 rather than higher predictive accuracy.
 
 \subsection*{Proportional-hazards diagnostic}
@@ -1279,7 +1279,7 @@ for Cox partial least squares,
 $`r sprintf("%.2f", read_result("desurv_vs_supervised_stats")$stability[["Supervised PCA"]])`$
 for supervised principal components and
 $`r sprintf("%.2f", read_result("desurv_vs_supervised_stats")$stability[["Sparse Cox"]])`$
-for sparse Cox. DeSurv is mid-range. This comparison favours dense methods by
+for sparse Cox. DeSurv is mid-range. This comparison favors dense methods by
 construction, because a score that spreads weight across many genes has a more
 stable top-100 list than one built from a selective basis, as the sparse Cox
 value illustrates. Gene-level resampling stability addresses a complementary property distinct
@@ -1472,7 +1472,7 @@ for standard NMF. The proCAF programs, by contrast, are recovered comparably by
 all methods (`r .srN["SCISSORS_proCAF","DeSurv"]` versus
 `r .srN["SCISSORS_proCAF","NMF_k3"]` of `r .sr2$sig_size["SCISSORS_proCAF"]` genes).
 
-In the full-gene view, which correlates loadings across all 1,970 analysed genes
+In the full-gene view, which correlates loadings across all 1,970 analyzed genes
 with signature membership, **no method separates restCAF from proCAF**: every
 correspondence lies between
 $`r sprintf("%.2f", min(.srF[c("SCISSORS_restCAF","Elyada_iCAF","SCISSORS_proCAF","Elyada_myCAF"),]))`$

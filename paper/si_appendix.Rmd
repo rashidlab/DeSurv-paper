@@ -91,7 +91,7 @@ likelihood $\ell(W,\beta)$ is
 The inner sum runs over the risk set $\{j : y_j \ge y_i\}$ of subjects still at risk at the observed time $y_i$; tied event times are handled by the Breslow approximation in the \texttt{glmnet} Coxnet routine used for the $\beta$ update (below).
 Hyperparameters satisfy $\alpha \in [0,1)$,
 $\lambda_H \ge 0$, $\lambda \ge 0$, and $\xi \in [0,1]$.
-The constants $1/(2\lVert X \rVert_F^2)$, $2/n_{\text{event}}$, and $1/(2nk)$ place the reconstruction, loadings-penalty, and survival terms on comparable numerical scales for stable optimization.
+The constants $1/(2\lVert X \rVert_F^2)$, $2/n_{\text{event}}$, and $1/(2nk)$ place the reconstruction, loadings-penalty, and survival terms on comparable numerical scales for stable optimization. The elastic-net mixing parameter $\xi$ is the argument \texttt{nu} in the DeSurv package.
 
 
 \section{Optimization Algorithm}
@@ -268,7 +268,7 @@ line search.
             \State \textbf{(Column normalization)}
             \State \hspace{0.5cm} Compute $D = \mathrm{diag}\!\big(\lVert W^{(t+1)}_{(:,1)cand}\rVert_2,\dots,\lVert W^{(t+1)}_{(:,k)cand}\rVert_2\big)$
             \State \hspace{0.5cm} and set $W^{(t+1)}_{cand} \leftarrow W^{(t+1)}_{cand} D^{-1}$, $H^{(t+1)}_{cand} \leftarrow D H^{(t+1)}$, and $\beta^{(t)}_{cand} \leftarrow D \beta^{(t)}$
-            \If{$\mathcal{L}(W^{(t+1)}_{cand},H^{(t+1)},\beta^{(t)}) \leq \mathcal{L}(W^{(t)},H^{(t+1)},\beta^{(t)})$}
+            \If{$\mathcal{L}(W^{(t+1)}_{cand},H^{(t+1)}_{cand},\beta^{(t)}_{cand}) \leq \mathcal{L}(W^{(t)},H^{(t+1)},\beta^{(t)})$}
               \State $W^{(t+1)} = W^{(t+1)}_{cand}$
               \State $H^{(t+1)} = H^{(t+1)}_{cand}$
               \State $\beta^{(t)} = \beta^{(t)}_{cand}$
@@ -557,7 +557,9 @@ For the PDAC application, the objective was the mean 5-fold cross-validated
 Harrell C-index (Algorithm \ref{alg:cv}), with folds stratified by cohort under
 a fixed seed (123); each configuration was evaluated from 30 random
 initializations and its C-index averaged across them. The bounded search domain
-was $k \in [2, 12]$, $\alpha \in [0, 1]$, $\lambda \in [10^{-3}, 10^{3}]$
+was $k \in [2, 12]$, $\alpha \in [0, 1]$ (the proposal bounds; the model domain
+is $\alpha \in [0, 1)$, package validation clips proposals at $\alpha \geq 1$, and the
+largest evaluated value was $`r sprintf("%.3f", max(read_result("desurv_bo_results_tcgacptac")$history$alpha_grid, na.rm = TRUE))`$), $\lambda \in [10^{-3}, 10^{3}]$
 (optimized on a $\log_{10}$ scale), $\xi \in [0, 1]$, and
 $n_{\text{top}} \in [50, 300]$, with the loadings ridge penalty fixed at
 $\lambda_H = 0$. Bayesian optimization used an initial design of 50 evaluations
@@ -608,7 +610,7 @@ is refit at the selected parameters using the consensus-based initialization
 $n_{\text{top}}$ (when tuned) is used to
 truncate each program for downstream analysis.
 
-The parameter $n_{\text{top}}$ controls which genes enter the survival linear predictor. After factorization, each sample's score for factor $j$ is computed as $\widetilde{W}_j^\top x$, where $\widetilde{W}_j$ retains only the $n_{\text{top}}$ genes with the largest factor-specificity scores $s_{ij}$ (Supplementary Information, Section \ref{sec:gene-program-correlation}); genes outside this set still shape the factorization but do not enter the linear predictor. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. When $\alpha = 0$ (no survival supervision), gene selection and survival outcomes are decoupled.
+The parameter $n_{\text{top}}$ determines the factor-specific gene support used for projection and, in the final consensus procedure, the gene sets from each restart that enter the consensus initialization. After factorization, each sample's score for factor $j$ is computed as $\widetilde{W}_j^\top x$, where $\widetilde{W}_j$ retains only the $n_{\text{top}}$ genes with the largest factor-specificity scores $s_{ij}$ (Supplementary Information, Section \ref{sec:gene-program-correlation}); genes outside this set still shape the factorization but do not enter the linear predictor. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. When $\alpha = 0$ (no survival supervision), survival does not influence factor estimation; it is used only for the post hoc Cox fit and for tuning $n_{\text{top}}$ on the projected representation.
 
 Supplementary Fig. \ref{fig:fig-si-bo-tuning} illustrates the tuned response surface for the two most influential coordinates in the PDAC training cohort: the cross-validated C-index over factorization rank $k$ and supervision strength $\alpha$. Performance is maximized at intermediate supervision and moderate rank and degrades toward the unsupervised corner ($\alpha = 0$), consistent with a benefit of survival supervision. This is an empirical model-selection sensitivity surface, not a simulation result.
 
@@ -1381,11 +1383,11 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 Fig.\ \ref{fig:fig-nmf-k7-heatmap} (and main-text Fig.\ 2a,b) display factor-to-reference-program correspondence as a heatmap. We additionally summarize this same correspondence across factorization rank $k$ using three quantities computed from the same correlation matrix (top 50 genes per factor by factor-specificity score, Spearman correlation of factor loadings against binary reference-program membership, $r > 0.2$ representation threshold; Supplementary Information, Section \ref{sec:gene-program-correlation}), over the fixed `r .rpmsi_universe`-program reference universe. Coverage is the number of reference programs with at least one factor at $r > 0.2$. Edges is the total number of (factor, reference-program) pairs at $r > 0.2$. Reference-program multiplicity is edges divided by coverage, defined only when coverage $> 0$, and reports edges per represented program. A low multiplicity is not by itself evidence that fewer programs are represented, so multiplicity is always reported alongside coverage rather than in place of it.
 
-At each rank $k = 2, \ldots, 12$, these quantities are computed for two single fits at fixed $\lambda$, $\nu$ and $n_{\text{top}} = 270$ from the $k \times \alpha$ cross-validation grid (\texttt{results/cv\_grid}): the unsupervised fit ($\alpha = 0$) and the fit at the $\alpha$ maximizing mean cross-validated C-index, the same $\alpha$-selection convention used for Supplementary Fig.\ \ref{fig:fig-cindex-by-k}. These rank-wise points are single fits at fixed hyperparameters, not the 100-restart consensus fits used elsewhere in the manuscript. Three consensus-fit anchors are overlaid: DeSurv ($k = 3$), standard NMF at matched rank ($k = 3$; Lee NMF), and the rank-optimized unsupervised control ($k = 7$, $\alpha = 0$).
+At each rank $k = 2, \ldots, 12$, these quantities are computed for two single fits at fixed $\lambda$, $\xi$ and $n_{\text{top}} = 270$ from the $k \times \alpha$ cross-validation grid (\texttt{results/cv\_grid}): the unsupervised fit ($\alpha = 0$) and the fit at the $\alpha$ maximizing mean cross-validated C-index, the same $\alpha$-selection convention used for Supplementary Fig.\ \ref{fig:fig-cindex-by-k}. These rank-wise points are single fits at fixed hyperparameters, not the 100-restart consensus fits used elsewhere in the manuscript. Three consensus-fit anchors are overlaid: DeSurv ($k = 3$), standard NMF at matched rank ($k = 3$; Lee NMF), and the rank-optimized unsupervised control ($k = 7$, $\alpha = 0$).
 
 At these anchors, DeSurv reaches coverage `r .rpmsi_co3`, edges `r .rpmsi_ed3`, multiplicity `r .rpmsi_mu3`; matched-rank standard NMF reaches coverage `r .rpmsi_co_n3`, edges `r .rpmsi_ed_n3`, multiplicity `r .rpmsi_mu_n3`; and the rank-optimized unsupervised control at $k = 7$ reaches coverage `r .rpmsi_co7`, edges `r .rpmsi_ed7`, multiplicity `r .rpmsi_mu7`. Coverage increases with rank considerably more than multiplicity does, indicating that the additional factors at higher rank extend correspondence to more reference programs rather than densely duplicating correspondence to the same ones. Through $k = 7$ the dominant change is increased coverage with modest repeated representation. This is not a claim about predictive performance, which is addressed separately (Table \ref{tab:hr-adjusted}; Supplementary Table \ref{tab:tab-cindex-comparison}).
 
-```{r fig-rpm, fig.width = 6, fig.height = 8, fig.cap = "Reference-program coverage, edges and multiplicity by factorization rank $k$, for the unsupervised ($\\alpha = 0$) and supervised (best $\\alpha$ by cross-validated C-index) curves, computed from the same factor-to-reference-program correspondence analysis as Fig.\\ \\ref{fig:fig-nmf-k7-heatmap} and main-text Fig.\\ 2a,b (top 50 genes per factor, $r > 0.2$ threshold, same reference-program universe). Rank-wise points are single fits at fixed $\\lambda$, $\\nu$ and $n_{\\text{top}}$, not the 100-restart consensus fits used elsewhere; markers denote the three consensus-fit anchors (DeSurv $k = 3$, matched-rank standard NMF $k = 3$, rank-optimized unsupervised control $k = 7$). \\label{fig:fig-rpm}", fig.env='figure', fig.pos='t', out.width='0.72\\textwidth'}
+```{r fig-rpm, fig.width = 6, fig.height = 8, fig.cap = "Reference-program coverage, edges and multiplicity by factorization rank $k$, for the unsupervised ($\\alpha = 0$) and supervised (best $\\alpha$ by cross-validated C-index) curves, computed from the same factor-to-reference-program correspondence analysis as Fig.\\ \\ref{fig:fig-nmf-k7-heatmap} and main-text Fig.\\ 2a,b (top 50 genes per factor, $r > 0.2$ threshold, same reference-program universe). Rank-wise points are single fits at fixed $\\lambda$, $\\xi$ and $n_{\\text{top}}$, not the 100-restart consensus fits used elsewhere; markers denote the three consensus-fit anchors (DeSurv $k = 3$, matched-rank standard NMF $k = 3$, rank-optimized unsupervised control $k = 7$). \\label{fig:fig-rpm}", fig.env='figure', fig.pos='t', out.width='0.72\\textwidth'}
 knitr::include_graphics(file.path("..", "figures", "fig_reference_program_multiplicity.pdf"), error = FALSE)
 ```
 
@@ -1512,7 +1514,7 @@ then fit by the same 100-restart consensus procedure used for DeSurv
 
 The control
 selected $\lambda = `r sprintf("%.4f", .pf$lambda)`$,
-$\nu = `r sprintf("%.4f", .pf$nu)`$ and $n_{\text{top}} = `r .pf$ntop`$; note
+$\xi = `r sprintf("%.4f", .pf$nu)`$ and $n_{\text{top}} = `r .pf$ntop`$; note
 that its gene support was selected at the upper bound of the search range
 ($300$), whereas the supervised model settled at
 $n_{\text{top}} = `r .pd$ntop`$ well inside it. Because $\alpha = 0$ removes the
@@ -1527,7 +1529,7 @@ same rank, while still recovering D2
 ($\rho = `r sprintf("%.2f", max(.cf[3, ]))`$). Its external discrimination is
 likewise no better than \texttt{NMF::nmf} at $k = 3$
 (Table \ref{tab:tab-cindex-comparison}). A sensitivity analysis holding the
-supervised model's own $\lambda$, $\nu$ and $n_{\text{top}}$ fixed and varying
+supervised model's own $\lambda$, $\xi$ and $n_{\text{top}}$ fixed and varying
 only $\alpha$ gave the same conclusion. Matching the tuning budget therefore
 does not close the representational gap, and the reorganization reported in the
 main text is attributable to supervision rather than to computational effort.

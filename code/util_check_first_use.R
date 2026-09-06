@@ -69,7 +69,7 @@ DEFINED <- c(
   "concordance"               = "the probability that the model ranks a pair of patients",
   "one-standard-error"        = "the most parsimonious model within one standard error",
   "partial log-likelihood"    = "the fit criterion of the Cox model",
-  "consensus initialization"  = "starting values pooled over many restarts",
+  "consensus initialization"  = "starting values built from the solutions of many restarts",
   "linear predictor"          = "the weighted sum of the three program scores"
 )
 

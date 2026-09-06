@@ -147,7 +147,7 @@ Conceptualization: A.M.Y., N.U.R. Methodology: A.M.Y., A.Y., D.L., N.U.R. Softwa
 
 # Competing Interests {.unnumbered}
 
-N.U.R. and J.J.Y. are named as inventors on US patents US20220127676A1 and US20250066856A1, which relate to pancreatic cancer subtype classification. The PurIST and DeCAF classifiers were used only as published, independently derived comparators: their subtype calls were obtained with the released classifiers and included as fixed covariate annotations, and these calls enter only as fixed covariates in the adjustment analyses and are not components of DeSurv. They are not components of DeSurv. The other authors declare no competing interests.
+N.U.R. and J.J.Y. are named as inventors on US patents US20220127676A1 and US20250066856A1, which relate to pancreatic cancer subtype classification. The PurIST and DeCAF classifiers were used only as published, independently derived comparators: their subtype calls were obtained with the released classifiers and included as fixed covariate annotations, and these calls enter only as fixed covariates in the adjustment analyses and are not components of DeSurv. The other authors declare no competing interests.
 
 # References
 

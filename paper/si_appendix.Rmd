@@ -1262,8 +1262,8 @@ $`r sprintf("%.2f", read_result("desurv_vs_supervised_stats")$stability[["Sparse
 for sparse Cox. DeSurv is mid-range. This comparison favours dense methods by
 construction, because a score that spreads weight across many genes has a more
 stable top-100 list than one built from a selective basis, as the sparse Cox
-value illustrates. Gene-level resampling stability addresses a complementary property and is not
-required for frozen-program reproducibility.
+value illustrates. Gene-level resampling stability addresses a complementary property distinct
+from reproducibility of the frozen end-to-end procedure.
 
 # Simulation results under null and mixed scenarios
 

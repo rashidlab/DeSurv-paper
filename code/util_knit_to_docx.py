@@ -239,6 +239,34 @@ def _clean_text(s):
     return re.sub(r"[ \t]{2,}", " ", s)
 
 
+def flatten_prose(s):
+    head, sep, body = s.partition("\n---\n")  # keep the YAML header intact
+    if not sep:
+        head, body = "", s
+    math = []
+
+    def stash(m):
+        math.append(m.group(0))
+        return "\x00%d\x00" % (len(math) - 1)
+    body = re.sub(r"\$\$.*?\$\$|\$[^$\n]*\$", stash, body, flags=re.S)
+    body = re.sub(r"\\(part|section|subsection|subsubsection)\*\{", lambda m: "\\%s{" % m.group(1), body)  # starred forms
+    body = replace_cmd(body, r"\part", lambda x: "\n\n# %s\n" % x)
+    body = replace_cmd(body, r"\section", lambda x: "\n\n# %s\n" % x)
+    body = replace_cmd(body, r"\subsection", lambda x: "\n\n## %s\n" % x)
+    body = replace_cmd(body, r"\subsubsection", lambda x: "\n\n### %s\n" % x)
+    body = replace_cmd(body, r"\textbf", lambda x: "**%s**" % x)
+    body = replace_cmd(body, r"\textit", lambda x: "*%s*" % x)
+    body = replace_cmd(body, r"\emph", lambda x: "*%s*" % x)
+    body = replace_cmd(body, r"\texttt", lambda x: "`%s`" % x)
+    body = replace_cmd(body, r"\url", lambda x: "<%s>" % x)
+    body = replace_cmd(body, r"\textsubscript", lambda x: "~%s~" % x)
+    body = replace_cmd(body, r"\textsuperscript", lambda x: "^%s^" % x)
+    body = re.sub(r"\\addcontentsline\{[^}]*\}\{[^}]*\}\{[^}]*\}", "", body)
+    body = re.sub(r"\\(newpage|clearpage|noindent|centering)\b", "", body)
+    body = re.sub(r"\x00(\d+)\x00", lambda m: math[int(m.group(1))], body)
+    return head + sep + body
+
+
 def convert(base):
     s = open(base + ".knit.md", encoding="utf8").read()
 
@@ -274,6 +302,14 @@ def convert(base):
     s = replace_cmd(s, r"\ref", lambda x: "[%s]" % x)
     s = replace_cmd(s, r"\label", lambda x: "")
     s = re.sub(r"\\externaldocument\{[^}]*\}", "", s)
+
+    # Prose written in LaTeX rather than markdown (the SI mixes both): section
+    # commands and inline formatting outside math. pandoc is run with -raw_tex,
+    # so anything left here would print verbatim in the DOCX. Real incident
+    # 2026-09-06: the R5/R6 SI sections used \subsection*{} and \texttt{} and
+    # appeared as raw markup in the editable file. Math is masked so that
+    # commands inside $...$ are untouched.
+    s = flatten_prose(s)
 
     md = base + ".docx.md"
     open(md, "w", encoding="utf8").write(s)

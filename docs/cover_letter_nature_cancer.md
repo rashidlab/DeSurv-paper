@@ -8,7 +8,8 @@
         grant, or shares an institution.
      5. Submission form: article type = Technical Report (not Article). The
         category must match the first sentence of this letter.
-     Lab style: no em-dashes, direct voice. -->
+     Render: pandoc -f markdown+hard_line_breaks (keeps the address and signature
+     blocks on separate lines). Lab style: no em-dashes, direct voice. -->
 
 [Date]
 

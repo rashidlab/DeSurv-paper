@@ -569,8 +569,40 @@ identically.
 
 For model selection, we take the highest observed $\hat{c}(\theta)$ as the
 optimal configuration. When fold-level standard errors are available, we apply
-a one-standard-error rule for $k$, selecting the smallest rank whose mean
-performance lies within one standard error of the best. The final DeSurv model
+a one-standard-error rule for $k$: for each rank we retain the configuration
+with the highest observed mean cross-validated C-index, set the threshold one
+fold-level standard error below the overall best configuration's mean, and
+select the smallest rank whose retained configuration meets it.
+
+```{r k-selection-detail, echo=FALSE, message=FALSE, warning=FALSE}
+.ks  <- read_result("tar_k_selection_tcgacptac")
+.pbk <- read_result("tar_params_best_tcgacptac")
+.boh <- read_result("desurv_bo_results_tcgacptac")$history; .boh <- .boh[.boh$status == "ok", ]
+.bo3 <- .boh[round(.boh$k_grid) == .ks$k_selected, ]; .bo3best <- .bo3[which.max(.bo3$mean_cindex), ]
+.cvg <- read.csv("results/cv_grid/cv_grid_summary.csv")
+.cvg <- .cvg[.cvg$k == .ks$k_selected & !is.na(.cvg$ntop) & .cvg$ntop == as.integer(round(.pbk$ntop)), ]
+.cvg_near <- .cvg[which.min(abs(.cvg$alpha - .pbk$alpha)), ]
+```
+
+Two details of this rule matter for reading the reported numbers. First, the
+comparison is between the best configuration observed at each rank: the highest
+mean cross-validated C-index anywhere in the search was
+$`r sprintf("%.3f", .ks$best_mean)`$ at $k = `r .ks$k_best`$ (fold-level standard
+error $`r sprintf("%.3f", .ks$best_se)`$), and the best configuration observed at
+$k = `r .ks$k_selected`$ reached $`r sprintf("%.3f", .bo3best$mean_cindex)`$, within
+the threshold of $`r sprintf("%.3f", .ks$lcb_threshold)`$. Second, the final model
+is a hybrid of the two: the rule fixed $k = `r .ks$k_selected`$, while the remaining
+hyperparameters ($\alpha = `r sprintf("%.3f", .pbk$alpha)`$,
+$\lambda = `r sprintf("%.3f", .pbk$lambda)`$, $\xi = `r sprintf("%.3f", .pbk$nu)`$,
+$n_{\text{top}} = `r as.integer(round(.pbk$ntop))`$) were retained from the overall
+best configuration at $k = `r .ks$k_best`$. The final configuration was therefore
+not itself a point evaluated in the search, and neither number above is its
+cross-validated performance. The nearest evaluated point is in the
+fixed-hyperparameter sensitivity grid (Cross-validated C-index across
+factorization rank), which holds the same $\lambda$, $\xi$ and $n_{\text{top}}$:
+at $k = `r .ks$k_selected`$, $\alpha = `r .cvg_near$alpha`$, the five-fold
+cross-validated C-index was $`r sprintf("%.3f", .cvg_near$mean_cindex)`$ (standard
+error $`r sprintf("%.3f", .cvg_near$se_cindex)`$). The final DeSurv model
 is refit at the selected parameters using the consensus-based initialization
 (Consensus initialization for the final model), and the BO-chosen
 $n_{\text{top}}$ (when tuned) is used to
@@ -1294,7 +1326,7 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 To evaluate how the number of latent factors $k$ affects prognostic performance, as a sensitivity analysis we performed an exhaustive grid search over $k \in \{2, 3, \ldots, 12\}$ and supervision strength $\alpha \in \{0, 0.05, \ldots, 0.95\}$ using 5-fold cross-validation on the TCGA+CPTAC training cohort. For each $k$, the best-performing $\alpha$ was selected by maximizing the mean CV C-index. The unsupervised limit ($\alpha = 0$) was evaluated at the same $k$ values for comparison. Results are shown for two gene-selection settings: $n_{\text{top}} = 270$ top genes per factor and $n_{\text{top}} = \text{ALL}$ (all genes retained), both at $\lambda = 0.349$ and $\xi = 0.056$. External validation C-index is shown descriptively; validation outcomes were not used to select $k$, $\alpha$, $\lambda$, $\xi$, or $n_{\text{top}}$.
 
-Fig. \ref{fig:fig-cindex-by-k} shows the resulting C-index curves for both training (CV) and external validation (pooled across held-out cohorts), with shaded ribbons indicating $\pm 1$ standard error. Rank was selected on the training cross-validated concordance: for DeSurv the curve is close to flat across the whole range examined, spanning about two standard errors from $k = 2$ to $k = 12$ with its nominal maximum at $k = 9$ rather than at the selected rank, and the one-standard-error rule accordingly selected the parsimonious $k = 3$. The selection depends on the gene-selection setting: under panel (b), with all genes retained, the same rule selects $k = 2$. DeSurv had a higher point estimate than its unsupervised limit at every $k$ examined. The external-validation curve is shown only descriptively (validation outcomes were used for no part of rank or hyperparameter selection) and is consistent with this training-based choice, with DeSurv at $k = 3$ attaining concordance comparable to the rank-optimized unsupervised control ($k = 7$; Table \ref{tab:tab-cindex-comparison}).
+Fig. \ref{fig:fig-cindex-by-k} shows the resulting C-index curves for both training (CV) and external validation (pooled across held-out cohorts), with shaded ribbons indicating $\pm 1$ standard error. Rank was selected on the training cross-validated concordance: for DeSurv the curve is close to flat across the whole range examined, spanning about two standard errors from $k = 2$ to $k = 12$ with its nominal maximum at $k = 9$ rather than at the selected rank (this fixed-$\lambda$, $\xi$, $n_{\text{top}}$ grid is a different exercise from the full Bayesian-optimization search over all tuned hyperparameters, whose highest observed mean C-index occurred at $k = `r .ks$k_best`$), and the one-standard-error rule accordingly selected the parsimonious $k = 3$. The selection depends on the gene-selection setting: under panel (b), with all genes retained, the same rule selects $k = 2$. DeSurv had a higher point estimate than its unsupervised limit at every $k$ examined. The external-validation curve is shown only descriptively (validation outcomes were used for no part of rank or hyperparameter selection) and is consistent with this training-based choice, with DeSurv at $k = 3$ attaining concordance comparable to the rank-optimized unsupervised control ($k = 7$; Table \ref{tab:tab-cindex-comparison}).
 
 ```{r fig-cindex-by-k, fig.width = 10, fig.height = 10, fig.cap="Training (CV) and external validation C-index as a function of factorization rank $k$ for DeSurv (blue) and its unsupervised limit (red, $\\alpha = 0$). Shaded ribbons show $\\pm 1$ SE. For each $k$, the best $\\alpha$ was selected by maximizing the mean CV C-index. Validation C-index is pooled across all external cohorts. (a) Results using $n_{\\text{top}} = 270$ top genes per factor ($\\lambda = 0.349$, $\\xi = 0.056$). (b) Results retaining all genes ($n_{\\text{top}} = \\text{ALL}$; $\\lambda = 0.349$, $\\xi = 0.056$).", fig.env='figure*', fig.pos='t', out.width='\\textwidth', echo=FALSE}
 # This figure is produced by the cv_grid pipeline (separate store);

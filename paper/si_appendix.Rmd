@@ -192,14 +192,35 @@ We define a gradient-scaling heuristic
 \zeta^{(t)}
 =
 \frac{
-  \left\lVert (1-\alpha) \nabla_W \mathcal{L}_{\mathrm{NMF}}(W^{(t)},H^{(t+1)}) \right\rVert_F^2
+  \left\lVert (1-\alpha) \nabla_W \mathcal{L}_{\mathrm{NMF}}(W^{(t)},H^{(t+1)}) \right\rVert_F
 }{
-  \left\lVert \alpha \nabla_W \mathcal{L}_{Cox}(W^{(t)},\beta^{(t)}) \right\rVert_F^2
+  \left\lVert \alpha \nabla_W \mathcal{L}_{Cox}(W^{(t)},\beta^{(t)}) \right\rVert_F
 },
 \end{equation}
 and clip $\zeta^{(t)}$ to avoid extreme values:
 $\zeta^{(t)} \leftarrow \min(\zeta^{(t)}, \zeta_{\max})$
-with $\zeta_{\max} = 10^6$ in all experiments.
+with $\zeta_{\max} = 10^6$ in all experiments. The scaling removes differences in
+the magnitudes of the weighted reconstruction and survival gradients before the
+additional factor $\alpha$ below controls the relative Cox contribution. When
+neither gradient is zero and the cap is inactive, the scaled Cox contribution
+has Frobenius norm $\alpha$ times that of the weighted reconstruction gradient.
+
+```{r zeta-trace, echo=FALSE, message=FALSE, warning=FALSE}
+.zt <- read_result("zeta_trace")
+```
+
+In the reported consensus fit, $\zeta$ decreased from
+$`r sprintf("%.2f", .zt$trace$zeta[1])`$ after the first iteration to
+$`r sprintf("%.3f", .zt$final$zeta)`$ at convergence, and the scaled Cox
+contribution was then `r sprintf("%.1f", 100 * .zt$final$cox_to_nmf_ratio)`\%
+of the reconstruction term in the numerator. The cap was reached only at
+initialization, where $\beta = 0$ makes the Cox gradient itself zero, so the
+cap contributed no update; across the `r .zt$endpoints$n` single-run endpoints
+$\zeta$ ranged from $`r sprintf("%.3f", .zt$endpoints$min)`$ to
+$`r sprintf("%.3f", .zt$endpoints$max)`$ and was never capped
+(\texttt{code/26}, which reconstructs the production optimization path from the
+cached seed fits and checks it against the cached final fit to a declared
+tolerance).
 
 The multiplicative factor for $W$ is then
 \begin{equation}
@@ -207,13 +228,14 @@ R^{(t)}
 =
 \frac{
   \frac{(1-\alpha)}{\lVert X \rVert_F^2} X H^{(t+1)\top}
-  +\frac{2\alpha}{n_{\mathrm{event}}}\,\zeta^{(t)}\,\nabla_W \ell(W^{(t)},\beta^{(t)})
+  +\alpha\,\zeta^{(t)}\,\frac{2\alpha}{n_{\mathrm{event}}}\,\nabla_W \ell(W^{(t)},\beta^{(t)})
 }{
   \frac{(1-\alpha)}{\lVert X \rVert_F^2} W^{(t)} H^{(t+1)}H^{(t+1)\top}
   +\varepsilon_W
 },
 \end{equation}
-and the proposed update is
+$R^{(t)}$ is clamped elementwise to $[0.2, 5]$ before use, which bounds the
+change of any entry of $W$ in a single step, and the proposed update is
 \begin{equation}
 \label{eqn:W_update}
 W^{(t+1)}
@@ -238,7 +260,7 @@ line search.
     \begin{algorithmic}[1]
         \Require Value of $W$ and the previous iteration $t$: $W^{(t)}$, the multiplicative update term at the current iteration $R^{(t)}$, the max number of backtracking updates $max\_bt$, the backtracking parameter $\rho \in (0,1)$
         \Ensure $W^{(t+1)}$
-        \State $\theta =1$
+        \State $\theta = \theta_0$
         \State b = 1
         \State $flag\_accept = FALSE$
         \While{$b \leq max\_bt$}
@@ -262,6 +284,7 @@ line search.
     \end{algorithmic}
 \end{algorithm}
 
+In all reported fits $\theta_0 = 0.5$, $\rho = 0.9$ and $max\_bt = 30$.
 Column normalization preserves the reconstruction $WH$ and linear predictor
 $W\beta$. Because the accompanying rescaling can alter penalization terms, the
 normalized proposal is evaluated using the full penalized objective within the
@@ -1209,6 +1232,15 @@ more closely with the reported basis (gene-loading correlation `r .rng(.el)`,
 top-$`r .ps$meta$ntop`$ Jaccard `r .rng(.ej)`). Splitting the restarts halves the
 number aggregated relative to the reported procedure, so these figures are
 conservative.
+
+The fitted basis also moved materially from the consensus initialization
+$W_0$: with programs corresponding by position (confirmed against the full
+correlation matrix), gene-loading correlations between $W_0$ and the final $W$
+were `r sprintf("%.2f", min(.zt$w0$r))`--`r sprintf("%.2f", max(.zt$w0$r))` and
+top-$`r .zt$w0$ntop`$ Jaccard overlaps were
+`r sprintf("%.2f", min(.zt$w0$jaccard))`--`r sprintf("%.2f", max(.zt$w0$jaccard))`
+(\texttt{code/26}). The consensus therefore supplies a reproducible
+initialization rather than fixing the final basis.
 
 The optimizer alone is not identifiable. The consensus step is what makes the
 reported decomposition a stable object rather than one draw from a wide

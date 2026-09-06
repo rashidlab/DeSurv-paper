@@ -83,6 +83,7 @@ all:
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/23_stroma_resolution.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/24_reference_program_multiplicity.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/25_validation_heterogeneity_ci.R
+	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/26_zeta_trace.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09a_figures.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09b_si_figures.R
 	DESURV_NCORES=$(NCORES) $(RSCRIPT) code/09c_sim_figures.R

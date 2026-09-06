@@ -398,7 +398,7 @@ knitr::include_graphics(file.path("..", "figures", "model_schematic_final.pdf"))
 ```
 
 
-## Survival supervision resolves a distinct tumor--stroma program structure {.unnumbered}
+## Survival supervision changes the recovered representation at matched complexity {.unnumbered}
 
 To determine how survival supervision altered the biological representation, we compared DeSurv with standard NMF at the same rank ($k = 3$), thereby holding model complexity constant. DeSurv resolved three distinct programs (D1--D3): D1, enriched for classical tumor and restCAF-like stromal signatures; D2, enriched for proCAF-like stroma; and D3, enriched for basal-like tumor programs (Fig.\ \ref{fig:pdac}a). Together, these programs define a tumor--stroma prognostic architecture spanning classical/restCAF-like and basal-like/proCAF-like states across patients. The classical identity of D1 was independently supported in the COMPASS cohort, where D1 scores correlated with GATA6 RNA in situ hybridization (Spearman $\rho = `r sprintf("%.2f", .g6$rho)`$, $P `r if (.g6$p < 0.001) "< 0.001" else sprintf("= %.3f", .g6$p)`$, $n = `r .g6$n`$; Fig.\ \ref{fig:pdac}e).
 

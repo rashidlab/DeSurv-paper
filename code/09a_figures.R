@@ -159,7 +159,7 @@ load(top_genes_path)  # loads: top_genes, colors, subtypeList, etc.
 desurv_k <- ncol(tar_fit_desurv$W)
 std_k    <- ncol(fit_std_desurvk$W)
 heatmap_factor_labels <- if (desurv_k == 3) {
-  c("D1 Classical/restCAF", "D2 proCAF", "D3 Basal-like")
+  c("D1 Classical/restCAF-like", "D2 proCAF-like", "D3 Basal-like")
 } else {
   paste0("D", seq_len(desurv_k))
 }

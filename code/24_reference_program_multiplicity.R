@@ -42,7 +42,7 @@
 #   Matched-rank Lee NMF  results/fit_std_desurvk_tcgacptac.rds
 #   Unsupervised NMF k=7  results/tar_fit_desurv_alpha0_tcgacptac.rds
 #                         (confirmed by dim(W)[2] == 7; this is the fit
-#                         underlying the "Unsupervised NMF (k = 7, alpha = 0)"
+#                         underlying the "Rank-optimized unsupervised control (k = 7, alpha = 0)"
 #                         row and is already used for SI Fig. S6 in
 #                         code/09a_figures.R / code/09b_si_figures.R.)
 #
@@ -199,7 +199,7 @@ stopifnot("Reference-program universe size is not constant across configurations
 anchors <- data.frame(
   anchor_id    = c("desurv_k3", "nmf_k3_matched_rank", "nmf_k7_unsupervised"),
   label        = c("DeSurv (k = 3)", "Matched-rank Lee NMF (k = 3)",
-                    "Unsupervised NMF (k = 7, alpha = 0)"),
+                    "Rank-optimized unsupervised control (k = 7, alpha = 0)"),
   k            = c(ncol(tar_fit_desurv$W), ncol(fit_std_desurvk$W), ncol(tar_fit_desurv_alpha0$W)),
   n_factors    = c(m_desurv_k3$n_factors, m_nmf_k3$n_factors, m_nmf_k7$n_factors),
   coverage     = c(m_desurv_k3$coverage, m_nmf_k3$coverage, m_nmf_k7$coverage),

@@ -17,6 +17,9 @@
 #     zeta = ||g_N||_F / ||g_C||_F  (plain Frobenius norms; capped at 1e6),
 # and adds alpha * zeta * g_C to the multiplicative numerator. Away from the cap
 # and the zero-gradient case the added term therefore has norm alpha * ||g_N||_F.
+# Backtracking constants used by the production fits are those passed by the R
+# wrapper (.run_optimize_loss: theta_init = 0.5, rho = 0.5, max_backtracks = 10),
+# not the C++ signature defaults (0.5, 0.9, 30); see LESSONS.md L13.
 # The package does not log zeta, so this script reconstructs the production
 # optimization path from the cached seed fits and the consensus rule of
 # code/04, ASSERTS that the reconstruction agrees with the cached final fit to
@@ -61,10 +64,12 @@ zeta_at <- function(W, H, beta, X, y, d) {
   g <- d - e * cum
   gN <- ((1 - alpha) / sum(X^2)) * (W %*% H - X) %*% t(H)          # (1-alpha) grad_W L_NMF
   gC <- (2 * alpha / sum(d)) * (X %*% g) %*% t(beta)                # alpha grad_W L_Cox
-  gn <- sqrt(sum(gN^2)) + 1e-12; gc <- sqrt(sum(gC^2)) + 1e-12
+  gc_raw <- sqrt(sum(gC^2))                    # exact norm; zero when beta = 0
+  gn <- sqrt(sum(gN^2)) + 1e-12; gc <- gc_raw + 1e-12
   zeta <- gn / gc
   c(gn = gn, gc = gc, zeta = zeta, capped = as.numeric(zeta >= 1e6),
-    cox_term_norm = alpha * min(zeta, 1e6) * gc,
+    # the added term is alpha*min(zeta,cap)*gC, so it is exactly zero when gC is zero
+    cox_term_norm = if (gc_raw == 0) 0 else alpha * min(zeta, 1e6) * gc_raw,
     nmf_num_norm = sqrt(sum((((1 - alpha) / sum(X^2)) * X %*% t(H))^2)))
 }
 
@@ -117,7 +122,7 @@ res <- list(
   final = list(zeta = z_final[["zeta"]], cox_term_norm = z_final[["cox_term_norm"]],
                nmf_num_norm = z_final[["nmf_num_norm"]],
                cox_to_nmf_ratio = z_final[["cox_term_norm"]] / z_final[["nmf_num_norm"]]),
-  init = list(beta0_all_zero = all(init$beta0 == 0), cox_grad_norm = z_init[["gc"]] - 1e-12,
+  init = list(beta0_all_zero = all(init$beta0 == 0), cox_grad_norm = max(z_init[["gc"]] - 1e-12, 0),
               capped = z_init[["capped"]] == 1, cox_term_norm = z_init[["cox_term_norm"]]),
   endpoints = list(zeta = unname(ep[, "zeta"]), n = nrow(ep), n_capped = sum(ep[, "capped"]),
                    min = min(ep[, "zeta"]), median = median(ep[, "zeta"]), max = max(ep[, "zeta"])),

@@ -284,7 +284,8 @@ line search.
     \end{algorithmic}
 \end{algorithm}
 
-In all reported fits $\theta_0 = 0.5$, $\rho = 0.9$ and $max\_bt = 30$.
+In all reported fits $\theta_0 = 0.5$, $\rho = 0.5$ and $max\_bt = 10$
+(the values passed by the package's R wrapper to the optimizer).
 Column normalization preserves the reconstruction $WH$ and linear predictor
 $W\beta$. Because the accompanying rescaling can alter penalization terms, the
 normalized proposal is evaluated using the full penalized objective within the

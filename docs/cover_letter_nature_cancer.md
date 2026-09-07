@@ -1,17 +1,16 @@
 # Cover letter for Nature Cancer (DeSurv), Technical Report
 
 <!-- REMAINING AUTHOR ITEMS BEFORE SENDING:
-     1. [Date] below.
-     2. Referee contact emails (line marked "contact details to be added").
-     3. Confirm the editor name (Julieta Alfonso) against the presubmission thread.
-     4. Confirm no suggested referee is a recent co-author/collaborator, shares a
+     1. Referee contact emails are entered directly in the submission system.
+     2. Confirm the editor name (Julieta Alfonso) against the presubmission thread.
+     3. Confirm no suggested referee is a recent co-author/collaborator, shares a
         grant, or shares an institution.
-     5. Submission form: article type = Technical Report (not Article). The
+     4. Submission form: article type = Technical Report (not Article). The
         category must match the first sentence of this letter.
      Render: pandoc -f markdown+hard_line_breaks (keeps the address and signature
      blocks on separate lines). Lab style: no em-dashes, direct voice. -->
 
-[Date]
+7 September 2026
 
 Dr. Julieta Alfonso
 Senior Editor, Nature Cancer
@@ -28,7 +27,7 @@ We want to be explicit about what is not claimed. DeSurv does not predict surviv
 
 Because the central claims concern the factorization itself, we ask that at least one referee have expertise in matrix factorization or related latent-variable models. We confirm that this manuscript has not been published elsewhere and is not under consideration by another journal. All authors have approved the manuscript and agree with its submission to Nature Cancer. Competing interests are disclosed in the manuscript: N.U.R. and J.J.Y. are inventors on two pancreatic-cancer subtype-classification patents; the PurIST and DeCAF classifiers are used only as published, independent comparators and are not components of DeSurv.
 
-We suggest the following referees (contact details to be added):
+We suggest the following referees:
 
 - Elana J. Fertig (University of Maryland School of Medicine), computational cancer biology and non-negative matrix factorization of tumor transcriptomes; a natural methodological reviewer for interpretable, outcome-aligned latent-program models.
 - Andrew J. Aguirre (Dana-Farber Cancer Institute), pancreatic cancer functional genomics, molecular subtypes, and precision oncology.

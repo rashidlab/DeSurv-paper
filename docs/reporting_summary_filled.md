@@ -81,7 +81,7 @@ For all statistical analyses, confirm the following are reported:
   treatment-naive, non-metastatic tumors. Translational cohorts are treated PDAC
   (metastatic and locally advanced). Per-cohort characteristics summarized in the
   Supplementary Information; demographic stratification is limited by inconsistent
-  annotation across source studies (stated in the Inclusion and Diversity statement).
+  annotation across source studies (stated in Methods, "Ethics, sex and gender, and ancestry").
 - **Recruitment:** All participants were recruited by the original studies/consortia
   (TCGA, CPTAC, ICGC/PACA-AU, Moffitt, Dijk, Puleo; and the treated trials). We performed
   no recruitment; selection into this analysis was by the eligibility criteria above.

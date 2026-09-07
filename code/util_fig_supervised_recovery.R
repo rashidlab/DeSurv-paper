@@ -19,7 +19,7 @@ par(mfrow = c(1, 2), mar = c(7, 4.5, 3.6, 1.2), mgp = c(2.5, 0.7, 0))
 cols <- ifelse(tab$supervised, "#1B7837", "#999999")
 bp <- barplot(abs(tab$score_cor_D1), col = cols, border = "grey25", ylim = c(0, 1.25),
               ylab = "| correlation with DeSurv D1 |",
-              main = "a  Recovery of the D1 coupling axis", xaxt = "n", yaxt = "n")
+              main = "a  Recovery of the D1 axis", xaxt = "n", yaxt = "n")
 axis(2, at = seq(0, 1, 0.25))
 axis(1, at = bp, labels = FALSE)
 text(bp, par("usr")[3] - 0.05, labels = tab$method, srt = 35, adj = 1, xpd = TRUE, cex = 0.85)

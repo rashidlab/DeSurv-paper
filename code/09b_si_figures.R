@@ -151,8 +151,17 @@ fig_res  <- load_precomputed("fig_residuals_tcgacptac")
 fig_coph <- load_precomputed("fig_cophenetic_tcgacptac")
 fig_sil  <- load_precomputed("fig_silhouette_tcgacptac")
 
+# Panels (a) and (b) each show one series; only the silhouette panel (c) has
+# three (coefficient, basis and consensus matrices), so its legend is the one
+# shown. Residual breaks are set to evenly spaced values.
+fig_res <- fig_res +
+  ggplot2::scale_y_continuous(name = expression("Reconstruction error" ~ (x10^10)),
+                              labels = scales::label_number(scale = 1e-10, accuracy = 0.1),
+                              breaks = scales::pretty_breaks(5))
 legend_s4 <- cowplot::get_legend(
-  set_fig_font(fig_res, 10) + ggplot2::theme(legend.position = "bottom")
+  set_fig_font(fig_sil, 10) + ggplot2::theme(legend.position = "bottom") +
+    ggplot2::guides(colour = ggplot2::guide_legend(title = "Silhouette of"),
+                    shape = "none", linetype = "none", size = "none", alpha = "none")
 )
 
 ggsave(
@@ -284,9 +293,16 @@ if (all(file.exists(cv_summary_path, cv_val_path, cv_alpha_path))) {
     )
   }
 
-  gt           <- ggplot2::ggplotGrob(plots[[1]])
+  # The combined figure is printed at text width from a 10 x 10 in canvas, so
+  # enlarge subtitle, facet strip, axis and legend text to stay legible.
+  big_text <- ggplot2::theme(plot.subtitle = ggplot2::element_text(size = 15),
+                             strip.text = ggplot2::element_text(size = 14),
+                             axis.title = ggplot2::element_text(size = 14),
+                             axis.text = ggplot2::element_text(size = 12),
+                             legend.text = ggplot2::element_text(size = 14))
+  gt           <- ggplot2::ggplotGrob(plots[[1]] + big_text)
   legend_grob  <- gt$grobs[[which(vapply(gt$grobs, `[[`, character(1), "name") == "guide-box")]]
-  plots_no_leg <- lapply(plots, function(p) p + ggplot2::theme(legend.position = "none"))
+  plots_no_leg <- lapply(plots, function(p) p + big_text + ggplot2::theme(legend.position = "none"))
   panel_grid   <- cowplot::plot_grid(plotlist = plots_no_leg, nrow = 2,
                                      labels = c("a", "b"), label_size = 12)
   combined     <- cowplot::plot_grid(panel_grid, legend_grob,

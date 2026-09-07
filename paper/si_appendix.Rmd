@@ -29,6 +29,7 @@ header-includes:
 - \renewcommand{\thefigure}{S\arabic{figure}}
 - \renewcommand{\thetable}{S\arabic{table}}
 - \renewcommand{\thealgorithm}{S\arabic{algorithm}}
+- \renewcommand{\theequation}{S\arabic{equation}}
 bibliography: references_30102025.bib
 csl: nature.csl
 link-citations: true
@@ -154,6 +155,7 @@ keeps the multiplicative $H$-update numerically well-defined.
 
 
 \subsection{Update for $W$}
+\label{sec:wupdate}
 For $W$, we construct a hybrid multiplicative update that balances the
 contributions of the NMF and Cox gradients. Let
 \[
@@ -222,9 +224,9 @@ initialization, where $\beta = 0$ makes the Cox gradient itself zero, so the
 cap contributed no update; across the `r .zt$endpoints$n` single-run endpoints
 $\zeta$ ranged from $`r sprintf("%.3f", .zt$endpoints$min)`$ to
 $`r sprintf("%.3f", .zt$endpoints$max)`$ and was never capped
-(\texttt{code/26}, which reconstructs the production optimization path from the
-cached seed fits and checks it against the cached final fit to a declared
-tolerance).
+(the $\zeta$-trace script, Table \ref{tab:scripts}, reconstructs the production
+optimization path from the cached seed fits and checks it against the cached
+final fit to a declared tolerance).
 
 The multiplicative factor for $W$ is then
 \begin{equation}
@@ -262,13 +264,13 @@ line search.
 \caption{$W$ update with backtracking}
 \label{alg:backtrack}
     \begin{algorithmic}[1]
-        \Require Value of $W$ and the previous iteration $t$: $W^{(t)}$, the multiplicative update term at the current iteration $R^{(t)}$, the max number of backtracking updates $max\_bt$, the backtracking parameter $\rho \in (0,1)$
+        \Require Value of $W$ and the previous iteration $t$: $W^{(t)}$, the multiplicative update term at the current iteration $R^{(t)}$, the max number of backtracking updates $max\_bt$, the initial step $s_0 \in (0,1]$, the backtracking factor $\gamma \in (0,1)$
         \Ensure $W^{(t+1)}$
-        \State $\theta = \theta_0$
+        \State $s = s_0$
         \State b = 1
         \State $flag\_accept = FALSE$
         \While{$b \leq max\_bt$}
-            \State $W^{(t+1)}_{cand} = \max\!\left( W^{(t)} \odot [(1-\theta) + \theta R^{(t)}],\ \varepsilon_W \right)$
+            \State $W^{(t+1)}_{cand} = \max\!\left( W^{(t)} \odot [(1-s) + s R^{(t)}],\ \varepsilon_W \right)$
             \State \textbf{(Column normalization)}
             \State \hspace{0.5cm} Compute $D = \mathrm{diag}\!\big(\lVert W^{(t+1)}_{(:,1)cand}\rVert_2,\dots,\lVert W^{(t+1)}_{(:,k)cand}\rVert_2\big)$
             \State \hspace{0.5cm} and set $W^{(t+1)}_{cand} \leftarrow W^{(t+1)}_{cand} D^{-1}$, $H^{(t+1)}_{cand} \leftarrow D H^{(t+1)}$, and $\beta^{(t)}_{cand} \leftarrow D \beta^{(t)}$
@@ -279,7 +281,7 @@ line search.
               \State $flag\_accept = TRUE$
               \State break
             \EndIf
-            \State $\theta = \theta*\rho$
+            \State $s = s \gamma$
             \State $b = b + 1$
         \EndWhile
         \If{$flag\_accept = FALSE$}
@@ -288,19 +290,17 @@ line search.
     \end{algorithmic}
 \end{algorithm}
 
-In all reported fits $\theta_0 = 0.5$, $\rho = 0.5$ and $max\_bt = 10$
+In all reported fits $s_0 = 0.5$, $\gamma = 0.5$ and $max\_bt = 10$
 (the values passed by the package's R wrapper to the optimizer).
-Column normalization preserves the reconstruction $WH$ and linear predictor
-$W\beta$. Because the accompanying rescaling can alter penalization terms, the
-normalized proposal is evaluated using the full penalized objective within the
-backtracking procedure, which accepts the update only if it does not increase
-$\mathcal{L}$.
+The column normalization inside the line search is described in Normalization
+of $W$ below; it is applied to each candidate before the objective is compared,
+so the accepted update is the normalized one.
 
 \subsection{Update for $\beta$}
 
 Conditional on $(W,H)$, the loss in $\beta$ reduces to a convex
 elastic-net–penalized Cox problem; the common factor $\alpha > 0$ multiplies both
-the log-partial-likelihood and the penalty in the joint loss (Equation 1) and is
+the log-partial-likelihood and the penalty in the joint loss (main-text Equation 1) and is
 dropped here, as it does not affect the minimizer:
 \[
 \min_{\beta \in \mathbb{R}^k}
@@ -459,7 +459,7 @@ knitr::kable(.arch, format = "latex", escape = FALSE, booktabs = TRUE,
 
 \section{Cross-validation procedure}
 Algorithm \ref{alg:cv} describes the cross validation procedure with $F$ folds and $R$ initializations.
-We define the c-index using comparable pairs
+We define the C-index using comparable pairs
 $\mathcal{P} = \{(i,j) : y_i < y_j,\ \delta_i = 1\}$ and linear predictors
 $\hat{\eta}_i$:
 \begin{equation}
@@ -482,7 +482,7 @@ $\hat{\eta}_i$:
 \Statex Number of initializations $R$
 \Statex Observed data ($X$, $y$, $\delta$)
 \Statex Hyperparameters $k$, $\alpha$, $\lambda$, $\xi$, $\lambda_H$, and number of top genes per factor $n_{top}$
-\Ensure The cross-validated c-index
+\Ensure The cross-validated C-index
 
 \State Divide subjects into $F$ folds.
 \For{$f = 1$ to $F$}
@@ -495,16 +495,16 @@ $\hat{\eta}_i$:
         $
         \hat{\eta} = X_{(f)}^T\hat{W}\hat{\beta}
         $
-        \State Compute c-index, denoted $\hat{c}_{(f)r}$, according to Equation \ref{eqn:cindex}
+        \State Compute C-index, denoted $\hat{c}_{(f)r}$, according to Equation \ref{eqn:cindex}
     \EndFor
     \State \textbf{end loop over $r$}
-    \State Compute average c-index across initializations:
+    \State Compute average C-index across initializations:
     $
     \hat{c}_{(f)} = \frac{1}{R}\sum_{r=1}^R\hat{c}_{(f)r}
     $
 \EndFor
 \State \textbf{end loop over $f$}
-\State Compute final cross-validated c-index:
+\State Compute final cross-validated C-index:
 $
 \hat{c} = \frac{1}{F}\sum_{f=1}^F \hat{c}_{(f)}
 $
@@ -515,37 +515,38 @@ $
 
 
 \section{Bayesian Optimization}
+\label{sec:bo}
 
 We treat hyperparameter tuning as a black-box optimization problem over a
-bounded domain. Let $\theta$ collect the tuned parameters (at minimum
-$\theta = (k,\alpha,\lambda,\xi)$, and optionally discrete choices
-such as the signature size $n_{\text{top}}$). For a given $\theta$ we run the
-cross-validation procedure in Algorithm \ref{alg:cv}, averaging the c-index
+bounded domain. Let $\psi$ collect the tuned parameters (at minimum
+$\psi = (k,\alpha,\lambda,\xi)$, and optionally discrete choices
+such as the signature size $n_{\text{top}}$). For a given $\psi$ we run the
+cross-validation procedure in Algorithm \ref{alg:cv}, averaging the C-index
 across folds and random initializations to form the objective
 \[
-\hat{c}(\theta) = \frac{1}{F} \sum_{f=1}^F \hat{c}_{(f)}(\theta).
+\hat{c}(\psi) = \frac{1}{F} \sum_{f=1}^F \hat{c}_{(f)}(\psi).
 \]
-Because $\hat{c}(\theta)$ is expensive to evaluate and non-differentiable with
-respect to $\theta$, we use Bayesian optimization (BO) to adaptively select
+Because $\hat{c}(\psi)$ is expensive to evaluate and non-differentiable with
+respect to $\psi$, we use Bayesian optimization (BO) to adaptively select
 candidate configurations.
 
 We place a Gaussian-process (GP) prior on the response surface
-$f(\theta) \sim \mathcal{GP}(0, k(\theta,\theta'))$ with a Mat\'ern kernel and
+$f(\psi) \sim \mathcal{GP}(0, k(\psi,\psi'))$ with a Mat\'ern kernel and
 automatic relevance determination length-scales. Continuous parameters are
 rescaled to $[0,1]$ and penalties are optimized on a log scale; integer-valued
 coordinates (e.g., $k$ or $n_{\text{top}}$) are proposed in the continuous
 space and rounded inside the evaluator. After an initial batch of evaluations,
 the GP is refit after each new observation and used to guide acquisition.
 
-At iteration $t$, let $\mu_t(\theta)$ and $\sigma_t(\theta)$ denote the GP
+At iteration $t$, let $\mu_t(\psi)$ and $\sigma_t(\psi)$ denote the GP
 posterior mean and standard deviation, and let $f_\star$ be the best observed
 score. We select new candidates by maximizing expected improvement (EI),
 \[
-\operatorname{EI}(\theta) =
-\left(\mu_t(\theta) - f_\star - \kappa\right)\Phi(Z(\theta))
-  + \sigma_t(\theta)\phi(Z(\theta)),
+\operatorname{EI}(\psi) =
+\left(\mu_t(\psi) - f_\star - \kappa\right)\Phi(Z(\psi))
+  + \sigma_t(\psi)\phi(Z(\psi)),
 \quad
-Z(\theta) = \frac{\mu_t(\theta) - f_\star - \kappa}{\sigma_t(\theta)},
+Z(\psi) = \frac{\mu_t(\psi) - f_\star - \kappa}{\sigma_t(\psi)},
 \]
 where $\Phi$ and $\phi$ are the standard normal cdf/pdf and $\kappa \ge 0$
 controls the exploration margin. EI is evaluated over a candidate pool sampled
@@ -568,7 +569,7 @@ bounded domain at each step with an exploration margin $\kappa = 0.01$. The
 unsupervised comparator fixed $\alpha = 0$ and tuned the remaining coordinates
 identically.
 
-For model selection, we take the highest observed $\hat{c}(\theta)$ as the
+For model selection, we take the highest observed $\hat{c}(\psi)$ as the
 optimal configuration. When fold-level standard errors are available, we apply
 a one-standard-error rule for $k$: for each rank we retain the configuration
 with the highest observed mean cross-validated C-index, set the threshold one
@@ -613,13 +614,14 @@ The parameter $n_{\text{top}}$ determines the factor-specific gene support used 
 
 Supplementary Fig. \ref{fig:fig-si-bo-tuning} illustrates the tuned response surface for the two most influential coordinates in the PDAC training cohort: the cross-validated C-index over factorization rank $k$ and supervision strength $\alpha$. Performance is maximized at intermediate supervision and moderate rank and degrades toward the unsupervised corner ($\alpha = 0$), consistent with a benefit of survival supervision. This is an empirical model-selection sensitivity surface, not a simulation result.
 
-```{r fig-si-bo-tuning, fig.cap="Bayesian-optimization tuning surface for DeSurv in the PDAC training cohort (TCGA + CPTAC). Gaussian-process--predicted mean cross-validated C-index over factorization rank ($k$) and supervision strength ($\\alpha$; $\\alpha = 0$ corresponds to the unsupervised limit). The response surface shows a broad region of high cross-validated performance at intermediate supervision and moderate rank, with discrimination degrading toward the unsupervised ($\\alpha = 0$) boundary. This is empirical model-selection tuning on the training data, not a simulation result.", echo=FALSE, fig.env='figure*', fig.pos='t', out.height= '3.6in', out.width='4.5in', fig.align='center'}
+```{r fig-si-bo-tuning, fig.cap="Bayesian-optimization tuning surface for DeSurv in the PDAC training cohort (TCGA + CPTAC). Gaussian-process--predicted mean cross-validated C-index over factorization rank ($k$) and supervision strength ($\\alpha$; $\\alpha = 0$ corresponds to the unsupervised limit). The response surface shows a broad region of high cross-validated performance at intermediate supervision and moderate rank, with discrimination degrading toward the unsupervised ($\\alpha = 0$) boundary.", echo=FALSE, fig.env='figure*', fig.pos='t', out.height= '3.6in', out.width='4.5in', fig.align='center'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_bo_tuning_surface_tcgacptac.pdf", density = 300))
 
 ```
 
 \subsection{Consensus initialization for the final model}
+\label{sec:consensus-init}
 
 The final DeSurv model at the selected hyperparameters was initialized from a consensus of multiple independent runs to reduce sensitivity to random starts. We first fit $R = 100$ DeSurv models to the training data from independent random nonnegative initializations at the selected $(k,\alpha,\lambda,\xi,n_{\text{top}})$ (seed 1--100). For each run, the top $n_{\text{top}}$ genes of every learned program were extracted by factor-specificity score, and a gene-by-gene consensus matrix was accumulated across runs, recording how often each pair of genes appeared together among the top genes of the same program.
 
@@ -738,6 +740,7 @@ Puleo            & Microarray & `r .coh$N[["Puleo_array"]]` & `r .coh$cell[["Pul
 \end{table}
 
 \section{Survival Analysis}
+\label{sec:survival}
 
 Survival analyses used overall survival time with event indicators as provided
 by each cohort. For fitted DeSurv models, sample-level program scores are the
@@ -765,6 +768,21 @@ Table \ref{tab:het-ci} and the between-cohort heterogeneity test standardize eac
 score to zero mean and unit standard deviation within its own cohort, so they are
 per within-cohort standard deviation. Hazard ratios under (ii) and (iii) are
 therefore not interchangeable, whereas C-indices are identical under all three.
+
+\subsection{Independence of discovery and validation}
+
+DeSurv
+is trained with survival supervision only; it never uses PurIST, DeCAF, or any molecular
+subtype label during factorization or hyperparameter selection. The PurIST and DeCAF
+subtype calls were fixed before the DeSurv analysis (loaded as precomputed per-cohort
+annotations) and enter only as covariates in the adjusted Cox models, not as inputs to
+DeSurv. All rank and hyperparameter selection (including the one-standard-error rule) was
+performed by cross-validation entirely within the TCGA and CPTAC training data;
+no external validation cohort was used for training or tuning.
+Validation-cohort expression enters only at scoring, a fixed-basis projection
+($Z = \widetilde{W}^\top X_{\text{new}}$) that uses no validation outcome, and
+validation-cohort survival outcomes were used only for the final, out-of-sample
+performance evaluation.
 
 \section{Gene Program Correlation Analysis}
 \label{sec:gene-program-correlation}
@@ -802,11 +820,11 @@ subtypes [@chansengyue2020transcription]; the Maurer ECM and immune programs
 tumor-compartment signatures [@puleo2018stratification]; the Elyada iCAF and
 myCAF signatures [@elyada2019cross]; the SCISSORS fibroblast and tumor
 signatures [@leary2023s]; and the DeCAF proCAF and restCAF programs
-[@peng2024determination]. Three source lists were dropped before analysis
-because they duplicate a retained program gene for gene (a second copy of the
-Moffitt activated and normal stroma lists, and the SCISSORS CAF-versus-perivascular
-variants of its apCAF, iCAF and myCAF lists), together with the nine-gene
-PurISS iCAF and myCAF lists and Bailey's non-unique gene set. The SCISSORS iCAF
+[@peng2024determination]. Nine source entries were excluded before analysis: six that duplicate a
+retained list gene for gene (a second copy of the Moffitt activated and normal
+stroma lists, the SCISSORS CAF-versus-perivascular variants of its apCAF, iCAF
+and myCAF lists, and a second copy of its perivascular list), the two nine-gene
+PurISS iCAF and myCAF lists, and Bailey's non-unique gene set. The SCISSORS iCAF
 and myCAF signatures are displayed under the DeCAF nomenclature, restCAF and
 proCAF (Stromal resolution: which reference programs are recovered from bulk).
 Puleo's whole-tumor ``pure basal-like'' component and its tumor-compartment
@@ -882,6 +900,7 @@ $41.8\%/18.6\%/39.7\%$ for NMF (N1/N2/N3) and $18.8\%/25.2\%/56.0\%$ for DeSurv
 D1 ($\Delta\ell = 66.4$) with all NMF factors negligible.
 
 \section{Factor Correspondence Analysis}
+\label{sec:factor-correspondence}
 
 To assess which biological programs are preserved, altered, or suppressed
 under survival supervision, we quantified the pairwise correspondence between
@@ -896,9 +915,89 @@ ranks while remaining robust to scale differences between the two methods.
 Results are displayed as a heatmap with NMF factors as rows and DeSurv factors
 as columns (main text, Fig.\ 2d).
 
-\subsection{Cross-method reconstructability and reconstruction fidelity}
+\section{Analysis scripts and cached objects}
+\label{sec:scripts}
 
-The correlation heatmap summarizes pairwise similarity; to make a direction-aware
+Every number in this document and in the main text is read at render time from
+an object cached by one of the pipeline scripts in the accompanying code
+repository; none is typed. Table \ref{tab:scripts} indexes the scripts referred
+to in this document by the analysis they perform, so that the prose above and
+below can name analyses rather than files.
+
+```{r tab-scripts, echo=FALSE, results='asis'}
+.sc <- data.frame(
+  Script = c("code/03", "code/04", "code/05", "code/06", "code/07", "code/11", "code/14",
+             "code/15", "code/16", "code/17", "code/18", "code/19", "code/20", "code/21",
+             "code/23", "code/24", "code/25", "code/26"),
+  Analysis = c(
+    "Bayesian optimization of hyperparameters; the matched-budget refinement with $\\alpha$ pinned at 0",
+    "Final 100-restart consensus fits (DeSurv, Lee NMF at matched and elbow rank, unsupervised controls)",
+    "External validation: frozen projection, linear predictor and per-dataset C-index",
+    "Fixed-hyperparameter $k \\times \\alpha$ cross-validation grid and its external-validation curve",
+    "Simulation studies (three scenarios, 100 replicates each)",
+    "Treated-cohort analyses (O'Kane/COMPASS arm-stratified D1; Linehan paired D2)",
+    "Variance partition of the D1 score; additive and interaction adjustment for PurIST and DeCAF",
+    "Single-component supervised comparators and recovery of the D1 axis",
+    "Subsample stability of top-gene sets across methods",
+    "Proper-scoring sensitivity (integrated Brier score, IPA)",
+    "Clinical-covariate and tumor-purity adjustment by cohort",
+    "Independently tuned supervised comparators, axis decomposition and compartment attribution",
+    "Dispersion of individual random restarts",
+    "Reproducibility of the consensus endpoint from disjoint restart halves",
+    "Stromal reference-program resolution (top-gene and full-gene views)",
+    "Reference-program coverage, edges and multiplicity by rank; the reference-universe table",
+    "Between-cohort heterogeneity, proportional-hazards diagnostic and bootstrap C-index intervals",
+    "Reconstruction of the gradient-scaling factor $\\zeta$ along the production optimization path"),
+  `Read in` = c(
+    paste0("Sections ", "\\ref{sec:bo}, \\ref{sec:matched}"), paste0("Sections ", "\\ref{sec:consensus-init}, \\ref{sec:progstab}"), paste0("Sections ", "\\ref{sec:survival}, \\ref{sec:het}"), paste0("Sections ", "\\ref{sec:cvk}, \\ref{sec:coverage}"),
+    paste0("Section ", "\\ref{sec:sim}"), paste0("Section ", "\\ref{si:treated}"), paste0("Section ", "\\ref{sec:varpart}"), paste0("Section ", "\\ref{sec:d1axis}"),
+    paste0("Section ", "\\ref{sec:progstab}"), paste0("Section ", "\\ref{sec:brier}"), paste0("Section ", "\\ref{sec:purity}"), paste0("Section ", "\\ref{sec:tuned}"),
+    paste0("Section ", "\\ref{sec:progstab}"), paste0("Section ", "\\ref{sec:progstab}"), paste0("Section ", "\\ref{sec:stroma}"), paste0("Sections ", "\\ref{sec:gene-program-correlation}, \\ref{sec:coverage}"),
+    paste0("Sections ", "\\ref{sec:ph}, \\ref{sec:het}"), paste0("Sections ", "\\ref{sec:wupdate}, \\ref{sec:progstab}")),
+  check.names = FALSE, stringsAsFactors = FALSE)
+knitr::kable(.sc, format = "latex", booktabs = TRUE, escape = FALSE, linesep = "",
+  caption = "Index of analysis scripts. Scripts are numbered as in the code repository; helper functions shared by several scripts (de-duplication of PACA-AU patients, validation scoring, elbow selection) are called from the scripts listed. Section numbers refer to this document. \\label{tab:scripts}") |>
+  kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 8) |>
+  kableExtra::column_spec(2, width = "9.5cm")
+```
+
+\clearpage
+
+\newpage
+
+\part{Supplementary Results}
+
+<!-- Supplementary numbering convention: all SI figures labeled "Fig. S1", "Fig. S2", etc.
+     (not "Figure 1"). Tables: "Table S1", etc. Internal scenario code names
+     (R0_easy, R00_null, R_mixed) are replaced with descriptive labels (prognostic,
+     null, mixed) consistent with main-text terminology. -->
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(message = FALSE,
+                      warning = FALSE,
+                      echo    = FALSE,
+                      fig.path = "figures/",
+                      dev     = "png",
+                      dpi     = 300)
+source("paper/load_precomputed.R")
+library(dplyr)
+library(ggplot2)
+library(cowplot)
+if (!exists("set_fig_font", inherits = TRUE)) {
+  set_fig_font <- function(plot_obj, size = 10) {
+    if (inherits(plot_obj, "ggplot")) {
+      plot_obj + ggplot2::theme(text = ggplot2::element_text(size = size))
+    } else {
+      plot_obj
+    }
+  }
+}
+```
+
+
+\section{Cross-method reconstructability and reconstruction fidelity}
+\label{sec:recon}
+
+The factor-correspondence heatmap of Section \ref{sec:factor-correspondence} (main-text Fig.\ 2d) summarizes pairwise similarity; to make a direction-aware
 statement of how much of each factor is \emph{linearly reconstructable} from the
 other method's basis, we regressed each factor's gene-loading vector onto the full
 set of the other method's loading vectors and report the ordinary least-squares
@@ -947,7 +1046,7 @@ exocrine factor (N2) less well ($R^2 = `r sprintf("%.2f", .r2_N[2])`$).
 .gap_u <- 100 * (.r2u[1] - .r2u[2]); .gap_c <- 100 * (.r2c[1] - .r2c[2])
 ```
 
-At the whole-matrix level, this reorganization carries a real but bounded reconstruction cost (Table \ref{tab:overall-r2}). On the conventional centered $R^2$, DeSurv reconstructs `r sprintf("%.2f", .r2c[2])` of the analysis matrix against `r sprintf("%.2f", .r2c[1])` for unsupervised NMF, a difference of `r sprintf("%.1f", .gap_c)` percentage points.
+At the whole-matrix level, this reorganization carries a real but bounded reconstruction cost (Table \ref{tab:overall-r2}). On the conventional centered $R^2$, DeSurv reconstructs `r sprintf("%.2f", .r2c[2])` of the analysis matrix against `r sprintf("%.2f", .r2c[1])` for unsupervised NMF, a difference of `r sprintf("%.1f", .gap_c)` percentage points and a relative loss of about `r sprintf("%.0f", 100 * .gap_c / (100 * .r2c[1]))`\%; this centered figure is the one reported in the main text. On the uncentered scale the gap is only `r sprintf("%.1f", .gap_u)` percentage points, but that scale flatters any nonnegative low-rank fit to a rank matrix.
 
 ```{r tab-overall-r2, echo=FALSE, results='asis'}
 .or <- data.frame(
@@ -958,20 +1057,12 @@ At the whole-matrix level, this reorganization carries a real but bounded recons
   stringsAsFactors = FALSE)
 colnames(.or) <- c("Model", "Centered $R^2$", "Uncentered $R^2$", "Residual fraction (centered)")
 knitr::kable(.or, format = "latex", escape = FALSE, booktabs = TRUE,
-  caption = sprintf("Whole-matrix reconstruction $R^2$ across the 1,970-gene analysis matrix for unsupervised NMF versus DeSurv at $k = 3$. Two denominators are shown. The centered $R^2$ is the conventional definition, taken about the grand mean, and is the one to read as fraction of variation reconstructed. The uncentered $R^2$ divides by $\\sum X^2$; because the analysis matrix holds within-sample ranks with grand mean $p/2$, the mean alone accounts for about 75\\%% of that denominator, so uncentered values are high for any nonnegative low-rank fit and are reported only for comparability with the code. On the centered definition DeSurv gives up %.1f percentage points of reconstruction relative to NMF (%.1f on the uncentered scale). \\label{tab:overall-r2}", .gap_c, .gap_u)) |>
+  caption = sprintf("Whole-matrix reconstruction $R^2$ across the 1,970-gene analysis matrix for unsupervised NMF versus DeSurv at $k = 3$. Two denominators are shown. The centered $R^2$ is the conventional definition, taken about the grand mean, and is the one to read as fraction of variation reconstructed. The uncentered $R^2$ divides by $\\sum X^2$; because the analysis matrix holds within-sample ranks with grand mean $p/2$, the mean alone accounts for about 75\\%% of that denominator, so uncentered values are high for any nonnegative low-rank fit and are reported for completeness. On the centered definition DeSurv gives up %.1f percentage points of reconstruction relative to NMF (%.1f on the uncentered scale). \\label{tab:overall-r2}", .gap_c, .gap_u)) |>
   kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
-On the uncentered scale used by
-the reconstruction helper the gap is only $`r sprintf("%.1f", .gap_u)`$
-percentage points, but that scale flatters any nonnegative low-rank fit to a
-rank matrix, and on the conventional centered definition DeSurv gives up
-$`r sprintf("%.1f", .gap_c)`$ percentage points of reconstruction $R^2$
-relative to unsupervised NMF (Table \ref{tab:overall-r2}), a relative loss of
-about $`r sprintf("%.0f", 100 * .gap_c / (100 * .r2c[1]))`$\%. We report the
-centered figure in the main text.
-
-\subsection{The D1 axis is not specific to DeSurv}
+\section{The D1 axis is not specific to DeSurv}
+\label{sec:d1axis}
 
 ```{r suprec-stats, echo=FALSE, message=FALSE, warning=FALSE}
 load_result("supervised_recovery_stats")
@@ -1017,9 +1108,10 @@ load_result("desurv_vs_supervised_tuned")
 .stvns  <- .stv$meta$nseed
 ```
 
-\subsection{Robustness to tuned supervised comparators and compartment attribution}
+\section{Robustness to tuned supervised comparators and compartment attribution}
+\label{sec:tuned}
 
-The analyses above establish D1 as a survival-associated expression direction shared across supervised methods; here we ask what DeSurv adds beyond recovering that direction, using canonical, independently tuned comparators in place of the simple single-component versions above: supervised principal components (\texttt{superpc}; Bair--Tibshirani, with cross-validated screening threshold and component number) and penalized (lasso) Cox (\texttt{glmnet}, a single $\lambda_{\min}$ model). Cox partial least squares was not included in this comparison because a validated multi-component implementation was unavailable in our environment. All methods used the same 1,970-gene universe selected from the training data by expression and variance and performed its own feature selection; DeSurv was scored with its Bayesian-optimization-selected top-270-per-factor programs; all scoring used the frozen, rank-transformed transfer with no validation refitting.
+The preceding section establishes D1 as a survival-associated expression direction shared across supervised methods; here we ask what DeSurv adds beyond recovering that direction, using canonical, independently tuned comparators in place of the simple single-component versions above: supervised principal components (\texttt{superpc}; Bair--Tibshirani, with cross-validated screening threshold and component number) and penalized (lasso) Cox (\texttt{glmnet}, a single $\lambda_{\min}$ model). Cox partial least squares was not included in this comparison because a validated multi-component implementation was unavailable in our environment. All methods used the same 1,970-gene universe selected from the training data by expression and variance and performed its own feature selection; DeSurv was scored with its Bayesian-optimization-selected top-270-per-factor programs; all scoring used the frozen, rank-transformed transfer with no validation refitting.
 
 External discrimination was similar: the pooled frozen-transfer C-index was $`r .stvp("DeSurv full LP")`$ for the DeSurv linear predictor, $`r .stvp("Supervised PCA")`$ for supervised PCA, and $`r .stvp("Sparse Cox")`$ for penalized Cox. Consistent with the score-level recovery above, both tuned methods aligned with the D1 direction (training $|r| = `r .stva("Sparse Cox","D1")`$ for penalized Cox and $`r .stva("Supervised PCA","D1")`$ for supervised PCA) and with the DeSurv linear predictor ($|r| = `r .stva("Sparse Cox","fullLP")`$ for penalized Cox and $`r .stva("Supervised PCA","fullLP")`$ for supervised PCA), but were only weakly correlated with the activated-stroma/proCAF program D2 ($|r| = `r .stva("Sparse Cox","D2")`$ for penalized Cox and $`r .stva("Supervised PCA","D2")`$ for supervised PCA): a single supervised risk axis captures the dominant tumor-axis signal but not the separate stromal program.
 
@@ -1032,7 +1124,8 @@ load_result("desurv_brier_stats")
 .br <- desurv_brier_stats; .brp <- .br$pooled; .bripa <- range(.br$per_cohort$ipa)
 ```
 
-\subsection*{Proper-scoring sensitivity of the external validation}
+\section{Proper-scoring sensitivity of the external validation}
+\label{sec:brier}
 
 The main-text external validation reports discrimination with Harrell's C-index
 under a Cox proportional-hazards model. Harrell's C ranks patients by a single
@@ -1047,7 +1140,7 @@ recalibrating only its scalar slope and baseline hazard within each cohort and
 integrating over that cohort's follow-up to the 80th percentile of its event
 times.
 
-Across the `r nrow(.br$per_cohort)` cohorts the DeSurv predictor achieved an
+Across the `r c("one","two","three","four","five","six")[nrow(.br$per_cohort)]` validation platform datasets (PACA-AU array restricted to its array-only patients) the DeSurv predictor achieved an
 event-weighted integrated Brier score of `r sprintf("%.3f", .brp["ibs"])` versus
 `r sprintf("%.3f", .brp["ibs_null"])` for a Kaplan--Meier reference, an index of
 prediction accuracy (IPA $= 1 - \mathrm{IBS}/\mathrm{IBS}_{\text{null}}$) of
@@ -1070,7 +1163,8 @@ discrimination (C $= `r sprintf("%.2f", .brp["cindex"])`$) and with DeSurv's
 contribution being a separately resolved tumor- and stroma-associated decomposition
 rather than higher predictive accuracy.
 
-\subsection*{Proportional-hazards diagnostic}
+\section{Proportional-hazards diagnostic}
+\label{sec:ph}
 
 ```{r si-ph-diagnostic, echo=FALSE, message=FALSE, warning=FALSE}
 # Single owner: the proportional-hazards diagnostic is computed once, in
@@ -1086,9 +1180,10 @@ rather than higher predictive accuracy.
 .ph_slope <- .ph_cache$slope_time
 ```
 
-Because the pooled hazard ratio assumes proportional hazards, we tested the scaled Schoenfeld residuals of the stratified validation model ($\mathrm{Surv}(t,\delta) \sim \text{risk\_z} + \mathrm{strata}(\text{dataset})$) with \texttt{survival::cox.zph}. The proportional-hazards assumption was not supported for the standardized DeSurv linear predictor ($\chi^2 = `r sprintf("%.1f", .ph_chisq)`$, $\mathrm{df} = `r .ph_df`$, $P = `r sprintf("%.1e", .ph_p)`$), with the association attenuating over follow-up (the scaled Schoenfeld residuals, an estimate of the time-varying coefficient, decline with Kaplan--Meier-transformed time, slope $`r sprintf("%.2f", .ph_slope)`$, against a positive coefficient). The reported pooled hazard ratio is therefore a time-averaged summary of that association, not a constant multiplicative effect. The horizon-integrated proper-scoring (IBS/IPA) sensitivity above complements it by integrating prediction accuracy over each cohort's event-time horizon rather than through a single hazard-ratio summary.
+Because the pooled hazard ratio assumes proportional hazards, we tested the scaled Schoenfeld residuals of the validation model, a Cox regression of overall survival on the standardized DeSurv linear predictor with a separate baseline hazard for each dataset (stratification), using the Grambsch--Therneau test. The proportional-hazards assumption was not supported for the standardized DeSurv linear predictor ($\chi^2 = `r sprintf("%.1f", .ph_chisq)`$, $\mathrm{df} = `r .ph_df`$, $P = `r sprintf("%.1e", .ph_p)`$), with the association attenuating over follow-up (the scaled Schoenfeld residuals, an estimate of the time-varying coefficient, decline with Kaplan--Meier-transformed time, slope $`r sprintf("%.2f", .ph_slope)`$, against a positive coefficient). The reported pooled hazard ratio is therefore a time-averaged summary of that association, not a constant multiplicative effect. The horizon-integrated proper-scoring (IBS/IPA) sensitivity above complements it by integrating prediction accuracy over each cohort's event-time horizon rather than through a single hazard-ratio summary.
 
-\subsection*{Between-cohort heterogeneity and C-index confidence intervals}
+\section{Between-cohort heterogeneity and C-index confidence intervals}
+\label{sec:het}
 
 ```{r het-ci-stats, echo=FALSE, message=FALSE, warning=FALSE}
 load_result("validation_heterogeneity_ci")
@@ -1096,43 +1191,21 @@ load_result("validation_heterogeneity_ci")
 .hcic <- .hci$cindex
 .hcip <- .hcic[.hcic$cohort == "POOLED", ]
 .hdisp <- c(Dijk = "Dijk", Moffitt = "Moffitt", `PACA-AU` = "PACA-AU", Puleo = "Puleo")
-# Model formulas are printed from the cached object rather than retyped. They
-# contain "~" and "_", both special in LaTeX, so escape before typesetting.
-# NOTE the asymmetry: with fixed = TRUE the replacement is taken literally, so
-# it needs ONE escaped backslash; the second gsub is regex, where "\\\\_" is
-# needed to emit a single "\_".
-.tt <- function(s) paste0("\\texttt{",
-  gsub("_", "\\\\_", gsub("~", "$\\sim$", s, fixed = TRUE)), "}")
-stopifnot(identical(.tt("a ~ b_c"), "\\texttt{a $\\sim$ b\\_c}"))
 ```
 
-The five validation platform datasets span four independent patient cohorts, because the PACA-AU array and RNA-seq series profile a partially overlapping set of the same ICGC patients. All analyses in this subsection are patient-level and de-duplicated by the shared rule of \texttt{R/paca\_dedup.R}: a patient profiled on both PACA-AU platforms is represented once, by the RNA-seq record, leaving `r .hci$paca$n_after_dedup` PACA-AU patients (`r .hci$paca$n_array_only` array-only and `r .hci$paca$n_rnaseq` RNA-seq) and `r .hci$totals$n` unique patients with `r .hci$totals$events` deaths in total (\texttt{code/25}).
+The five validation platform datasets span four independent patient cohorts, because the PACA-AU array and RNA-seq series profile a partially overlapping set of the same ICGC patients. All analyses in this section are patient-level and de-duplicated by the rule used throughout the manuscript: a patient profiled on both PACA-AU platforms is represented once, by the RNA-seq record, leaving `r .hci$paca$n_after_dedup` PACA-AU patients (`r .hci$paca$n_array_only` array-only and `r .hci$paca$n_rnaseq` RNA-seq) and `r .hci$totals$n` unique patients with `r .hci$totals$events` deaths in total.
 
-The DeSurv linear predictor was standardized \emph{within} cohort, \texttt{ave(risk\_score, cohort, FUN = scale)}, the same convention used for the per-factor forest estimates in main-text Fig. \ref{fig:val}a and deliberately not the pooled-standard-deviation convention used for the headline pooled hazard ratio. Within-cohort standardization removes the scale degree of freedom (every cohort's score then has mean zero and unit standard deviation by construction), so a cohort-by-score interaction can only be testing whether the slope per within-cohort standard deviation differs between cohorts, and not whether the score is more dispersed in one cohort than another. Comparing a common-slope model (`r .tt(.hci$formulas$common_slope)`) with a cohort-specific-slope model (`r .tt(.hci$formulas$cohort_specific_slope)`) by likelihood-ratio test gave $\chi^2 = `r sprintf("%.2f", .hci$lrt$stat)`$ on `r .hci$lrt$df` degrees of freedom ($P = `r sprintf("%.2f", .hci$lrt$p)`$); standardizing within platform rather than within cohort, which removes the small residual location difference between the two PACA-AU platforms, gives $\chi^2 = `r sprintf("%.2f", .hci$sensitivity$lrt_within_platform_standardization$stat)`$ on `r .hci$sensitivity$lrt_within_platform_standardization$df` degrees of freedom ($P = `r sprintf("%.2f", .hci$sensitivity$lrt_within_platform_standardization$p)`$).
+The DeSurv linear predictor was standardized \emph{within} cohort (centered and scaled to unit standard deviation separately in each cohort), the same convention used for the per-factor forest estimates in main-text Fig. \ref{fig:val}a and not the pooled-standard-deviation convention used for the headline pooled hazard ratio (Survival Analysis). Within-cohort standardization removes the scale degree of freedom (every cohort's score then has mean zero and unit standard deviation by construction), so a cohort-by-score interaction tests only whether the slope per within-cohort standard deviation differs between cohorts, and not whether the score is more dispersed in one cohort than another. Both models are Cox regressions of overall survival with a separate baseline hazard for each cohort (stratification): the common-slope model has the standardized predictor as its single covariate, and the cohort-specific-slope model adds the predictor-by-cohort interaction. Comparing them by likelihood-ratio test gave $\chi^2 = `r sprintf("%.2f", .hci$lrt$stat)`$ on `r .hci$lrt$df` degrees of freedom ($P = `r sprintf("%.2f", .hci$lrt$p)`$); standardizing within platform rather than within cohort, which removes the small residual location difference between the two PACA-AU platforms, gives $\chi^2 = `r sprintf("%.2f", .hci$sensitivity$lrt_within_platform_standardization$stat)`$ on `r .hci$sensitivity$lrt_within_platform_standardization$df` degrees of freedom ($P = `r sprintf("%.2f", .hci$sensitivity$lrt_within_platform_standardization$p)`$).
 
 Cochran's $Q$ over the four cohort-specific log hazard ratios and their standard errors was $`r sprintf("%.2f", .hci$heterogeneity$Q)`$ on `r .hci$heterogeneity$df` degrees of freedom ($P = `r sprintf("%.2f", .hci$heterogeneity$p)`$), giving $I^2 = `r sprintf("%.0f", 100*.hci$heterogeneity$I2)`$\% under $I^2 = \max\{0, (Q - \mathrm{df})/Q\}$. $Q$ and $I^2$ are descriptive summaries of dispersion among the four estimates and are reported as complements to the interaction test, not as a substitute for it. The likelihood-ratio test is the inferential statement, and with four cohorts both are low-powered against modest heterogeneity.
 
-Confidence intervals for the C-index were obtained by a stratified nonparametric bootstrap on the same de-duplicated table, resampling patients with replacement \emph{within} cohort so that no replicate mixes patients across cohorts or reinstates a de-duplicated PACA-AU record ($B = `r .hci$meta$B`$ replicates, seed `r .hci$meta$seed`, percentile intervals). The PACA-AU stratum contains its `r .hci$paca$n_array_only` array-only and `r .hci$paca$n_rnaseq` RNA-seq patient records. Concordance was evaluated with \texttt{survival::concordance(Surv(time, event) $\sim$ risk\_score, reverse = TRUE)}, the convention of \texttt{R/predict\_validation\_scores.R} and \texttt{code/05}, which \texttt{code/25} verifies reproduces the per-dataset C-indices of Supplementary Table \ref{tab:tab-cindex-comparison} exactly. The combined value is the event-weighted mean of the cohort C-indices, as in \texttt{code/17} and \texttt{code/19}, and therefore never forms a concordance pair across cohorts. The combined C-index was $`r sprintf("%.3f", .hcip$cindex)`$ (95\% CI $`r sprintf("%.3f", .hcip$lo)`$--$`r sprintf("%.3f", .hcip$hi)`$); the per-cohort hazard ratios and C-indices are given in Table \ref{tab:het-ci}.
+Confidence intervals for the C-index were obtained by a stratified nonparametric bootstrap on the same de-duplicated table, resampling patients with replacement \emph{within} cohort so that no replicate mixes patients across cohorts or reinstates a de-duplicated PACA-AU record ($B = `r .hci$meta$B`$ replicates, seed `r .hci$meta$seed`, percentile intervals). Concordance was evaluated as Harrell's C with higher scores treated as higher risk, the convention of the external-validation C-indices, and the heterogeneity script (Table \ref{tab:scripts}) verifies that this reproduces the per-dataset C-indices of Supplementary Table \ref{tab:tab-cindex-comparison} exactly. The combined value is the event-weighted mean of the cohort C-indices, the same convention as the proper-scoring and tuned-comparator analyses, and therefore never forms a concordance pair across cohorts. The combined C-index was $`r sprintf("%.3f", .hcip$cindex)`$ (95\% CI $`r sprintf("%.3f", .hcip$lo)`$--$`r sprintf("%.3f", .hcip$hi)`$); the per-cohort hazard ratios and C-indices are given in Table \ref{tab:het-ci}.
 
-\subsection*{Independence of discovery and validation}
-
-DeSurv
-is trained with survival supervision only; it never uses PurIST, DeCAF, or any molecular
-subtype label during factorization or hyperparameter selection. The PurIST and DeCAF
-subtype calls were fixed before the DeSurv analysis (loaded as precomputed per-cohort
-annotations) and enter only as covariates in the adjusted Cox models, not as inputs to
-DeSurv. All rank and hyperparameter selection (including the one-standard-error rule) was
-performed by cross-validation entirely within the TCGA and CPTAC training data;
-no external validation cohort was used for training or tuning.
-Validation-cohort expression enters only at scoring, a fixed-basis projection
-($Z = \widetilde{W}^\top X_{\text{new}}$) that uses no validation outcome, and
-validation-cohort survival outcomes were used only for the final, out-of-sample
-performance evaluation.
-
-\subsection*{Variance partition of the D1 score}
+\section{Variance partition of the D1 score}
+\label{sec:varpart}
 
 The main text reports the fraction of the D1 score's variance explained by the
-binary PurIST and DeCAF classifications (\texttt{code/14}). D1 scores are first
+binary PurIST and DeCAF classifications. D1 scores are first
 standardized within cohort, and an ordinary least-squares model is then fitted
 with cohort as a fixed effect together with PurIST, DeCAF and their interaction.
 The quantity reported is the ordinary $R^2$ of that model, not the adjusted
@@ -1157,7 +1230,7 @@ cells, so that its classical and restCAF-like arms would simply re-express one
 cell of a two-by-two. The main text reports the additive adjustment (D1 added to
 a cohort-stratified Cox model containing PurIST and DeCAF as main effects). As a
 sensitivity analysis we repeated that test with the PurIST-by-DeCAF interaction
-also in the base model (\texttt{code/14}); the statistics below are from this
+also in the base model; the statistics below are from this
 interaction model and differ slightly from the main-text additive ones for that
 reason. The interaction term itself is not prognostic
 (HR $`r sprintf("%.2f", .d1i$int_hr)`$, $P = `r sprintf("%.2f", .d1i$int_p)`$),
@@ -1172,7 +1245,8 @@ saturated four-level categorical variable is the same model reparameterized and
 returns the identical statistic
 ($\chi^2 = `r sprintf("%.2f", .d1i$cell_lr_chisq)`$). D1's prognostic information is therefore not captured by the saturated four-level joint classification.
 
-\subsection*{Adjustment for clinical covariates and tumor purity}
+\section{Adjustment for clinical covariates and tumor purity}
+\label{sec:purity}
 
 The association of the frozen DeSurv linear predictor with survival was estimated in cohort-specific Cox models before and after adjustment for the clinical covariates that cohort annotates and, where available, for tumor purity (Table \ref{tab:clinical-adjustment}). Purity annotation is present in only a subset of cohorts and is derived by different estimators across them (TCGA-PAAD purity was estimated by ABSOLUTE; the PACA-AU and Moffitt purity fields were used as distributed with the cohort annotations, which do not identify the estimator), so it is used here solely as an adjustment covariate; wherever purity could be measured on a full cohort the adjusted hazard ratio was essentially unchanged from the unadjusted one, providing no evidence that the association was explained by measured tumor purity. Consistently, the D1 score itself correlated only weakly with purity in the two full-cohort datasets (Spearman $\rho = `r sprintf("%.2f", read_result("desurv_clinical_adjustment")$PACA_AU_array$purity_cor$D1)`$ in PACA-AU array and $`r sprintf("%.2f", read_result("desurv_clinical_adjustment")$PACA_AU_seq$purity_cor$D1)`$ in PACA-AU RNA-seq), the values reported in the main text.
 
@@ -1197,40 +1271,8 @@ knitr::kable(.catab, format="latex", escape=FALSE, booktabs=TRUE,
   kableExtra::kable_styling(latex_options=c("HOLD_position","scale_down"), font_size=8)
 ```
 
-\clearpage
-
-\newpage
-
-\part{Supplementary Results}
-
-<!-- Supplementary numbering convention: all SI figures labeled "Fig. S1", "Fig. S2", etc.
-     (not "Figure 1"). Tables: "Table S1", etc. Internal scenario code names
-     (R0_easy, R00_null, R_mixed) are replaced with descriptive labels (prognostic,
-     null, mixed) consistent with main-text terminology. -->
-```{r, echo=FALSE, message=FALSE, warning=FALSE}
-knitr::opts_chunk$set(message = FALSE,
-                      warning = FALSE,
-                      echo    = FALSE,
-                      fig.path = "figures/",
-                      dev     = "png",
-                      dpi     = 300)
-source("paper/load_precomputed.R")
-library(dplyr)
-library(ggplot2)
-library(cowplot)
-if (!exists("set_fig_font", inherits = TRUE)) {
-  set_fig_font <- function(plot_obj, size = 10) {
-    if (inherits(plot_obj, "ggplot")) {
-      plot_obj + ggplot2::theme(text = ggplot2::element_text(size = size))
-    } else {
-      plot_obj
-    }
-  }
-}
-```
-
-
-# Empirical optimization stability across random initializations
+\section{Empirical optimization stability across random initializations}
+\label{sec:optstab}
 
 ```{r converge-diag, echo=FALSE}
 .sf    <- read_result("desurv_seed_fits_tcgacptac")
@@ -1255,7 +1297,8 @@ All 100 runs terminated on the stopping criterion rather than the iteration cap,
 
 
 
-# Stability of the recovered gene programs
+\section{Stability of the recovered gene programs}
+\label{sec:progstab}
 
 ```{r program-stability, echo=FALSE, message=FALSE, warning=FALSE}
 .ps  <- read_result("program_stability_stats")
@@ -1275,8 +1318,7 @@ establish that the programs it converges to are the same ones each time, and
 that is the property the manuscript relies on when it applies a frozen
 decomposition across cohorts. We therefore measured stability at the
 level of the recovered programs rather than the objective, using the same
-$R = `r .ps$meta$n_restarts`$ cached initializations (\texttt{code/20},
-\texttt{code/21}). No model was refitted for the restart analysis.
+$R = `r .ps$meta$n_restarts`$ cached initializations. No model was refitted for the restart analysis.
 
 **Individual restarts are highly dispersed.** Comparing pairs of independent
 random restarts, and matching their columns one to one by absolute Spearman
@@ -1309,8 +1351,8 @@ $W_0$: with programs corresponding by position (confirmed against the full
 correlation matrix), gene-loading correlations between $W_0$ and the final $W$
 were `r sprintf("%.2f", min(.zt$w0$r))`--`r sprintf("%.2f", max(.zt$w0$r))` and
 top-$`r .zt$w0$ntop`$ Jaccard overlaps were
-`r sprintf("%.2f", min(.zt$w0$jaccard))`--`r sprintf("%.2f", max(.zt$w0$jaccard))`
-(\texttt{code/26}). The consensus therefore supplies a reproducible
+`r sprintf("%.2f", min(.zt$w0$jaccard))`--`r sprintf("%.2f", max(.zt$w0$jaccard))`.
+The consensus therefore supplies a reproducible
 initialization rather than fixing the final basis.
 
 The optimizer alone is not identifiable. The consensus step is what makes the
@@ -1342,9 +1384,10 @@ relative to the consensus procedure used for the reported model, because each
 refit here is a single run. Gene-level resampling stability addresses a complementary property distinct
 from reproducibility of the frozen end-to-end procedure.
 
-# Simulation results under null and mixed scenarios
+\section{Simulation results under null and mixed scenarios}
+\label{sec:sim}
 
-To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the prognostic scenario (main text Fig. \ref{fig:sim}), the factor-specific survival signal contributed relatively little transcriptomic variation compared with the shared outcome-neutral background signal, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, survival depended on 300 genes per lethal factor, of which 50% were factor-specific markers and 50% were background genes with loadings shared across all factors. All scenarios used $G = 3{,}000$ genes, $N = 200$ samples, $K = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Methods). Performance was evaluated using the concordance index (C-index) on the held-out 30\% test split of each replicate, precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
+To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the prognostic scenario (main text Fig. \ref{fig:sim}), the factor-specific survival signal contributed relatively little transcriptomic variation compared with the shared outcome-neutral background signal, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, survival depended on 300 genes per lethal factor, of which 50% were factor-specific markers and 50% were background genes with loadings shared across all factors. All scenarios used $p = 3{,}000$ genes, $n = 200$ samples, $k = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Methods). Performance was evaluated using the concordance index (C-index) on the held-out 30\% test split of each replicate, precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
 
 ```{r si-null-alpha, echo=FALSE}
 load_result("sim_figs_by_scenario")
@@ -1373,11 +1416,12 @@ cowplot::ggdraw() + cowplot::draw_image(
 ```
 
 
-# Cross-validated C-index across factorization rank
+\section{Cross-validated C-index across factorization rank}
+\label{sec:cvk}
 
 To evaluate how the number of latent factors $k$ affects prognostic performance, as a sensitivity analysis we performed an exhaustive grid search over $k \in \{2, 3, \ldots, 12\}$ and supervision strength $\alpha \in \{0, 0.05, \ldots, 0.95\}$ using 5-fold cross-validation on the TCGA+CPTAC training cohort. For each $k$, the best-performing $\alpha$ was selected by maximizing the mean CV C-index. The unsupervised limit ($\alpha = 0$) was evaluated at the same $k$ values for comparison. Results are shown for two gene-selection settings: $n_{\text{top}} = 270$ top genes per factor and $n_{\text{top}} = \text{ALL}$ (all genes retained), both at $\lambda = 0.349$ and $\xi = 0.056$. External validation C-index is shown descriptively; validation outcomes were not used to select $k$, $\alpha$, $\lambda$, $\xi$, or $n_{\text{top}}$.
 
-Fig. \ref{fig:fig-cindex-by-k} shows the resulting C-index curves for both training (CV) and external validation (pooled across held-out cohorts), with shaded ribbons indicating $\pm 1$ standard error. Rank was selected on the training cross-validated concordance: for DeSurv the curve is close to flat across the whole range examined, spanning about two standard errors from $k = 2$ to $k = 12$ with its nominal maximum at $k = 9$ rather than at the selected rank (this fixed-$\lambda$, $\xi$, $n_{\text{top}}$ grid is a different exercise from the full Bayesian-optimization search over all tuned hyperparameters, whose highest observed mean C-index occurred at $k = `r .ks$k_best`$), and applying the same one-standard-error rule to this fixed-hyperparameter sensitivity grid also selects $k = 3$. The selection depends on the gene-selection setting: under panel (b), with all genes retained, the same rule selects $k = 2$. On the training cross-validated curve DeSurv had a higher point estimate than its unsupervised limit at every $k$ examined. The external-validation curve, shown only descriptively (validation outcomes were used for no part of rank or hyperparameter selection), does not show that ordering uniformly: the unsupervised limit is higher at $k = 6$ and at $k = 10$--$12$, and the supervised curve dips at $k = 6$, where the single grid fit at its selected $\alpha$ is the same fit whose factors correspond to almost no reference program (Reference-program coverage, edges and multiplicity). These rank-wise points are single fits, not consensus fits. At the selected rank the validation curve is consistent with the training-based choice, with DeSurv at $k = 3$ attaining concordance comparable to the rank-optimized unsupervised control ($k = 7$; Table \ref{tab:tab-cindex-comparison}).
+Fig. \ref{fig:fig-cindex-by-k} shows the resulting C-index curves for both training (CV) and external validation (pooled across held-out cohorts), with shaded ribbons indicating $\pm 1$ standard error. Rank was selected on the training cross-validated concordance: for DeSurv the curve is close to flat across the whole range examined, spanning about two standard errors from $k = 2$ to $k = 12$ with its nominal maximum at $k = 9$ rather than at the selected rank (this fixed-$\lambda$, $\xi$, $n_{\text{top}}$ grid is a different exercise from the full Bayesian-optimization search over all tuned hyperparameters, whose highest observed mean C-index occurred at $k = `r .ks$k_best`$), and applying the same one-standard-error rule to this fixed-hyperparameter sensitivity grid also selects $k = 3$. The selection depends on the gene-selection setting: under panel (b), with all genes retained, the same rule selects $k = 2$. On the training cross-validated curve DeSurv had a higher point estimate than its unsupervised limit at every $k$ examined. The external-validation curve, shown only descriptively, does not show that ordering uniformly: the unsupervised limit is higher at $k = 6$ and at $k = 10$--$12$, and the supervised curve dips at $k = 6$, where the single grid fit at its selected $\alpha$ is the same fit whose factors correspond to almost no reference program (Reference-program coverage, edges and multiplicity). These rank-wise points are single fits, not consensus fits. At the selected rank the validation curve is consistent with the training-based choice, with DeSurv at $k = 3$ attaining concordance comparable to the rank-optimized unsupervised control ($k = 7$; Table \ref{tab:tab-cindex-comparison}).
 
 ```{r fig-cindex-by-k, fig.width = 10, fig.height = 10, fig.cap="Training (CV) and external validation C-index as a function of factorization rank $k$ for DeSurv (blue) and its unsupervised limit (red, $\\alpha = 0$). Shaded ribbons show $\\pm 1$ SE. For each $k$, the best $\\alpha$ was selected by maximizing the mean CV C-index. Validation C-index is pooled across all external cohorts. (a) Results using $n_{\\text{top}} = 270$ top genes per factor ($\\lambda = 0.349$, $\\xi = 0.056$). (b) Results retaining all genes ($n_{\\text{top}} = \\text{ALL}$; $\\lambda = 0.349$, $\\xi = 0.056$).", fig.env='figure*', fig.pos='t', out.width='\\textwidth', echo=FALSE}
 # This figure is produced by the cv_grid pipeline (separate store);
@@ -1390,7 +1434,7 @@ img <- magick::image_read("figures/cv_cindex_by_k_primary.pdf", density = 300)
 cowplot::ggdraw() + cowplot::draw_image(img)
 ```
 
-# Standard NMF rank selection heuristics
+\section{Standard NMF rank selection heuristics}
 
 Standard unsupervised rank selection criteria (reconstruction residuals, cophenetic correlation coefficient, and mean silhouette width) yielded inconsistent guidance for selecting the factorization rank $k$ in the PDAC training cohort (TCGA + CPTAC). Reconstruction residuals decreased smoothly without a visually distinct elbow (Fig. \ref{fig:nmf-diagnostics}a); the Kneedle elbow rule (maximum deviation of the normalized curve from its chord) applied to this curve nonetheless returns $k = 5$, which is the rank used for the elbow-selected Lee NMF comparator in Table \ref{tab:tab-cindex-comparison}. Cophenetic correlation fluctuated without a distinct transition point (Fig. \ref{fig:nmf-diagnostics}b). Mean silhouette width favored very low ranks that conflicted with other criteria (Fig. \ref{fig:nmf-diagnostics}c). These inconsistencies illustrate the ambiguity of rank selection under unsupervised criteria in this dataset; the main text selects rank on cross-validated prognostic performance.
 
@@ -1402,7 +1446,7 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 
 
-# Factor structure of the rank-optimized unsupervised control ($k = 7$)
+\section{Factor structure of the rank-optimized unsupervised control ($k = 7$)}
 
 Throughout the main text, both DeSurv and Lee NMF were fit at the same rank ($k = 3$), enabling a controlled comparison of the effect of survival supervision on factor structure. When the unsupervised limit of the same pipeline selects its own rank, Bayesian optimization at $\alpha = 0$ selects $k = 7$ (the rank-optimized unsupervised control), whereas the one-standard-error rule applied to the supervised DeSurv BO results selects $k = 3$. We therefore examine the factor structure of this independently selected $k = 7$ solution to characterize how the additional factors relate to established programs when supervision is absent (Fig. \ref{fig:fig-nmf-k7-heatmap}).
 
@@ -1413,7 +1457,8 @@ cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_nmf_k7_heatmap_tcgacptac.pdf", density = 300))
 ```
 
-\subsection*{Reference-program coverage, edges and multiplicity}
+\subsection{Reference-program coverage, edges and multiplicity}
+\label{sec:coverage}
 
 ```{r rpm-si-stats, echo=FALSE, message=FALSE, warning=FALSE}
 .rpmsi <- read_result("reference_program_multiplicity")
@@ -1432,7 +1477,7 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 Fig.\ \ref{fig:fig-nmf-k7-heatmap} (and main-text Fig.\ 2a,b) display factor-to-reference-program correspondence as a heatmap. We additionally summarize this same correspondence across factorization rank $k$ using three quantities computed from the same correlation matrix (top 50 genes per factor by factor-specificity score, Spearman correlation of factor loadings against binary reference-program membership, $r > 0.2$ representation threshold; Supplementary Information, Section \ref{sec:gene-program-correlation}), over the fixed `r .rpmsi_universe`-program reference universe. Coverage is the number of reference programs with at least one factor at $r > 0.2$. Edges is the total number of (factor, reference-program) pairs at $r > 0.2$. Reference-program multiplicity is edges divided by coverage, defined only when coverage $> 0$, and reports edges per represented program. A low multiplicity is not by itself evidence that fewer programs are represented, so multiplicity is always reported alongside coverage rather than in place of it.
 
-At each rank $k = 2, \ldots, 12$, these quantities are computed for two single fits at fixed $\lambda$, $\xi$ and $n_{\text{top}} = 270$ from the $k \times \alpha$ cross-validation grid (\texttt{results/cv\_grid}): the unsupervised fit ($\alpha = 0$) and the fit at the $\alpha$ maximizing mean cross-validated C-index, the same $\alpha$-selection convention used for Supplementary Fig.\ \ref{fig:fig-cindex-by-k}. These rank-wise points are single fits at fixed hyperparameters, not the 100-restart consensus fits used elsewhere in the manuscript. Three consensus-fit anchors are overlaid: DeSurv ($k = 3$), standard NMF at matched rank ($k = 3$; Lee NMF), and the rank-optimized unsupervised control ($k = 7$, $\alpha = 0$).
+At each rank $k = 2, \ldots, 12$, these quantities are computed for two single fits at fixed $\lambda$, $\xi$ and $n_{\text{top}} = 270$ from the $k \times \alpha$ cross-validation grid: the unsupervised fit ($\alpha = 0$) and the fit at the $\alpha$ maximizing mean cross-validated C-index, the same $\alpha$-selection convention used for Supplementary Fig.\ \ref{fig:fig-cindex-by-k}. These rank-wise points are single fits at fixed hyperparameters, not the 100-restart consensus fits used elsewhere in the manuscript. Three consensus-fit anchors are overlaid: DeSurv ($k = 3$), standard NMF at matched rank ($k = 3$; Lee NMF), and the rank-optimized unsupervised control ($k = 7$, $\alpha = 0$).
 
 At these anchors, DeSurv reaches coverage `r .rpmsi_co3`, edges `r .rpmsi_ed3`, multiplicity `r .rpmsi_mu3`; matched-rank standard NMF reaches coverage `r .rpmsi_co_n3`, edges `r .rpmsi_ed_n3`, multiplicity `r .rpmsi_mu_n3`; and the rank-optimized unsupervised control at $k = 7$ reaches coverage `r .rpmsi_co7`, edges `r .rpmsi_ed7`, multiplicity `r .rpmsi_mu7`.
 
@@ -1468,21 +1513,22 @@ fmt_cindex <- function(tbl, col_name) {
     dplyr::rename(!!col_name := cindex)
 }
 
-cindex_wide <- fmt_cindex(val_cindex_desurv_tcgacptac, "DeSurv (K=3)") %>%
-  dplyr::left_join(fmt_cindex(val_cindex_std_desurvk_tcgacptac, "Lee NMF (K=3)"), by = "dataset") %>%
-  dplyr::left_join(fmt_cindex(val_cindex_desurv_a0k3_tcgacptac, "Matched-budget control (K=3, $\\alpha$=0)"), by = "dataset") %>%
-  dplyr::left_join(fmt_cindex(val_cindex_std_elbowk_tcgacptac, "Lee NMF (K=5, elbow)"), by = "dataset") %>%
-  dplyr::left_join(fmt_cindex(val_cindex_desurv_alpha0_tcgacptac, "Rank-optimized control (K=7, $\\alpha$=0)"), by = "dataset") %>%
+cindex_wide <- fmt_cindex(val_cindex_desurv_tcgacptac, "DeSurv ($k = 3$)") %>%
+  dplyr::left_join(fmt_cindex(val_cindex_std_desurvk_tcgacptac, "Lee NMF ($k = 3$)"), by = "dataset") %>%
+  dplyr::left_join(fmt_cindex(val_cindex_desurv_a0k3_tcgacptac, "Matched-budget control ($k = 3$, $\\alpha = 0$)"), by = "dataset") %>%
+  dplyr::left_join(fmt_cindex(val_cindex_std_elbowk_tcgacptac, "Lee NMF ($k = 5$, elbow)"), by = "dataset") %>%
+  dplyr::left_join(fmt_cindex(val_cindex_desurv_alpha0_tcgacptac, "Rank-optimized control ($k = 7$, $\\alpha = 0$)"), by = "dataset") %>%
   dplyr::mutate(dplyr::across(where(is.numeric), ~ round(.x, 3))) %>%
-  dplyr::rename(Cohort = dataset) %>%
-  dplyr::mutate(Cohort = gsub("_", "\\_", Cohort, fixed = TRUE))
+  dplyr::rename(Dataset = dataset) %>%
+  dplyr::mutate(Dataset = c(Dijk = "Dijk", Moffitt_GEO_array = "Moffitt", PACA_AU_array = "PACA-AU array",
+                            PACA_AU_seq = "PACA-AU RNA-seq", Puleo_array = "Puleo")[Dataset])
 
 # Explicit \label is the canonical referenced name (main paper + SI \ref it);
 # push knitr's auto chunk-label to a throwaway name so it neither collides with
 # the explicit one nor is silently relied upon in its place.
 knitr::opts_current$set(label = "tab-cindex-comparison-auto")
 kable(cindex_wide, format = "latex", booktabs = TRUE, linesep = "", escape = FALSE,
-      caption = "External validation C-index by method and cohort. DeSurv at the one-standard-error-selected rank ($k = 3$) is compared with Lee NMF at matched rank ($k = 3$) and at elbow-selected rank ($k = 5$), with the matched-budget unsupervised control ($k = 3$, $\\alpha = 0$) and with the rank-optimized unsupervised control ($k = 7$, $\\alpha = 0$). The unsupervised columns are not all produced by one implementation: the two Lee NMF columns are \\texttt{NMF::nmf}, whereas the two controls are the DeSurv optimizer run at $\\alpha = 0$ with the same consensus-initialization procedure as the supervised model. The matched-budget column is the tuning-budget control: it holds rank, optimizer, consensus-initialization procedure and Bayesian-optimization budget fixed while re-optimizing the remaining hyperparameters with $\\alpha = 0$. It therefore varies only supervision and does not improve on \\texttt{NMF::nmf} at the same rank. Higher values indicate better discrimination. All columns are scored on the same union-of-top-genes support ($n_{\\text{top}} = 270$). \\label{tab:tab-cindex-comparison}") |>
+      caption = "External validation C-index by method and validation dataset. DeSurv at the one-standard-error-selected rank ($k = 3$) is compared with Lee NMF at matched rank ($k = 3$) and at elbow-selected rank ($k = 5$), with the matched-budget unsupervised control ($k = 3$, $\\alpha = 0$) and with the rank-optimized unsupervised control ($k = 7$, $\\alpha = 0$). The unsupervised columns are not all produced by one implementation: the two Lee NMF columns are \\texttt{NMF::nmf}, whereas the two controls are the DeSurv optimizer run at $\\alpha = 0$ with the same consensus-initialization procedure as the supervised model. The matched-budget column is the tuning-budget control: it holds rank, optimizer, consensus-initialization procedure and Bayesian-optimization budget fixed while re-optimizing the remaining hyperparameters with $\\alpha = 0$. It therefore varies only supervision and does not improve on \\texttt{NMF::nmf} at the same rank. Higher values indicate better discrimination. All columns are scored on the same union-of-top-genes support ($n_{\\text{top}} = 270$). \\label{tab:tab-cindex-comparison}") |>
   kable_styling(latex_options = c("HOLD_position", "scale_down"))
 ```
 
@@ -1511,7 +1557,8 @@ knitr::kable(.hrow, format = "latex", escape = FALSE, booktabs = TRUE, align = "
 .cn <- abs(cor(.Wd_c, .Wn_c, method = "spearman"))
 ```
 
-\subsection*{Stromal resolution: which reference programs are recovered from bulk}
+\subsection{Stromal resolution: which reference programs are recovered from bulk}
+\label{sec:stroma}
 
 ```{r stroma-res, echo=FALSE, message=FALSE, warning=FALSE}
 load_result("stroma_resolution_stats")
@@ -1523,7 +1570,7 @@ Bulk deconvolution has conventionally separated activated from normal stroma,
 whereas the finer cancer-associated fibroblast states, and the proCAF/restCAF
 classification derived from them, were established in single-cell data. We
 therefore asked which stromal reference programs each $k = 3$ factorization
-actually resolves (\texttt{code/23}). Two views are reported because they do not
+actually resolves. Two views are reported because they do not
 agree, and the defensible claim depends on which question is asked.
 
 In the top-gene view shown in main-text Fig.\ 2a,b, which asks whether signature
@@ -1559,17 +1606,13 @@ Note also that the SCISSORS iCAF and myCAF reference signatures are displayed as
 restCAF and proCAF in main-text Fig.\ 2, following the naming used by the DeCAF
 classification; the underlying gene sets are the single-cell-derived ones.
 
-\subsection*{Matched-budget unsupervised control at the same rank}
+\subsection{Matched-budget unsupervised control at the same rank}
+\label{sec:matched}
 
 The matched-rank comparison in the main text uses Lee multiplicative NMF, which
 receives neither DeSurv's consensus initialization nor its hyperparameter
 tuning. That asymmetry leaves open whether the difference in factor structure reflects
-tuning effort rather than supervision. We therefore fit an unsupervised control using the same rank, optimizer, search budget, gene filter, cross-validation folds and consensus-fitting procedure as DeSurv, while re-optimizing the remaining hyperparameters with $\alpha$ fixed at 0. Bayesian optimization was run with $\alpha$ pinned to
-$0$ and the rank pinned to DeSurv's selected $k = `r .pd$k`$, using the same
-optimizer (\texttt{desurv\_cv\_bayesopt\_refine}), the same search budget, the
-same gene filter and the same cross-validation folds; the resulting model was
-then fit by the same 100-restart consensus procedure used for DeSurv
-(\texttt{code/03} section 5, \texttt{code/04} sections 1d--1e).
+tuning effort rather than supervision. We therefore fit an unsupervised control that holds everything but supervision fixed: Bayesian optimization was run with $\alpha$ pinned to $0$ and the rank pinned to DeSurv's selected $k = `r .pd$k`$, with the same optimizer, search budget, gene filter and cross-validation folds, re-optimizing only the remaining hyperparameters; the resulting model was then fit by the same 100-restart consensus procedure used for DeSurv.
 
 The control
 selected $\lambda = `r sprintf("%.4f", .pf$lambda)`$,
@@ -1593,8 +1636,7 @@ only $\alpha$ gave the same conclusion. Matching the tuning budget therefore doe
 Lee NMF at elbow-selected $k = 5$ and the rank-optimized unsupervised control at $k = 7$ both substantially improve over Lee NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}); additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, the rank-optimized control exceeds DeSurv's C-index in all five validation datasets, so unsupervised factorization given more factors discriminates at least as well as the supervised three-program model. The tradeoff is between that higher discrimination and a less parsimonious factorization: the $k = 7$ control represents a broader set of established programs across seven factors (Fig. \ref{fig:fig-nmf-k7-heatmap}; Supplementary Fig. \ref{fig:fig-rpm}) rather than concentrating the prognostic signal in three programs. Both the $k = 7$ control and the DeSurv linear predictor retain significant prognostic value after adjustment for established classifiers (main-text Table \ref{tab:hr-adjusted}); DeSurv does so with fewer factors.
 
 
-\section*{Supplementary Data: factor-specific gene lists}
-\addcontentsline{toc}{section}{Supplementary Data: factor-specific gene lists}
+\section{Supplementary Data: factor-specific gene lists}
 
 As Supplementary Data, Tables \ref{tab:gene-list-270-D1}--\ref{tab:gene-list-270-D3} list the top 270 genes for each of the three DeSurv factors, ranked by the factor specificity score $s_{ij}$ defined in Supplementary Information, Section \ref{sec:gene-program-correlation}. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}} = 270$); these are the genes used to compute sample-level factor scores for survival prediction.
 
@@ -1687,4 +1729,4 @@ In the `r .tcs$paired$n` Linehan patients with paired pre- and post-treatment bi
 
 \subsection{Caveats}
 
-These analyses are exploratory and prognostic, not predictive: treatment, stage and cohort are confounded, the treated cohorts are modestly sized, and no analysis plan was preregistered. Each analysis is confined to a single cohort; nothing is pooled across cohorts, and the O'Kane/COMPASS common slope is estimated from a model with arm-specific baseline hazards; it is not a pooled estimate across cohorts. We do not test a survival association for $D_2$ in the paired bulk-treatment cohort; the O'Kane/COMPASS specimens are laser-capture epithelium, not bulk tissue. Robust treated-cohort validation, and any assessment of whether the programs predict differential treatment benefit, will require larger harmonized series with adequately powered treatment-by-program interaction analyses.
+These analyses are exploratory and prognostic, not predictive: treatment, stage and cohort are confounded, the treated cohorts are modestly sized, and no analysis plan was preregistered. Each analysis is confined to a single cohort, and the O'Kane/COMPASS common slope is estimated within that cohort from a model with arm-specific baseline hazards; it is not a pooled estimate across cohorts. We do not test a survival association for $D_2$ in the paired bulk-treatment cohort; the O'Kane/COMPASS specimens are laser-capture epithelium, not bulk tissue. Robust treated-cohort validation, and any assessment of whether the programs predict differential treatment benefit, will require larger harmonized series with adequately powered treatment-by-program interaction analyses.

@@ -628,7 +628,7 @@ cowplot::ggdraw() + cowplot::draw_image(
 
 The final DeSurv model at the selected hyperparameters was initialized from a consensus of multiple independent runs to reduce sensitivity to random starts. We first fit $R = 100$ DeSurv models to the training data from independent random nonnegative initializations at the selected $(k,\alpha,\lambda,\xi,n_{\text{top}})$ (seeds 1--100). For each run, the top $n_{\text{top}}$ genes of every learned program were extracted by factor-specificity score, and a gene-by-gene consensus matrix was accumulated across runs, recording how often each pair of genes appeared together among the top genes of the same program.
 
-Genes appearing in the top sets of fewer than $\lceil 0.3R \rceil$ of the $R$ runs were treated as inactive and excluded from clustering. The consensus matrix over the remaining genes was partitioned into $k$ groups by agglomerative hierarchical clustering (average linkage), and each cluster defined one column of the initial gene-program matrix $W_0$; inactive genes and otherwise-empty entries were set to a small positive floor ($\sqrt{\epsilon_{\text{mach}}}$) to preserve strict positivity. The initial loadings $H_0$ were obtained by nonnegative least squares given $W_0$ and the training expression matrix, and the initial Cox coefficients $\beta_0$ were set to zero. This consensus seed used only training-cohort data and was applied solely to initialize the single final refit after hyperparameter selection; it used no validation-cohort data and therefore introduced no information leakage.
+Genes appearing in the top sets of fewer than $\lceil 0.3R \rceil$ of the $R$ runs were treated as inactive and excluded from clustering. Because the consensus is constructed from gene-by-gene co-occurrence across restarts, it is invariant to factor-label permutations and does not require explicit alignment of factor labels across runs. The consensus matrix over the remaining genes was partitioned into $k$ groups by agglomerative hierarchical clustering (average linkage), and each cluster defined one column of the initial gene-program matrix $W_0$; inactive genes and otherwise-empty entries were set to a small positive floor ($\sqrt{\epsilon_{\text{mach}}}$) to preserve strict positivity. The initial loadings $H_0$ were obtained by nonnegative least squares given $W_0$ and the training expression matrix, and the initial Cox coefficients $\beta_0$ were set to zero. This consensus seed used only training-cohort data and was applied solely to initialize the single final refit after hyperparameter selection; it used no validation-cohort data and therefore introduced no information leakage.
 
 \section{PDAC Datasets}
 
@@ -785,6 +785,30 @@ Validation-cohort expression enters only at scoring, a fixed-basis projection
 ($Z = \widetilde{W}^\top X_{\text{new}}$) that uses no validation outcome, and
 validation-cohort survival outcomes were used only for the final, out-of-sample
 performance evaluation.
+
+\subsection{Cohort handling in the training objective}
+\label{sec:cohort-training}
+
+```{r cohort-training-check, echo=FALSE, message=FALSE, warning=FALSE}
+# Descriptive check, computed from the cached training data and final fit with
+# the same per-program top-gene scoring used for validation. Not a refit.
+.ct_d <- read_result("tar_data_filtered_tcgacptac"); .ct_f <- read_result("tar_fit_desurv_tcgacptac")
+.ct_nt <- as.integer(round(read_result("tar_params_best_tcgacptac")$ntop))
+.ct_tg <- DeSurv::desurv_get_top_genes(.ct_f$W, .ct_nt)$top_genes
+.ct_X <- as.matrix(.ct_d$ex)
+.ct_Z <- sapply(seq_len(ncol(.ct_f$W)), function(j) { g <- .ct_tg[[j]]; colSums(.ct_f$W[g, j] * .ct_X[g, ]) })
+.ct_si <- .ct_d$sampInfo; .ct_si$lp <- as.numeric(scale(.ct_Z %*% .ct_f$beta)); .ct_si$coh <- factor(.ct_si$dataset)
+.ct_hr <- function(fml) exp(coef(survival::coxph(fml, data = .ct_si)))
+.ct_pooled <- .ct_hr(survival::Surv(time, event) ~ lp)[["lp"]]
+.ct_strat  <- .ct_hr(survival::Surv(time, event) ~ lp + survival::strata(coh))[["lp"]]
+.ct_cohhr  <- .ct_hr(survival::Surv(time, event) ~ lp + coh)[[2]]
+.ct_shift  <- unname(diff(tapply(.ct_si$lp, .ct_si$coh, mean)))   # TCGA minus CPTAC (factor order CPTAC, TCGA_PAAD)
+.ct_ca <- read_result("desurv_clinical_adjustment")
+.ct_within <- c(TCGA = .ct_ca$TCGA_PAAD$unadjusted$hr, CPTAC = .ct_ca$CPTAC$unadjusted$hr)
+stopifnot(levels(.ct_si$coh)[2] == "TCGA_PAAD", all(.ct_within > 2), .ct_strat > 2)
+```
+
+The training Cox objective was fit to the pooled TCGA-PAAD and CPTAC samples without a cohort term; cross-validation folds were constructed within cohort with stratification by event status. Because survival shapes $W$, a cohort effect associated with both expression and survival could in principle be rewarded by the survival gradient. As a descriptive check for cohort-driven association, computed from the cached training data and final fit and not a refit, the fitted linear predictor remained strongly associated with survival within TCGA-PAAD and CPTAC separately (in-sample HR per SD `r sprintf("%.2f", .ct_within[["TCGA"]])` and `r sprintf("%.2f", .ct_within[["CPTAC"]])`; Table \ref{tab:clinical-adjustment}) and in a model stratified by cohort (HR per SD `r sprintf("%.2f", .ct_strat)`, against `r sprintf("%.2f", .ct_pooled)` unstratified), while the between-cohort shift in the score was opposite to the between-cohort hazard difference: the predictor averaged `r sprintf("%.2f", abs(.ct_shift))` SD higher in TCGA-PAAD, yet CPTAC had the higher hazard given the predictor (HR `r sprintf("%.2f", .ct_cohhr)`). These in-sample quantities argue against the specific mechanism in which the survival gradient learns cohort membership, but they do not rule out cohort influence on the factorization, which the external validation addresses directly.
 
 \section{Gene Program Correlation Analysis}
 \label{sec:gene-program-correlation}

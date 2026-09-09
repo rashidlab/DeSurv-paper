@@ -571,8 +571,8 @@ km_legend_grob <- km_legend_gg$grobs[
 ## Fig 3C: tuned supervised scores vs DeSurv programs (|Pearson r|; axis_decomposition cache)
 .axd <- readRDS("results/desurv_vs_supervised_tuned.rds")$axis_decomposition
 .hm_df <- data.frame(
-  method  = factor(rep(c("Supervised PCA", "Penalized Cox"), each = 3),
-                   levels = c("Supervised PCA", "Penalized Cox")),
+  method  = factor(rep(c("Supervised PCA", "Lasso Cox"), each = 3),
+                   levels = c("Supervised PCA", "Lasso Cox")),
   program = factor(rep(c("D1", "D2", "D3"), 2), levels = c("D1", "D2", "D3")),
   r = c(abs(as.numeric(.axd["Supervised PCA", c("D1", "D2", "D3")])),
         abs(as.numeric(.axd["Sparse Cox",     c("D1", "D2", "D3")])))

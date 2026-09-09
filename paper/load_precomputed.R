@@ -7,6 +7,10 @@
 
 PRECOMPUTED_DIR <- if (file.exists("results")) "results" else "../results"
 
+# Shared PACA-AU de-duplication helper (single source of truth for combined
+# validation analyses; keeps one record per unique patient, preferring RNA-seq).
+source(if (file.exists("R/paca_dedup.R")) "R/paca_dedup.R" else "../R/paca_dedup.R")
+
 load_result <- function(name, envir = parent.frame()) {
   path <- file.path(PRECOMPUTED_DIR, paste0(name, ".rds"))
   if (!file.exists(path)) {

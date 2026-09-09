@@ -53,9 +53,9 @@
 @misc{data_paca_au_egas,
   author = {{Australian Pancreatic Cancer Genome Initiative} and {International Cancer Genome Consortium}},
   title = {Pancreatic cancer (PACA-AU) cohort: array and RNA-sequencing data},
-  howpublished = {European Genome--phenome Archive, EGAS00001000154},
+  howpublished = {Array data: Gene Expression Omnibus GSE36924; RNA-sequencing data: European Genome--phenome Archive EGAS00001000154},
   year = {2016},
-  url = {https://ega-archive.org/studies/EGAS00001000154},
+  url = {https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE36924},
   note = {Accessed 3 May 2026}
 }
 
@@ -82,6 +82,18 @@
   doi={10.1016/j.ccell.2017.07.007}
 }
 
+@article{cao2021proteogenomic,
+  title={Proteogenomic characterization of pancreatic ductal adenocarcinoma},
+  author={Cao, Liwei and Huang, Chen and Cui Zhou, Daniel and Hu, Yingwei and Lih, Tung-Shing M and Savage, Sara R and Krug, Karsten and Clark, David J and Schnaubelt, Michael and Chen, Lijun and others},
+  journal={Cell},
+  volume={184},
+  number={19},
+  pages={5031--5052},
+  year={2021},
+  publisher={Elsevier},
+  doi={10.1016/j.cell.2021.08.023}
+}
+
 @article{ellis2013clinical,
   title={Connecting genomic alterations to cancer biology with proteomics: the NCI Clinical Proteomic Tumor Analysis Consortium},
   author={Ellis, MJ and Gillette, M and Carr, SA and Paulovich, AG and Smith, RD and Rodland, KK and Townsend, RR and Kinsinger, C and Mesri, M and Rodriguez, H and others},
@@ -105,7 +117,7 @@
 }
 
 @article{simon2011regularization,
-  title={Regularization paths for Cox's proportional hazards model via coordinate descent},
+  title={Regularization paths for {Cox's} proportional hazards model via coordinate descent},
   author={Simon, Noah and Friedman, Jerome H and Hastie, Trevor and Tibshirani, Rob},
   journal={Journal of Statistical Software},
   volume={39},
@@ -146,17 +158,6 @@
   pages={1168--1178},
   year={2015},
   doi={10.1038/ng.3398}
-}
-
-@article{zhao2018gene,
-  title={Gene expression profiling of 1200 pancreatic ductal adenocarcinoma reveals novel subtypes},
-  author={Zhao, Lan and Zhao, Hongya and Yan, Hong},
-  journal={BMC Cancer},
-  volume={18},
-  number={1},
-  pages={603},
-  year={2018},
-  doi={10.1186/s12885-018-4546-8}
 }
 
 @article{puleo2018stratification,
@@ -228,7 +229,7 @@
 
 
 @article{gaujoux2010flexible,
-  title={A flexible R package for nonnegative matrix factorization},
+  title={A flexible {R} package for nonnegative matrix factorization},
   author={Gaujoux, Renaud and Seoighe, Cathal},
   journal={BMC Bioinformatics},
   volume={11},
@@ -273,7 +274,6 @@
   doi={10.1371/journal.pbio.0020108}
 }
 
-
 @article{peng2019novo,
   title={De novo compartment deconvolution and weight estimation of tumor samples using DECODER},
   author={Peng, Xianlu Laura and Moffitt, Richard A and Torphy, Robert J and Volmar, Keith E and Yeh, Jen Jen},
@@ -308,26 +308,38 @@
 }
 
 
-% NOTE: Verify if Le Goff et al. has been published in a peer-reviewed journal by submission time
-@misc{le2025survnmf,
+% Checked 2026-08-05 (Crossref + web): no peer-reviewed version located; still a
+% HAL preprint. Re-check at submission if materially later than this date.
+% @article with a "Preprint at <URL>" journal field so the preprint status and
+% locator actually render under nature.csl (Nature's own preprint format);
+% pandoc's bibtex->CSL conversion silently drops @misc howpublished/url, which
+% left this reference rendering as bare title + year.
+% Verified against full text 2026-09-05 (HAL PDF, 7 pp., a Journees de Statistique
+% 2025 submission; the deposited file is Soumission_JDS_2025-9.pdf and each page is
+% footed "JdS2025"). Notation is transposed relative to this manuscript and to
+% CoxNMF: X is n x p, W is n x K (samples x factors) and H is p x K (features x
+% factors), with X ~ W H^T. The Cox term is fit on W, the sample-side latent
+% matrix. Held-out samples are scored by first estimating W_test under a
+% least-squares criterion with the same constraints via HALS, then applying the
+% fitted beta. No software repository or package is named in the paper.
+@article{le2025survnmf,
   title={SurvNMF: Non-Negative Matrix Factorization supervised for survival data analysis},
   author={Le Goff, Vincent and Guillemot, Vincent and Philippe, Cathy and Deleuze, Jean-Fran{\c{c}}ois and Le Floch, Edith and Gloaguen, Arnaud},
   year={2025},
-  howpublished={HAL [Preprint], hal-04975434v1},
-  institution={Institut Pasteur and CEA, Centre National de Recherche en G\'enomique Humaine},
-  url={https://hal.science/hal-04975434v1},
-  note={Preprint, accessed 3 May 2026}
+  journal={Preprint at https://hal.science/hal-04975434},
+  note={HAL preprint hal-04975434v1, accessed 5 August 2026; full text verified 5 September 2026}
 }
 
+% Checked 2026-08-05 (Crossref + web): no peer-reviewed version located; still an
+% arXiv preprint. Entry type corrected from @article, which had no journal field
+% and would render without a venue.
+% Same rendering fix as le2025survnmf above.
 @article{huang2020low,
   title={Low-rank reorganization via proportional hazards non-negative matrix factorization unveils survival associated gene clusters},
   author={Huang, Zhi and Salama, Paul and Shao, Wei and Zhang, Jie and Huang, Kun},
-  archivePrefix={arXiv},
-  eprint={2008.03776},
-  primaryClass={cs.LG},
   year={2020},
-  url={https://arxiv.org/abs/2008.03776},
-  note={Preprint, accessed 3 May 2026}
+  journal={Preprint at https://arxiv.org/abs/2008.03776},
+  note={arXiv:2008.03776 [cs.LG], accessed 5 August 2026}
 }
 
 @inproceedings{donoho2004nmf,
@@ -465,33 +477,14 @@
   doi       = {10.1214/088342306000000682}
 }
 
-@article{bair2006supervised,
-  title     = {Prediction by supervised principal components},
-  author    = {Bair, Eric and Hastie, Trevor and Paul, Debashis and Tibshirani, Robert},
-  journal   = {Journal of the American Statistical Association},
-  volume    = {101},
-  number    = {473},
-  pages     = {119--137},
-  year      = {2006},
-  doi       = {10.1198/016214505000000628}
-}
-
-@article{tishby1999information,
-  title   = {The information bottleneck method},
-  author  = {Tishby, Naftali and Pereira, Fernando C. and Bialek, William},
-  journal = {Proceedings of the 37th Annual Allerton Conference on Communication, Control, and Computing},
-  pages   = {368--377},
-  year    = {1999}
-}
-
 @article{aran2015systematic,
   title     = {Systematic pan-cancer analysis of tumour purity},
   author    = {Aran, Dvir and Sirota, Marina and Butte, Atul J.},
   journal   = {Nature Communications},
   volume    = {6},
-  pages     = {8971},
+  pages     = {9971},
   year      = {2015},
-  doi       = {10.1038/ncomms8971}
+  doi       = {10.1038/ncomms9971}
 }
 
 @article{frigyesi2008nmf,
@@ -502,17 +495,6 @@
   pages     = {275--292},
   year      = {2008},
   doi       = {10.4137/CIN.S606}
-}
-
-@article{arora2020survclust,
-  title={Pan-cancer identification of clinically relevant genomic subtypes using outcome-weighted integrative clustering},
-  author={Arora, Arshi and Olshen, Adam B and Seshan, Venkatraman E and Shen, Ronglai},
-  journal={Genome Medicine},
-  volume={12},
-  number={1},
-  pages={110},
-  year={2020},
-  doi={10.1186/s13073-020-00804-8}
 }
 
 @article{chansengyue2020transcription,
@@ -552,7 +534,6 @@
   title={Practical {B}ayesian optimization of machine learning algorithms},
   author={Snoek, Jasper and Larochelle, Hugo and Adams, Ryan P.},
   booktitle={Advances in Neural Information Processing Systems 25 (NeurIPS 2012)},
-  pages={2951--2959},
   year={2012},
   url={https://proceedings.neurips.cc/paper/2012/hash/05311655a15b75fab86956663e1819cd-Abstract.html}
 }
@@ -566,4 +547,204 @@
   pages={148--175},
   year={2016},
   doi={10.1109/JPROC.2015.2494218}
+}
+@article{dai2025guide,
+  title={A guide to transcriptomic deconvolution in cancer},
+  author={Dai, Yaoyi and Guo, Shuai and Pan, Yidan and Castignani, Carla and Montierth, Matthew D and Van Loo, Peter and Wang, Wenyi},
+  journal={Nature Reviews Cancer},
+  volume={26},
+  number={2},
+  pages={84--103},
+  year={2026},
+  doi={10.1038/s41568-025-00886-9}
+}
+
+@article{siegel2026cancer,
+  title={Cancer statistics, 2026},
+  author={Siegel, Rebecca L and Kratzer, Tyler B and Wagle, Nikita S and Sung, Hyuna and Jemal, Ahmedin},
+  journal={CA: A Cancer Journal for Clinicians},
+  volume={76},
+  number={1},
+  pages={e70043},
+  year={2026},
+  doi={10.3322/caac.70043}
+}
+
+@article{lautizi2022pancreatic,
+  title={A systematic assessment of pancreatic cancer molecular subtype classification across cohorts},
+  author={Lautizi, Manuela and Baumbach, Jan and Weichert, Wilko and Steiger, Katja and List, Markus},
+  journal={NAR Cancer},
+  volume={4},
+  number={4},
+  pages={zcac030},
+  year={2022},
+  doi={10.1093/narcan/zcac030}
+}
+
+@article{torrehealy2023pdacr,
+  title={Open-source curation of a pancreatic ductal adenocarcinoma gene expression analysis platform (pdacR) supports a two-subtype model of clinical relevance},
+  author={Torre-Healy, Luke A and others},
+  journal={Communications Biology},
+  volume={6},
+  number={1},
+  pages={163},
+  year={2023},
+  doi={10.1038/s42003-023-04461-6}
+}
+
+@article{wan2025mycaf,
+  author={Wan and others},
+  title={Heterogenous cancer-associated fibroblasts related tumor microenvironment marked by CD10/KLF4/TIAM1 in pancreatic adenocarcinoma by integrated transcriptomics},
+  journal={Frontiers in Immunology}, year={2025}, doi={10.3389/fimmu.2025.1557698}
+}
+@article{chen2026complementcaf,
+  author={Chen and others},
+  title={Complement-secreting CAFs are associated with better prognosis in pancreatic cancer: single-cell multiomics},
+  journal={Gut}, year={2026}, doi={10.1136/gutjnl-2025-335683}
+}
+@article{cumming2025ifncaf,
+  author={Cumming and others},
+  title={Dissecting FAP+ cell diversity in pancreatic cancer uncovers an interferon-response subtype of cancer-associated fibroblasts with tumor-restraining properties},
+  journal={Cancer Research}, year={2025}, doi={10.1158/0008-5472.CAN-23-3252}
+}
+@article{hussain2024cafmacrophage,
+  author={Hussain and others},
+  title={Macrophages reprogramming driven by cancer-associated fibroblasts under FOLFIRINOX treatment correlates with shorter survival in pancreatic cancer},
+  journal={Cell Communication and Signaling}, year={2024}, doi={10.1186/s12964-023-01388-7}
+}
+@article{raymant2024macrophagefibroblast,
+  author={Raymant and others},
+  title={Macrophage-fibroblast JAK/STAT dependent crosstalk promotes liver metastatic outgrowth in pancreatic cancer},
+  journal={Nature Communications}, year={2024}, doi={10.1038/s41467-024-47949-3}
+}
+
+@article{lee2024tumorcaf,
+  author={Lee, Jaewon J. and Kearney, Joseph F. and Trembath, Hannah E. and Hariharan, Arthi and LaBella, Michelle E. and Kharitonova, Elena V. and Chan, Priscilla S. and Morrison, Ashley B. and Cliff, Ashley and Meyers, Michael O. and Kim, Hong Jin and Rashid, Naim U. and Peng, Xianlu L. and Yeh, Jen Jen},
+  title={Tumor-intrinsic and cancer-associated fibroblast subtypes independently predict outcomes in pancreatic cancer},
+  journal={Annals of Surgery}, volume={280}, number={4}, pages={659--666}, year={2024},
+  doi={10.1097/SLA.0000000000006416}
+}
+
+@article{smith2020standard,
+  author={Smith, Aaron M. and Walsh, Jonathan R. and Long, John and Davis, Craig B. and Henstock, Peter and Hodge, Martin R. and Maciejewski, Mateusz and Mu, Xinmeng Jasmine and Ra, Stephen and Zhao, Shanrong and Ziemek, Daniel and Fisher, Charles K.},
+  title={Standard machine learning approaches outperform deep representation learning on phenotype prediction from transcriptomics data},
+  journal={BMC Bioinformatics}, volume={21}, number={1}, pages={119}, year={2020},
+  doi={10.1186/s12859-020-3427-8}
+}
+
+@article{mcandrews2022caf,
+  author={McAndrews, Kathleen M. and Chen, Yang and Darpolor, J. Kebbeh and Zheng, Xiaofeng and Yang, Sujuan and Carstens, Julienne L. and Li, Bingrui and Wang, Huamin and Miyake, Toru and Correa de Sampaio, Pedro and Kirtley, Michelle L. and Natale, Mariangela and Wu, Chia-Chin and Sugimoto, Hikaru and LeBleu, Valerie S. and Kalluri, Raghu},
+  title={Identification of functional heterogeneity of carcinoma-associated fibroblasts with distinct {IL6}-mediated therapy resistance in pancreatic cancer},
+  journal={Cancer Discovery}, volume={12}, number={6}, pages={1580--1597}, year={2022},
+  doi={10.1158/2159-8290.CD-20-1484}
+}
+
+@article{singh2024basal,
+  author={Singh, Harshabad and Xiu, Joanne and Kapner, Kevin S. and Yuan, Chen and Narayan, Raja R. and Oberley, Matthew and Farrell, Alex and Surana, Rishi and Huffman, Brandon M. and Perez, Kimberly and Cleary, James M. and Jordan, Alexander C. and Dias Costa, Andressa and Williams, Hannah L. and Raghavan, Srivatsan and Weinberg, Benjamin and Pishvaian, Michael J. and Shroff, Rachna T. and Goel, Sanjay and Dougan, Stephanie K. and Nowak, Jonathan A. and Spetzler, David and Sledge, George and Wolpin, Brian M. and Aguirre, Andrew J.},
+  title={Clinical and genomic features of classical and basal transcriptional subtypes in pancreatic cancer},
+  journal={Clinical Cancer Research}, volume={30}, number={21}, pages={4932--4942}, year={2024},
+  doi={10.1158/1078-0432.CCR-24-1164}
+}
+
+@article{ogawa2020stroma,
+  author={Ogawa, Yurina and Masugi, Yohei and Abe, Tokiya and Yamazaki, Ken and Ueno, Akihisa and Fujii-Nishimura, Yoko and Hori, Shutaro and Yagi, Hiroshi and Abe, Yuta and Kitago, Minoru and Sakamoto, Michiie},
+  title={Three distinct stroma types in human pancreatic cancer identified by image analysis of fibroblast subpopulations and collagen},
+  journal={Clinical Cancer Research}, volume={27}, number={1}, pages={107--119}, year={2021},
+  doi={10.1158/1078-0432.CCR-20-2298}
+}
+
+@article{neuzillet2022periostin,
+  author={Neuzillet, Cindy and Nicolle, R{\'e}my and Raffenne, J{\'e}r{\^o}me and Tijeras-Raballand, Annemila{\"i} and Brunel, Alexia and Astorgues-Xerri, Lucile and Vacher, Sophie and Arbateraz, Floriane and Fanjul, Marjorie and Hilmi, Marc and Samain, R{\'e}mi and Klein, Christophe and Perraud, Aur{\'e}lie and Rebours, Vinciane and Mathonnet, Muriel and Bi{\`e}che, Ivan and Kocher, Hemant and Cros, J{\'e}r{\^o}me and Bousquet, Corinne},
+  title={Periostin- and podoplanin-positive cancer-associated fibroblast subtypes cooperate to shape the inflamed tumor microenvironment in aggressive pancreatic adenocarcinoma},
+  journal={The Journal of Pathology}, volume={258}, number={4}, pages={408--425}, year={2022},
+  doi={10.1002/path.6011}
+}
+
+@article{zaccaria2023surviae,
+  author={Zaccaria, Gian Maria and Altini, Nicola and Mezzolla, Giuseppe and Vegliante, Maria Carmela and Stranieri, Marianna and Pappagallo, Susanna Anita and Ciavarella, Sabino and Guarini, Attilio and Bevilacqua, Vitoantonio},
+  title={{SurvIAE}: Survival prediction with interpretable autoencoders from diffuse large {B}-cell lymphoma gene expression data},
+  journal={Computer Methods and Programs in Biomedicine}, volume={244}, pages={107966}, year={2024},
+  doi={10.1016/j.cmpb.2023.107966}
+}
+
+@article{meng2022savae,
+  author={Meng, Xiangyu and Wang, Xun and Zhang, Xudong and Zhang, Chaogang and Zhang, Zhiyuan and Zhang, Kuijie and Wang, Shudong},
+  title={A novel attention-mechanism based {Cox} survival model by exploiting pan-cancer empirical genomic information},
+  journal={Cells}, volume={11}, number={9}, pages={1421}, year={2022},
+  doi={10.3390/cells11091421}
+}
+
+@article{birolo2025beyondcox,
+  author={Birolo, Giovanni and Rossi, Ivan and Sartori, Flavio and Rollo, Cesare and Fariselli, Piero and Sanavia, Tiziana},
+  title={Beyond {Cox} models: assessing the performance of machine-learning methods in non-proportional hazards and non-linear survival analysis},
+  journal={Computers in Biology and Medicine}, volume={198}, pages={111176}, year={2025},
+  doi={10.1016/j.compbiomed.2025.111176}
+}
+
+@article{hao2021dnnsurv,
+  author={Hao, Lin and Kim, Juncheol and Kwon, Sookhee and Ha, Il Do},
+  title={Deep learning-based survival analysis for high-dimensional survival data},
+  journal={Mathematics}, volume={9}, number={11}, pages={1244}, year={2021},
+  doi={10.3390/math9111244}
+}
+
+@article{newman2019cibersortx,
+  author={Newman, Aaron M. and Steen, Chlo{\'e} B. and Liu, Chih Long and Gentles, Andrew J. and Chaudhuri, Aadel A. and Scherer, Florian and Khodadoust, Michael S. and Esfahani, Mohammad S. and Luca, Bogdan A. and Steiner, David and Diehn, Maximilian and Alizadeh, Ash A.},
+  title={Determining cell type abundance and expression from bulk tissues with digital cytometry},
+  journal={Nature Biotechnology}, volume={37}, number={7}, pages={773--782}, year={2019},
+  doi={10.1038/s41587-019-0114-2}
+}
+
+@article{chu2022bayesprism,
+  author={Chu, Tinyi and Wang, Zhong and Pe'er, Dana and Danko, Charles G.},
+  title={Cell type and gene expression deconvolution with {BayesPrism} enables {Bayesian} integrative analysis across bulk and single-cell {RNA} sequencing in oncology},
+  journal={Nature Cancer}, volume={3}, number={4}, pages={505--517}, year={2022},
+  doi={10.1038/s43018-022-00356-3}
+}
+
+@article{moncada2020spatial,
+  author={Moncada, Reuben and Barkley, Dalia and Wagner, Florian and Chiodin, Marta and Devlin, Joseph C and Baron, Maayan and Hajdu, Cristina H and Simeone, Diane M and Yanai, Itai},
+  title={Integrating microarray-based spatial transcriptomics and single-cell {RNA}-seq reveals tissue architecture in pancreatic ductal adenocarcinomas},
+  journal={Nature Biotechnology}, volume={38}, number={3}, pages={333--342}, year={2020},
+  doi={10.1038/s41587-019-0392-8}
+}
+
+@article{hwang2022single,
+  author={Hwang, William L and Jagadeesh, Karthik A and Guo, Jimmy A and Hoffman, Hannah I and Yadollahpour, Payman and others},
+  title={Single-nucleus and spatial transcriptome profiling of pancreatic cancer identifies multicellular dynamics associated with neoadjuvant treatment},
+  journal={Nature Genetics}, volume={54}, number={8}, pages={1178--1191}, year={2022},
+  doi={10.1038/s41588-022-01134-8}
+}
+
+@incollection{shapley1953value,
+  author    = {Shapley, L. S.},
+  title     = {A value for n-person games},
+  booktitle = {Contributions to the Theory of Games, Volume II},
+  editor    = {Kuhn, H. W. and Tucker, A. W.},
+  series    = {Annals of Mathematics Studies},
+  number    = {28},
+  pages     = {307--317},
+  publisher = {Princeton University Press},
+  year      = {1953}
+}
+
+@article{antolini2005timedependent,
+  author={Antolini, Laura and Boracchi, Patrizia and Biganzoli, Elia},
+  title={A time-dependent discrimination index for survival data},
+  journal={Statistics in Medicine}, volume={24}, number={24}, pages={3927--3944}, year={2005},
+  doi={10.1002/sim.2427}
+}
+
+@article{uno2011cstatistics,
+  author={Uno, Hajime and Cai, Tianxi and Pencina, Michael J. and D'Agostino, Ralph B. and Wei, L. J.},
+  title={On the {C}-statistics for evaluating overall adequacy of risk prediction procedures with censored survival data},
+  journal={Statistics in Medicine}, volume={30}, number={10}, pages={1105--1117}, year={2011},
+  doi={10.1002/sim.4154}
+}
+
+@article{blanche2019cindex,
+  author={Blanche, Paul and Kattan, Michael W. and Gerds, Thomas A.},
+  title={The c-index is not proper for the evaluation of $t$-year predicted risks},
+  journal={Biostatistics}, volume={20}, number={2}, pages={347--357}, year={2019},
+  doi={10.1093/biostatistics/kxy006}
 }

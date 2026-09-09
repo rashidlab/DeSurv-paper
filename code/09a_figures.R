@@ -31,6 +31,10 @@ source("R/cluster_alignment.R")
 source("R/cv_grid_helpers.R")
 source("R/get_top_genes.R")
 source("R/fit_cox_model.R")
+source("R/variance_helpers.R")
+source("R/reconstruction_helpers.R")
+source("R/figure_plot_helpers.R")
+source("R/theme_nature.R")   # single source of truth: theme_nature(), semantic color vectors
 
 # ── Load prerequisites ────────────────────────────────────────────────────
 tar_fit_desurv        <- load_precomputed("tar_fit_desurv_tcgacptac")
@@ -103,31 +107,22 @@ fig_bo_heat_maxed <- ggplot(curve, aes(x = k, y = alpha, fill = mean)) +
   )
 
 
-# ── Variance explained vs survival contribution scatter ───────────────────
-df_nmf <- build_variance_survival_df(
-  X = tar_data_filtered$ex,
-  scores = fit_std_desurvk$W,
-  loadings = fit_std_desurvk$H,
+# ── Reconstruction contribution vs survival contribution scatter (issue #7) ──
+# x-axis: per-factor reconstruction Shapley share (sums to 100% by the
+# efficiency axiom; supersedes the non-partitioning centered-variance metric).
+# build_recon_surv_df is defined in R/reconstruction_helpers.R.
+df_nmf <- build_recon_surv_df(
+  W = fit_std_desurvk$W, H = fit_std_desurvk$H, X = tar_data_filtered$ex,
   time = tar_data_filtered$sampInfo$time,
-  event = tar_data_filtered$sampInfo$event,
-  method = "NMF"
-)
-df_desurv <- build_variance_survival_df(
-  X = tar_data_filtered$ex,
-  scores = tar_fit_desurv$W,
-  loadings = tar_fit_desurv$H,
+  event = tar_data_filtered$sampInfo$event, method = "NMF")
+df_desurv <- build_recon_surv_df(
+  W = tar_fit_desurv$W, H = tar_fit_desurv$H, X = tar_data_filtered$ex,
   time = tar_data_filtered$sampInfo$time,
-  event = tar_data_filtered$sampInfo$event,
-  method = "DeSurv"
-)
-df_plot <- dplyr::bind_rows(df_nmf, df_desurv) |>
-  dplyr::mutate(
-    factor_label = dplyr::case_when(
-      method == "NMF" ~ paste0("N", factor),
-      method == "DeSurv" ~ paste0("D", factor),
-      TRUE ~ paste0("F", factor)
-    )
-  )
+  event = tar_data_filtered$sampInfo$event, method = "DeSurv")
+df_plot <- rbind(df_nmf, df_desurv)
+df_plot$factor_label <- ifelse(df_plot$method == "NMF",
+                                paste0("N", df_plot$factor),
+                                paste0("D", df_plot$factor))
 fig_variation_explained <- ggplot(df_plot,
          aes(x = variance_explained, y = delta_loglik,
              label = factor_label, color = method)) +
@@ -136,15 +131,15 @@ fig_variation_explained <- ggplot(df_plot,
       size = 4, max.overlaps = Inf, box.padding = 0.6,
       point.padding = 0.4, segment.size = 0.3, force = 2
     ) +
-    scale_color_manual(values = c("NMF" = "red", "DeSurv" = "blue")) +
+    scale_color_manual(values = desurv_method_cols) +   # DeSurv #0072B2, NMF #D55E00
     scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
     labs(
-      x = "Conditional variance explained\n(semi-partial R\u00b2)",
+      x = "Contribution to reconstruction\n(Shapley share, %)",
       y = expression(atop(Delta ~ "partial log-likelihood",
                           "(full vs. k-1 factor model)")),
       color = "Method"
     ) +
-    theme_classic(base_size = 10)
+    theme_nature(base_size = 8)
 saveRDS(fig_variation_explained, file.path(RESULTS_DIR, "fig_variation_explained_tcgacptac.rds"))
 
 # ── Gene overlap heatmaps ─────────────────────────────────────────────────
@@ -164,12 +159,12 @@ load(top_genes_path)  # loads: top_genes, colors, subtypeList, etc.
 desurv_k <- ncol(tar_fit_desurv$W)
 std_k    <- ncol(fit_std_desurvk$W)
 heatmap_factor_labels <- if (desurv_k == 3) {
-  c("D1 Classical/restCAF", "D2 proCAF", "D3 Basal-like")
+  c("D1 Classical/restCAF-like", "D2 proCAF-like", "D3 Basal-like")
 } else {
   paste0("D", seq_len(desurv_k))
 }
 heatmap_factor_labels_std <- if (std_k == 3) {
-  c("N1 Classical", "N2 Exocrine", "N3 Microenviron.")
+  c("N1 Tumor", "N2 Exocrine", "N3 Microenviron.")
 } else {
   paste0("N", seq_len(std_k))
 }
@@ -185,17 +180,40 @@ tar_tops_std_elbowk    <- get_top_genes(W = fit_std_elbowk$W, ntop = ntop_value)
 tar_fit_desurv_alpha0 <- load_precomputed("tar_fit_desurv_alpha0_tcgacptac")
 tar_tops_desurv_alpha0 <- get_top_genes(W = tar_fit_desurv_alpha0$W, ntop = ntop_value)
 
+# Panels a/b of the main factor-structure figure display an IDENTICAL row set:
+# the union of reference programs passing the r > 0.2 display threshold in
+# either method, ordered once (average-linkage clustering on the concatenated
+# correlation profiles) and imposed on both panels. With per-panel filtering, a
+# row's absence from one panel could mean "filtered from display" rather than
+# "not correlated", which misreads as evidence.
+hm_mat_desurv <- make_gene_overlap_heatmap(
+      tar_fit_desurv, tar_tops_desurv$top_genes, top_genes, return_matrix = TRUE
+    )
+hm_mat_std    <- make_gene_overlap_heatmap(
+      fit_std_desurvk, tar_tops_std_desurvk$top_genes, top_genes, return_matrix = TRUE
+    )
+rows_union <- union(hm_mat_desurv$keep, hm_mat_std$keep)
+rows_comb  <- cbind(hm_mat_desurv$cor_mat[rows_union, , drop = FALSE],
+                    hm_mat_std$cor_mat[rows_union, , drop = FALSE])
+# A program with no genes in one method's displayed gene space has an
+# uncomputable (NA) correlation there; it is drawn as an NA cell in that panel,
+# and for ordering purposes only the NA is treated as 0.
+rows_comb[is.na(rows_comb)] <- 0
+rows_shared <- rows_union[stats::hclust(stats::dist(rows_comb), method = "average")$order]
+
 # DeSurv heatmap
 fig_gene_overlap_heatmap_desurv <- make_gene_overlap_heatmap(
       tar_fit_desurv, tar_tops_desurv$top_genes, top_genes,
-      factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7
+      factor_labels = heatmap_factor_labels, title = "DeSurv", fontsize_row = 7,
+      rows_show = rows_shared
     )
 
 
 # Standard NMF at DeSurv k heatmap
 fig_gene_overlap_heatmap_std_desurvk <- make_gene_overlap_heatmap(
       fit_std_desurvk, tar_tops_std_desurvk$top_genes, top_genes,
-      factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7
+      factor_labels = heatmap_factor_labels_std, title = "NMF", fontsize_row = 7,
+      rows_show = rows_shared
     )
 
 
@@ -213,16 +231,18 @@ fig_gene_overlap_heatmap_desurv_elbowk <- make_gene_overlap_heatmap(
 saveRDS(fig_gene_overlap_heatmap_desurv_elbowk,
         file.path(RESULTS_DIR, "fig_gene_overlap_heatmap_desurv_elbowk_tcgacptac.rds"))
 
-# DeSurv alpha=0 heatmap
+# DeSurv alpha=0 heatmap (k=7 unsupervised NMF fragmentation, Supplementary Fig. S8)
 fig_gene_overlap_heatmap_desurv_alpha0 <- make_gene_overlap_heatmap(
-      tar_fit_desurv_alpha0, tar_tops_desurv_alpha0$top_genes, top_genes
+      tar_fit_desurv_alpha0, tar_tops_desurv_alpha0$top_genes, top_genes,
+      factor_labels = paste0("N", seq_len(ncol(tar_fit_desurv_alpha0$W))),
+      title = "NMF", fontsize_row = 7
     )
 saveRDS(fig_gene_overlap_heatmap_desurv_alpha0,
         file.path(RESULTS_DIR, "fig_gene_overlap_heatmap_desurv_alpha0_tcgacptac.rds"))
 
 # ── HR forest plot ────────────────────────────────────────────────────────
-desurv_df <- compute_hrs(data_val_filtered, tar_fit_desurv, "DeSurv")
-nmf_df    <- compute_hrs(data_val_filtered, fit_std_desurvk, "NMF")
+desurv_df <- compute_hrs(data_val_filtered, tar_fit_desurv, "DeSurv", ntop = ntop_value)
+nmf_df    <- compute_hrs(data_val_filtered, fit_std_desurvk, "NMF", ntop = ntop_value)
 
 df <- rbind(desurv_df, nmf_df)
 pd <- position_dodge(width = 0.6)
@@ -263,8 +283,9 @@ make_spearman_heatmap <- function(c_mat, row_labels, col_labels) {
     mat = c_mat,
     cluster_rows = FALSE, cluster_cols = FALSE,
     show_colnames = TRUE, show_rownames = TRUE,
-    fontsize = 8, fontsize_number = 8, number_color = "black",
-    breaks = seq(-0.5, 1, length.out = 101),
+    color = desurv_diverging(100),
+    fontsize = 7, fontsize_number = 7, number_color = "black",
+    breaks = seq(-1, 1, length.out = 101),   # symmetric so 0 maps to white midpoint
     display_numbers = TRUE, number_format = "%.2f", silent = TRUE
   )
   ph <- do.call(pheatmap::pheatmap, c(ph_args, list(legend = FALSE)))
@@ -344,11 +365,13 @@ plot_3a <- fig_gene_overlap_heatmap_desurv$plot +
 plot_3b <- fig_gene_overlap_heatmap_std_desurvk$plot +
   theme(plot.margin = margin(t = 14, r = 2, b = 2, l = 2))
 legend_ab <- gtable::gtable_add_padding(
-  fig_gene_overlap_heatmap_desurv$legend, padding = unit(c(0, 10, 0, 0), "pt"))
+  fig_gene_overlap_heatmap_desurv$legend, padding = unit(c(0, 6, 0, 6), "pt"))
+# Wider legend column so the "Spearman correlation" title is not clipped on
+# the right of panel b.
 top_row_3 <- plot_grid(
   plot_3a, plot_3b, cowplot::ggdraw(legend_ab),
-  ncol = 3, labels = c("A", "B", ""), align = "hv",
-  label_size = 12, rel_widths = c(3.5, 3.5, 0.3)
+  ncol = 3, labels = c("a", "b", ""), align = "hv",
+  label_size = 12, rel_widths = c(3.4, 3.4, 0.85)
 )
 
 plot_3c <- fig_variation_explained +
@@ -362,8 +385,8 @@ legend_d_plot <- ggplot(
 ) +
   geom_tile() +
   scale_fill_gradientn(
-    colors = grDevices::colorRampPalette(rev(RColorBrewer::brewer.pal(n = 7, name = "RdYlBu")))(100),
-    limits = c(-0.5, 1), breaks = c(-0.4, 0, 0.4, 0.8), name = "Spearman\ncorrelation"
+    colors = desurv_diverging(100),
+    limits = c(-1, 1), breaks = c(-0.8, -0.4, 0, 0.4, 0.8), name = "Spearman\ncorrelation"
   ) +
   guides(fill = guide_colorbar(barwidth = unit(0.3, "cm"), barheight = unit(2, "cm"),
                                title.position = "top", title.hjust = 0.5)) +
@@ -373,15 +396,31 @@ legend_d_plot <- ggplot(
 legend_d_grob <- cowplot::get_legend(legend_d_plot)
 
 plot_3d <- plot_grid(
-  fig_desurv_std_correlation_top50$plot + theme(plot.margin = margin(2, 2, 2, 20)),
+  fig_desurv_std_correlation$plot + theme(plot.margin = margin(2, 2, 2, 6)),
   plot_grid(NULL, cowplot::ggdraw(legend_d_grob), nrow = 2, rel_heights = c(0.08, 0.92)),
-  ncol = 2, rel_widths = c(4, 1)
+  ncol = 2, rel_widths = c(5.5, 1)
 )
-bottom_row_3 <- plot_grid(plot_3c, plot_3d, ncol = 2, labels = c("C", "D"),
-                          label_size = 12, rel_widths = c(0.55, 0.45))
+# Panel E: DeSurv D1 score vs GATA6 RNA-ISH in COMPASS. Raw per-sample points are
+# cached (aggregate-level derived values, no raw expression) in the tracked
+# treated_cohort_stats.rds by code/11 (run out of band on the restricted data).
+# Read from the fixed base "results/" path (where code/11 writes it), NOT
+# RESULTS_DIR, so it resolves under quick/ntop subfolder modes too.
+.g6 <- readRDS(file.path("results", "treated_cohort_stats.rds"))$gata6
+plot_3e <- ggplot(.g6$points, aes(x = factor(gata6), y = D1)) +
+  geom_boxplot(outlier.shape = NA, width = 0.6, fill = "grey92", linewidth = 0.3) +
+  geom_jitter(width = 0.12, height = 0, size = 1.3, alpha = 0.75, colour = desurv_accent) +
+  annotate("text", x = 0.6, y = max(.g6$points$D1), hjust = 0, vjust = 1, size = 2.9,
+           label = sprintf("Spearman~rho==%.2f", .g6$rho), parse = TRUE) +
+  annotate("text", x = 0.6, y = max(.g6$points$D1) - 0.45, hjust = 0, vjust = 1, size = 2.9,
+           label = sprintf("italic(P)<0.001*','~n==%d", .g6$n), parse = TRUE) +
+  labs(x = "GATA6 RNA-ISH level", y = "DeSurv D1 score (z)") +
+  theme_classic(base_size = 9) + theme(axis.title = element_text(size = 8))
+
+bottom_row_3 <- plot_grid(plot_3c, plot_3d, plot_3e, ncol = 3, labels = c("c", "d", "e"),
+                          label_size = 12, rel_widths = c(0.34, 0.40, 0.26))
 ggsave(
   file.path(FIGURE_DIR, "fig3_tcgacptac.pdf"),
-  plot_grid(top_row_3, bottom_row_3, nrow = 2, rel_heights = c(1.3, 0.7)),
+  plot_grid(top_row_3, bottom_row_3, nrow = 2, rel_heights = c(1.3, 0.72)),
   width = 7, height = 7
 )
 message("Saved fig3_tcgacptac.pdf")
@@ -391,15 +430,36 @@ d <- fig_hr_forest$data
 d$dataset <- dplyr::recode(d$dataset,
   "Puleo_array" = "Puleo", "Moffitt_GEO_array" = "Moffitt",
   "PACA_AU_seq" = "PACA seq", "PACA_AU_array" = "PACA array")
-pooled <- d %>%
-  dplyr::mutate(logHR = log(HR), se = (log(upper) - log(lower)) / (2 * 1.96), w = 1 / se^2) %>%
-  dplyr::group_by(method, factor_name) %>%
-  dplyr::summarise(pooled_logHR = sum(logHR * w) / sum(w),
-                   pooled_se    = sqrt(1 / sum(w)), .groups = "drop") %>%
-  dplyr::mutate(HR = exp(pooled_logHR),
-                lower = exp(pooled_logHR - 1.96 * pooled_se),
-                upper = exp(pooled_logHR + 1.96 * pooled_se),
-                dataset = "Pooled")
+# Pooled diamonds are derived from the DE-DUPLICATED patient-level dataset (one
+# record per unique patient; PACA-AU array duplicates excluded, RNA-seq retained
+# -- shared DeCAF-consistent rule) via a per-factor cohort-stratified Cox on the
+# within-cohort standardized factor score. This cannot treat the two PACA-AU
+# platform estimates as independent contributions; the per-cohort points above
+# still display each platform separately.
+source("R/paca_dedup.R")
+pooled_factor_hr <- function(data_val, fit, prefix) {
+  rows <- lapply(data_val, function(co) {
+    keep <- intersect(rownames(fit$W), rownames(co$ex))
+    Z  <- t(co$ex[keep, , drop = FALSE]) %*% fit$W[keep, , drop = FALSE]
+    si <- co$sampInfo
+    data.frame(id = rownames(si), dataset = si$dataset, time = si$time,
+               event = si$event, Z, check.names = FALSE, stringsAsFactors = FALSE)
+  })
+  df <- do.call(rbind, rows); df <- df[is.finite(df$time) & df$time > 0, ]
+  df <- dedup_combined(df, "dataset", "id")
+  kc <- setdiff(colnames(df), c("id", "dataset", "time", "event"))
+  do.call(rbind, lapply(seq_along(kc), function(j) {
+    z <- ave(df[[kc[j]]], df$dataset, FUN = function(x) as.numeric(scale(x)))
+    s <- summary(survival::coxph(survival::Surv(df$time, df$event) ~ z + strata(df$dataset)))
+    data.frame(factor_name = paste0(prefix, j),
+               HR = s$conf.int[1], lower = s$conf.int[3], upper = s$conf.int[4],
+               stringsAsFactors = FALSE)
+  }))
+}
+pooled <- rbind(
+  cbind(pooled_factor_hr(data_val_filtered, tar_fit_desurv, "D"), method = "DeSurv"),
+  cbind(pooled_factor_hr(data_val_filtered, fit_std_desurvk, "N"), method = "NMF"))
+pooled$dataset <- "Pooled"
 keep_cols <- c("factor_name", "HR", "lower", "upper", "dataset", "method", "row_type")
 d$row_type <- "cohort"; pooled$row_type <- "pooled"
 all_data <- rbind(d[, keep_cols], pooled[, keep_cols])
@@ -436,7 +496,7 @@ make_forest_panel <- function(dat, title, highlight_level) {
     scale_size_manual(values = cohort_sizes, name = NULL, drop = FALSE) +
     scale_x_log10(limits = c(0.35, 3)) +
     labs(x = "Hazard ratio (95% CI)", y = NULL, title = title) +
-    theme_classic(base_size = base_size) +
+    theme_nature(base_size = base_size) +
     theme(legend.position = "none",
           plot.title    = element_text(face = "bold", size = 9, hjust = 0.5),
           axis.text.y   = element_text(size = 8, face = "bold"),
@@ -464,7 +524,7 @@ plot_forest_4 <- plot_grid(
   forest_legend, nrow = 2, rel_heights = c(15, 1)
 )
 
-theme_pnas <- theme_classic(base_size = base_size) +
+theme_pnas <- theme_nature(base_size = base_size) +
   theme(plot.title = element_text(face = "bold"),
         plot.margin = margin(6, 10, 6, 15),
         legend.box.margin = margin(0, 0, 0, 0),
@@ -498,8 +558,7 @@ km_legend_plot <- ggplot(
   aes(x = x, y = y, colour = group)
 ) +
   geom_line() +
-  scale_colour_manual(values = c("Low" = "violetred2", "High" = "turquoise4"),
-                      name = "Risk group") +
+  scale_colour_manual(values = desurv_risk_cols, name = "Risk group") +   # blue/vermillion, matches SI + splot_cutpoint
   theme_pnas +
   theme(legend.position = "bottom",
         legend.text  = element_text(size = km_text_size),
@@ -509,16 +568,43 @@ km_legend_gg   <- ggplotGrob(km_legend_plot)
 km_legend_grob <- km_legend_gg$grobs[
   sapply(km_legend_gg$grobs, function(x) x$name) == "guide-box"][[1]]
 
+## Fig 3C: tuned supervised scores vs DeSurv programs (|Pearson r|; axis_decomposition cache)
+.axd <- readRDS("results/desurv_vs_supervised_tuned.rds")$axis_decomposition
+.hm_df <- data.frame(
+  method  = factor(rep(c("Supervised PCA", "Penalized Cox"), each = 3),
+                   levels = c("Supervised PCA", "Penalized Cox")),
+  program = factor(rep(c("D1", "D2", "D3"), 2), levels = c("D1", "D2", "D3")),
+  r = c(abs(as.numeric(.axd["Supervised PCA", c("D1", "D2", "D3")])),
+        abs(as.numeric(.axd["Sparse Cox",     c("D1", "D2", "D3")])))
+)
+fig_supcorr_hm <- ggplot(.hm_df, aes(program, method, fill = r)) +
+  geom_tile(color = "white", linewidth = 0.6) +
+  geom_text(aes(label = sprintf("%.2f", r)), size = km_text_size / ggplot2::.pt) +
+  scale_fill_gradient(low = "#f7fbff", high = desurv_accent, limits = c(0, 1),   # |r| ramp anchored on DeSurv blue
+                      name = expression("|" * italic(r) * "|")) +
+  labs(x = NULL, y = NULL, title = "Supervised score vs\nDeSurv program") +
+  theme_pnas +
+  theme(plot.title = element_text(size = 9), axis.text = element_text(size = km_text_size),
+        legend.position = "right", legend.key.width = unit(8, "pt"))
+
+# Panel b was previously a dichotomized-risk-group KM curve. It was removed
+# because the cutpoint it displayed is not reproducible: run_cv_grid_point()
+# passes `seed` to desurv_fit() but also parallel_init = TRUE, and the forked
+# initialization workers do not inherit a reproducible RNG stream, so identical
+# calls select z-cutpoints anywhere in 0.8-2.0 and high-risk fractions from
+# 5% to 33%. The validation conclusion never depended on it (the continuous
+# linear predictor and the per-factor HRs carry it), so the panel was dropped
+# rather than re-derived. See docs/LESSONS.md.
 km_block_4 <- plot_grid(
-  stack_surv(fig_median_survival_desurv, "DeSurv"),
-  stack_surv(fig_median_survival_std_desurvk, "NMF"),
-  ggdraw(km_legend_grob),
-  nrow = 3, labels = c("B", "C", ""), label_size = 12, rel_heights = c(5, 5, 0.6)
+  NULL,
+  plot_grid(fig_supcorr_hm, labels = "b", label_size = 12),
+  NULL,
+  nrow = 3, rel_heights = c(1.0, 2.6, 1.0)
 )
 ggsave(
   file.path(FIGURE_DIR, "fig4_tcgacptac.pdf"),
   plot_grid(plot_forest_4, km_block_4, ncol = 2, rel_widths = c(1.4, 1),
-            labels = c("A", ""), label_size = 12),
+            labels = c("a", ""), label_size = 12),
   width = 7, height = 4.8
 )
 message("Saved fig4_tcgacptac.pdf")

@@ -461,7 +461,8 @@ plot_sim_variance_survival <- function(
   # Build a 2×3 facet scatter (method × scenario) showing per-factor
   # variance explained vs. survival contribution (delta log-likelihood),
   # coloured by whether each learned factor was matched to the true prognostic
-  # program.  Intended as a supplementary figure grounding Fig 4C in simulations.
+  # program.  Intended as a supplementary figure grounding the main-text
+  # reconstruction-versus-survival panel in simulations.
 
   tbl <- sim_results_table
   if (!is.null(analysis_ids)) {

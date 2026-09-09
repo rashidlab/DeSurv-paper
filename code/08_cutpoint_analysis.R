@@ -1,6 +1,22 @@
 #!/usr/bin/env Rscript
 # code/08_cutpoint_analysis.R — CV-based cutpoint selection for dichotomized risk
 #
+# ORPHANED as of Aug 2026 — NOT part of the manuscript pipeline.
+#
+# Its outputs fed main-text Fig. 3b and the SI section "Cutpoint selection and
+# validation of dichotomized risk groups". Both were removed because the
+# cutpoint this script selects is not reproducible: run_cv_grid_point() passes
+# `seed` to desurv_fit() but also parallel_init = TRUE, and the forked
+# initialization workers do not inherit a reproducible RNG stream. Four
+# identical calls returned optimal z of 1.00 / 0.80 / 1.20 / 2.00, moving the
+# validation high-risk fraction from 5% to 33%. The validation conclusion never
+# depended on it (the continuous linear predictor and per-factor HRs carry it).
+#
+# The cached .rds files are retained so the removed analysis can be reproduced
+# on request. Before reinstating anything derived from them, fix the RNG seeding
+# (RNGkind("L'Ecuyer-CMRG") or parallel_init = FALSE) and re-run. See
+# docs/LESSONS.md row L7.
+#
 # Computes the optimal z-score cutpoint that converts the continuous DeSurv
 # (and standard NMF at DeSurv-k) linear predictor into a binary risk
 # stratification. Outputs the per-cutpoint summary and the LP statistics

@@ -970,6 +970,14 @@ compute_sim_variance_survival_df <- function(fit, processed) {
   # Compute per-factor variance explained and survival contribution for one
   # simulation replicate.
   #
+  # Variance metric: cross-sample variance fraction of factor j's rank-one
+  # contribution to the GENE-CENTERED expression matrix, i.e.
+  # ||(W_j H_j^T)^{(c)}||_F^2 / ||X^{(c)}||_F^2 where (c) denotes gene-wise
+  # centering across samples. This matches the corrected main-paper Fig 2C
+  # metric (see R/variance_helpers.R and GitHub issue #6). The
+  # uncentered variant was dominated by the baseline of rank-normalized X
+  # and deflated factors encoding genuine cross-sample variation.
+  #
   # Returns a tibble with columns: factor, variance_explained, delta_loglik.
   # Returns NULL silently on any error or missing data so that the calling
   # summarize_simulation_results() is never interrupted.
@@ -988,15 +996,14 @@ compute_sim_variance_survival_df <- function(fit, processed) {
     k <- ncol(W)
     if (k == 0L) return(NULL)
 
-    # --- Variance explained (semi-partial R², leave-one-out) ---
-    total_ss   <- sum(X^2, na.rm = TRUE)
-    if (!is.finite(total_ss) || total_ss <= 0) return(NULL)
-    X_hat_full <- W %*% H
-    rss_full   <- sum((X - X_hat_full)^2, na.rm = TRUE)
+    # --- Cross-sample variance fraction (gene-centered) ---
+    Xc       <- X - rowMeans(X, na.rm = TRUE)
+    var_den  <- sum(Xc^2, na.rm = TRUE)
+    if (!is.finite(var_den) || var_den <= 0) return(NULL)
     var_exp <- vapply(seq_len(k), function(j) {
-      X_hat_mj <- W[, -j, drop = FALSE] %*% H[-j, , drop = FALSE]
-      rss_mj   <- sum((X - X_hat_mj)^2, na.rm = TRUE)
-      (rss_mj - rss_full) / total_ss
+      comp  <- W[, j] %o% H[j, ]
+      compc <- comp - rowMeans(comp, na.rm = TRUE)
+      sum(compc^2, na.rm = TRUE) / var_den
     }, numeric(1))
 
     # --- Survival contribution (Type III partial log-likelihood) ---

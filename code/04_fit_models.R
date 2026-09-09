@@ -172,6 +172,47 @@ tar_fit_desurv_elbowk <- cache_or_compute("tar_fit_desurv_elbowk_tcgacptac", {
                     ntop_elbowk, "DeSurv-elbowk")
 })
 
+# ── 1d. Fair matched-rank comparator (alpha = 0 at DeSurv's k, own tuning) ───
+# Same optimizer, same consensus initialization, same multi-start budget and
+# same BO tuning budget as DeSurv; only supervision is off and rank is held.
+# This is the comparator that separates supervision from tuning budget, which
+# the plain NMF::nmf model in section 2 below cannot do.
+tar_params_best_a0k3 <- load_precomputed("tar_params_best_a0k3_tcgacptac")
+lambdaW_a0k3 <- extract_param(tar_params_best_a0k3, "lambdaW", 0)
+lambdaH_a0k3 <- extract_param(tar_params_best_a0k3, "lambdaH", 0)
+ntop_a0k3 <- if (!is.null(tar_params_best_a0k3$ntop) && !is.na(tar_params_best_a0k3$ntop)) {
+  as.integer(round(tar_params_best_a0k3$ntop))
+} else {
+  100L
+}
+
+desurv_seed_fits_a0k3 <- cache_or_compute("desurv_seed_fits_a0k3_tcgacptac", {
+  run_seed_fits(tar_data_filtered, tar_params_best_a0k3,
+                lambdaW_a0k3, lambdaH_a0k3, NINIT_FULL, "Fair-a0k3")
+})
+
+tar_fit_desurv_a0k3 <- cache_or_compute("tar_fit_desurv_a0k3_tcgacptac", {
+  consensus_and_fit(desurv_seed_fits_a0k3, tar_data_filtered, tar_params_best_a0k3,
+                    lambdaW_a0k3, lambdaH_a0k3, ntop_a0k3, "Fair-a0k3")
+})
+
+# ── 1e. Sensitivity: alpha = 0 holding DeSurv's OWN tuned hyperparameters ────
+# Isolates the hyperparameter axis. Identical to DeSurv in every respect except
+# alpha = 0, so the only thing that differs is supervision itself. Reported as a
+# sensitivity because its hyperparameters were selected for the supervised model.
+tar_params_a0k3pin <- tar_params_best
+tar_params_a0k3pin$alpha <- 0
+
+desurv_seed_fits_a0k3pin <- cache_or_compute("desurv_seed_fits_a0k3pin_tcgacptac", {
+  run_seed_fits(tar_data_filtered, tar_params_a0k3pin,
+                lambdaW_value, lambdaH_value, NINIT_FULL, "Fair-a0k3-pinned")
+})
+
+tar_fit_desurv_a0k3pin <- cache_or_compute("tar_fit_desurv_a0k3pin_tcgacptac", {
+  consensus_and_fit(desurv_seed_fits_a0k3pin, tar_data_filtered, tar_params_a0k3pin,
+                    lambdaW_value, lambdaH_value, ntop_value, "Fair-a0k3-pinned")
+})
+
 # ── 2. Standard NMF at DeSurv k (k=3) ───────────────────────────────────
 fit_std_desurvk <- cache_or_compute("fit_std_desurvk_tcgacptac", {
   selected_k <- tar_params_best$k

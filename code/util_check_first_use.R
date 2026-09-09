@@ -69,8 +69,11 @@ DEFINED <- c(
   "concordance"               = "the probability that the model ranks a pair of patients",
   "one-standard-error"        = "the most parsimonious model within one standard error",
   "partial log-likelihood"    = "the fit criterion of the Cox model",
-  "consensus initialization"  = "starting values built from the solutions of many restarts",
-  "linear predictor"          = "the weighted sum of the three program scores"
+  # "consensus initialization": the aggregation of restarts is explained in the
+  # Introduction ("solutions from many independent restarts are aggregated to
+  # initialize a final fit") before the term's first use in Results; the
+  # Results-side gloss was removed at the PI's direction (2026-09-08).
+  "linear predictor"          = "combines D1 and D3, with coefficients oriented so that higher values indicate higher risk"
 )
 
 # ── Terms deliberately left undefined, with the reason ──────────────────────

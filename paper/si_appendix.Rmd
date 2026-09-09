@@ -1,6 +1,6 @@
 ---
 title: "Supplementary Information"
-subtitle: "DeSurv, a survival-supervised matrix factorization framework, identifies a replicable tumor--stroma prognostic architecture in pancreatic cancer"
+subtitle: "DeSurv identifies a replicable tumor--stroma prognostic architecture in pancreatic cancer through survival-supervised matrix factorization"
 author: Amber M. Young, Alisa Yurovsky, Xianlu Laura Peng, Jen Jen Yeh, Didong Li, Naim U. Rashid
 header-includes:
 - \providecommand{\pandocbounded}[1]{#1}

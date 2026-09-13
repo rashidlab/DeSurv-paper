@@ -131,8 +131,8 @@ Optimization proceeds by block coordinate descent (BCD; Algorithm \ref{alg:desur
             \State \hspace{0.5cm} Record $\mathcal{L}(W^{(t+1)},H^{(t+1)},\beta^{(t+1)})$
             \State $t = t + 1$
         \EndWhile
-        \State Refit $\beta$ on the final $W$ by the same routine (this is the only $\beta$ estimate when $\alpha = 0$)
-        \State \Return $\hat{W} = W^{(t)}, \hat{H} = H^{(t)}, \hat{\beta}=\beta^{(t)}$
+        \State Refit $\beta$ on the final $W$ by the same routine, giving $\beta_{\mathrm{refit}}$ (this is the only $\beta$ estimate when $\alpha = 0$)
+        \State \Return $\hat{W} = W^{(t)}, \hat{H} = H^{(t)}, \hat{\beta}=\beta_{\mathrm{refit}}$
     \end{algorithmic}
 \end{algorithm}
 
@@ -207,7 +207,8 @@ We define a gradient-scaling heuristic
 with a numerical stabilizer $\varepsilon_\zeta = 10^{-12}$ in each norm, and clip
 $\zeta^{(t)}$ to avoid extreme values:
 $\zeta^{(t)} \leftarrow \min(\zeta^{(t)}, \zeta_{\max})$
-with $\zeta_{\max} = 10^6$ in all experiments. The scaling removes differences in
+with $\zeta_{\max} = 10^6$ in all experiments; below we write $\zeta$ for
+$\zeta^{(t)}$ where the iteration index is not needed. The scaling removes differences in
 the magnitudes of the weighted reconstruction and survival gradients before the
 additional factor $\alpha$ below controls the relative Cox contribution. Because
 the Cox gradient entering $\zeta$ is already weighted by $\alpha$, the additional
@@ -341,8 +342,9 @@ closed form
 },
 \end{equation}
 where $S(a,\tau) = \mathrm{sign}(a)\max(|a|-\tau,0)$ is the soft-thresholding
-operator, $w(\tilde{\eta})$, $v(\tilde{\eta})$ are standard local
-quadratic approximations of the Cox log-partial likelihood [@simon2011regularization],
+operator, $w(\tilde{\eta})_i$ and $v(\tilde{\eta})_i$ are the standard local
+quadratic-approximation weight and working response for sample $i$ in the Cox
+log-partial likelihood [@simon2011regularization],
 and $z_{i,r}$ denotes the standardized score of factor $r$ in sample $i$.
 
 The implemented update departs from an exact conditional minimization in three
@@ -372,13 +374,15 @@ exactly those produced by this procedure.
 
 \subsection{Normalization of W}
 
-After each accepted $W$ update, we normalize the columns of $W$ as
+Within each candidate $W$ update, we normalize the columns of $W$ as
 $W \leftarrow W D^{-1}$, and adjust $H$ and $\beta$ as
 \[
 H \leftarrow D H, \qquad \beta \leftarrow D \beta,
 \]
-where $D$ is the diagonal matrix of column $\ell_2$-norms of $W$.
-This preserves the reconstruction $WH$ and the linear predictor $W\beta$; because
+where $D$ is the diagonal matrix containing the column Euclidean norms of the
+candidate $W$.
+This preserves the reconstruction $WH$ and the collapsed gene-weight vector
+$W\beta$, and hence the linear predictor $X^\top W \beta$; because
 the accompanying rescaling of $H$ and $\beta$ can alter the penalization terms,
 the normalized proposal is evaluated under the full penalized objective within
 the backtracking procedure for the $W$ update rather than assumed loss-invariant. Normalization
@@ -407,16 +411,17 @@ In DeSurv, survival supervision enters through the projection $Z = W^\top X$ in 
 \]
 so the update for $W$ in Equation \ref{eqn:W_update} combines the reconstruction and supervision terms, and the gene-program definitions are shaped directly by their association with survival.
 
-By contrast, if supervision were applied to the sample loadings \(H\), the model
-could reduce the Cox loss by redistributing patient-specific coefficients while
-leaving the gene-level programs \(W\) nearly unchanged, a behavior documented for
-supervised topic models, where supervision applied only to the coefficient
-matrix modifies \(H\) but not the basis \(W\) [@blei2007slda].
+With supervision applied to the sample loadings \(H\), the Cox term has no direct
+gradient with respect to the gene-program matrix \(W\); survival can nevertheless
+influence \(W\) indirectly through the alternating reconstruction updates
+involving \(H\). The distinction concerns where supervision enters the objective,
+not a guarantee that sample-side supervision leaves the basis unchanged; related
+considerations arise in supervised topic models [@blei2007slda].
 
 Supervising \(W\) also provides a practical advantage for **portability**:
 because \(W\) defines gene-level programs, new samples can be scored directly by the projection \(Z_{\text{new}} = W^\top X_{\text{new}}\). Supervising \(H\)
 would not yield such a mapping: obtaining sample loadings for external datasets
-would require an additional sample-specific estimation step, a nonnegative least-squares (NNLS) problem for each new sample.
+would require an additional sample-specific estimation step, a nonnegative least-squares (NNLS) problem for each new sample. SurvNMF uses constrained least squares for held-out samples; CoxNMF does not describe new-sample scoring in the cited source (Supplementary Table \ref{tab:architecture}). Estimating loadings with a fixed basis does not require relearning the gene programs or using validation survival outcomes.
 
 Supervising through \(W\) is therefore intended to shape the gene programs
 toward prognostic directions and to yield signatures that can be scored
@@ -948,7 +953,11 @@ conditional (each is evaluated against the full complement of the remaining
 $k-1$ factors) and are nonadditive: they do not partition the total model partial
 likelihood and are not comparable across factors as variance-style shares. We
 therefore report them as per-factor conditional increments rather than as an
-additive survival decomposition.
+additive survival decomposition. These are post-fit unpenalized Cox comparisons,
+not differences obtained by deleting terms from the trained penalized DeSurv
+predictor. Because the gene programs were learned using these training outcomes,
+the increments describe the recovered representation and do not independently
+validate prognostic relevance.
 
 ```{r recon-surv-shares, echo=FALSE}
 .vs <- read_result("fig_variation_explained_tcgacptac")$data
@@ -1153,11 +1162,10 @@ $`r sprintf("%.2f", max(abs(unlist(.srt[.srt$supervised, c("score_cor_D2", "scor
 By contrast, the leading \emph{unsupervised} direction
 (the first principal component) was only weakly correlated with D1
 ($|r| = `r sprintf("%.2f", .srcor("Unsupervised PCA"))`$) and instead tracked the
-high-variance D2/D3 stroma--basal axis. This D1 axis is thus shared across survival-supervised methods, not an idiosyncrasy of the DeSurv
-algorithm. Two additional findings are consistent with this conclusion: D1 is unreconstructable from the
+high-variance D2/D3 stroma--basal axis. This D1 axis is thus shared across the examined survival-supervised methods. Two additional findings are consistent with this conclusion: D1 is unreconstructable from the
 unsupervised NMF basis (Table \ref{tab:projection-r2}), and Lee NMF at matched rank does not recover the restCAF and iCAF marker genes that appear among DeSurv's defining genes (Stromal resolution: which reference programs are recovered from bulk).
 
-```{r fig-suprec, echo=FALSE, fig.width = 8, fig.height = 3.6, fig.cap = "Independent survival-supervised methods recover the D1 axis; an unsupervised method does not. (a) Absolute correlation (across training-cohort patients) of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox all recover D1 (green), whereas the leading unsupervised principal component does not (grey). (b) Sample-level agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \\label{fig:suprec}", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
+```{r fig-suprec, echo=FALSE, fig.width = 8, fig.height = 3.6, fig.cap = "Correspondence of supervised scores and the first unsupervised principal component with D1 in the training cohort. (a) Absolute correlation (across training-cohort patients) of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox all recover D1 (green), whereas the leading unsupervised principal component does not (grey). (b) Sample-level agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \\label{fig:suprec}", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
 knitr::include_graphics(file.path("..", "figures", "fig_supervised_recovery.pdf"), error = FALSE)
 ```
 
@@ -1181,7 +1189,7 @@ External discrimination was similar: the pooled frozen-transfer C-index was $`r 
 
 The compartment attribution made this explicit. The genes emphasized by a supervised risk score need not coincide with D1's positively weighted defining genes, because the high-risk end of D1 is characterized in part by loss of classical-tumor and restCAF-like expression. Empirically they were basal-like tumor markers: across `r .stvns` cross-validation seeds the genes selected by both methods were enriched (hypergeometric $P < 0.01$) for the basal-like tumor program (in `r .stvhit("Sparse Cox")`/`r .stvns` seeds for lasso Cox and `r .stvhit("Supervised PCA")`/`r .stvns` for supervised PCA) and in no seed for the activated-stroma/proCAF, restraining-stroma, immune, or exocrine compartments. The supervised risk scores did nonetheless retain some stromal signal: each correlated modestly with an external activated-stroma/proCAF signature ($|r| = `r .stvc("Sparse Cox")`$ for lasso Cox and $`r .stvc("Supervised PCA")`$ for supervised PCA), but well below DeSurv's D2 program ($|r| = `r .stvc("DeSurv D2 (proCAF factor)")`$), which tracks that signature directly.
 
-The distinction is therefore representational: DeSurv preserves stromal context as an explicit program even when that program does not contribute independently to the fitted linear predictor.
+The distinction is therefore representational: DeSurv preserves stromal context as an explicit program even when that program does not contribute independently to the fitted linear predictor. The independently tuned methods used different feature-selection procedures and retained different numbers of genes. Absence of reference-program enrichment in their selected gene lists does not establish absence of stromal information in their risk scores.
 
 ```{r brier-stats, echo=FALSE, message=FALSE, warning=FALSE}
 load_result("desurv_brier_stats")
@@ -1221,7 +1229,8 @@ frozen predictor, this sensitivity evaluates the transported score direction
 under local recalibration rather than a frozen absolute-risk model. Second, the
 scores are computed on the same data used to fit that recalibration, with no
 cross-validation or resampling, so the reported IBS and IPA are apparent
-in-sample values and overstate out-of-sample accuracy. Both caveats weaken the evidentiary value of the apparent improvement, which is already small. This
+in-sample values that are subject to optimism and do not estimate out-of-sample
+accuracy. Both caveats weaken the evidentiary value of the apparent improvement, which is already small. This
 modest proper-score improvement over the null is consistent with the moderate
 discrimination (C $= `r sprintf("%.2f", .brp["cindex"])`$) and with DeSurv's
 contribution being a separately resolved tumor- and stroma-associated decomposition
@@ -1409,7 +1418,10 @@ compared the results (`r .pe$meta$n_splits` random splits). Across the `r c("one
 more closely with the reported basis (gene-loading correlation `r .rng(.el)`,
 top-$`r .ps$meta$ntop`$ Jaccard `r .rng(.ej)`). Splitting the restarts halves the
 number aggregated relative to the reported procedure, so these figures are
-conservative.
+conservative. Each half contained `r .pe$meta$block_size` of the same
+`r .ps$meta$n_restarts` cached starts; this supports robustness to restart-pool
+composition on the observed training data and is not a set of independently
+repeated executions of the full `r .ps$meta$n_restarts`-restart procedure.
 
 The fitted basis also moved materially from the consensus initialization
 $W_0$: with programs corresponding by position (confirmed against the full
@@ -1452,7 +1464,7 @@ from reproducibility of the frozen end-to-end procedure.
 \section{Simulation results under null and mixed scenarios}
 \label{sec:sim}
 
-To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the prognostic scenario (main text Fig. \ref{fig:sim}), the factor-specific survival signal contributed relatively little transcriptomic variation compared with the shared background signal excluded from the survival-generating gene set, and survival depended on 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, 300 genes per survival-driving factor entered the survival-generating weight matrix $\widetilde{W}$: each of its columns carried 150 factor-specific markers and 150 background genes with loadings shared across all factors, with survival weight placed on factor 1 only ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). All scenarios used $p = 3{,}000$ genes, $n = 200$ samples, $k = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Methods). Performance was evaluated using the concordance index (C-index) on the held-out 30\% test split of each replicate, precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates.
+To characterize the operating characteristics of DeSurv across different signal regimes, we evaluated performance under three simulation scenarios. In the prognostic scenario (main text Fig. \ref{fig:sim}), the factor-specific survival signal contributed relatively little transcriptomic variation compared with the shared background signal excluded from the survival-generating gene set, and the specified survival-generating gene set comprised 150 factor-specific marker genes ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). In the null scenario, survival times were generated independently of gene expression ($\beta = 0$), so no prognostic structure existed. In the mixed scenario, 300 genes per survival-driving factor entered the survival-generating weight matrix $\widetilde{W}$: each of its columns carried 150 factor-specific markers and 150 background genes with loadings shared across all factors, with survival weight placed on factor 1 only ($\beta_1 = 2$, $\beta_2 = \beta_3 = 0$). All scenarios used $p = 3{,}000$ genes, $n = 200$ samples, $k = 3$ true factors, and identical gamma distribution parameters for the gene loading matrix $W$ (see Methods). Performance was evaluated using the concordance index (C-index) on the held-out 30\% test split of each replicate, precision of recovered prognostic gene sets, and the distribution of selected ranks across simulation replicates. In the prognostic scenario the shared background genes are excluded from the survival-generating gene set; their exclusion does not imply statistical independence from survival, because background and marker expression share latent factor activities.
 
 ```{r si-null-alpha, echo=FALSE}
 load_result("sim_figs_by_scenario")
@@ -1473,7 +1485,7 @@ In the prognostic scenario, median matched-factor precision was `r sprintf("%.2f
 
 Under the null scenario (Fig. \ref{fig:sim-null-mixed}a--b), DeSurv showed no advantage over unsupervised NMF ($\alpha = 0$): both methods yielded C-index values near 0.5, and selected ranks concentrated at low values (NMF favoring $k = 2$), consistent with the absence of survival signal. Because the survival objective is uninformative under the null, the cross-validated concordance is essentially flat in $\alpha$ and the Bayesian-optimized supervision strength is unidentified, dispersing across its admissible range rather than concentrating near zero (median $\alpha = `r round(null_alpha_median, 2)`$, IQR $`r round(null_alpha_q1, 2)`$--$`r round(null_alpha_q3, 2)`$; range $`r round(null_alpha_min, 2)`$--$`r round(null_alpha_max, 2)`$ across `r null_alpha_n` replicates). The null-scenario specificity thus reflects the flat concordance surface itself, not the optimizer driving $\alpha$ to zero.
 
-Under the mixed scenario (Fig. \ref{fig:sim-null-mixed}c--f), DeSurv's advantage was concentrated in marker-gene recovery. Precision against the factor-specific marker genes alone (150 genes; Fig. \ref{fig:sim-null-mixed}d left) substantially favored DeSurv, whereas precision against the full 300-gene survival set including background genes (Fig. \ref{fig:sim-null-mixed}d right) was more modestly improved, indicating similar background-gene recovery between methods. The learned factor aligned with the true marker program also received a larger Cox coefficient ($|\beta|$) under DeSurv (Fig. \ref{fig:sim-null-mixed}e), and C-index was modestly higher (Fig. \ref{fig:sim-null-mixed}c). Across the three scenarios the pattern was graded: DeSurv's advantage was greatest when variance and prognosis diverged (prognostic), attenuated when they partially overlapped (mixed, as background-gene dilution reduced the discrimination gain), and absent when no survival signal existed (null). These simulations indicate that DeSurv is most advantageous when prognostic structure is not aligned with the dominant sources of transcriptomic variation.
+Under the mixed scenario (Fig. \ref{fig:sim-null-mixed}c--f), DeSurv's advantage was concentrated in marker-gene recovery. Precision against the factor-specific marker genes alone (150 genes; Fig. \ref{fig:sim-null-mixed}d left) substantially favored DeSurv, whereas precision against the full 300-gene survival set including background genes (Fig. \ref{fig:sim-null-mixed}d right) was more modestly improved, indicating similar background-gene recovery between methods. The learned factor aligned with the true marker program also received a larger Cox coefficient ($|\beta|$) under DeSurv (Fig. \ref{fig:sim-null-mixed}e), and C-index was modestly higher (Fig. \ref{fig:sim-null-mixed}c). Across the three scenarios the pattern was graded: DeSurv's advantage was greatest when variance and prognosis diverged (prognostic), attenuated in full-target precision and in discrimination when they partially overlapped (mixed, as background-gene dilution reduced the discrimination gain) while marker-only precision still favored DeSurv, and absent when no survival signal existed (null). These simulations indicate that DeSurv is most advantageous when prognostic structure is not aligned with the dominant sources of transcriptomic variation.
 
 ```{r fig-sim-null-mixed, fig.width = 6.5, fig.height = 7, fig.cap = "DeSurv performance under null and mixed simulation scenarios. (a,b) Null scenario ($\\beta = 0$): both methods yield C-index $\\approx 0.5$ (a) and comparable rank distributions (b), so both methods show no out-of-sample prognostic discrimination under the null; precision is omitted as no true survival genes exist. (c--f) Mixed scenario: survival depends on factor-specific marker genes (50\\%) and shared background genes (50\\%). (c) C-index is modestly higher for DeSurv. (d) Precision by gene-set definition: marker-only precision (150 genes; left facet) substantially favors DeSurv; full 300-gene survival-set precision (right facet) shows a more modest improvement. (e) The matched factor receives a larger fitted Cox coefficient $|\\beta|$ under DeSurv. (f) Selected-rank distributions. DeSurv (blue); NMF (red, $\\alpha = 0$); both Bayesian-optimized. \\label{fig:sim-null-mixed}", fig.env='figure*', fig.pos='t', out.height = "6.5in", out.width='\\textwidth'}
 cowplot::ggdraw() + cowplot::draw_image(
@@ -1556,7 +1568,7 @@ stopifnot(identical(sort(.rpc_low$k), c(6, 8)))
 stopifnot(.rp_neighbors >= 0.5, max(.rpc_low$max_rho) < 0.3)   # the sentence says "barely above 0.2" vs "at least" the neighbor minimum
 ```
 
-The supervised curve collapses at two ranks: at $k = `r .rpc6$k`$ ($\alpha = `r .rpc6$alpha`$) and $k = `r .rpc8$k`$ ($\alpha = `r .rpc8$alpha`$) the single grid fit reaches coverage `r .rpc6$coverage` and `r .rpc8$coverage` (edges `r .rpc6$edges` and `r .rpc8$edges`), because the largest correlation between any of its factors and any reference program is only $`r sprintf("%.2f", .rpc6$max_rho)`$ and $`r sprintf("%.2f", .rpc8$max_rho)`$, barely above the $0.2$ representation threshold, whereas the unsupervised fits at the same ranks and the supervised fits at the neighboring ranks $k = 5, 7, 9$ all reach at least $`r sprintf("%.2f", .rp_neighbors)`$. These are single fits from one random start at fixed hyperparameters, and the $k = 6$ fit is also the one whose external concordance dips in Supplementary Fig. \ref{fig:fig-cindex-by-k}; their collapse is the single-run dispersion documented in Stability of the recovered gene programs, not a property of the consensus fits. Across the remaining ranks, coverage increases with rank considerably more than multiplicity does, indicating that the additional factors at higher rank extend correspondence to more reference programs rather than densely duplicating correspondence to the same ones. Through $k = 7$ the dominant change is increased coverage with modest repeated representation. This is not a claim about predictive performance, which is addressed separately (Table \ref{tab:hr-adjusted}; Supplementary Table \ref{tab:tab-cindex-comparison}).
+The supervised curve collapses at two ranks: at $k = `r .rpc6$k`$ ($\alpha = `r .rpc6$alpha`$) and $k = `r .rpc8$k`$ ($\alpha = `r .rpc8$alpha`$) the single grid fit reaches coverage `r .rpc6$coverage` and `r .rpc8$coverage` (edges `r .rpc6$edges` and `r .rpc8$edges`), because the largest correlation between any of its factors and any reference program is only $`r sprintf("%.2f", .rpc6$max_rho)`$ and $`r sprintf("%.2f", .rpc8$max_rho)`$, barely above the $0.2$ representation threshold, whereas the unsupervised fits at the same ranks and the supervised fits at the neighboring ranks $k = 5, 7, 9$ all reach at least $`r sprintf("%.2f", .rp_neighbors)`$. These are single fits from one random start at fixed hyperparameters, and the $k = 6$ fit is also the one whose external concordance dips in Supplementary Fig. \ref{fig:fig-cindex-by-k}; these low-coverage endpoints are consistent with the single-start variability documented in Stability of the recovered gene programs; consensus fits at these ranks were not evaluated by this curve. Across the remaining ranks, coverage increases with rank considerably more than multiplicity does, indicating that the additional factors at higher rank extend correspondence to more reference programs rather than densely duplicating correspondence to the same ones. Through $k = 7$ the dominant change is increased coverage with modest repeated representation. This is not a claim about predictive performance, which is addressed separately (Table \ref{tab:hr-adjusted}; Supplementary Table \ref{tab:tab-cindex-comparison}).
 
 ```{r fig-rpm, fig.width = 6, fig.height = 8, fig.cap = "Reference-program coverage, edges and multiplicity by factorization rank $k$, for the unsupervised ($\\alpha = 0$) and supervised (best $\\alpha$ by cross-validated C-index) curves, computed from the same factor-to-reference-program correspondence analysis as Fig.\\ \\ref{fig:fig-nmf-k7-heatmap} and main-text Fig.\\ 2a,b (top 50 genes per factor, $\rho > 0.2$ threshold, same reference-program universe). Rank-wise points are single fits at fixed $\\lambda$, $\\xi$ and $n_{\\text{top}}$, not the 100-restart consensus fits used elsewhere; markers denote the three final-model anchors (the consensus fits for DeSurv $k = 3$ and the rank-optimized unsupervised control $k = 7$, and the best-of-30-run \\texttt{NMF::nmf} fit at matched rank $k = 3$). \\label{fig:fig-rpm}", fig.env='figure', fig.pos='t', out.width='0.72\\textwidth'}
 knitr::include_graphics(file.path("..", "figures", "fig_reference_program_multiplicity.pdf"), error = FALSE)
@@ -1725,7 +1737,7 @@ likewise no better than \texttt{NMF::nmf} at $k = 3$
 supervised model's own $\lambda$, $\xi$ and $n_{\text{top}}$ fixed and varying
 only $\alpha$ gave the same conclusion. Matching the tuning budget therefore does not close the representational gap, supporting survival supervision rather than tuning effort alone as the source of the reorganization reported in the main text.
 
-Lee NMF at elbow-selected $k = 5$ and the rank-optimized unsupervised control at $k = 7$ both substantially improve over Lee NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}); additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, the rank-optimized control exceeds DeSurv's C-index in all five validation datasets, so unsupervised factorization given more factors discriminates at least as well as the supervised three-program model. The tradeoff is between that higher discrimination and a less parsimonious factorization: the $k = 7$ control represents a broader set of established programs across seven factors (Fig. \ref{fig:fig-nmf-k7-heatmap}; Supplementary Fig. \ref{fig:fig-rpm}) rather than concentrating the prognostic signal in three programs. Both the $k = 7$ control and the DeSurv linear predictor retain significant prognostic value after adjustment for established classifiers (main-text Table \ref{tab:hr-adjusted}); DeSurv does so with fewer factors.
+Lee NMF at elbow-selected $k = 5$ and the rank-optimized unsupervised control at $k = 7$ both substantially improve over Lee NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}); additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, the rank-optimized control exceeds DeSurv's C-index in all five validation datasets, so unsupervised factorization given more factors discriminates at least as well as the supervised three-program model. The comparison also differs in representation size: the $k = 7$ control represents a broader set of established programs across seven factors (Fig. \ref{fig:fig-nmf-k7-heatmap}; Supplementary Fig. \ref{fig:fig-rpm}) rather than concentrating the prognostic signal in three programs. Both the $k = 7$ control and the DeSurv linear predictor retain significant prognostic value after adjustment for established classifiers (main-text Table \ref{tab:hr-adjusted}); DeSurv does so with fewer factors. Because the rank-optimized unsupervised control used the best observed configuration whereas DeSurv used a one-standard-error rank rule, it does not establish seven as the minimum rank required for unsupervised recovery of comparable prognostic information.
 
 
 \section{Supplementary Data: factor-specific gene lists}
@@ -1826,4 +1838,4 @@ In the `r .tcs$paired$n` Linehan patients with paired pre- and post-treatment bi
 
 \subsection{Caveats}
 
-These analyses are exploratory and do not establish treatment-predictive effects; treatment, stage and cohort are confounded, the treated cohorts are modestly sized, and no analysis plan was preregistered. The O'Kane/COMPASS analysis is prognostic within treated metastatic disease, whereas the Linehan analysis tests a paired change in program score. Each analysis is confined to a single cohort, and the O'Kane/COMPASS common slope is estimated within that cohort from a model with arm-specific baseline hazards; it is not a pooled estimate across cohorts. We do not test a survival association for $D_2$ in the paired Linehan cohort, because its trained coefficient is zero. No $D_2$ analysis is possible in O'Kane/COMPASS, whose specimens are laser-capture epithelium rather than bulk tissue. Robust treated-cohort validation, and any assessment of whether the programs predict differential treatment benefit, will require larger harmonized series with adequately powered treatment-by-program interaction analyses.
+These analyses are exploratory and do not establish treatment-predictive effects; treatment, stage and cohort are confounded, the treated cohorts are modestly sized, and no analysis plan was preregistered. The O'Kane/COMPASS analysis is prognostic within treated metastatic disease, whereas the Linehan analysis tests a paired change in program score. Each analysis is confined to a single cohort, and the O'Kane/COMPASS common slope is estimated within that cohort from a model with arm-specific baseline hazards; it is not a pooled estimate across cohorts. We did not test a survival association for $D_2$ in the paired Linehan cohort; this analysis concerns program-level change. The trained survival coefficient was zero, but that alone does not preclude a separate association in another setting. A stromal $D_2$ readout is not interpretable in O'Kane/COMPASS, whose specimens are laser-capture epithelium rather than bulk tissue. Its $D_1$ result chiefly supports transport of the tumor-associated component of the score. Robust treated-cohort validation, and any assessment of whether the programs predict differential treatment benefit, will require larger harmonized series with adequately powered treatment-by-program interaction analyses.

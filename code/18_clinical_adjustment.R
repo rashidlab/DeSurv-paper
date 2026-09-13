@@ -6,9 +6,10 @@
 # (stage, grade, age, sex, nodal status, resection margin) and for tumor
 # purity, per cohort?
 #
-# Scores: validation cohorts use the exact latent/LP from val_latent (full-W
-# projection, same object the manuscript reports); training cohorts (TCGA,
-# CPTAC) are scored by the identical projection Z = X^T W, LP = Z beta.
+# Scores: validation cohorts use the exact latent/LP from val_latent (union-of-
+# top-genes support at n_top = 270 since commit 5361374; same object the
+# manuscript reports); training cohorts (TCGA, CPTAC) are scored on the FULL W,
+# Z = X^T W, LP = Z beta, which is a different support from val_latent.
 # Clinical covariates are joined from the original per-cohort objects
 # (data/original/<cohort>.rds $sampInfo, positionally aligned to $ex columns).
 # Covariate encodings were inspected per cohort; unparseable/absent covariates

@@ -38,7 +38,9 @@ if (!exists("COHORT")) stop("Restricted external data-path config (data_paths.R)
 
 # Projection gene set: top-270-per-factor UNION (the validation convention; code/05 +
 # tar_params_best$ntop=270). Rank is taken over the full Wg namespace, then the projection is
-# restricted to PGENES, exactly as code/05 does (dv$ex rank-transformed, then ex[top_genes,] %*% W[top_genes,]).
+# restricted to PGENES. This matches code/05 except for missing genes: code/05 zero-fills
+# support genes absent from a cohort (zero_fill_missing = TRUE), whereas projZ below OMITS them
+# (intersect), and ranks are taken over the measured subset of the trained-W namespace.
 source("R/get_top_genes.R")
 PGENES <- unique(unlist(lapply(get_top_genes(fit$W, 270)$top_genes, as.character)))
 

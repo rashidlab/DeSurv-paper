@@ -437,9 +437,15 @@ d$dataset <- dplyr::recode(d$dataset,
 # platform estimates as independent contributions; the per-cohort points above
 # still display each platform separately.
 source("R/paca_dedup.R")
-pooled_factor_hr <- function(data_val, fit, prefix) {
+# Pooled diamonds must use the same union-of-top-genes support as the per-cohort
+# points (compute_hrs, ntop) and as val_latent / Table 1. Before 2026-09-13 this
+# function used the full W, so the diamonds and the Results prose disagreed
+# (full-W D3 = 1.15, 1.04-1.28 vs union-support 1.09, 0.98-1.21).
+pooled_factor_hr <- function(data_val, fit, prefix, ntop = NULL) {
+  support <- if (is.null(ntop)) rownames(fit$W) else
+    unique(unlist(DeSurv::desurv_get_top_genes(fit$W, ntop)$top_genes))
   rows <- lapply(data_val, function(co) {
-    keep <- intersect(rownames(fit$W), rownames(co$ex))
+    keep <- intersect(support, rownames(co$ex))
     Z  <- t(co$ex[keep, , drop = FALSE]) %*% fit$W[keep, , drop = FALSE]
     si <- co$sampInfo
     data.frame(id = rownames(si), dataset = si$dataset, time = si$time,
@@ -457,8 +463,8 @@ pooled_factor_hr <- function(data_val, fit, prefix) {
   }))
 }
 pooled <- rbind(
-  cbind(pooled_factor_hr(data_val_filtered, tar_fit_desurv, "D"), method = "DeSurv"),
-  cbind(pooled_factor_hr(data_val_filtered, fit_std_desurvk, "N"), method = "NMF"))
+  cbind(pooled_factor_hr(data_val_filtered, tar_fit_desurv, "D", ntop = ntop_value), method = "DeSurv"),
+  cbind(pooled_factor_hr(data_val_filtered, fit_std_desurvk, "N", ntop = ntop_value), method = "NMF"))
 pooled$dataset <- "Pooled"
 keep_cols <- c("factor_name", "HR", "lower", "upper", "dataset", "method", "row_type")
 d$row_type <- "cohort"; pooled$row_type <- "pooled"

@@ -790,8 +790,9 @@ performance evaluation.
 \label{sec:cohort-training}
 
 ```{r cohort-training-check, echo=FALSE, message=FALSE, warning=FALSE}
-# Descriptive check, computed from the cached training data and final fit with
-# the same per-program top-gene scoring used for validation. Not a refit.
+# Descriptive check, computed from the cached training data and final fit. NOTE:
+# scores here use per-factor top-gene masks, not the union support that the
+# validation path uses; the qualitative conclusion holds under both. Not a refit.
 .ct_d <- read_result("tar_data_filtered_tcgacptac"); .ct_f <- read_result("tar_fit_desurv_tcgacptac")
 .ct_nt <- as.integer(round(read_result("tar_params_best_tcgacptac")$ntop))
 .ct_tg <- DeSurv::desurv_get_top_genes(.ct_f$W, .ct_nt)$top_genes

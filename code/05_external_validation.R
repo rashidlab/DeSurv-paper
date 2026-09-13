@@ -20,7 +20,7 @@ library(survival)
 source("R/load_data.R")
 source("R/load_data_internal.R")
 source("R/preprocess_helpers.R")
-source("R/predict_validation_scores.R")
+source("R/predict_validation_scores.R")   # NOTE: sourced for its helpers only; its per-factor scorer desurv_prepare_validation_latent() is never called (union support is the production convention, see extract_val_latent below)
 source("R/cv_grid_helpers.R")
 
 # ── Validation cohorts ────────────────────────────────────────────────────

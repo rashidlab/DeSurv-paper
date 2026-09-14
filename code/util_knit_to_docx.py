@@ -269,6 +269,9 @@ def flatten_prose(s):
 
 def convert(base):
     s = open(base + ".knit.md", encoding="utf8").read()
+    # \diag is a preamble \DeclareMathOperator; pandoc's math reader does not
+    # see the preamble, so map it to the operator form it does know.
+    s = re.sub(r"\\diag\b", r"\\operatorname{diag}", s)
 
     # Tables first: they contain \caption too, and must not be eaten by the
     # figure pass.

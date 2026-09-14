@@ -193,11 +193,11 @@ contributions of the NMF and Cox gradients. Let
 \]
 and let
 \[
-\nabla_W \mathcal{L}_{\mathrm{Cox}}(W,\beta)
+G_\ell(W,\beta)
 =
-\frac{2}{n_{event}}\nabla_W \ell(W,\beta),
+\frac{2}{n_{\mathrm{event}}}\nabla_W \ell(W,\beta)
 \]
-where $\nabla_W \ell(W,\beta)$ denotes the Cox gradient with respect to $W$. A closed-form expression for $\nabla_W \ell$ is
+denote the scaled log-partial-likelihood gradient, where $\nabla_W \ell(W,\beta)$ is the gradient of the Cox log-partial likelihood with respect to $W$. $G_\ell$ is not the gradient of the penalized survival component $\mathcal{L}_{\mathrm{Cox}}$ of Model details, whose penalty depends on $W$ through $D_Z$. A closed-form expression for $\nabla_W \ell$ is
 \begin{equation}
 \nabla_W \ell(W,\beta)
 =
@@ -224,7 +224,7 @@ We define a gradient-scaling heuristic
 \frac{
   \left\lVert (1-\alpha) \nabla_W \mathcal{L}_{\mathrm{NMF}}(W^{(t)},H^{(t+1)}) \right\rVert_F + \varepsilon_\zeta
 }{
-  \left\lVert \alpha \nabla_W \mathcal{L}_{Cox}(W^{(t)},\beta^{(t)}) \right\rVert_F + \varepsilon_\zeta
+  \left\lVert \alpha\, G_\ell(W^{(t)},\beta^{(t)}) \right\rVert_F + \varepsilon_\zeta
 },
 \end{equation}
 with a numerical stabilizer $\varepsilon_\zeta = 10^{-12}$ in each norm, and clip
@@ -358,13 +358,16 @@ dropped here, as it does not affect the minimizer,
 with $D_Z$ held at the value implied by the current $W$. The coefficients
 reported throughout the manuscript are the raw-score coefficients
 $\beta = D_Z^{-1} b$ on the retained rows.
-We update $\beta$ by cyclic coordinate descent following
-[@simon2011regularization]. Writing $\ell(\beta) = \ell(W,\beta)$ and
-$\tilde{\eta}_i = Z_i^\top \beta$, the update for coordinate $r$ has the
+We update $b$ by cyclic coordinate descent following
+[@simon2011regularization]. Let $\tilde{z}_i = D_Z^{-1}(Z_i - \bar{Z})$ denote
+the centered and standardized score vector of sample $i$, with $Z_i$ the $i$th
+column of the raw scores $Z$ and $\bar{Z}$ the vector of row means, and write
+$\tilde{\eta}_i = \tilde{z}_i^\top b$, which equals $Z_i^\top \beta$ up to an
+additive constant common to all samples. The update for coordinate $r$ has the
 closed form
 \begin{equation}
 \label{eqn:beta_update}
-\hat{\beta}_r
+\hat{b}_r
 =
 \frac{
   S\!\left(
@@ -372,7 +375,7 @@ closed form
     \sum_{i=1}^n w(\tilde{\eta})_i
     z_{i,r}
     \left[
-      v(\tilde{\eta})_i - \sum_{j \ne r} z_{i,j} \beta_j
+      v(\tilde{\eta})_i - \sum_{j \ne r} z_{i,j} b_j
     \right],
     \lambda \xi
   \right)
@@ -384,7 +387,9 @@ where $S(a,\tau) = \mathrm{sign}(a)\max(|a|-\tau,0)$ is the soft-thresholding
 operator, $w(\tilde{\eta})_i$ and $v(\tilde{\eta})_i$ are the standard local
 quadratic-approximation weight and working response for sample $i$ in the Cox
 log-partial likelihood [@simon2011regularization],
-and $z_{i,r}$ denotes the standardized score of factor $r$ in sample $i$.
+and $z_{i,r}$ denotes the standardized score of factor $r$ in sample $i$, the
+$r$th entry of $\tilde{z}_i$. After the sweeps, the raw-score coefficients are
+recovered as $\beta = D_Z^{-1} b$ on the retained rows.
 
 The sweeps operate on centered and standardized scores, the parameterization in
 which $\mathcal{L}$ is defined. The $k$ rows of $Z$ are centered and scaled to
@@ -398,7 +403,7 @@ by a common additive constant, which cancels from the Cox partial likelihood.
 Given that parameterization, the implemented update departs from an exact
 conditional minimization of $\mathcal{L}$ in two ways, which we state explicitly
 because Equation 1 of the main text, reproduced as $\mathcal{L}$ above, is the
-objective whose monotone descent the algorithm enforces. First, the quadratic
+objective the algorithm evaluates and records. First, the quadratic
 approximation entering Eq. \ref{eqn:beta_update} carries likelihood weight
 $1/n_{\mathrm{event}}$, whereas the log-partial likelihood in the objective
 carries weight $2/n_{\mathrm{event}}$; relative to that likelihood weight the
@@ -412,10 +417,9 @@ $0.9$, at most 30 steps), or the previous $\beta$ is retained. That acceptance
 safeguard makes the $\beta$ update non-increasing in the evaluated objective, and
 it does not establish convergence to a conditional or joint optimum. The $\beta$
 block is therefore an approximate, monotone conditional update rather than an
-exact conditional minimizer of $\mathcal{L}$. Both the recorded objective and the
-acceptance test use $\mathcal{L}$ as defined above, so monotone descent of
-$\mathcal{L}$ is preserved, and the reported fits are exactly those produced by
-this procedure. After the outer loop terminates, $\beta$ is refit once on the
+exact conditional minimizer of $\mathcal{L}$. The acceptance safeguards prevent accepted $W$ and $\beta$ updates from
+increasing the evaluated objective; they do not establish convergence to an
+optimum. The reported fits are exactly those produced by this procedure. After the outer loop terminates, $\beta$ is refit once on the
 final $W$ by the same routine under the same tolerance and pass limit
 (Algorithm \ref{alg:desurv}); this refit is the reported $\hat{\beta}$, and it is
 the only $\beta$ estimate when $\alpha = 0$. The objective after that refit is
@@ -458,11 +462,7 @@ DeSurv as well: individual restarts of the reported model are dispersed, and the
 final fit is obtained by a consensus procedure over many restarts
 (Stability of the recovered gene programs).
 
-In DeSurv, survival supervision enters through the projection $Z = W^\top X$ in the partial log-likelihood, so that both component losses have a gradient with respect to the programs and the update for $W$ in Equation \ref{eqn:W_update} combines them as
-\[
-(1-\alpha) \nabla_W \mathcal{L}_{\mathrm{NMF}}(W,H) - \alpha\nabla_W \mathcal{L}_{\mathrm{Cox}}(W,\beta),
-\]
-so the gene-program definitions are shaped directly by their association with survival. This combination is the proposal direction and not the gradient of the full objective, which depends on $W$ additionally through the penalty on $b = D_Z\beta$ (Update for $W$).
+In DeSurv, survival supervision enters through the projection $Z = W^\top X$ in the partial log-likelihood, so that both component losses have a gradient with respect to the programs. The update for $W$ combines the weighted reconstruction gradient with the scaled log-partial-likelihood gradient $G_\ell$ through the rescaled multiplicative construction of Equations \ref{eq:supp-zeta} to \ref{eqn:W_update}, so the gene-program definitions are shaped directly by their association with survival. That construction is a proposal direction and not the gradient of the full objective, which depends on $W$ additionally through the penalty on $b = D_Z\beta$ (Update for $W$).
 
 With supervision applied to the sample loadings \(H\), the Cox term has no direct
 gradient with respect to the gene-program matrix \(W\); survival can nevertheless
@@ -1435,7 +1435,7 @@ The DeSurv linear predictor was standardized \emph{within} cohort (centered and 
 
 Cochran's $Q$ over the four cohort-specific log hazard ratios and their standard errors was $`r sprintf("%.2f", .hci$heterogeneity$Q)`$ on `r .hci$heterogeneity$df` degrees of freedom ($P = `r sprintf("%.2f", .hci$heterogeneity$p)`$), giving $I^2 = `r sprintf("%.0f", 100*.hci$heterogeneity$I2)`$\% under $I^2 = \max\{0, (Q - \mathrm{df})/Q\}$. $Q$ and $I^2$ are descriptive summaries of dispersion among the four estimates and are reported as complements to the interaction test, not as a substitute for it. The likelihood-ratio test is the inferential statement, and with four cohorts both are low-powered against modest heterogeneity.
 
-Confidence intervals for the C-index were obtained by a stratified nonparametric bootstrap on the same de-duplicated table, resampling patients with replacement \emph{within} cohort so that no replicate mixes patients across cohorts or reinstates a de-duplicated PACA-AU record ($B = `r .hci$meta$B`$ replicates, seed `r .hci$meta$seed`, percentile intervals). Concordance was evaluated as Harrell's C with higher scores treated as higher risk, the convention of the external-validation C-indices, and the heterogeneity script (Table \ref{tab:scripts}) verifies that this reproduces the per-dataset C-indices of Supplementary Table \ref{tab:tab-cindex-comparison} exactly. The combined value is the event-weighted mean of the cohort C-indices, the same convention as the proper-scoring and tuned-comparator analyses, and therefore never forms a concordance pair across cohorts. The combined C-index was $`r sprintf("%.3f", .hcip$cindex)`$ (95\% CI $`r sprintf("%.3f", .hcip$lo)`$--$`r sprintf("%.3f", .hcip$hi)`$); the per-cohort hazard ratios and C-indices are given in Table \ref{tab:het-ci}.
+Confidence intervals for the C-index were obtained by a stratified nonparametric bootstrap on the same de-duplicated table, resampling patients with replacement \emph{within} cohort so that no replicate mixes patients across cohorts or reinstates a de-duplicated PACA-AU record ($B = `r formatC(.hci$meta$B, big.mark = "{,}", format = "d")`$ replicates, seed `r .hci$meta$seed`, percentile intervals). Concordance was evaluated as Harrell's C with higher scores treated as higher risk, the convention of the external-validation C-indices, and the heterogeneity script (Table \ref{tab:scripts}) verifies that this reproduces the per-dataset C-indices of Supplementary Table \ref{tab:tab-cindex-comparison} exactly. The combined value is the event-weighted mean of the cohort C-indices, the same convention as the proper-scoring and tuned-comparator analyses, and therefore never forms a concordance pair across cohorts. The combined C-index was $`r sprintf("%.3f", .hcip$cindex)`$ (95\% CI $`r sprintf("%.3f", .hcip$lo)`$--$`r sprintf("%.3f", .hcip$hi)`$); the per-cohort hazard ratios and C-indices are given in Table \ref{tab:het-ci}.
 
 \section{Variance partition of the D1 score}
 \label{sec:varpart}

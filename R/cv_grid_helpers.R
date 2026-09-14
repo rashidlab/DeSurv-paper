@@ -883,8 +883,18 @@ compute_lp <- function(W, beta, X, ntop = NULL) {
     Z <- t(X) %*% W
     return(drop(Z %*% beta))
   }
-  # Top-gene subsetting with theta normalization
-  top_info <- DeSurv::desurv_get_top_genes(W, as.integer(ntop))
+  # Top-gene subsetting with theta normalization. Use the DeSurv package when
+  # available; otherwise fall back to the identical factor-specificity selection
+  # in R/get_top_genes.R so local figure previews build without the package (the
+  # HPC pipeline always has DeSurv and uses it).
+  top_info <- if (requireNamespace("DeSurv", quietly = TRUE)) {
+    DeSurv::desurv_get_top_genes(W, as.integer(ntop))
+  } else {
+    if (!exists("get_top_genes"))
+      source(if (file.exists("R/get_top_genes.R")) "R/get_top_genes.R" else "../R/get_top_genes.R")
+    tg <- get_top_genes(W, as.integer(ntop))$top_genes
+    list(top_indices = lapply(tg, function(g) match(g, rownames(W))))
+  }
   idx_mat <- top_info$top_indices
   idx <- unique(as.integer(unlist(idx_mat, use.names = FALSE)))
   idx <- idx[!is.na(idx) & idx >= 1L & idx <= nrow(W)]
@@ -1108,7 +1118,7 @@ plot_cutpoint_curves <- function(cutpoint_data, k, alpha, ntop,
     ggplot2::labs(
       x = "z-score cutpoint",
       y = "Mean |log-rank z|",
-      title = paste0("|Log-rank z|\n", title_base)
+      title = "Mean |log-rank z| by cutpoint"
     ) +
     ggplot2::theme_bw(base_size = 10)
 
@@ -1194,7 +1204,7 @@ plot_cutpoint_curve_logrank <- function(cutpoint_data, k, alpha, ntop,
     ggplot2::labs(
       x = "z-score cutpoint",
       y = "Mean |log-rank z|",
-      title = paste0("|Log-rank z|\n", title_base)
+      title = "Mean |log-rank z| by cutpoint"
     ) +
     ggplot2::theme_bw(base_size = 10)
 
@@ -1279,7 +1289,7 @@ plot_km_training <- function(grid_fit_entry, cv_grid_data) {
     pval = FALSE,
     title = title,
     legend.labs = c("Low", "High"),
-    palette = c("#2166AC", "#B2182B"),
+    palette = c("#0072B2", "#D55E00"),
     ggtheme = ggplot2::theme_bw(base_size = 10)
   )
   ggsurv$plot <- ggsurv$plot +
@@ -1378,9 +1388,16 @@ plot_km_validation <- function(grid_fit_entry, val_ds, ds_name, xlim = NULL) {
     sprintf("\nz-cutpoint=%.2f, n=%d", z_cut, nrow(df))
   )
 
-  title <- sprintf("Validation KM (%s): k=%d, alpha=%.2f, ntop=%s",
-                    ds_name, grid_fit_entry$k, grid_fit_entry$alpha, ntop_label)
+  # Plain dataset name only (the k, alpha, ntop constants live in the caption /
+  # Methods, not on every panel). Expand underscored IDs to display names.
+  disp <- ds_name
+  disp <- sub("^Moffitt_GEO_array$", "Moffitt", disp)
+  disp <- sub("^Puleo_array$", "Puleo", disp)
+  disp <- gsub("PACA_AU", "PACA-AU", disp)
+  title <- gsub("_", " ", disp)
 
+  if (!exists("desurv_risk_cols"))
+    source(if (file.exists("R/theme_nature.R")) "R/theme_nature.R" else "../R/theme_nature.R")
   surv_args <- list(
     fit = sfit,
     data = df,
@@ -1388,8 +1405,8 @@ plot_km_validation <- function(grid_fit_entry, val_ds, ds_name, xlim = NULL) {
     pval = FALSE,
     title = title,
     legend.labs = c("Low", "High"),
-    palette = c("#2166AC", "#B2182B"),
-    ggtheme = ggplot2::theme_bw(base_size = 10)
+    palette = unname(desurv_risk_cols[c("Low", "High")]),   # blue Low / vermillion High
+    ggtheme = theme_nature(base_size = 9)
   )
   if (!is.null(xlim)) {
     surv_args$xlim <- xlim
@@ -1433,6 +1450,7 @@ plot_km_validation_pooled <- function(grid_fit_entry, val_datasets) {
   pooled_time <- numeric(0)
   pooled_event <- integer(0)
   pooled_ds <- character(0)
+  pooled_id <- character(0)
 
   for (ds_name in names(val_datasets)) {
     val_ds <- val_datasets[[ds_name]]
@@ -1453,6 +1471,8 @@ plot_km_validation_pooled <- function(grid_fit_entry, val_datasets) {
     ds_labels <- si$dataset[valid]
     if (is.null(ds_labels)) ds_labels <- rep(ds_name, sum(valid))
     pooled_ds <- c(pooled_ds, ds_labels)
+    ids <- rownames(si); if (is.null(ids)) ids <- colnames(val_ds$ex)
+    pooled_id <- c(pooled_id, ids[valid])
   }
 
   if (length(pooled_lp) < 2) return(NULL)
@@ -1468,8 +1488,13 @@ plot_km_validation_pooled <- function(grid_fit_entry, val_datasets) {
     event = pooled_event,
     group = group,
     dataset = pooled_ds,
+    id = pooled_id,
     stringsAsFactors = FALSE
   )
+  # Combined KM/inference over unique patients: drop PACA-AU array duplicates
+  # (RNA-seq retained), per the shared DeCAF-consistent rule.
+  if (!exists("paca_combined_keep")) source("R/paca_dedup.R")
+  df <- df[paca_combined_keep(df$dataset, df$id), , drop = FALSE]
   if (length(unique(df$group)) < 2) return(NULL)
 
   sfit <- survival::survfit(survival::Surv(time, event) ~ group, data = df)
@@ -1498,8 +1523,7 @@ plot_km_validation_pooled <- function(grid_fit_entry, val_datasets) {
     sprintf("\nz-cutpoint=%.2f, n=%d", z_cut, nrow(df))
   )
 
-  title <- sprintf("Pooled Validation KM: k=%d, alpha=%.2f, ntop=%s",
-                    grid_fit_entry$k, grid_fit_entry$alpha, ntop_label)
+  title <- "Pooled validation"   # k, alpha, ntop are constants stated in the caption/Methods
 
   ggsurv <- survminer::ggsurvplot(
     sfit,
@@ -1508,7 +1532,7 @@ plot_km_validation_pooled <- function(grid_fit_entry, val_datasets) {
     pval = FALSE,
     title = title,
     legend.labs = c("Low", "High"),
-    palette = c("#2166AC", "#B2182B"),
+    palette = c("#0072B2", "#D55E00"),
     ggtheme = ggplot2::theme_bw(base_size = 10)
   )
   ggsurv$plot <- ggsurv$plot +
@@ -1981,14 +2005,14 @@ plot_cindex_by_k <- function(cv_grid_summary,
       ggplot2::geom_line() +
       ggplot2::geom_point(size = 2) +
       ggplot2::scale_x_continuous(breaks = seq(2, 12)) +
-      ggplot2::scale_color_manual(values = c("DeSurv" = "blue", "NMF" = "red")) +
-      ggplot2::scale_fill_manual(values = c("DeSurv" = "blue", "NMF" = "red")) +
+      ggplot2::scale_color_manual(values = c("DeSurv" = "#0072B2", "NMF" = "#D55E00")) +
+      ggplot2::scale_fill_manual(values = c("DeSurv" = "#0072B2", "NMF" = "#D55E00")) +
       ggplot2::facet_wrap(~ panel) +
       ggplot2::labs(
         x = "Factorization rank (k)", y = "C-index",
         subtitle = subtitle, color = NULL, fill = NULL
       ) +
-      ggplot2::theme_classic(base_size = 10) +
+      (if (exists("theme_nature")) theme_nature() else ggplot2::theme_classic(base_size = 10)) +
       ggplot2::theme(legend.position = "bottom")
   }
 
@@ -2147,7 +2171,7 @@ plot_km_training_factor <- function(fit, train_data, factor_id, z_mean, z_sd,
     pval = FALSE,
     title = title,
     legend.labs = c("Low", "High"),
-    palette = c("#2166AC", "#B2182B"),
+    palette = c("#0072B2", "#D55E00"),
     ggtheme = ggplot2::theme_bw(base_size = 10)
   )
   ggsurv$plot <- ggsurv$plot +
@@ -2241,7 +2265,7 @@ plot_km_validation_factor <- function(fit, val_ds, ds_name, factor_id,
     pval = FALSE,
     title = title,
     legend.labs = c("Low", "High"),
-    palette = c("#2166AC", "#B2182B"),
+    palette = c("#0072B2", "#D55E00"),
     ggtheme = ggplot2::theme_bw(base_size = 10)
   )
   ggsurv$plot <- ggsurv$plot +
@@ -2341,7 +2365,7 @@ plot_km_validation_pooled_factor <- function(fit, val_datasets, factor_id,
     pval = FALSE,
     title = title,
     legend.labs = c("Low", "High"),
-    palette = c("#2166AC", "#B2182B"),
+    palette = c("#0072B2", "#D55E00"),
     ggtheme = ggplot2::theme_bw(base_size = 10)
   )
   ggsurv$plot <- ggsurv$plot +

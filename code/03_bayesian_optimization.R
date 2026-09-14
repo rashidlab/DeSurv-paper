@@ -228,4 +228,59 @@ tar_data_filtered_elbowk <- cache_or_compute("tar_data_filtered_elbowk_tcgacptac
                            method_trans_train = "rank")
 })
 
+# ── 5. Fair matched-rank comparator: alpha = 0 at DeSurv's own k ─────────
+# The matched-rank comparison in the Results uses standard NMF at k = 3, which
+# receives neither DeSurv's consensus initialization nor its tuning budget, so
+# that contrast cannot separate supervision from tuning. This block removes both
+# confounds by composing the two pinning idioms already used above: alpha is
+# dropped from the search as in section 2 (:141-143) and k is dropped as in
+# section 4 (:199-201). The comparator therefore gets the same optimizer, the
+# same BO budget, the same ngene and the same folds as DeSurv. Only supervision
+# is switched off, and rank is held at DeSurv's selected k.
+desurv_bo_results_a0k3 <- cache_or_compute("desurv_bo_results_a0k3_tcgacptac", {
+  bounds_a0k3 <- BO_BOUNDS
+  bounds_a0k3$alpha_grid <- NULL
+  bounds_a0k3$k_grid     <- NULL
+  bo_fixed_a0k3 <- c(BO_FIXED, list(alpha_grid = 0, k_grid = tar_params_best$k))
+  do.call(DeSurv::desurv_cv_bayesopt_refine, c(
+    list(
+      X = tar_data$ex,
+      y = tar_data$sampInfo$time,
+      d = tar_data$sampInfo$event,
+      dataset = tar_data$sampInfo$dataset,
+      samp_keeps = tar_data$samp_keeps,
+      coarse_bounds = bounds_a0k3,
+      bo_fixed = bo_fixed_a0k3
+    ),
+    BO_COMMON
+  ))
+})
+
+# k and alpha were both fixed, so BO does not return them; set them explicitly.
+# select_bo_k_by_cv_se() is deliberately NOT called here: with k out of
+# coarse_bounds the history carries no k_grid column and the helper returns
+# reason = "missing_k" (R/bo_helpers.R). The elbow-k block above skips it for
+# the same reason.
+tar_params_best_a0k3 <- cache_or_compute("tar_params_best_a0k3_tcgacptac", {
+  params <- standardize_bo_params(desurv_bo_results_a0k3$overall_best$params)
+  params$k     <- tar_params_best$k
+  params$alpha <- 0
+  params
+})
+
+# ngene is fixed in BO_FIXED for every variant, so the comparator shares
+# tar_data_filtered_tcgacptac rather than getting its own filtered object.
+# (ngene_value above is scoped inside a cache_or_compute expr and does not
+# exist here on a cache hit, so recompute the expectation from BO_FIXED.)
+local({
+  .want <- if (!is.null(BO_FIXED$ngene)) as.integer(BO_FIXED$ngene) else 3000L
+  .got  <- tar_params_best_a0k3$ngene
+  if (!is.null(.got) && !is.na(.got)) stopifnot(as.integer(round(.got)) == .want)
+})
+
+message("  Fair matched-rank BO (alpha=0, k fixed): k=", tar_params_best_a0k3$k,
+        " lambda=", signif(tar_params_best_a0k3$lambda, 3),
+        " nu=", signif(tar_params_best_a0k3$nu, 3),
+        " ntop=", tar_params_best_a0k3$ntop)
+
 message("=== Step 3 complete ===")

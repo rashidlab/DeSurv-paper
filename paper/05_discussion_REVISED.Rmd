@@ -3,13 +3,6 @@
 <!--   elyada2019cross, rashid2020purity, moffitt2015virtual, Maurer2019, peng2019novo, -->
 <!--   collisson2011subtypes, Bailey2016, collisson2019molecular -->
 
-```{r disc-stability, echo=FALSE, message=FALSE, warning=FALSE}
-.dstab <- read_result("consensus_endpoint_stats")
-.drng  <- function(v) sprintf("%.2f--%.2f", min(v), max(v))
-.dsl   <- .drng(.dstab$vs_reported$loading[, "median"])
-.dsj   <- .drng(.dstab$vs_reported$top_jaccard[, "median"])
-.dsnt  <- as.integer(.dstab$meta$ntop)
-```
 
 DeSurv allows patient survival to shape gene-program discovery, yielding a tumor--stroma architecture that connects prognostic information with interpretable malignant and stromal programs. In PDAC, the architecture comprised a dominant survival-aligned program, D1, characterized by coordinated cross-patient variation in classical tumor and restCAF-like stromal features, alongside separately resolved proCAF-like stromal and basal-like tumor programs. D1 remained prognostic after adjustment for the established PurIST and DeCAF classifications. The frozen programs then transferred without refitting across four independent external patient cohorts.
 

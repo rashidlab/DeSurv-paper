@@ -63,7 +63,7 @@ $W$ to survival via an elastic-net–penalized Cox model. Supervision is placed 
 
 Let $y \in \mathbb{R}^n_{> 0}$ be the observed survival times,
 $\delta \in \{0,1\}^n$ the event indicators, and
-$Z = W^\top X \in \mathbb{R}^{k \times n}$ the sample-wise factor scores. We write $Z_i$ for the $i$th column of $Z$, and
+$Z = W^\top X \in \mathbb{R}^{k \times n}$ the sample-wise projected scores. We write $Z_i$ for the $i$th column of $Z$, and
 $n_{\text{event}} = \sum_{i=1}^n \delta_i$. For convenience we recall the
 DeSurv loss from Equation 1 in the main text and rewrite it as
 \begin{align}
@@ -74,7 +74,7 @@ DeSurv loss from Equation 1 in the main text and rewrite it as
 \end{align}
 
 where $\lVert \cdot \rVert_F$ is the Frobenius norm,
-$\beta \in \mathbb{R}^k$ are the Cox coefficients on the raw factor scores, and
+$\beta \in \mathbb{R}^k$ are the Cox coefficients on the raw projected scores, and
 $D_Z = \diag\!\big(\mathrm{sd}(Z_{1\cdot}),\dots,\mathrm{sd}(Z_{k\cdot})\big)$ is
 the diagonal matrix of the sample-wise standard deviations of the $k$ rows of
 $Z = W^\top X$ evaluated at the current $W$. The elastic-net penalty therefore
@@ -1458,6 +1458,70 @@ Cochran's $Q$ over the four cohort-specific log hazard ratios and their standard
 
 Confidence intervals for the C-index were obtained by a stratified nonparametric bootstrap on the same de-duplicated table, resampling patients with replacement \emph{within} cohort so that no replicate mixes patients across cohorts or reinstates a de-duplicated PACA-AU record ($B = `r formatC(.hci$meta$B, big.mark = "{,}", format = "d")`$ replicates, seed `r .hci$meta$seed`, percentile intervals). Concordance was evaluated as Harrell's C with higher scores treated as higher risk, the convention of the external-validation C-indices, and the heterogeneity script (Table \ref{tab:scripts}) verifies that this reproduces the per-dataset C-indices of Supplementary Table \ref{tab:tab-cindex-comparison} exactly. The combined value is the event-weighted mean of the cohort C-indices, the same convention as the proper-scoring and tuned-comparator analyses, and therefore never forms a concordance pair across cohorts. The combined C-index was $`r sprintf("%.3f", .hcip$cindex)`$ (95\% CI $`r sprintf("%.3f", .hcip$lo)`$--$`r sprintf("%.3f", .hcip$hi)`$); the per-cohort hazard ratios and C-indices are given in Table \ref{tab:het-ci}.
 
+\subsection{Leave-one-dataset-out sensitivity of the pooled hazard ratio}
+\label{sec:loco}
+
+```{r loco-stats, echo=FALSE, message=FALSE, warning=FALSE}
+library(survival)
+# Leave-one-dataset-out (LODO) estimates for the frozen DeSurv linear predictor.
+# Recomputed here from the same cached validation latents and the same shared
+# PACA-AU de-duplication rule as the main text (paper/04_results_REVISED.Rmd),
+# so the two documents cannot disagree: the main text quotes the range of these
+# point estimates, this table reports each one with its interval.
+load_result("val_latent_desurv_tcgacptac")
+.loco_pool <- local({
+  dfs <- lapply(val_latent_desurv_tcgacptac, function(entry) {
+    surv <- entry$survival
+    if (is.null(surv) || !all(c("time", "event") %in% names(surv))) return(NULL)
+    data.frame(id = rownames(surv), time = surv$time, event = surv$event,
+               dataset = entry$dataset, risk_score = entry$risk_score,
+               stringsAsFactors = FALSE)
+  })
+  df <- do.call(rbind, Filter(Negate(is.null), dfs))
+  df <- df[is.finite(df$time) & is.finite(df$risk_score), ]
+  dedup_combined(df, dataset_col = "dataset", id_col = "id")
+})
+.loco_fit <- function(df) {
+  df$rz <- df$risk_score / sd(df$risk_score)
+  s <- summary(coxph(Surv(time, event) ~ rz + strata(dataset), data = df))
+  c(n = nrow(df), events = sum(df$event), hr = s$conf.int["rz", "exp(coef)"],
+    lo = s$conf.int["rz", "lower .95"], hi = s$conf.int["rz", "upper .95"],
+    p = s$coefficients["rz", "Pr(>|z|)"])
+}
+# Display names, the same labels used in main-text Fig. \ref{fig:val}; the
+# stopifnot fails loudly if a validation dataset is ever added or renamed.
+.loco_disp <- c(Dijk = "Dijk", Moffitt_GEO_array = "Moffitt GEO array",
+                PACA_AU_array = "PACA-AU array", PACA_AU_seq = "PACA-AU RNA-seq",
+                Puleo_array = "Puleo")
+.loco_ds  <- sort(unique(.loco_pool$dataset))
+stopifnot(all(.loco_ds %in% names(.loco_disp)))
+.loco_all <- .loco_fit(.loco_pool)
+.loco_out <- t(vapply(.loco_ds,
+                      function(co) .loco_fit(.loco_pool[.loco_pool$dataset != co, ]),
+                      numeric(6)))
+# Tripwire: the range of the LODO point estimates is what the main text quotes.
+stopifnot(nrow(.loco_out) == length(.loco_ds), length(.loco_ds) == 5)
+.loco_tab <- data.frame(
+  `Dataset omitted` = c("None (all datasets)", unname(.loco_disp[.loco_ds])),
+  `$n$`              = c(.loco_all[["n"]], .loco_out[, "n"]),
+  Deaths             = c(.loco_all[["events"]], .loco_out[, "events"]),
+  `HR per pooled SD (95\\% CI)` = sprintf("%.2f (%.2f--%.2f)",
+                                        c(.loco_all[["hr"]], .loco_out[, "hr"]),
+                                        c(.loco_all[["lo"]], .loco_out[, "lo"]),
+                                        c(.loco_all[["hi"]], .loco_out[, "hi"])),
+  `$P$`              = vapply(c(.loco_all[["p"]], .loco_out[, "p"]),
+                              function(pv) if (pv < 1e-4) "$<10^{-4}$" else
+                                sprintf("$%.4f$", pv), character(1)),
+  check.names = FALSE, stringsAsFactors = FALSE, row.names = NULL)
+```
+
+```{r tab-loco, echo=FALSE, results='asis'}
+knitr::kable(.loco_tab, format = "latex", escape = FALSE, booktabs = TRUE,
+  align = "lrrcc", linesep = "",
+  caption = paste0("Leave-one-dataset-out sensitivity of the pooled external-validation hazard ratio for the frozen DeSurv linear predictor. Each row refits the dataset-stratified Cox model on the de-duplicated patient-level table with the named validation dataset omitted; the first row is the full combined estimate reported in main-text Table \\ref{tab:hr-adjusted}. Hazard ratios are per pooled standard deviation of the linear predictor, recomputed within each subset, the same convention as the headline pooled estimate and not the within-cohort convention of Table \\ref{tab:het-ci}. Puleo contributes ", sum(grepl("^Puleo", .loco_pool$dataset)), " of the ", nrow(.loco_pool), " unique patients, which is why this sensitivity analysis is reported. \\label{tab:loco}")) |>
+  kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 8)
+```
+
 \section{Variance partition of the D1 score}
 \label{sec:varpart}
 
@@ -1978,7 +2042,7 @@ standard NMF at elbow-selected $k = 5$ and the rank-optimized unsupervised contr
 
 \section{Supplementary Data: factor-specific gene lists}
 
-As Supplementary Data, Tables \ref{tab:gene-list-270-D1}--\ref{tab:gene-list-270-D3} list the top 270 genes for each of the three DeSurv factors, ranked by the factor specificity score $s_{ij}$ defined in Supplementary Information, Section \ref{sec:gene-program-correlation}. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}} = 270$); these are the genes used to compute sample-level factor scores for survival prediction.
+As Supplementary Data, Tables \ref{tab:gene-list-270-D1}--\ref{tab:gene-list-270-D3} list the top 270 genes for each of the three DeSurv factors, ranked by the factor specificity score $s_{ij}$ defined in Supplementary Information, Section \ref{sec:gene-program-correlation}. The 270-gene cutoff corresponds to the Bayesian optimization--selected projection dimension ($n_{\text{top}} = 270$); these are the genes used to compute sample-level projected scores for survival prediction.
 
 ```{r support-disjoint, echo=FALSE}
 .nt_sup <- as.integer(round(read_result("tar_params_best_tcgacptac")$ntop))

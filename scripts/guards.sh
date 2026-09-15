@@ -12,4 +12,4 @@ for f in paper si_appendix; do echo "  $f: pages=$(pdfinfo paper/$f.pdf|awk '/Pa
 echo "  refs in sources: $(grep -o '\\ref{' paper/*.Rmd | wc -l)"
 echo "  main text: $(t=0; for f in 02_introduction_REVISED 04_results_REVISED 05_discussion_REVISED; do n=$(python3 code/util_sentence_extract.py paper/$f.Rmd --list | grep -oP '^\S+\s+\S+\s+\K\d+(?=w)' | paste -sd+ | bc); t=$((t+n)); done; echo $t) / 4000"
 echo "  abstract (rendered): $(pdftotext -f 1 -l 1 paper/paper.pdf - | tr -s '[:space:]' ' ' | python3 -c "
-import sys; t=sys.stdin.read(); i=t.find('Pancreatic ductal adenocarcinoma (PDAC) outcome'); j=t.find('prognostically relevant, interpretable programs.')+len('prognostically relevant, interpretable programs.'); print(len(t[i:j].split()))") words"
+import sys; t=sys.stdin.read(); i=t.find('Pancreatic ductal adenocarcinoma (PDAC) outcome'); j=t.find('survival signal contributed little expression variation.')+len('survival signal contributed little expression variation.'); print(len(t[i:j].split()))") words"

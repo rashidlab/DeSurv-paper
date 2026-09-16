@@ -769,6 +769,61 @@ is refit at the selected parameters using the consensus-based initialization
 $n_{\text{top}}$ is used to
 truncate each program for downstream analysis.
 
+```{r final-config-cv-setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Same-build re-evaluation of the three configurations under the Bayesian-optimization
+# cross-validation protocol (code/29_final_config_cv.R). No value below is typed.
+.fcv     <- read_result("final_config_cv_tcgacptac")
+.fcv_bo  <- read_result("desurv_bo_results_tcgacptac")
+.fcv_run <- .fcv_bo$runs[[1]]
+.fcv_seed <- .fcv_run$seed
+.fcv_ns   <- .fcv$meta$bo_fixed$n_starts
+.fcv_nf   <- c("one", "two", "three", "four", "five", "six", "seven", "eight",
+               "nine", "ten")[.fcv$meta$base_args$nfolds]
+# Historical (cached) BO value for the best k = 3 row, for the build caveat.
+.fcv_hist <- local({
+  h <- .fcv_run$history; h <- h[h$status == "ok" & !is.na(h$mean_cindex), ]
+  max(h$mean_cindex[round(h$k_grid) == .fcv$bo_best_k3$params$k_grid])
+})
+.fcv_rows <- list(.fcv$bo_best_k7, .fcv$bo_best_k3, .fcv$final_config)
+.fcv_lab  <- c(sprintf("Overall best ($k = %d$)", .fcv$bo_best_k7$params$k_grid),
+               sprintf("Best $k = %d$ in the search", .fcv$bo_best_k3$params$k_grid),
+               sprintf("Final fitted model ($k = %d$)", .fcv$final_config$params$k_grid))
+.fcv_g <- function(f) vapply(.fcv_rows, f, numeric(1))
+stopifnot(identical(.fcv$final_config$params$k_grid, .fcv$bo_best_k3$params$k_grid),
+          identical(.fcv$final_config$params$ntop, .fcv$bo_best_k7$params$ntop))
+.fcv_tab <- data.frame(
+  Configuration      = .fcv_lab,
+  `$k$`              = sprintf("%d", as.integer(.fcv_g(function(r) r$params$k_grid))),
+  `$\\alpha$`        = sprintf("%.3f", .fcv_g(function(r) r$params$alpha_grid)),
+  `$\\lambda$`       = sprintf("%.3f", .fcv_g(function(r) r$params$lambda_grid)),
+  `$\\xi$`           = sprintf("%.3f", .fcv_g(function(r) r$params$nu_grid)),
+  `$n_{\\text{top}}$` = sprintf("%d", as.integer(.fcv_g(function(r) r$params$ntop))),
+  `Mean C-index`     = sprintf("%.3f", .fcv_g(function(r) r$mean_cindex)),
+  `Fold-level SE`    = sprintf("%.3f", .fcv_g(function(r) r$se_cindex)),
+  check.names = FALSE, stringsAsFactors = FALSE, row.names = NULL)
+```
+
+```{r tab-final-config-cv, echo=FALSE, results='asis'}
+knitr::kable(.fcv_tab, format = "latex", escape = FALSE, booktabs = TRUE,
+  align = "lrrrrrrr", linesep = "",
+  caption = paste0("Cross-validation of the final DeSurv hyperparameter configuration. ",
+    "The overall-best $k = ", .fcv$bo_best_k7$params$k_grid, "$ configuration, the best $k = ",
+    .fcv$bo_best_k3$params$k_grid, "$ configuration identified during Bayesian optimization, and the final fitted $k = ",
+    .fcv$final_config$params$k_grid, "$ configuration were re-evaluated using the same DeSurv software build and the ",
+    "Bayesian-optimization cross-validation protocol: ", .fcv_nf,
+    " folds constructed within the training data and stratified jointly by event status and cohort (seed ",
+    .fcv_seed, "), ", .fcv_ns, " random initializations per configuration and fold, and the same preprocessing, ",
+    "stopping tolerance, iteration cap and $n_{\\text{top}}$-based scoring procedure. Values are mean Harrell C-index ",
+    "across folds with fold-level standard error. The cached Bayesian-optimization history was generated with an ",
+    "earlier DeSurv installation whose package version was not recorded; the best $k = ",
+    .fcv$bo_best_k3$params$k_grid, "$ configuration has C-index ",
+    sprintf("%.3f", .fcv$bo_best_k3$mean_cindex), " under the current build versus ",
+    sprintf("%.3f", .fcv_hist), " in the historical optimization object. The same-build values shown here are ",
+    "therefore used for direct numerical comparison. \\label{tab:final-config-cv}")) |>
+  kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 8)
+```
+
+
 The parameter $n_{\text{top}}$ determines the gene support used for projection and, in the final consensus procedure, the gene sets from each restart that enter the consensus initialization. After factorization, the support is restricted to the union of the $k$ programs' top-$n_{\text{top}}$ gene sets, ranked within each program by specificity score $s_{ij}$ (Supplementary Information, Section \ref{sec:gene-program-correlation}), giving the truncated matrix $\widetilde{W}$; each sample's score for program $j$ is then $\widetilde{W}_j^\top x$, the $j$th column of $\widetilde{W}$ applied to that shared support. Genes outside the union still shape the factorization but do not enter the linear predictor. This union construction is the convention used by the cross-validation objective and by the primary external-validation scoring. BO selects $n_{\text{top}}$ jointly with $k$, $\alpha$, $\lambda$, and $\xi$ by optimizing cross-validated C-index. Each comparator search selects its own $n_{\text{top}}$. The primary factorization comparison used a common number of top genes per program when constructing each model's scoring union, the supervised model's $n_{\text{top}} = `r as.integer(round(.pbk$ntop))`$ (Supplementary Table \ref{tab:tab-cindex-comparison}), with the tuning-selected values reported alongside it; total union size can still differ with rank and overlap among programs. When $\alpha = 0$ (no survival supervision), survival does not enter the factorization objective; it is used for the post hoc Cox fit and for tuning $n_{\text{top}}$, which sets the projection support and, through the consensus initialization, can still influence the final unsupervised fit indirectly.
 
 Supplementary Fig. \ref{fig:fig-si-bo-tuning} illustrates the tuned response surface for the two coordinates of primary interest in the PDAC training cohort: the cross-validated C-index over factorization rank $k$ and supervision strength $\alpha$. Performance is high across a broad region at intermediate supervision and moderate rank, with a second high region at $k \ge 9$ and $\alpha \approx 0.2$--$0.3$, and degrades toward the unsupervised corner ($\alpha = 0$), consistent with a benefit of survival supervision; the second region is consistent with the flat rank dependence of the supervised curve in Section \ref{sec:cvk}. This is an empirical model-selection sensitivity surface, not a simulation result.

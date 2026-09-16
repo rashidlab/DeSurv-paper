@@ -1,6 +1,6 @@
 ---
 title: "Supplementary Information"
-subtitle: "DeSurv identifies a replicable tumor--stroma prognostic architecture in pancreatic cancer through survival-supervised matrix factorization"
+subtitle: "DeSurv identifies a prognostic tumor--stroma architecture in pancreatic cancer through survival-supervised matrix factorization"
 author: Amber M. Young, Alisa Yurovsky, Xianlu Laura Peng, Jen Jen Yeh, Didong Li, Naim U. Rashid
 header-includes:
 - \providecommand{\pandocbounded}[1]{#1}
@@ -728,6 +728,44 @@ stopifnot(.cvg_all_se$k_selected < .ks$k_selected)
 stopifnot(identical(sort(.ci_sf$seeds), seq_len(.ci_R)))
 ```
 
+```{r final-config-cv-setup, echo=FALSE, message=FALSE, warning=FALSE}
+# Same-build re-evaluation of the three configurations under the Bayesian-optimization
+# cross-validation protocol (code/29_final_config_cv.R). No value below is typed.
+.fcv     <- read_result("final_config_cv_tcgacptac")
+.fcv_bo  <- read_result("desurv_bo_results_tcgacptac")
+.fcv_run <- .fcv_bo$runs[[1]]
+.fcv_seed <- .fcv$meta$base_args$seed
+stopifnot(identical(as.integer(.fcv_seed), as.integer(.fcv_run$seed)))
+.fcv_ns   <- .fcv$meta$bo_fixed$n_starts
+.fcv_nf   <- c("one", "two", "three", "four", "five", "six", "seven", "eight",
+               "nine", "ten")[.fcv$meta$base_args$nfolds]
+# Historical (cached) BO value for the best k = 3 row, for the build caveat.
+.fcv_hist <- local({
+  h <- .fcv_run$history; h <- h[h$status == "ok" & !is.na(h$mean_cindex), ]
+  max(h$mean_cindex[round(h$k_grid) == .fcv$bo_best_k3$params$k_grid])
+})
+.fcv_thr <- .fcv$bo_best_k7$mean_cindex - .fcv$bo_best_k7$se_cindex
+.fcv_gap <- .fcv_thr - .fcv$final_config$mean_cindex
+stopifnot(.fcv_gap > 0)
+.fcv_rows <- list(.fcv$bo_best_k7, .fcv$bo_best_k3, .fcv$final_config)
+.fcv_lab  <- c(sprintf("Overall best ($k = %d$)", .fcv$bo_best_k7$params$k_grid),
+               sprintf("Best $k = %d$ in the search", .fcv$bo_best_k3$params$k_grid),
+               sprintf("Final fitted model ($k = %d$)", .fcv$final_config$params$k_grid))
+.fcv_g <- function(f) vapply(.fcv_rows, f, numeric(1))
+stopifnot(identical(.fcv$final_config$params$k_grid, .fcv$bo_best_k3$params$k_grid),
+          identical(.fcv$final_config$params$ntop, .fcv$bo_best_k7$params$ntop))
+.fcv_tab <- data.frame(
+  Configuration      = .fcv_lab,
+  `$k$`              = sprintf("%d", as.integer(.fcv_g(function(r) r$params$k_grid))),
+  `$\\alpha$`        = sprintf("%.3f", .fcv_g(function(r) r$params$alpha_grid)),
+  `$\\lambda$`       = sprintf("%.3f", .fcv_g(function(r) r$params$lambda_grid)),
+  `$\\xi$`           = sprintf("%.3f", .fcv_g(function(r) r$params$nu_grid)),
+  `$n_{\\text{top}}$` = sprintf("%d", as.integer(.fcv_g(function(r) r$params$ntop))),
+  `Mean C-index`     = sprintf("%.3f", .fcv_g(function(r) r$mean_cindex)),
+  `Fold-level SE`    = sprintf("%.3f", .fcv_g(function(r) r$se_cindex)),
+  check.names = FALSE, stringsAsFactors = FALSE, row.names = NULL)
+```
+
 Two details of this rule matter for reading the reported numbers. First, the
 comparison is between the best configuration observed at each rank: the highest
 mean cross-validated C-index anywhere in the search was
@@ -740,10 +778,15 @@ hyperparameters ($\alpha = `r sprintf("%.3f", .pbk$alpha)`$,
 $\lambda = `r sprintf("%.3f", .pbk$lambda)`$, $\xi = `r sprintf("%.3f", .pbk$nu)`$,
 $n_{\text{top}} = `r as.integer(round(.pbk$ntop))`$) were retained from the overall
 best configuration at $k = `r .ks$k_best`$. The final configuration was therefore
-not itself a point evaluated in the search, and neither number above is its
-cross-validated performance. We therefore ran a sensitivity check on rank
-selection using the same training data and the selected non-rank
-hyperparameters, the fixed-hyperparameter grid of Cross-validated C-index across
+not itself a point evaluated in the search. Its cross-validated performance
+under the identical protocol and the current software build is reported in
+Table \ref{tab:final-config-cv}:
+$`r sprintf("%.3f", .fcv$final_config$mean_cindex)`$ (fold-level standard error
+$`r sprintf("%.3f", .fcv$final_config$se_cindex)`$),
+$`r sprintf("%.3f", .fcv_gap)`$ below the recomputed one-standard-error
+threshold of $`r sprintf("%.3f", .fcv_thr)`$. Separately, we ran a sensitivity
+analysis of rank selection using the same training data and the selected
+non-rank hyperparameters, the fixed-hyperparameter grid of Cross-validated C-index across
 factorization rank. That grid is an exhaustive rank-by-supervision search over
 $k \in \{2, 3, \ldots, 12\}$ and $\alpha \in \{0, 0.05, \ldots, 0.95\}$ holding
 $\lambda$, $\xi$ and $n_{\text{top}}$ at the selected model's values, and the
@@ -769,41 +812,6 @@ is refit at the selected parameters using the consensus-based initialization
 $n_{\text{top}}$ is used to
 truncate each program for downstream analysis.
 
-```{r final-config-cv-setup, echo=FALSE, message=FALSE, warning=FALSE}
-# Same-build re-evaluation of the three configurations under the Bayesian-optimization
-# cross-validation protocol (code/29_final_config_cv.R). No value below is typed.
-.fcv     <- read_result("final_config_cv_tcgacptac")
-.fcv_bo  <- read_result("desurv_bo_results_tcgacptac")
-.fcv_run <- .fcv_bo$runs[[1]]
-.fcv_seed <- .fcv$meta$base_args$seed
-stopifnot(identical(as.integer(.fcv_seed), as.integer(.fcv_run$seed)))
-.fcv_ns   <- .fcv$meta$bo_fixed$n_starts
-.fcv_nf   <- c("one", "two", "three", "four", "five", "six", "seven", "eight",
-               "nine", "ten")[.fcv$meta$base_args$nfolds]
-# Historical (cached) BO value for the best k = 3 row, for the build caveat.
-.fcv_hist <- local({
-  h <- .fcv_run$history; h <- h[h$status == "ok" & !is.na(h$mean_cindex), ]
-  max(h$mean_cindex[round(h$k_grid) == .fcv$bo_best_k3$params$k_grid])
-})
-.fcv_rows <- list(.fcv$bo_best_k7, .fcv$bo_best_k3, .fcv$final_config)
-.fcv_lab  <- c(sprintf("Overall best ($k = %d$)", .fcv$bo_best_k7$params$k_grid),
-               sprintf("Best $k = %d$ in the search", .fcv$bo_best_k3$params$k_grid),
-               sprintf("Final fitted model ($k = %d$)", .fcv$final_config$params$k_grid))
-.fcv_g <- function(f) vapply(.fcv_rows, f, numeric(1))
-stopifnot(identical(.fcv$final_config$params$k_grid, .fcv$bo_best_k3$params$k_grid),
-          identical(.fcv$final_config$params$ntop, .fcv$bo_best_k7$params$ntop))
-.fcv_tab <- data.frame(
-  Configuration      = .fcv_lab,
-  `$k$`              = sprintf("%d", as.integer(.fcv_g(function(r) r$params$k_grid))),
-  `$\\alpha$`        = sprintf("%.3f", .fcv_g(function(r) r$params$alpha_grid)),
-  `$\\lambda$`       = sprintf("%.3f", .fcv_g(function(r) r$params$lambda_grid)),
-  `$\\xi$`           = sprintf("%.3f", .fcv_g(function(r) r$params$nu_grid)),
-  `$n_{\\text{top}}$` = sprintf("%d", as.integer(.fcv_g(function(r) r$params$ntop))),
-  `Mean C-index`     = sprintf("%.3f", .fcv_g(function(r) r$mean_cindex)),
-  `Fold-level SE`    = sprintf("%.3f", .fcv_g(function(r) r$se_cindex)),
-  check.names = FALSE, stringsAsFactors = FALSE, row.names = NULL)
-```
-
 ```{r tab-final-config-cv, echo=FALSE, results='asis'}
 knitr::kable(.fcv_tab, format = "latex", escape = FALSE, booktabs = TRUE,
   align = "lrrrrrrr", linesep = "",
@@ -820,7 +828,10 @@ knitr::kable(.fcv_tab, format = "latex", escape = FALSE, booktabs = TRUE,
     .fcv$bo_best_k3$params$k_grid, "$ configuration has C-index ",
     sprintf("%.3f", .fcv$bo_best_k3$mean_cindex), " under the current build versus ",
     sprintf("%.3f", .fcv_hist), " in the historical optimization object. The same-build values shown here are ",
-    "therefore used for direct numerical comparison. \\label{tab:final-config-cv}")) |>
+    "therefore used for direct numerical comparison. The final configuration lies ",
+    sprintf("%.3f", .fcv_gap), " below the recomputed one-standard-error threshold of ",
+    sprintf("%.3f", .fcv_thr), " (", sprintf("%.3f", .fcv$bo_best_k7$mean_cindex),
+    " minus its fold-level standard error). \\label{tab:final-config-cv}")) |>
   kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 8)
 ```
 
@@ -829,7 +840,7 @@ The parameter $n_{\text{top}}$ determines the gene support used for projection a
 
 Supplementary Fig. \ref{fig:fig-si-bo-tuning} illustrates the tuned response surface for the two coordinates of primary interest in the PDAC training cohort: the cross-validated C-index over factorization rank $k$ and supervision strength $\alpha$. Performance is high across a broad region at intermediate supervision and moderate rank, with a second high region at $k \ge 9$ and $\alpha \approx 0.2$--$0.3$, and degrades toward the unsupervised corner ($\alpha = 0$), consistent with a benefit of survival supervision; the second region is consistent with the flat rank dependence of the supervised curve in Section \ref{sec:cvk}. This is an empirical model-selection sensitivity surface, not a simulation result.
 
-```{r fig-si-bo-tuning, fig.cap="Bayesian-optimization tuning surface for DeSurv in the PDAC training cohort (TCGA + CPTAC). Gaussian-process--predicted mean cross-validated C-index over factorization rank ($k$) and supervision strength ($\\alpha$; $\\alpha = 0$ corresponds to the unsupervised limit). The response surface shows a broad region of high cross-validated performance at intermediate supervision and moderate rank, a second high region at $k \\ge 9$ and $\\alpha \\approx 0.2$--$0.3$, and discrimination degrading toward the unsupervised ($\\alpha = 0$) boundary.", echo=FALSE, fig.env='figure*', fig.pos='t', out.height= '3.6in', out.width='4.5in', fig.align='center'}
+```{r fig-si-bo-tuning, fig.cap="Bayesian-optimization tuning surface for DeSurv in the PDAC training cohort (TCGA + CPTAC). Gaussian-process--predicted mean cross-validated C-index over factorization rank ($k$) and supervision strength ($\\alpha$; $\\alpha = 0$ corresponds to the unsupervised limit). The response surface shows a broad region of high cross-validated performance at intermediate supervision and moderate rank, a second high region at $k \\ge 9$ and $\\alpha \\approx 0.2$--$0.3$, and discrimination degrading toward the unsupervised ($\\alpha = 0$) boundary. The surface is a two-dimensional slice of the fitted five-parameter Gaussian process through the Bayesian-optimization-selected values of the top-gene count, ridge penalty and elastic-net mixing parameter ($n_{\\text{top}}$, $\\lambda$, $\\xi$), not a marginal or profile surface over those hyperparameters.", echo=FALSE, fig.env='figure*', fig.pos='t', out.height= '3.6in', out.width='4.5in', fig.align='center'}
 cowplot::ggdraw() + cowplot::draw_image(
   magick::image_read("figures/si_fig_bo_tuning_surface_tcgacptac.pdf", density = 300))
 
@@ -1065,7 +1076,7 @@ performance evaluation.
 stopifnot(levels(.ct_si$coh)[2] == "TCGA_PAAD", all(.ct_within > 2), .ct_strat > 2)
 ```
 
-The training Cox objective was fit to the pooled TCGA-PAAD and CPTAC samples without a cohort term; cross-validation folds were constructed within cohort with stratification by event status. Because survival shapes $W$, a cohort effect associated with both expression and survival could in principle be rewarded by the survival gradient. As a descriptive check for cohort-driven association, computed from the cached training data and final fit and not a refit, the fitted linear predictor remained strongly associated with survival within TCGA-PAAD and CPTAC separately (in-sample HR per SD `r sprintf("%.2f", .ct_within[["TCGA"]])` and `r sprintf("%.2f", .ct_within[["CPTAC"]])`; Table \ref{tab:clinical-adjustment}) and in a model stratified by cohort (HR per SD `r sprintf("%.2f", .ct_strat)`, against `r sprintf("%.2f", .ct_pooled)` unstratified), while the between-cohort shift in the score was opposite to the between-cohort hazard difference: the predictor averaged `r sprintf("%.2f", abs(.ct_shift))` SD higher in TCGA-PAAD, yet CPTAC had the higher hazard given the predictor (HR `r sprintf("%.2f", .ct_cohhr)`). These in-sample quantities argue against the specific mechanism in which the survival gradient learns cohort membership, but they do not rule out cohort influence on the factorization, which the external validation addresses directly.
+The training Cox objective was fit to the pooled TCGA-PAAD and CPTAC samples without a cohort term; cross-validation folds were constructed within cohort with stratification by event status. Because survival shapes $W$, a cohort effect associated with both expression and survival could in principle be rewarded by the survival gradient. As a descriptive check for cohort-driven association, computed from the cached training data and final fit and not a refit, the fitted linear predictor remained strongly associated with survival within TCGA-PAAD and CPTAC separately (in-sample HR per SD `r sprintf("%.2f", .ct_within[["TCGA"]])` and `r sprintf("%.2f", .ct_within[["CPTAC"]])`; Table \ref{tab:clinical-adjustment}) and in a model stratified by cohort (HR per SD `r sprintf("%.2f", .ct_strat)`, against `r sprintf("%.2f", .ct_pooled)` unstratified), while the between-cohort shift in the score was opposite to the between-cohort hazard difference: the predictor averaged `r sprintf("%.2f", abs(.ct_shift))` SD higher in TCGA-PAAD, yet CPTAC had the higher hazard given the predictor (HR `r sprintf("%.2f", .ct_cohhr)`). These in-sample quantities argue against the specific mechanism in which the survival gradient learns cohort membership, but they do not rule out cohort influence on the factorization, whose impact on transportability is tested by external validation.
 
 \section{Gene Program Correlation Analysis}
 \label{sec:gene-program-correlation}
@@ -1233,7 +1244,7 @@ below can name analyses rather than files.
 .sc <- data.frame(
   Script = c("code/03", "code/04", "code/05", "code/06", "code/07", "code/11", "code/14",
              "code/15", "code/16", "code/17", "code/18", "code/19", "code/20", "code/21",
-             "code/23", "code/24", "code/25", "code/26"),
+             "code/23", "code/24", "code/25", "code/26", "code/29"),
   Analysis = c(
     "Bayesian optimization of hyperparameters; the matched-budget refinement with $\\alpha$ pinned at 0",
     "Final fits: 100-restart consensus fits for DeSurv and the two $\\alpha = 0$ controls; best-of-30-run \\texttt{NMF::nmf} fits for standard NMF at matched and elbow rank, each with a post hoc Cox fit",
@@ -1252,13 +1263,14 @@ below can name analyses rather than files.
     "Stromal reference-program resolution (top-gene and full-gene views)",
     "Reference-program coverage, edges and multiplicity by rank; the reference-universe table",
     "Between-cohort heterogeneity, proportional-hazards diagnostic and bootstrap C-index intervals",
-    "Reconstruction of the gradient-scaling factor $\\zeta$ along the production optimization path"),
+    "Reconstruction of the gradient-scaling factor $\\zeta$ along the production optimization path",
+    "Re-evaluates the overall-best, best $k = 3$ and final hyperparameter configurations under the Bayesian-optimization cross-validation protocol (Table \\ref{tab:final-config-cv})"),
   `Read in` = c(
     paste0("Sections ", "\\ref{sec:bo}, \\ref{sec:matched}"), paste0("Sections ", "\\ref{sec:consensus-init}, \\ref{sec:progstab}"), paste0("Sections ", "\\ref{sec:survival}, \\ref{sec:het}"), paste0("Sections ", "\\ref{sec:cvk}, \\ref{sec:coverage}"),
     paste0("Section ", "\\ref{sec:sim}"), paste0("Section ", "\\ref{si:treated}"), paste0("Section ", "\\ref{sec:varpart}"), paste0("Section ", "\\ref{sec:d1axis}"),
     paste0("Section ", "\\ref{sec:progstab}"), paste0("Section ", "\\ref{sec:brier}"), paste0("Section ", "\\ref{sec:purity}"), paste0("Section ", "\\ref{sec:tuned}"),
     paste0("Section ", "\\ref{sec:progstab}"), paste0("Section ", "\\ref{sec:progstab}"), paste0("Section ", "\\ref{sec:stroma}"), paste0("Sections ", "\\ref{sec:gene-program-correlation}, \\ref{sec:coverage}"),
-    paste0("Sections ", "\\ref{sec:ph}, \\ref{sec:het}"), paste0("Sections ", "\\ref{sec:wupdate}, \\ref{sec:progstab}")),
+    paste0("Sections ", "\\ref{sec:ph}, \\ref{sec:het}"), paste0("Sections ", "\\ref{sec:wupdate}, \\ref{sec:progstab}"), paste0("Section ", "\\ref{sec:bo}")),
   check.names = FALSE, stringsAsFactors = FALSE)
 knitr::kable(.sc, format = "latex", booktabs = TRUE, escape = FALSE, linesep = "",
   caption = "Index of analysis scripts. Scripts are numbered as in the code repository; helper functions shared by several scripts (de-duplication of PACA-AU patients, validation scoring, elbow selection) are called from the scripts listed. Section numbers refer to this document. \\label{tab:scripts}") |>
@@ -1712,7 +1724,7 @@ $`r sprintf("%.3f", .ci["median"])`$, standard deviation
 $`r sprintf("%.3f", .ci["sd"])`$). Near-identical predictive performance from
 bases that share little gene membership is consistent with a non-identifiable objective, and it is precisely why the reported model is not a single run.
 
-The reported procedure is reproducible with respect to initialization. The reported basis is obtained by
+The reported procedure is stable to restart-pool composition within the observed training data. The reported basis is obtained by
 aggregating restarts into a consensus initialization and then fitting from it.
 To test whether that procedure returns the same programs, we partitioned the
 cached restarts into two disjoint halves, built a consensus initialization from
@@ -1737,7 +1749,7 @@ The consensus therefore supplies a reproducible
 initialization rather than fixing the final basis.
 
 The optimizer alone is not identifiable. The consensus step is what makes the
-reported decomposition reproducible rather than one draw from a wide
+reported decomposition stable to restart-pool composition rather than one draw from a wide
 distribution, and reproducibility claims in this manuscript refer to that
 end-to-end procedure.
 
@@ -1827,7 +1839,7 @@ prim_i <- which(sids == "R0_easy" & aids == "bo_tune_ntop")[1]
 .prim_rec  <- tapply(.prim_d$marker_recall_all, .prim_d$method, median, na.rm = TRUE)
 ```
 
-In the prognostic scenario, median matched-factor precision was `r sprintf("%.2f", .prim_prec[["DeSurv"]])` for DeSurv versus `r sprintf("%.2f", .prim_prec[["NMF"]])` for unsupervised NMF, and global marker recall, the fraction of the survival-driving marker genes recovered anywhere in the union of all learned factors' top-$n_{\text{top}}$ gene sets, was `r sprintf("%.2f", .prim_rec[["DeSurv"]])` versus `r sprintf("%.2f", .prim_rec[["NMF"]])`. Recall is insensitive to factor matching because it searches the union of all learned factors rather than a single matched factor; like precision, it depends on each method's selected $n_{\text{top}}$. It complements the matched-factor precision reported in main-text Fig. \ref{fig:sim}.
+In the prognostic scenario, median matched-factor precision was `r sprintf("%.2f", .prim_prec[["DeSurv"]])` for DeSurv versus `r sprintf("%.2f", .prim_prec[["NMF"]])` for unsupervised NMF, and global marker recall, the fraction of the survival-driving marker genes recovered anywhere in the union of all learned factors' top-$n_{\text{top}}$ gene sets, was `r sprintf("%.2f", .prim_rec[["DeSurv"]])` versus `r sprintf("%.2f", .prim_rec[["NMF"]])`. Matched-factor precision is optimistic by construction, because the matched factor is selected using the same precision that is then reported; global marker recall, which searches the union of all learned factors, is the matching-free complement. Like precision, it depends on each method's selected $n_{\text{top}}$. It complements the matched-factor precision reported in main-text Fig. \ref{fig:sim}.
 
 Under the null scenario (Fig. \ref{fig:sim-null-mixed}a--b), DeSurv showed no advantage over unsupervised NMF ($\alpha = 0$): both methods yielded C-index values near 0.5, and selected ranks concentrated at low values (NMF favoring $k = 2$), consistent with the absence of survival signal. Because the survival objective is uninformative under the null, the cross-validated concordance is essentially flat in $\alpha$ and the Bayesian-optimized supervision strength is unidentified, dispersing across its admissible range rather than concentrating near zero (median $\alpha = `r round(null_alpha_median, 2)`$, IQR $`r round(null_alpha_q1, 2)`$--$`r round(null_alpha_q3, 2)`$; range $`r round(null_alpha_min, 2)`$--$`r round(null_alpha_max, 2)`$ across `r null_alpha_n` replicates). The null-scenario specificity thus reflects the flat concordance surface itself, not the optimizer driving $\alpha$ to zero.
 
@@ -1846,7 +1858,7 @@ To evaluate how the number of latent factors $k$ affects prognostic performance,
 
 Fig. \ref{fig:fig-cindex-by-k} shows the resulting C-index curves for both training (CV) and external validation (pooled across held-out cohorts), with shaded ribbons indicating $\pm 1$ standard error. Rank was selected on the training cross-validated concordance. For DeSurv that curve is close to flat across the whole range examined, spanning about two standard errors from $k = 2$ to $k = 12$, with its nominal maximum at $k = `r .cvg_one_se$k_best`$ rather than at the selected rank. This fixed-$\lambda$, $\xi$, $n_{\text{top}}$ grid is a different exercise from the full Bayesian-optimization search over all tuned hyperparameters, whose highest observed mean C-index occurred at $k = `r .ks$k_best`$. Applying the same one-standard-error rule to panel (a) of this sensitivity grid, at $n_{\text{top}} = `r as.integer(round(.pbk$ntop))`$, also selects $k = `r .ks$k_selected`$, from a grid best of $`r sprintf("%.3f", .cvg_one_se$best_mean)`$ (standard error $`r sprintf("%.3f", .cvg_one_se$best_se)`$) at $k = `r .cvg_one_se$k_best`$ and the resulting threshold $`r sprintf("%.3f", .cvg_one_se$threshold)`$. That threshold is the grid's own, distinct from the Bayesian-optimization threshold of $`r sprintf("%.3f", .ks$lcb_threshold)`$, and what it corroborates is the selected rank rather than the exact final configuration, whose nearest neighbor in this grid clears only the Bayesian-optimization threshold (Bayesian Optimization). The selection depends on the gene-selection setting: under panel (b), with all genes retained, the same rule selects $k = `r .cvg_all_se$k_selected`$. On the training cross-validated curve DeSurv had a higher point estimate than its unsupervised limit at every $k$ examined. The external-validation curve, shown only descriptively, does not show that ordering uniformly: the unsupervised limit is higher at $k = 6$ and at $k = 10$--$12$, and the supervised curve dips at $k = 6$, where the single grid fit at its selected $\alpha$ is the same fit whose factors correspond to almost no reference program (Reference-program coverage, edges and multiplicity). These rank-wise points are single fits, not consensus fits. At the selected rank the validation curve is consistent with the training-based choice, with DeSurv at $k = 3$ attaining concordance comparable to the rank-optimized unsupervised control ($k = 7$; Table \ref{tab:tab-cindex-comparison}).
 
-```{r fig-cindex-by-k, fig.width = 10, fig.height = 10, fig.cap="Training (CV) and external validation C-index as a function of factorization rank $k$ for DeSurv (blue) and its unsupervised limit (red, $\\alpha = 0$). Shaded ribbons show $\\pm 1$ SE. For each $k$, the best $\\alpha$ was selected by maximizing the mean CV C-index. Validation C-index is pooled across all external cohorts. (a) Results using $n_{\\text{top}} = 270$ top genes per factor ($\\lambda = 0.349$, $\\xi = 0.056$). (b) Results retaining all genes ($n_{\\text{top}} = \\text{ALL}$; $\\lambda = 0.349$, $\\xi = 0.056$).", fig.env='figure*', fig.pos='t', out.width='\\textwidth', echo=FALSE}
+```{r fig-cindex-by-k, fig.width = 10, fig.height = 10, fig.cap="Training (CV) and external validation C-index as a function of factorization rank $k$ for DeSurv (blue) and its unsupervised limit (red, $\\alpha = 0$). Shaded ribbons show $\\pm 1$ SE. For each $k$, the best $\\alpha$ was selected by maximizing the mean CV C-index. Validation C-index is a single Harrell concordance computed on the de-duplicated external patients of the four validation cohorts pooled together, so concordance pairs cross cohorts, with the ribbon giving plus or minus one standard error from that single concordance estimate. This descriptive quantity differs from the primary combined external C-index reported in the main text, which is an event-weighted mean of four cohort-specific C-indices, and the two are not directly comparable. (a) Results using $n_{\\text{top}} = 270$ top genes per factor ($\\lambda = 0.349$, $\\xi = 0.056$). (b) Results retaining all genes ($n_{\\text{top}} = \\text{ALL}$; $\\lambda = 0.349$, $\\xi = 0.056$).", fig.env='figure*', fig.pos='t', out.width='\\textwidth', echo=FALSE}
 # This figure is produced by the cv_grid pipeline (separate store);
 # read directly from the file output.
 # Use magick to render the PDF as a raster (avoids LaTeX path issues)

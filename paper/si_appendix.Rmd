@@ -775,7 +775,8 @@ truncate each program for downstream analysis.
 .fcv     <- read_result("final_config_cv_tcgacptac")
 .fcv_bo  <- read_result("desurv_bo_results_tcgacptac")
 .fcv_run <- .fcv_bo$runs[[1]]
-.fcv_seed <- .fcv_run$seed
+.fcv_seed <- .fcv$meta$base_args$seed
+stopifnot(identical(as.integer(.fcv_seed), as.integer(.fcv_run$seed)))
 .fcv_ns   <- .fcv$meta$bo_fixed$n_starts
 .fcv_nf   <- c("one", "two", "three", "four", "five", "six", "seven", "eight",
                "nine", "ten")[.fcv$meta$base_args$nfolds]

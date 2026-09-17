@@ -12,14 +12,14 @@
      the 1in margin keeps the letter to two pages). Lab style: no em-dashes,
      direct voice. -->
 
-7 September 2026
+17 September 2026
 
 Dr. Julieta Alfonso
 Senior Editor, Nature Cancer
 
 Dear Dr. Alfonso,
 
-We are submitting a Technical Report, "DeSurv identifies a replicable tumor-stroma prognostic architecture in pancreatic cancer through survival-supervised matrix factorization," for consideration at Nature Cancer. Thank you for inviting a full submission following our presubmission enquiry. The underlying study is unchanged; the revised title names the method directly, and we believe that a Technical Report best reflects the nature of its contribution: a new survival-supervised matrix-factorization framework for discovering and transferring clinically relevant gene programs, with pancreatic cancer providing the biological and clinical validation setting.
+We are submitting a Technical Report, "DeSurv identifies a prognostic tumor-stroma architecture in pancreatic cancer through survival-supervised matrix factorization," for consideration at Nature Cancer. Thank you for inviting a full submission following our presubmission enquiry. The underlying study is unchanged; the revised title names the method directly, and we believe that a Technical Report best reflects the nature of its contribution: a new survival-supervised matrix-factorization framework for discovering and transferring clinically relevant gene programs, with pancreatic cancer providing the biological and clinical validation setting.
 
 Molecular subtypes of pancreatic cancer are typically found by factorizing bulk expression to recover programs that best reconstruct the transcriptome, testing those programs against outcome, and validating retrospectively. DeSurv instead makes survival information part of discovery: the survival gradient acts on the gene weights that define each program, while the reconstruction objective keeps those programs representing the observed transcriptome. Because supervision acts on the gene weights, the trained basis is frozen and a new tumor is scored directly against the fixed gene-weight matrix, with no refitting and no use of validation outcomes, so cross-study transportability becomes a direct test of the same fixed representation. The related CoxNMF and SurvNMF formulations place the survival term on the sample-side latent representation; the manuscript tabulates that distinction.
 

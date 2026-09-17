@@ -107,6 +107,12 @@ all:
 paper:
 	DESURV_RECOMPUTE=FALSE $(RSCRIPT) code/10_render_paper.R
 
+# ── Side analyses (not loaded by the manuscript; documented in docs/) ─────
+# Read the cached training fit and code/15 and code/19 objects; never recompute them.
+side-analyses:
+	DESURV_RECOMPUTE=FALSE $(RSCRIPT) code/27_program_specificity.R
+	DESURV_RECOMPUTE=FALSE $(RSCRIPT) code/28_tuned_predictor_decomposition.R
+
 # ── Install DeSurv ────────────────────────────────────────────────────────
 install:
 	$(RSCRIPT) code/01_install.R

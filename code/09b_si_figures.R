@@ -3,8 +3,6 @@
 #
 # Builds the PDF figures referenced directly by paper/si_appendix.Rmd:
 #
-#   figures/cutpoint_curve_logrank_<bo_label>.pdf
-#   figures/cutpoint_curve_cindex_<bo_label>.pdf
 #   figures/km_val_<dataset>_logrank_<bo_label>.pdf
 #   figures/km_val_pooled_logrank_<bo_label>.pdf
 #   figures/subtype_overlap_pooled_logrank_<bo_label>.pdf
@@ -30,6 +28,9 @@ library(glmnet)
 
 source("R/cv_grid_helpers.R")
 source("R/preprocess_helpers.R")
+source("R/variance_helpers.R")
+source("R/reconstruction_helpers.R")
+source("R/theme_nature.R")   # single source of truth for the SI figures too
 
 # ── Identifier used in output filenames ──────────────────────────────────
 # Mirrors the bo_label convention from the original DeSurv-paper repo. The
@@ -44,9 +45,7 @@ tar_data_filtered   <- load_precomputed("tar_data_filtered_tcgacptac")
 data_val_filtered   <- load_precomputed("data_val_filtered_tcgacptac")
 tar_params_best     <- load_precomputed("tar_params_best_tcgacptac")
 
-desurv_cutpoint_summary <- load_precomputed("desurv_cutpoint_summary_tcgacptac")
 desurv_lp_stats         <- load_precomputed("desurv_lp_stats_tcgacptac")
-std_desurvk_cutpoint_summary <- load_precomputed("std_desurvk_cutpoint_summary_tcgacptac")
 std_desurvk_lp_stats         <- load_precomputed("std_desurvk_lp_stats_tcgacptac")
 
 ntop_for_lp <- tar_params_best$ntop
@@ -64,57 +63,14 @@ nms <- vapply(val_named, function(x) {
 names(val_named) <- nms
 data_val_filtered_surv <- merge_paca_au_datasets(val_named)
 
-# ── Cutpoint selection curves (logrank + cindex) ─────────────────────────
-p_logrank <- plot_cutpoint_curve_logrank(
-  desurv_cutpoint_summary,
-  k = tar_params_best$k,
-  alpha = tar_params_best$alpha,
-  ntop = ntop_label,
-  optimal_z = desurv_lp_stats$optimal_z_cutpoint
-)
-ggplot2::ggsave(
-  file.path(FIGURE_DIR, sprintf("cutpoint_curve_logrank_%s.pdf", bo_label)),
-  p_logrank, width = 5, height = 4
-)
-
-p_cindex <- plot_cutpoint_curve_cindex(
-  desurv_cutpoint_summary,
-  k = tar_params_best$k,
-  alpha = tar_params_best$alpha,
-  ntop = ntop_label,
-  optimal_z = desurv_lp_stats$optimal_z_cutpoint_cindex
-)
-ggplot2::ggsave(
-  file.path(FIGURE_DIR, sprintf("cutpoint_curve_cindex_%s.pdf", bo_label)),
-  p_cindex, width = 5, height = 4
-)
-
-# ── KM curves on dichotomized validation cohorts ─────────────────────────
-# fit_entry mirrors the structure cv_grid_helpers expects: a fit list (W, beta)
-# with metadata describing how to compute and z-standardize the LP.
-fit_entry <- list(
-  fit         = list(W = tar_fit_desurv$W, beta = tar_fit_desurv$beta),
-  ntop        = ntop_for_lp,
-  z_cutpoint  = desurv_lp_stats$optimal_z_cutpoint,
-  lp_mean     = desurv_lp_stats$lp_mean,
-  lp_sd       = desurv_lp_stats$lp_sd,
-  k           = tar_params_best$k,
-  alpha       = tar_params_best$alpha %||% NA_real_
-)
-
-for (ds_name in names(data_val_filtered_surv)) {
-  p <- plot_km_validation(fit_entry, data_val_filtered_surv[[ds_name]], ds_name)
-  if (is.null(p)) next
-  fpath <- file.path(FIGURE_DIR,
-                     sprintf("km_val_%s_logrank_%s.pdf", ds_name, bo_label))
-  save_ggsurvplot(p, fpath, width = 7, height = 5)
-}
-
-p_pooled <- plot_km_validation_pooled(fit_entry, data_val_filtered_surv)
-if (!is.null(p_pooled)) {
-  fpath <- file.path(FIGURE_DIR, sprintf("km_val_pooled_logrank_%s.pdf", bo_label))
-  save_ggsurvplot(p_pooled, fpath, width = 7, height = 5)
-}
+# ── Cutpoint / dichotomized-KM SI figures: REMOVED ───────────────────────
+# The SI section these fed ('Cutpoint selection and validation of dichotomized
+# risk groups') was cut, along with main-text Fig. 3b, because the cutpoint is
+# not reproducible: run_cv_grid_point() passes `seed` but also
+# parallel_init = TRUE, and the forked init workers do not inherit a
+# reproducible RNG stream. Identical calls select z anywhere in 0.8-2.0,
+# moving the high-risk fraction from 5% to 33%. No reported result depended
+# on it. See docs/LESSONS.md.  (code/08_cutpoint_analysis.R is now orphaned.)
 
 # ── Subtype-overlap stacked bar ───────────────────────────────────────────
 collect_subtype_overlap <- function(W, beta, ntop, lp_mean, lp_sd, z_cut, data_val) {
@@ -147,7 +103,12 @@ collect_subtype_overlap <- function(W, beta, ntop, lp_mean, lp_sd, z_cut, data_v
   if (length(pooled_rows) > 0) do.call(rbind, pooled_rows) else NULL
 }
 
-# DeSurv subtype overlap
+# DeSurv subtype overlap.
+# NOTE: this still dichotomizes at desurv_lp_stats$optimal_z_cutpoint and so
+# inherits the reproducibility defect documented above. It is retained only
+# because it is already an orphaned diagnostic: no figure it writes is read by
+# paper.Rmd or si_appendix.Rmd. Do not promote it into either without first
+# fixing the RNG seeding in run_cv_grid_point().
 pooled_df <- collect_subtype_overlap(
   tar_fit_desurv$W, tar_fit_desurv$beta, ntop_for_lp,
   desurv_lp_stats$lp_mean, desurv_lp_stats$lp_sd,
@@ -190,8 +151,17 @@ fig_res  <- load_precomputed("fig_residuals_tcgacptac")
 fig_coph <- load_precomputed("fig_cophenetic_tcgacptac")
 fig_sil  <- load_precomputed("fig_silhouette_tcgacptac")
 
+# Panels (a) and (b) each show one series; only the silhouette panel (c) has
+# three (coefficient, basis and consensus matrices), so its legend is the one
+# shown. Residual breaks are set to evenly spaced values.
+fig_res <- fig_res +
+  ggplot2::scale_y_continuous(name = expression("Reconstruction error" ~ (x10^10)),
+                              labels = scales::label_number(scale = 1e-10, accuracy = 0.1),
+                              breaks = scales::pretty_breaks(5))
 legend_s4 <- cowplot::get_legend(
-  set_fig_font(fig_res, 10) + ggplot2::theme(legend.position = "bottom")
+  set_fig_font(fig_sil, 10) + ggplot2::theme(legend.position = "bottom") +
+    ggplot2::guides(colour = ggplot2::guide_legend(title = "Silhouette of"),
+                    shape = "none", linetype = "none", size = "none", alpha = "none")
 )
 
 ggsave(
@@ -201,7 +171,7 @@ ggsave(
       set_fig_font(fig_res,  10) + theme(legend.position = "none"),
       set_fig_font(fig_coph, 10) + theme(legend.position = "none"),
       set_fig_font(fig_sil,  10) + theme(legend.position = "none"),
-      ncol = 3, labels = c("A", "B", "C")
+      ncol = 3, labels = c("a", "b", "c")
     ),
     legend_s4, nrow = 2, rel_heights = c(1, 0.15)
   ),
@@ -209,30 +179,11 @@ ggsave(
 )
 message("Saved si_fig_nmf_diagnostics_tcgacptac.pdf")
 
-# ── SI S5: Cutpoint selection and KM validation (composite) ──────────────────
+# ── SI S5 composite (cutpoint curve + validation KMs): REMOVED ──────────────
+# Assembled from the per-cohort KM PDFs deleted above. Its SI section is gone.
 read_pdf_grob <- function(path) {
   cowplot::ggdraw() + cowplot::draw_image(magick::image_read(path, density = 300))
 }
-ggsave(
-  file.path(FIGURE_DIR, sprintf("si_fig_cutpoint_km_%s.pdf", bo_label)),
-  cowplot::plot_grid(
-    cowplot::plot_grid(
-      read_pdf_grob(file.path(FIGURE_DIR, sprintf("cutpoint_curve_logrank_%s.pdf", bo_label))),
-      read_pdf_grob(file.path(FIGURE_DIR,  sprintf("km_val_pooled_logrank_%s.pdf", bo_label))),
-      ncol = 2, labels = c("A", "B"), label_size = 14),
-    cowplot::plot_grid(
-      read_pdf_grob(file.path(FIGURE_DIR, sprintf("km_val_Dijk_logrank_%s.pdf", bo_label))),
-      read_pdf_grob(file.path(FIGURE_DIR, sprintf("km_val_Moffitt_GEO_array_logrank_%s.pdf", bo_label))),
-      ncol = 2, labels = c("C", "D"), label_size = 14),
-    cowplot::plot_grid(
-      read_pdf_grob(file.path(FIGURE_DIR, sprintf("km_val_PACA_AU_logrank_%s.pdf", bo_label))),
-      read_pdf_grob(file.path(FIGURE_DIR, sprintf("km_val_Puleo_array_logrank_%s.pdf", bo_label))),
-      ncol = 2, labels = c("E", "F"), label_size = 14),
-    nrow = 3, rel_heights = c(1, 1, 1)
-  ),
-  width = 10, height = 11
-)
-message(sprintf("Saved si_fig_cutpoint_km_%s.pdf", bo_label))
 
 # ── SI S6: Subtype overlap composite ─────────────────────────────────────────
 img_so_desurv <- magick::image_read(
@@ -277,18 +228,15 @@ ggsave(
 )
 message(sprintf("Saved si_fig_nmf_k7_heatmap_%s.pdf", bo_label))
 
-# ── SI S10: Variance vs survival at k=5 ──────────────────────────────────────
+# ── SI S10: Reconstruction vs survival at k=5 (Shapley share, issue #7) ──────
 fit_std_elbowk  <- load_precomputed("fit_std_elbowk_tcgacptac")
 tar_data_elbowk <- load_precomputed("tar_data_filtered_elbowk_tcgacptac")
 
-df_varsurvk5 <- build_variance_survival_df(
-  X        = tar_data_elbowk$ex,
-  scores   = fit_std_elbowk$W,
-  loadings = fit_std_elbowk$H,
-  time     = tar_data_elbowk$sampInfo$time,
-  event    = tar_data_elbowk$sampInfo$event,
-  method   = "NMF"
-) |> dplyr::mutate(factor_label = paste0("N", factor))
+df_varsurvk5 <- build_recon_surv_df(
+  W = fit_std_elbowk$W, H = fit_std_elbowk$H, X = tar_data_elbowk$ex,
+  time = tar_data_elbowk$sampInfo$time,
+  event = tar_data_elbowk$sampInfo$event, method = "NMF")
+df_varsurvk5$factor_label <- paste0("N", df_varsurvk5$factor)
 
 ggsave(
   file.path(FIGURE_DIR, sprintf("si_fig_varsurvival_k5_%s.pdf", bo_label)),
@@ -299,7 +247,7 @@ ggsave(
                               point.padding = 0.3, segment.size = 0.3) +
     ggplot2::scale_x_continuous(labels = scales::percent_format(accuracy = 1)) +
     ggplot2::labs(
-      x = "Conditional variance explained\n(semi-partial R²)",
+      x = "Contribution to reconstruction\n(Shapley share, %)",
       y = expression(atop(Delta ~ "partial log-likelihood", "(full vs. k-1 factor model)"))
     ) +
     ggplot2::theme_classic(base_size = 10),
@@ -345,11 +293,18 @@ if (all(file.exists(cv_summary_path, cv_val_path, cv_alpha_path))) {
     )
   }
 
-  gt           <- ggplot2::ggplotGrob(plots[[1]])
+  # The combined figure is printed at text width from a 10 x 10 in canvas, so
+  # enlarge subtitle, facet strip, axis and legend text to stay legible.
+  big_text <- ggplot2::theme(plot.subtitle = ggplot2::element_text(size = 15),
+                             strip.text = ggplot2::element_text(size = 14),
+                             axis.title = ggplot2::element_text(size = 14),
+                             axis.text = ggplot2::element_text(size = 12),
+                             legend.text = ggplot2::element_text(size = 14))
+  gt           <- ggplot2::ggplotGrob(plots[[1]] + big_text)
   legend_grob  <- gt$grobs[[which(vapply(gt$grobs, `[[`, character(1), "name") == "guide-box")]]
-  plots_no_leg <- lapply(plots, function(p) p + ggplot2::theme(legend.position = "none"))
+  plots_no_leg <- lapply(plots, function(p) p + big_text + ggplot2::theme(legend.position = "none"))
   panel_grid   <- cowplot::plot_grid(plotlist = plots_no_leg, nrow = 2,
-                                     labels = c("A", "B"), label_size = 12)
+                                     labels = c("a", "b"), label_size = 12)
   combined     <- cowplot::plot_grid(panel_grid, legend_grob,
                                      ncol = 1, rel_heights = c(1, 0.05))
   ggplot2::ggsave(file.path(FIGURE_DIR, "cv_cindex_by_k_primary.pdf"),

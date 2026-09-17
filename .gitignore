@@ -8,6 +8,10 @@ Rplots.pdf
 paper/*.log
 paper/*.tex
 paper/*_files/
+paper/*.knit.md
+paper/*.fff
+paper/*.ttt
+/out.pdf
 logs/
 
 # OS
@@ -20,5 +24,34 @@ CLAUDE.md
 CLAUDE.local.md
 .claudeignore
 
-# Internal review docs (kept local; not for public archive)
-docs/
+# Internal review docs (kept local; not for public archive).
+# This repository IS the public reproducibility archive cited in the paper and
+# deposited at Zenodo, so anything tracked here becomes public. Keep out review
+# notes, revision plans, compliance audits, and the cover letter, which names
+# suggested referees and is confidential editorial correspondence.
+# (use docs/* not docs/ : git cannot re-include a file whose parent dir is excluded)
+docs/*
+# Exceptions: reporting deliverables that Nature publishes alongside the paper
+# and that belong in the reproducibility record.
+!docs/reporting_summary_filled.md
+!docs/tripod_checklist.md
+literature/
+
+# Design-handoff snapshots. These are point-in-time COPIES of figures and
+# figure code prepared for an external designer, not sources of truth. They go
+# stale as soon as the pipeline changes (the 2026-07-30 bundle still carries the
+# rank-biserial Fig 2 apparatus reverted in 21c0724, and a pre-truncation
+# compute_hrs), so tracking them creates a second, divergent copy of live code.
+# Regenerate before sending; never commit.
+figures/claude_design_handoff/
+figures/claude_design_handoff.zip
+# Local preview byproducts of code/util_fig2_standalone.R
+figures/standalone_preview/*-1.png
+figures/standalone_preview/fig_treated_context_preview.pdf
+
+# Python bytecode from the prose-pass utilities in code/
+__pycache__/
+
+# DOCX conversion scratch (regenerate with code/util_knit_to_docx.py)
+paper/.docx_media/
+paper/*.docx.md

@@ -1,0 +1,80 @@
+# paper-system manuscript contract (created 2026-09-22 for the frozen-reference transfer run)
+manuscript_id: desurv-nature-cancer
+manuscript_type: applied
+journal_target: Nature Cancer, Technical Report
+source_files:
+- paper/paper.Rmd
+- paper/02_introduction_REVISED.Rmd
+- paper/04_results_REVISED.Rmd
+- paper/05_discussion_REVISED.Rmd
+- paper/03_methods_REVISED.Rmd
+- paper/si_appendix.Rmd
+supplement_files:
+- paper/si_appendix.Rmd
+results_source: results
+guards: scripts/guards.sh
+figures:
+- figures/model_schematic_final.pdf
+- figures/fig2_tcgacptac.pdf
+- figures/fig3_tcgacptac.pdf
+- figures/fig4_tcgacptac.pdf
+- figures/fig_supervised_recovery.pdf
+- figures/fig_treated_context.pdf
+render: make paper
+limits:
+  body_words: 4000
+  body_words_min: null
+  abstract_words: 150
+  references_max: null
+  display_items_max: 8
+  standfirst_required: false
+  standfirst_marker: standfirst
+  note: 'Nature Cancer Technical Report: main text up to 4,000 words excluding abstract, Methods, references
+    and legends; 5-8 display items; references up to 60 is a recommendation (profile soft block)'
+state_store: external
+state_key: desurv-nature-cancer
+section_modes:
+  front: controlled
+  desurv: controlled
+  survival: controlled
+  frozen: controlled
+  d1: controlled
+  exploratory: controlled
+  method: controlled
+  problem: controlled
+  optimization: controlled
+  hyperparameter: controlled
+  consensus: controlled
+  unsupervised: controlled
+  biological: controlled
+  external: controlled
+  simulation: controlled
+  pdac: controlled
+  ethics: controlled
+  treatedcohort: controlled
+  use: controlled
+deferrals: []
+contract:
+  journal_profile:
+    path: docs/journal-profiles/nature-cancer-technical-report.yml
+    version: 1
+    retrieved_at: '2026-09-22'
+    reverified_at: '2026-09-22'
+  article_type: Technical Report
+  audience:
+    readership: Nature Cancer's cross-disciplinary cancer research readership (cancer biologists, clinician-scientists,
+      computational researchers) reading a primary-research Technical Report once; not statisticians,
+      and not readers of the online Methods. Starting value from the journal profile's soft block, pending
+      an owner ruling.
+    assumed_known: []
+    define_on_first_use: []
+  domain_profile: null
+  voice_profile: voice/profile.md
+  thesis: Supervising non-negative matrix factorization with survival changes which gene programs are
+    recovered from bulk PDAC expression, and the programs it recovers (a tumor basal-like program and
+    a stromal program) carry prognostic information that replicates across independent cohorts and beyond
+    established classifiers.
+  intellectual_outcome: 'a new technique, shown to work, with primary data: the method, its validated
+    prognostic programs, and the comparison that separates program recovery from survival prediction'
+  note: Compiled 2026-09-22 for the frozen-reference transfer run without any core change; audience, assumed_known
+    and define_on_first_use await owner rulings on the accessibility table.

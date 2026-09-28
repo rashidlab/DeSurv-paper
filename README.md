@@ -1,4 +1,4 @@
-# DeSurv identifies a replicable tumor-stroma prognostic architecture in pancreatic cancer through survival-supervised matrix factorization
+# DeSurv identifies a prognostic tumor-stroma architecture in pancreatic cancer through survival-supervised matrix factorization
 
 **Replication materials for Young et al. (manuscript under review).**
 
@@ -301,7 +301,7 @@ repository. See `data/README.md` for dataset provenance.
 
 ```bibtex
 @unpublished{young2026desurv,
-  title   = {{DeSurv} identifies a replicable tumor-stroma prognostic architecture in
+  title   = {{DeSurv} identifies a prognostic tumor-stroma architecture in
              pancreatic cancer through survival-supervised matrix factorization},
   author  = {Young, Amber M. and Yurovsky, Alisa and Peng, Xianlu Laura and
              Li, Didong and Yeh, Jen Jen and Rashid, Naim U.},

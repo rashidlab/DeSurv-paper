@@ -20,7 +20,10 @@ figures:
 - figures/fig4_tcgacptac.pdf
 - figures/fig_supervised_recovery.pdf
 - figures/fig_treated_context.pdf
-render: make paper
+render: scripts/guards.sh
+word_count_command: scripts/main_text_words.sh
+main_branch: revision/desurv-step6
+candidate_docx: false
 limits:
   body_words: 4000
   body_words_min: null
@@ -32,7 +35,7 @@ limits:
   note: 'Nature Cancer Technical Report: main text up to 4,000 words excluding abstract, Methods, references
     and legends; 5-8 display items; references up to 60 is a recommendation (profile soft block)'
 state_store: external
-state_key: desurv-nature-cancer
+state_key: desurv-nature-cancer-v2
 section_modes:
   front: controlled
   desurv: controlled

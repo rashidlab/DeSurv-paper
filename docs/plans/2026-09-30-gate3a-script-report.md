@@ -1,63 +1,52 @@
-# Track 3a gate script: report (2026-09-30)
+# Track 3a gate script: report (2026-09-30, revised for the fixed-R amendment)
 
-Written, not run on Longleaf. Nothing committed. Only `analysis/gate/` was created in this worktree.
+This revision implements `docs/plans/2026-09-30-section3-amendment-fixedR.md` (d120e56) on top of the committed script (e4195a2).
+- Nothing is committed.
+- Nothing has run on Longleaf.
+- Only the three files in `analysis/gate/` and this report changed.
+
+The first version's open point (R = 25 cannot be gated because R must be even) is moot. The amendment supersedes it.
 
 ## Files
 
-- `analysis/gate/gate_3a.R`: the probe.
-- `analysis/gate/gate_3a.sbatch`: Longleaf job (general, 1 node, 32 cpus, 64G, 12 h, `r/4.5.0`, paths as briefed; BLAS threads pinned to 1).
-- `analysis/gate/README.md`: what to stage, how to submit, what to read.
+- `analysis/gate/gate_3a.R`: the probe. Rewritten around the fixed-R rule. The R ladder, the 2R rule and `GATE_R_VALUES` are removed.
+- `analysis/gate/gate_3a.sbatch`: unchanged resources (general, 32 cpus, 64G, 12 h, `r/4.5.0`, briefed paths). The header comment names the amendment, and the script unsets `GATE_FORCE_BORDERLINE`.
+- `analysis/gate/README.md`: rewritten. It covers staging (the same two rds files), submitting, and reading the output.
 
-## What the script does
+## Implementation of the amendment
 
-1. **Preflight.** Checks `packageVersion("DeSurv") == "1.1.0"` and that `cox_stats_cpp` exists. Then it reads the env vars, refuses any `GATE_OUT_DIR` inside a `results/` directory or inside `GATE_DATA_DIR`, and writes `sessionInfo.txt`.
-2. **Inputs.** Reads only `tar_data_filtered_tcgacptac.rds` and `tar_params_best_tcgacptac.rds` and records their md5 sums.
-   - Hyperparameters: lambdaW and lambdaH default to 0 (code/04:55-61). ntop = 270.
-   - Fit settings: the code/04 full-mode ones: tol 1e-7, tol_init 1e-5, maxit = imaxit = 4000, ninit 1.
-3. **Gate bank.** Seeds 1,000,001-1,000,400, fitted in order with the exact call `desurv_consensus_fit` uses.
-   - Runs are saved in atomic chunks of 50 to `runs/`, and a resubmitted job loads finished chunks instead of refitting them.
-   - A worker crash is retried once, sequentially.
-   - A genuinely failed seed stops the job and writes `bank_failures.txt`. No run is dropped.
-   - The `data` element (a copy of X, about 4 MB) is removed from each stored fit. Neither estimator reads it.
-4. **Consensus fits.** `desurv_consensus_fit(run_fits = prefix)` at R = 25, 50, 100, 200, 400. Each object is saved.
-5. **Gate.** `desurv_consensus_gate` on R = 50, 100, 200, 400 (see Blocker 1), with split_seed 20260930, 10 splits and the package-default thresholds.
-6. **Reference.** The code/04 recipe on the three 100-seed sets:
-   - `run_seed_fits` semantics: failed fits are dropped and the count is recorded.
-   - `desurv_consensus_seed` with ntop and `min_frequency = ceil(0.3 n)`.
-   - One final `desurv_fit`.
-   - Pairwise W correlations of the three endpoints, with factors aligned by `DeSurv:::.dc_align` (Hungarian on Pearson r), reported as Pearson and Spearman.
-7. **Outputs.** `gate3a_results.rds` (everything), `gate.rds`, `consensus_fits.rds` and `gate3a_summary.txt`. The summary gives, per R:
-   - pass/fail;
-   - per-factor median and p05 r;
-   - mode_pass;
-   - occupancy;
-   - tightness;
-   - n_outliers;
-   - beta and training C agreement between halves.
+- **Stage R = 50.** Fits only seeds 1,000,001-1,000,200, in checkpointed chunks of 50. Each chunk is one ensemble block.
+  - One `desurv_consensus_fit(run_fits = block)` per ensemble E1-E4, run in parallel.
+  - For each of the 6 pairs: Hungarian alignment (`DeSurv:::.dc_align`, the estimator's own rule) and per-factor Pearson r.
+  - Factor identity across pairs comes from mapping each ensemble to E1. Each pair's partner factor comes from that pair's own Hungarian alignment, as the amendment says. The column `consistent_with_E1_map` flags any disagreement between the two alignments.
+- **Verdict**, in this order:
+  1. Any ensemble fit error, or any `mode_pass` FALSE: FAIL, with the reason.
+  2. Otherwise, per-factor median >= 0.98 and min >= 0.95: PASS.
+  3. Otherwise, all medians >= 0.95: BORDERLINE.
+  4. Otherwise: FAIL.
+- **Stage R = 100.** On BORDERLINE the same job fits seeds 1,000,201-1,000,600 (4 blocks of 100) and applies the same PASS rule. Anything but PASS is a FAIL.
+- **Failed constituent runs.** A failed run is not dropped and does not stop the job. Its ensemble is recorded as a fit error, which makes the stage FAIL, and the seeds go to `bank_failures_R<R>.txt`.
+- **Descriptive outputs**, never used for the verdict:
+  - `desurv_consensus_gate` half-vs-half within each ensemble (split seed 20260930, 10 splits);
+  - beta, training C and top-gene overlap (ntop 270) for each pair;
+  - occupancy, tightness, n_members, n_outliers and competing-mode medoid r for each ensemble;
+  - the code/04 reference on 1,100,001-300 (pairwise Pearson, Spearman and top-gene overlap).
+- **Kept from the first version:** preflight, sessionInfo, input md5 sums, the guard against writing under `results/`, the code/04 fit settings (tol 1e-7, tol_init 1e-5, maxit 4000) and training data only.
 
-   It also includes the reference correlations.
+## Local dry run (correctness only; Track 1 library, paper-clean results read-only, 4 cores)
 
-## Local dry run (correctness only)
+1. **`GATE_DRY=TRUE`** (4 ensembles of 6 runs, 2 half-splits, one 4-seed reference set).
+   - Exit 0, 0.6 min.
+   - Verdict: FAIL at R = 6 (competing mode in all 4). At this size that is expected and not a result.
+   - The pair table, per-ensemble lines and reference all printed.
+2. **`GATE_FORCE_BORDERLINE=TRUE` without `GATE_DRY`.** Refused at startup, as intended.
+3. **`GATE_DRY=TRUE GATE_FORCE_BORDERLINE=TRUE`**, run in the same output directory.
+   - All 5 existing checkpoints were loaded.
+   - The stage-1 pair table and ensemble W were identical to run 1.
+   - The second stage fitted only the 48 new seeds (1,000,025-072).
+   - The verdict line is labelled `[DRY RUN, borderline FORCED; not a gate result]`.
+4. `git status results/` in paper-clean is clean.
 
-Run with `GATE_DRY=TRUE` on 4 cores, using the Track 1 library and the paper-clean `results/` read-only.
-- It covered 12 bank seeds, R 4 and 6, 2 splits and one 4-seed reference set.
-- Exit 0 in 0.7 min. Each fit took about 7 s per core.
-- A second invocation loaded every checkpoint and reproduced the gate, the consensus W and the reference W identically.
-- `git status results/` in paper-clean is clean.
+## Not exercised by the dry run
 
-At the full size, the whole job should take well under 1 h on 32 cores.
-
-The dry-run numbers are meaningless: at R ≤ 6 every factor fails and one half emptied a family. They show that the error path is recorded as a FAIL, per clarification 4.
-
-## Blocker (needs an owner ruling before submission)
-
-1. **R = 25 cannot be gated.** Section 2 lists R = 25, but `desurv_consensus_gate` requires even R, and section 9 defines halves as "the first and second R/2".
-   - What I did: the script gates 50/100/200/400 and fits R = 25 only as a descriptive consensus.
-   - Options for the owner: accept this, substitute 24 or 26 (`GATE_R_VALUES=24,50,100,200,400`, no code change), or allow unequal halves (an API change).
-   - It matters only if R = 25 would have been the smallest passing R.
-
-## Minor observations (no action taken)
-
-- When a split errors, the gate's per-factor median is NA (it has no `na.rm`), while p05 uses `na.rm = TRUE`. That R already fails, so the gate outcome is unaffected. Only the reported median is uninformative.
-- In the dry run the constituent fits converged in a median of 37 recorded iterations at tol 1e-7, as the code/04 recipe does.
-- The reference recipe runs under 1.1.0, whose top-gene tie-break (FP15) differs from 1.0.1 only on exact ties at ntop.
+At dry-run sizes every ensemble has a competing mode. So the numeric PASS and BORDERLINE branches (the threshold comparisons) were reached only through the forced flag, not through real numbers. The logic is short and inline (`run_stage`, verdict block). A one-line code read is the cheapest check before submission.

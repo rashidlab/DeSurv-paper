@@ -93,3 +93,29 @@ through paper-system transactions; release gate and owner read afterwards.
 2. The section 4 claim rule (9/10 ordinary; 5-8/10 sensitivity-dependent with frequency; <5/10 removed).
 3. Keep the deterministic top-gene tie-break (section 1)?
 4. Longleaf compute budget; the BO seed-fits-per-fold count if the benchmark shows 100 is impractical.
+
+## 8. APPROVED (2026-09-30)
+
+Owner (verbatim): "Approve Rev 3. Approve the 9/10 / 5-8/10 / <5/10 claims rule with frequencies reported in
+the sensitivity analysis. Keep the deterministic top-gene tie-break. Benchmark NINIT_FULL=100 and use 100 unless
+measured runtime makes it genuinely impractical; no smaller count is approved prospectively yet."
+
+Clarification of the section 4 rule (owner): a claim meeting 9/10 can remain an ordinary finding in the main
+text, but its full sensitivity frequency is reported in the sensitivity results/SI. Claims meeting 5-8/10 must
+explicitly be described as solution-sensitive; claims below 5/10 are not asserted. The operational definition of
+each claim (exact test, CI or comparison criterion) is frozen in the claims inventory before any rerun. No
+intervals around the 9/10 cutoff; these are transparent sensitivity categories, not inferential thresholds.
+
+BO seed fits per fold: 100 (NINIT_FULL). If the benchmark shows 100 is genuinely impractical, the measured
+runtime goes to the owner before any change. The primary fit (seeds 1..NINIT_FULL) is frozen before the ten
+sensitivity reruns and is never replaced by a rerun. Methodological design is CLOSED.
+
+Execution order:
+1. Package: new branch from 72d8495 (tie fix) + the Track 2 correctness commits, re-pointed to the "reported"
+   estimator (code/04 recipe per fold); deterministic top-gene tie-break; tests (incl. 8, 9); install on Longleaf.
+2. Paper repo: section 5 pre-run fixes; claims inventory committed (before step 6).
+3. Benchmark a few BO evaluations at NINIT_FULL = 100 on Longleaf; report runtime.
+4. BO with 3 repeated CV partitions -> OWNER STOP (k, hyperparameters, runner-up, empirical SEs).
+5. Primary fit + full downstream rerun (staged); owner accepts before results/ is replaced.
+6. Ten sensitivity reruns; claims scored against the frozen inventory.
+7. Numbers diff and text transactions; release gate.

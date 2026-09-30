@@ -108,7 +108,7 @@ likelihood $\ell(W,\beta)$ is
   \right)
 \right].
 \end{equation}
-The inner sum runs over the risk set $\{j : y_j \ge y_i\}$ of subjects still at risk at the observed time $y_i$; tied event times are handled by the Breslow approximation in DeSurv's own Coxnet-style coordinate-descent routine for the $\beta$ update (below).
+The inner sum runs over the risk set $\{j : y_j \ge y_i\}$ of subjects still at risk at the observed time $y_i$; tied event times are handled by the Breslow approximation in the evaluated log-partial likelihood; the derivatives used by the $W$ proposal and by DeSurv's own Coxnet-style coordinate-descent routine for the $\beta$ update (below) accumulate tied events in data order, so within a tie group they omit the later tied events for all but the last subject.
 Hyperparameters satisfy $\alpha \in [0,1)$,
 $\lambda_H \ge 0$, $\lambda \ge 0$, and $\xi \in [0,1]$.
 The constants $1/(2\lVert X \rVert_F^2)$, $\lambda_H/(2nk)$ and $2/n_{\text{event}}$ normalize the component losses, the reconstruction, loadings-penalty and survival terms in that order, before $\alpha$ sets their relative contribution. The elastic-net mixing parameter $\xi$ is the argument \texttt{nu} in the DeSurv package. The implementation also carries an optional ridge penalty on $W$, $\lambda_W \lVert W \rVert_F^2/(2pk)$, held at $\lambda_W = `r read_result("tar_fit_desurv_tcgacptac")$hyper$lambdaW`$ in every reported fit and pinned to the same value throughout the Bayesian-optimization search`r stopifnot(read_result("desurv_bo_results_tcgacptac")$runs[[1]]$fixed$lambdaW_grid == 0)`; it is omitted from the display above.
@@ -125,7 +125,7 @@ Optimization proceeds by block coordinate descent (BCD; Algorithm \ref{alg:desur
 = 1 - \frac{\langle \mathrm{vec}\,A^{(t)},\, \mathrm{vec}\,A^{(t+1)}\rangle}
            {\lVert A^{(t)} \rVert_F \, \lVert A^{(t+1)} \rVert_F},
 \]
-clipped to $[0,2]$, so the criterion measures the change in direction of the whole iterate and is invariant to a common rescaling of it. Both quantities must fall below $tol$ in the same iteration. The objective value is recorded once per outer iteration, after the $\beta$ update, and that recorded series ends with the last outer iteration and does not include the post-loop $\beta$ refit, whose objective is stored separately.
+clipped to $[0,2]$, so the criterion measures the change in direction of the whole iterate and is invariant to a common rescaling of it. Both quantities must fall below $tol$ in the same iteration. A rejected $W$ step (Algorithm \ref{alg:backtrack}) leaves $W$ unchanged with cosine change zero, so the rule can also be met by $H$ converging with $W$ fixed, which is how the reported consensus fit terminated.`r stopifnot(tail(read_result("tar_fit_desurv_tcgacptac")$Wlossit, 1) < 1e-12)` The objective value is recorded once per outer iteration, after the $\beta$ update, and that recorded series ends with the last outer iteration and does not include the post-loop $\beta$ refit, whose objective is stored separately.
 
 <!-- obj: front.p8.b27b -->
 \begin{algorithm}[htbp]
@@ -135,8 +135,8 @@ clipped to $[0,2]$, so the criterion measures the change in direction of the who
         \Require $X \in \mathbb{R}_{\geq 0}^{p \times n}$, survival times $y \in \mathbb{R}^n_{> 0}$, event indicators $\delta \in \{0,1\}^{n}$, tolerance $tol$, maximum iterations $maxit$, supervision parameter $\alpha$, rank $k$, penalties $\lambda_H$, $\lambda$, and $\xi$
         \Ensure Fitted DeSurv parameters $(W,H,\beta)$
 
-        \State Initialize $W^{(0)}, H^{(0)}$ with positive entries (e.g., $W^{(0)},H^{(0)} \sim \mathrm{Uniform}(0,\max X)$)
-        \State Initialize $\beta^{(0)} = \mathbf{0}$ (the value used in all reported fits)
+        \State Initialize $W^{(0)}, H^{(0)}$ with nonnegative entries (single-run fits: $\mathrm{Uniform}(0,\max X)$; final model: consensus $W^{(0)}$ with NNLS $H^{(0)}$, Section \ref{sec:consensus-init}), then scale the columns of $W^{(0)}$ to unit norm and the rows of $H^{(0)}$ inversely
+        \State Initialize $\beta^{(0)} = \mathbf{0}$ (the value used for the final model)
         \State $eps_W = \infty$, $eps_H = \infty$, $t = 0$
         \While{($eps_W > tol$ \textbf{or} $eps_H > tol$) \textbf{and} $t < maxit$}
             \State \textbf{(H-update)}
@@ -149,7 +149,7 @@ clipped to $[0,2]$, so the criterion measures the change in direction of the who
             \State \textbf{($\beta$-update)}
             \State \hspace{0.5cm} Update $b^{(t+1)}$ by cyclic coordinate descent on the centered and
             \State \hspace{0.5cm} standardized scores (Eq. \ref{eqn:beta_update}), initialized from the
-            \State \hspace{0.5cm} current raw coefficients read through the current $D_Z$, holding
+            \State \hspace{0.5cm} current raw coefficients (used as starting $b$ without conversion by $D_Z$), holding
             \State \hspace{0.5cm} $W^{(t+1)}$ and $H^{(t+1)}$ fixed, stopping when the largest scaled
             \State \hspace{0.5cm} coefficient change falls below $10^{-6}$ or after 500 passes, and
             \State \hspace{0.5cm} accepting the proposal only if it does not increase the penalized
@@ -185,7 +185,7 @@ H \leftarrow
 where $\odot$ denotes elementwise multiplication, all divisions are
 elementwise, and $\varepsilon_H > 0$ is a small floor to prevent entries from
 becoming exactly zero. This update is equivalent to a majorization–minimization
-step and guarantees a nonincreasing reconstruction term conditional on $W$
+step and, apart from the $\varepsilon_H$ floor, does not increase the reconstruction term (with its $\lambda_H$ penalty) conditional on $W$
 [@seung2001algorithms; @pascualmontano2006nonsmooth]. The $\varepsilon_H$-floor
 ensures that iterates remain in the interior of the nonnegative orthant, which
 keeps the multiplicative $H$-update numerically well-defined.
@@ -207,7 +207,7 @@ G_\ell(W,\beta)
 =
 \frac{2}{n_{\mathrm{event}}}\nabla_W \ell(W,\beta)
 \]
-denote the scaled log-partial-likelihood gradient, where $\nabla_W \ell(W,\beta)$ is the gradient of the Cox log-partial likelihood with respect to $W$. $G_\ell$ is not the gradient of the penalized survival component $\mathcal{L}_{\mathrm{Cox}}$ of Model details, whose penalty depends on $W$ through $D_Z$. A closed-form expression for $\nabla_W \ell$ is
+denote the scaled log-partial-likelihood gradient, where $\nabla_W \ell(W,\beta)$ is the gradient of the Cox log-partial likelihood with respect to $W$. $G_\ell$ is not the gradient of the penalized survival component $\mathcal{L}_{\mathrm{Cox}}$ of main-text Equation 1, whose penalty depends on $W$ through $D_Z$. A closed-form expression for $\nabla_W \ell$ is
 \begin{equation}
 \nabla_W \ell(W,\beta)
 =
@@ -243,7 +243,7 @@ $\zeta^{(t)}$ to avoid extreme values:
 $\zeta^{(t)} \leftarrow \min(\zeta^{(t)}, \zeta_{\max})$
 with $\zeta_{\max} = 10^6$ in all experiments; below we write $\zeta$ for
 $\zeta^{(t)}$ where the iteration index is not needed. The proposal rescales the
-weighted reconstruction and survival gradients using this norm-based factor,
+weighted survival gradient by this norm-based factor, leaving the reconstruction terms unscaled,
 subject to its numerical stabilizer $\varepsilon_\zeta$ and the cap
 $\zeta_{\max}$, before the additional factor $\alpha$ below controls the relative
 Cox contribution. Because
@@ -296,17 +296,17 @@ W^{(t+1)}
   \varepsilon_W
 \right),
 \end{equation}
-with a small floor $\varepsilon_W > 0$. When $\alpha=0$, this reduces
-to the standard multiplicative update for NMF [@seung2001algorithms];
+with a small floor $\varepsilon_W > 0$. When $\alpha=0$, $R^{(t)}$ reduces
+to the factor of the standard multiplicative update for NMF [@seung2001algorithms];
 for $\alpha>0$, the Cox gradient perturbs the update in a direction that
-decreases the supervised loss.
+increases the log-partial likelihood $\ell$ to first order.
 
 <!-- obj: front.p15.6562 -->
 The proposal uses the reconstruction and Cox log-partial-likelihood derivatives
 only. It does not differentiate the $W$-dependent penalty on the
 standardized-score coefficients $b = D_Z\beta$, so it is not the gradient of the
 full objective $\mathcal{L}$, and candidate acceptance is instead evaluated using
-the full objective.
+the full objective. Because the survival derivative enters the proposal with weight $\alpha^2\zeta$ rather than $\alpha$, a fixed point of the proposal ($R^{(t)} = 1$ on the entries above $\varepsilon_W$) is not in general a stationary point of $\mathcal{L}$, even setting the $D_Z$ penalty aside.
 
 <!-- obj: front.p16.be30 -->
 Because the combined multiplicative step does not, by itself, guarantee a
@@ -321,9 +321,9 @@ line search.
         \Require $W$ at the previous iteration $t$, $W^{(t)}$; the multiplicative update term at the current iteration $R^{(t)}$, the max number of backtracking updates $max\_bt$, the initial step $s_0 \in (0,1]$, the backtracking factor $\gamma \in (0,1)$
         \Ensure $W^{(t+1)}$
         \State $s = s_0$
-        \State b = 1
+        \State $m = 0$
         \State $flag\_accept = FALSE$
-        \While{$b \leq max\_bt$}
+        \While{$m \leq max\_bt$}
             \State $W^{(t+1)}_{cand} = \max\!\left( W^{(t)} \odot [(1-s) + s R^{(t)}],\ \varepsilon_W \right)$
             \State \textbf{(Column normalization)}
             \State \hspace{0.5cm} Compute $D = \mathrm{diag}\!\big(\lVert W^{(t+1)}_{(:,1)cand}\rVert_2,\dots,\lVert W^{(t+1)}_{(:,k)cand}\rVert_2\big)$
@@ -336,7 +336,7 @@ line search.
               \State break
             \EndIf
             \State $s = s \gamma$
-            \State $b = b + 1$
+            \State $m = m + 1$
         \EndWhile
         \If{$flag\_accept = FALSE$}
             \State $W^{(t+1)}=W^{(t)}$
@@ -393,22 +393,21 @@ closed form
   S\!\left(
     \dfrac{1}{n_{\mathrm{event}}}
     \sum_{i=1}^n w(\tilde{\eta})_i
-    z_{i,r}
+    \tilde{z}_{i,r}
     \left[
-      v(\tilde{\eta})_i - \sum_{j \ne r} z_{i,j} b_j
+      v(\tilde{\eta})_i - \sum_{j \ne r} \tilde{z}_{i,j} b_j
     \right],
     \lambda \xi
   \right)
 }{
-  \frac{1}{n_{\mathrm{event}}} \sum_{i=1}^n w(\tilde{\eta})_i z_{i,r}^2 + \lambda(1-\xi)
+  \frac{1}{n_{\mathrm{event}}} \sum_{i=1}^n w(\tilde{\eta})_i \tilde{z}_{i,r}^2 + \lambda(1-\xi)
 },
 \end{equation}
 where $S(a,\tau) = \mathrm{sign}(a)\max(|a|-\tau,0)$ is the soft-thresholding
 operator, $w(\tilde{\eta})_i$ and $v(\tilde{\eta})_i$ are the standard local
 quadratic-approximation weight and working response for sample $i$ in the Cox
 log-partial likelihood [@simon2011regularization],
-and $z_{i,r}$ denotes the standardized score of factor $r$ in sample $i$, the
-$r$th entry of $\tilde{z}_i$. After the sweeps, the raw-score coefficients are
+and $\tilde{z}_{i,r}$ is the $r$th entry of $\tilde{z}_i$. After the sweeps, the raw-score coefficients are
 recovered as $\beta = D_Z^{-1} b$ on the retained rows.
 
 <!-- obj: front.p21.1c56 -->
@@ -419,7 +418,7 @@ $10^{-12}$ are dropped and assigned coefficient zero, the sweeps estimate $b$,
 and the estimates are divided back by the same standard deviations to give the
 reported $\beta = D_Z^{-1} b$ on the retained rows. Each update is initialized
 from the current raw coefficients, taken after the $W$-normalization step and
-read through the current $D_Z$. Centering the scores changes the linear predictor
+used as starting values of $b$ without conversion by $D_Z$. Centering the scores changes the linear predictor
 by a common additive constant, which cancels from the Cox partial likelihood.
 Given that parameterization, the implemented update departs from an exact
 conditional minimization of $\mathcal{L}$ in two ways, which we state explicitly

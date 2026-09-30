@@ -21,6 +21,7 @@
 # Output: figures/standalone_preview/fig3_full.pdf
 # ---------------------------------------------------------------------------
 
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({
   library(ggplot2); library(cowplot); library(survminer)
   library(survival); library(dplyr); library(gtable)
@@ -35,15 +36,15 @@ if (has_ggtext) suppressMessages({
   library(ggtext)
 })
 
-out_dir <- "figures/standalone_preview"
+out_dir <- fig_path("standalone_preview")
 dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
 
 # --- inputs -----------------------------------------------------------------
-tar_fit_desurv    <- readRDS("results/tar_fit_desurv_tcgacptac.rds")
-fit_std_desurvk   <- readRDS("results/fit_std_desurvk_tcgacptac.rds")
-data_val_filtered <- readRDS("results/data_val_filtered_tcgacptac.rds")
-km                <- readRDS("results/fig_median_survival_desurv_tcgacptac.rds")
-axd               <- readRDS("results/desurv_vs_supervised_tuned.rds")$axis_decomposition
+tar_fit_desurv    <- readRDS(res_path("tar_fit_desurv_tcgacptac.rds"))
+fit_std_desurvk   <- readRDS(res_path("fit_std_desurvk_tcgacptac.rds"))
+data_val_filtered <- readRDS(res_path("data_val_filtered_tcgacptac.rds"))
+km                <- readRDS(res_path("fig_median_survival_desurv_tcgacptac.rds"))
+axd               <- readRDS(res_path("desurv_vs_supervised_tuned.rds"))$axis_decomposition
 
 # --- compute_hrs: frozen-LP per-factor Cox HR per cohort (DeSurv-free) -------
 # (verbatim logic from R/figure_plot_helpers.R:303)

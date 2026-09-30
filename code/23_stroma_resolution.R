@@ -24,13 +24,12 @@
 # In-repo only; no new data. Run from the repository root.
 # ---------------------------------------------------------------------------
 
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({ library(purrr) })
 source("paper/load_precomputed.R")
 source("R/get_top_genes.R")
 
-REF <- "data/derv/cmbSubtypes_formatted.RData"
-if (!file.exists(REF)) REF <- "../DeSurv-paper/data/derv/cmbSubtypes_formatted.RData"
-if (!file.exists(REF)) stop("reference signature file not found: cmbSubtypes_formatted.RData")
+REF <- cmb_subtypes_path()   # R/paths.R: DESURV_CMBSUBTYPES, errors if missing
 load(REF)   # provides `top_genes`
 
 ## Assemble reference signatures with the SAME renaming the figure helper uses
@@ -105,7 +104,7 @@ res <- list(
                "separating restCAF from proCAF; only the activated/normal axis",
                "is recovered, and comparably by all methods.")
 )
-saveRDS(res, "results/stroma_resolution_stats.rds")
+saveRDS(res, res_path("stroma_resolution_stats.rds"))
 
 cat("\n=== TOP-GENE view: signature genes among each factor's 50 defining genes ===\n")
 tn <- res$top_n; colnames(tn) <- names(FITS)

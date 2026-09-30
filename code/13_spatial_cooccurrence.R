@@ -37,9 +37,9 @@
 
 suppressMessages({ library(Matrix) })
 set.seed(1)
-ROOT  <- "/home/naimrashid/Downloads/DeSurv-paper-clean"
+ROOT  <- getwd()
 STDIR <- "/tmp/unc_st"
-setwd(ROOT)
+stopifnot(file.exists("code/00_helpers.R"))  # run from the repo root; never setwd into another checkout
 
 ## --- trained fit + top-270 basis (identical convention to code/11) -------------
 fit <- readRDS(file.path("results","tar_fit_desurv_tcgacptac.rds"))

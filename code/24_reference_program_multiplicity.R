@@ -76,14 +76,7 @@ TOP_N         <- 50    # top-50-genes-per-factor rule (unchanged; enforced insid
 
 # ── Reference-program universe (same file/loader as code/09a_figures.R and
 #    code/23_stroma_resolution.R) ─────────────────────────────────────────
-top_genes_path <- "data/derv/cmbSubtypes_formatted.RData"
-if (!file.exists(top_genes_path)) {
-  top_genes_path <- "../DeSurv-paper/data/derv/cmbSubtypes_formatted.RData"
-}
-if (!file.exists(top_genes_path)) {
-  stop("Reference gene list not found. Copy data/derv/cmbSubtypes_formatted.RData ",
-       "from DeSurv-paper or set the path manually.")
-}
+top_genes_path <- cmb_subtypes_path()   # R/paths.R: DESURV_CMBSUBTYPES, errors if missing
 load(top_genes_path)  # loads: top_genes, colors, subtypeList, etc.
 
 # ── Cached model fits / grids (read-only; no recomputation) ──────────────

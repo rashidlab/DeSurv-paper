@@ -62,6 +62,7 @@
 # Output: results/validation_heterogeneity_ci.rds  (read by the manuscript)
 # ---------------------------------------------------------------------------
 
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages(library(survival))
 source("paper/load_precomputed.R")   # read_result/load_result + R/paca_dedup.R
 
@@ -315,7 +316,7 @@ res <- list(
               score = "entry$risk_score from results/val_latent_desurv_tcgacptac.rds (frozen DeSurv linear predictor)",
               n_boot_ok = n_boot_ok))
 
-saveRDS(res, "results/validation_heterogeneity_ci.rds")
+saveRDS(res, res_path("validation_heterogeneity_ci.rds"))
 
 ## ---- 10. console report ---------------------------------------------------
 cat("\n== de-duplicated validation set ==\n")

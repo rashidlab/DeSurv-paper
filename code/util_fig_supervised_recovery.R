@@ -9,11 +9,12 @@
 # bar value labels (they collided at ylim = 1), and panel letters are lowercase
 # per Nature figure style.
 
-res <- readRDS(file.path("results", "supervised_recovery_stats.rds"))
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
+res <- readRDS(res_path("supervised_recovery_stats.rds"))
 tab <- res$table
 sc  <- res$scores
 
-pdf("figures/fig_supervised_recovery.pdf", width = 9, height = 4.2)
+pdf(fig_path("fig_supervised_recovery.pdf"), width = 9, height = 4.2)
 par(mfrow = c(1, 2), mar = c(7, 4.5, 3.6, 1.2), mgp = c(2.5, 0.7, 0))
 # a: |cor with D1| per method
 cols <- ifelse(tab$supervised, "#1B7837", "#999999")

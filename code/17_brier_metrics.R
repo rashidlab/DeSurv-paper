@@ -24,10 +24,11 @@
 # score against that cohort's own follow-up.
 # ---------------------------------------------------------------------------
 
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({ library(survival); library(riskRegression); library(prodlim) })
 set.seed(1)
 
-val <- readRDS("results/val_latent_desurv_tcgacptac.rds")
+val <- readRDS(res_path("val_latent_desurv_tcgacptac.rds"))
 source("R/paca_dedup.R")   # combined-analysis PACA-AU de-duplication (shared rule)
 
 # Combined analysis: exclude PACA-AU array patients also profiled by RNA-seq, so
@@ -83,7 +84,7 @@ res <- list(per_cohort = tab, pooled = pooled,
             meta = list(n_cohorts = nrow(tab), total_events = sum(tab$events),
                         horizon = "per-cohort 80th percentile of event times",
                         note = "Antolini C = Harrell C for a single PH risk score"))
-saveRDS(res, "results/desurv_brier_stats.rds")
+saveRDS(res, res_path("desurv_brier_stats.rds"))
 
 cat("== per-cohort ==\n"); print(round(tab[, -1], 3), row.names = TRUE)
 cat(sprintf("\n== event-weighted pooled ==\n  C=%.3f  IBS=%.3f  IBS_null=%.3f  IPA=%.3f\n",

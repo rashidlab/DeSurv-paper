@@ -20,12 +20,11 @@ replicate=$(( (SLURM_ARRAY_TASK_ID % 100) + 1 ))
 export DESURV_SIM_SCENARIO=${SCENARIOS[$scenario_idx]}
 export DESURV_SIM_ANALYSIS=${ANALYSES[$analysis_idx]}
 export DESURV_SIM_REPLICATE=$replicate
-export DESURV_NCORES=$SLURM_CPUS_PER_TASK
 
-module purge
-module load r/4.4.0
-
-cd $SLURM_SUBMIT_DIR
+# rev 3 preamble: R 4.5.0, rev 3 library, DeSurv >= 1.2.0, isolated output dirs,
+# DESURV_RECOMPUTE=TRUE, DESURV_NCORES from the allocation. Simulations are rerun in
+# rev 3 only if their hyperparameters come from the BO (owner stop, plan section 5).
+source "${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}/slurm/rev3_env.sh"
 
 echo "=== Simulation task $SLURM_ARRAY_TASK_ID ==="
 echo "Scenario: $DESURV_SIM_SCENARIO  Analysis: $DESURV_SIM_ANALYSIS  Replicate: $DESURV_SIM_REPLICATE"

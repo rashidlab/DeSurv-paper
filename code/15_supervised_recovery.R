@@ -20,15 +20,16 @@
 # In-repo only. D1/D2/D3 scored by the manuscript rank-then-project convention.
 # ---------------------------------------------------------------------------
 
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({ library(survival); library(glmnet) })
 set.seed(1)
 # Run from the repository root (paths below are repo-root-relative), as with the
 # other pipeline scripts. No hardcoded absolute path, for portability across clones/HPC.
 
-dat <- readRDS("results/tar_data_filtered_tcgacptac.rds")
+dat <- readRDS(res_path("tar_data_filtered_tcgacptac.rds"))
 ex  <- dat$ex                                   # genes x samples (1970 x 273)
 si  <- dat$sampInfo
-fit <- readRDS("results/tar_fit_desurv_tcgacptac.rds")
+fit <- readRDS(res_path("tar_fit_desurv_tcgacptac.rds"))
 W   <- fit$W; Wg <- rownames(W)
 source("R/get_top_genes.R")
 PGENES <- unique(unlist(lapply(get_top_genes(W, 270)$top_genes, as.character)))
@@ -119,7 +120,7 @@ res <- list(
   sup_mean_load_cor  = mean(tab$load_cor_D1[tab$supervised]),
   scores = data.frame(D1 = D1, D2 = D2, D3 = D3,
                       PC1 = PC1, SupPCA = SPC1, CoxPLS = PLS1, SparseCox = SCOX))
-saveRDS(res, "results/supervised_recovery_stats.rds")
+saveRDS(res, res_path("supervised_recovery_stats.rds"))
 
 cat("\n================= SUPERVISED-METHOD RECOVERY OF D1 =================\n")
 cat(sprintf("training n=%d (%d events), %d genes\n\n", res$meta$n, res$meta$n_events, res$meta$n_genes))

@@ -34,13 +34,14 @@
 # In-repo only. No new data.
 # ---------------------------------------------------------------------------
 
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 NTOP     <- 270L   # BO-selected signature size, matches tar_params_best$ntop
 N_PAIRS  <- 30L    # restarts sampled in part (B); all C(N_PAIRS,2) pairs are compared
 N_SPLITS <- 20L    # random 50/50 splits for part (C)
 
-seed_obj <- readRDS("results/desurv_seed_fits_tcgacptac.rds")
-ref      <- readRDS("results/tar_fit_desurv_tcgacptac.rds")
-X        <- readRDS("results/tar_data_filtered_tcgacptac.rds")$ex
+seed_obj <- readRDS(res_path("desurv_seed_fits_tcgacptac.rds"))
+ref      <- readRDS(res_path("tar_fit_desurv_tcgacptac.rds"))
+X        <- readRDS(res_path("tar_data_filtered_tcgacptac.rds"))$ex
 
 fits <- seed_obj$fits
 Wref <- ref$W
@@ -190,7 +191,7 @@ program_stability_stats <- list(
                     min = min(C_ari), max = max(C_ari), n = length(C_ari)),
   cindex = c(median = median(ci), min = min(ci), max = max(ci), sd = sd(ci))
 )
-saveRDS(program_stability_stats, "results/program_stability_stats.rds")
+saveRDS(program_stability_stats, res_path("program_stability_stats.rds"))
 
 ## --- report -----------------------------------------------------------------
 

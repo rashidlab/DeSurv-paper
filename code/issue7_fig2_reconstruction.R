@@ -9,9 +9,10 @@
 ##   results/fit_std_desurvk_tcgacptac.rds  (standard NMF fit: $W, $H)
 ##   results/tar_data_filtered_tcgacptac.rds ($ex = genes x samples expression)
 
-f <- readRDS("results/tar_fit_desurv_tcgacptac.rds")   # DeSurv
-s <- readRDS("results/fit_std_desurvk_tcgacptac.rds")   # NMF k=3
-d <- readRDS("results/tar_data_filtered_tcgacptac.rds")
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
+f <- readRDS(res_path("tar_fit_desurv_tcgacptac.rds"))   # DeSurv
+s <- readRDS(res_path("fit_std_desurvk_tcgacptac.rds"))   # NMF k=3
+d <- readRDS(res_path("tar_data_filtered_tcgacptac.rds"))
 
 X     <- as.matrix(d$ex)
 genes <- rownames(X)

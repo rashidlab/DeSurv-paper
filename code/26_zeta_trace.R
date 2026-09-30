@@ -40,9 +40,11 @@
 #   reconstruction  agreement of the reconstructed path with the cached fit
 #   meta
 # ---------------------------------------------------------------------------
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages(library(DeSurv))
 source("paper/load_precomputed.R")
-stopifnot(identical(as.character(packageVersion("DeSurv")), "1.0.1"))
+# Rev 3: the rerun uses DeSurv >= 1.2.0 (feat/reported-estimator); 1.0.1 is the pre-rev-3 build.
+stopifnot("DeSurv >= 1.2.0 required (rev 3)" = packageVersion("DeSurv") >= "1.2.0")
 
 fit  <- read_result("tar_fit_desurv_tcgacptac")
 sf   <- read_result("desurv_seed_fits_tcgacptac")
@@ -129,11 +131,11 @@ res <- list(
   w0 = list(r = unname(diag(cm)), jaccard = jacc, ntop = ntop, aligned_identity = aligned_identity,
             cor_matrix = cm),
   reconstruction = recon,
-  meta = list(package = "DeSurv 1.0.1 (afb00d5)", alpha = alpha, zeta_cap = 1e6,
+  meta = list(package = paste0("DeSurv ", as.character(packageVersion("DeSurv"))), alpha = alpha, zeta_cap = 1e6,
               definition = "zeta = ||(1-alpha) grad_W L_NMF||_F / ||alpha grad_W L_Cox||_F; the W-update numerator adds alpha * min(zeta, 1e6) * alpha grad_W L_Cox",
               trace_convention = "zeta evaluated at (W, H, beta) after each completed iteration, i.e. after that iteration's beta update; iteration 0 is the consensus initialization with beta0 = 0",
               consensus = list(ntop = ntop, min_frequency = min_freq)))
-saveRDS(res, "results/zeta_trace.rds")
+saveRDS(res, res_path("zeta_trace.rds"))
 
 cat(sprintf("zeta: iter1 %.3f -> final %.4f; capped after init: %d of %d iterations; init capped: %s (Cox term norm %.3g)\n",
             trace$zeta[1], z_final[["zeta"]], sum(trace$capped), n_it, res$init$capped, res$init$cox_term_norm))

@@ -1,7 +1,17 @@
-fit_cox_model = function(XtW,df,nfold=5){
+# Rev 3: the CV folds are drawn ONCE from `fold_seed` and reused for every nu, so the
+# nu comparison is on common folds and the result is reproducible (previously
+# cv.glmnet drew new unseeded folds for each nu). The caller's RNG state is restored.
+fit_cox_model = function(XtW,df,nfold=5,fold_seed=20261202L){
   # param grid
   nu_grid = seq(0,1,by=.05)
   
+  # fixed fold assignment, drawn without disturbing the caller's RNG stream
+  had_seed = exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+  if (had_seed) old_seed = get(".Random.seed", envir = globalenv(), inherits = FALSE)
+  set.seed(fold_seed)
+  foldid = sample(rep(seq_len(nfold), length.out = nrow(XtW)))
+  if (had_seed) assign(".Random.seed", old_seed, envir = globalenv()) else
+    rm(".Random.seed", envir = globalenv())
   
   # loop over nu and fit glmnet
   cv = data.frame(matrix(ncol=3,nrow=0))
@@ -11,7 +21,7 @@ fit_cox_model = function(XtW,df,nfold=5){
                       y=Surv(df$time,df$event),
                       family="cox",
                       type.measure = "C",
-                      nfolds = nfold,
+                      foldid = foldid,
                       alpha = nu)
     temp = data.frame(lambda=cvfit$lambda,cvm=cvfit$cvm,cvsd=cvfit$cvsd)
     temp$nu = nu

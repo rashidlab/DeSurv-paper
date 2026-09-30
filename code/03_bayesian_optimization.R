@@ -223,9 +223,13 @@ tar_data_filtered_alpha0 <- cache_or_compute("tar_data_filtered_alpha0_tcgacptac
 message("  Alpha=0 BO: k=", tar_params_best_alpha0$k)
 
 # ── 3. Standard NMF for elbow k selection ────────────────────────────────
+STD_NMF_SEED <- 20261201L   # rev 3: fixed seed for the standard-NMF rank survey (was unseeded)
 fit_std <- cache_or_compute("fit_std_tcgacptac", {
+  # Numeric seed: NMF derives L'Ecuyer RNG streams from it for the nrun runs, so the
+  # result is reproducible in parallel mode too (?NMF::nmf, argument `seed`).
   NMF::nmf(tar_data_filtered$ex, STD_NMF_K_GRID,
            nrun = STD_NMF_NRUN, method = "lee",
+           seed = STD_NMF_SEED,
            .options = paste0("p", STD_NMF_NRUN))
 })
 

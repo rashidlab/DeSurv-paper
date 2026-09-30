@@ -15,12 +15,13 @@
 # In-repo only (val_latent_desurv + data_val sampInfo). No new data.
 # ---------------------------------------------------------------------------
 
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({ library(survival) })
 # Run from the repository root (paths below are repo-root-relative), like the
 # other pipeline scripts. No hardcoded absolute path, for portability.
 
-val  <- readRDS("results/val_latent_desurv_tcgacptac.rds")
-dval <- readRDS("results/data_val_filtered_tcgacptac.rds")
+val  <- readRDS(res_path("val_latent_desurv_tcgacptac.rds"))
+dval <- readRDS(res_path("data_val_filtered_tcgacptac.rds"))
 source("R/paca_dedup.R")   # combined-analysis PACA-AU de-duplication (shared rule)
 
 ## --- assemble pooled per-sample table: D1/D2/D3 + survival + PurIST + DeCAF ---
@@ -129,7 +130,7 @@ res <- list(
                      c_base = unname(summary(mi0)$concordance["C"]),
                      c_with_d1 = unname(si1$concordance["C"]),
                      cell_lr_chisq = lrc$Chisq[2], cell_lr_p = lrc$`Pr(>|Chi|)`[2]))
-saveRDS(res, "results/d1_variance_partition_stats.rds")
+saveRDS(res, res_path("d1_variance_partition_stats.rds"))
 
 fp <- function(p) ifelse(p<1e-4,"< 0.0001",sprintf("%.4f",p))
 cat("\n================= D1 VARIANCE PARTITION =================\n")

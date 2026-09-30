@@ -30,6 +30,7 @@
 # relies on.
 # ---------------------------------------------------------------------------
 
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 N_SPLITS <- as.integer(Sys.getenv("ENDPOINT_SPLITS", "8"))
 NTOP     <- 270L
 
@@ -37,10 +38,10 @@ NTOP     <- 270L
 if (dir.exists(.lib45)) .libPaths(c(.lib45, .libPaths()))
 suppressMessages(library(DeSurv))
 
-seed_obj <- readRDS("results/desurv_seed_fits_tcgacptac.rds")
-ref      <- readRDS("results/tar_fit_desurv_tcgacptac.rds")
-dat      <- readRDS("results/tar_data_filtered_tcgacptac.rds")
-prm      <- readRDS("results/tar_params_best_tcgacptac.rds")
+seed_obj <- readRDS(res_path("desurv_seed_fits_tcgacptac.rds"))
+ref      <- readRDS(res_path("tar_fit_desurv_tcgacptac.rds"))
+dat      <- readRDS(res_path("tar_data_filtered_tcgacptac.rds"))
+prm      <- readRDS(res_path("tar_params_best_tcgacptac.rds"))
 
 fits <- seed_obj$fits
 gn   <- rownames(ref$W)
@@ -155,7 +156,7 @@ consensus_endpoint_stats <- list(
   cindex = c(half_a = median(ci_a, na.rm = TRUE), half_b = median(ci_b, na.rm = TRUE),
              reported = ref$cindex)
 )
-saveRDS(consensus_endpoint_stats, "results/consensus_endpoint_stats.rds")
+saveRDS(consensus_endpoint_stats, res_path("consensus_endpoint_stats.rds"))
 
 pr <- function(tag, m) {
   cat(sprintf("  %-14s", tag))

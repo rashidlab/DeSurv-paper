@@ -735,12 +735,12 @@ retained configuration meets it.
 .pbk <- read_result("tar_params_best_tcgacptac")
 .boh <- read_result("desurv_bo_results_tcgacptac")$history; .boh <- .boh[.boh$status == "ok", ]
 .bo3 <- .boh[round(.boh$k_grid) == .ks$k_selected, ]; .bo3best <- .bo3[which.max(.bo3$mean_cindex), ]
-.cvg <- read.csv("results/cv_grid/cv_grid_summary.csv")
+.cvg <- read.csv(file.path(CV_GRID_CSV_DIR, "cv_grid_summary.csv"))
 .cvg <- .cvg[.cvg$k == .ks$k_selected & !is.na(.cvg$ntop) & .cvg$ntop == as.integer(round(.pbk$ntop)), ]
 .cvg_near <- .cvg[which.min(abs(.cvg$alpha - .pbk$alpha)), ]
 # The rank-by-supervision sensitivity grid has its own one-standard-error
 # threshold, distinct from the Bayesian-optimization one; both are read inline.
-.cvg_all <- read.csv("results/cv_grid/cv_grid_summary.csv")
+.cvg_all <- read.csv(file.path(CV_GRID_CSV_DIR, "cv_grid_summary.csv"))
 .cvg_nt  <- .cvg_all[!is.na(.cvg_all$ntop) & .cvg_all$ntop == as.integer(round(.pbk$ntop)), ]
 .cvg_bk  <- do.call(rbind, lapply(split(.cvg_nt, .cvg_nt$k), function(d) d[which.max(d$mean_cindex), ]))
 .cvg_one_se <- local({
@@ -889,7 +889,7 @@ Supplementary Fig. \ref{fig:fig-si-bo-tuning} illustrates the tuned response sur
 <!-- obj: front.p44.cb4d -->
 ```{r fig-si-bo-tuning, fig.cap="Bayesian-optimization tuning surface for DeSurv in the PDAC training cohort (TCGA + CPTAC). Gaussian-process--predicted mean cross-validated C-index over factorization rank ($k$) and supervision strength ($\\alpha$; $\\alpha = 0$ corresponds to the unsupervised limit). The response surface shows a broad region of high cross-validated performance at intermediate supervision and moderate rank, a second high region at $k \\ge 9$ and $\\alpha \\approx 0.2$--$0.3$, and discrimination degrading toward the unsupervised ($\\alpha = 0$) boundary. The surface is a two-dimensional slice of the fitted five-parameter Gaussian process through the Bayesian-optimization-selected values of the top-gene count, ridge penalty and elastic-net mixing parameter ($n_{\\text{top}}$, $\\lambda$, $\\xi$), not a marginal or profile surface over those hyperparameters.", echo=FALSE, fig.env='figure*', fig.pos='t', out.height= '3.6in', out.width='4.5in', fig.align='center'}
 cowplot::ggdraw() + cowplot::draw_image(
-  magick::image_read("figures/si_fig_bo_tuning_surface_tcgacptac.pdf", density = 300))
+  magick::image_read(paper_fig("si_fig_bo_tuning_surface_tcgacptac.pdf", "figures"), density = 300))
 
 ```
 
@@ -1508,7 +1508,7 @@ standard NMF basis (Table \ref{tab:projection-r2}), and standard NMF at matched 
 
 <!-- obj: front.p102.5c6b -->
 ```{r fig-suprec, echo=FALSE, fig.width = 8, fig.height = 3.6, fig.cap = "Correspondence of supervised scores and the first unsupervised principal component with D1 in the training cohort. (a) Absolute correlation (across training-cohort patients) of each method's leading direction with the DeSurv D1 score, in the training cohort: supervised principal components, Cox partial least squares, and sparse Cox are each strongly correlated with D1 (green), whereas the leading unsupervised principal component is only weakly correlated (grey). (b) Sample-level agreement with D1 for Cox-PLS (supervised, green) versus the first unsupervised principal component (grey). \\label{fig:suprec}", fig.env='figure*', fig.pos='t', out.width='\\textwidth'}
-knitr::include_graphics(file.path("..", "figures", "fig_supervised_recovery.pdf"), error = FALSE)
+knitr::include_graphics(paper_fig("fig_supervised_recovery.pdf", "../figures"), error = FALSE)
 ```
 
 <!-- obj: front.p103.83eb -->
@@ -2002,7 +2002,7 @@ Under the mixed scenario (Fig. \ref{fig:sim-null-mixed}c--f), DeSurv's advantage
 <!-- obj: front.p158.f8c8 -->
 ```{r fig-sim-null-mixed, fig.width = 6.5, fig.height = 7, fig.cap = "DeSurv performance under null and mixed simulation scenarios. (a,b) Null scenario ($\\beta = 0$): both methods yield C-index $\\approx 0.5$ (a) and comparable rank distributions (b), so both methods show no out-of-sample prognostic discrimination under the null; precision is omitted as no true survival genes exist. (c--f) Mixed scenario: survival depends on factor-specific marker genes (50\\%) and shared background genes (50\\%). (c) C-index is modestly higher for DeSurv. (d) Precision by gene-set definition: marker-only precision (150 genes; left facet) substantially favors DeSurv; full 300-gene survival-set precision (right facet) shows a more modest improvement. (e) The matched factor receives a larger fitted Cox coefficient $|\\beta|$ under DeSurv. (f) Selected-rank distributions. DeSurv (blue); NMF (red, $\\alpha = 0$); both Bayesian-optimized. \\label{fig:sim-null-mixed}", fig.env='figure*', fig.pos='t', out.height = "6.5in", out.width='\\textwidth'}
 cowplot::ggdraw() + cowplot::draw_image(
-  magick::image_read("figures/si_fig_sim_null_mixed_tcgacptac.pdf", density = 300))
+  magick::image_read(paper_fig("si_fig_sim_null_mixed_tcgacptac.pdf", "figures"), density = 300))
 ```
 
 
@@ -2024,7 +2024,7 @@ Fig. \ref{fig:fig-cindex-by-k} shows the resulting C-index curves for both train
 # NOTE: DL flagged duplicate legend across panels A and B. The legend is baked
 # into the pre-rendered PDF; consolidating it requires regenerating the source
 # figure in inst/cv_grid_validation_analysis_amber_optimal.R on HPC.
-img <- magick::image_read("figures/cv_cindex_by_k_primary.pdf", density = 300)
+img <- magick::image_read(paper_fig("cv_cindex_by_k_primary.pdf", "figures"), density = 300)
 cowplot::ggdraw() + cowplot::draw_image(img)
 ```
 
@@ -2037,7 +2037,7 @@ Standard unsupervised rank selection criteria (reconstruction residuals, cophene
 <!-- obj: front.p165.a134 -->
 ```{r fig-nmf-diagnostics, fig.width = 6, fig.height = 3.5, fig.cap = "Standard unsupervised NMF rank selection heuristics for the PDAC training cohort (TCGA + CPTAC). (a) Reconstruction residuals as a function of factorization rank $k$. (b) Cophenetic correlation coefficient as a function of $k$. (c) Mean silhouette width of the basis, coefficient and consensus matrices as a function of $k$. These criteria yield inconsistent guidance, illustrating the ambiguity of rank selection under unsupervised criteria; the main text selects rank on cross-validated prognostic performance. \\label{fig:nmf-diagnostics}", fig.env='figure*', fig.pos='t', out.height= "3.5in", out.width='\\textwidth'}
 cowplot::ggdraw() + cowplot::draw_image(
-  magick::image_read("figures/si_fig_nmf_diagnostics_tcgacptac.pdf", density = 300))
+  magick::image_read(paper_fig("si_fig_nmf_diagnostics_tcgacptac.pdf", "figures"), density = 300))
 ```
 
 
@@ -2055,7 +2055,7 @@ At BO-selected $k = 7$ under $\alpha = 0$ (Fig. \ref{fig:fig-nmf-k7-heatmap}), t
 <!-- obj: front.p169.2cdc -->
 ```{r fig-nmf-k7-heatmap, fig.width = 6, fig.height = 5, fig.cap = "Gene-program correspondence for the rank-optimized unsupervised control ($k = 7$, BO-selected rank at $\\alpha = 0$), computed with the same Spearman-correlation analysis and reference programs as main-text Fig.\\ 2a,b (top 50 genes per factor; reference programs with $\rho > 0.2$ for at least one factor are shown). Compared with the matched-rank $k = 3$ solution, the $k = 7$ solution shows broader correspondence to established PDAC programs, with some programs represented by more than one factor. Supplementary Fig.\\ \\ref{fig:fig-rpm} quantifies the accompanying changes in coverage and multiplicity. \\label{fig:fig-nmf-k7-heatmap}", fig.env='figure', fig.pos='t'}
 cowplot::ggdraw() + cowplot::draw_image(
-  magick::image_read("figures/si_fig_nmf_k7_heatmap_tcgacptac.pdf", density = 300))
+  magick::image_read(paper_fig("si_fig_nmf_k7_heatmap_tcgacptac.pdf", "figures"), density = 300))
 ```
 
 <!-- obj: front.p170.18f6 -->
@@ -2103,7 +2103,7 @@ The supervised curve collapses at two ranks: at $k = `r .rpc6$k`$ ($\alpha = `r 
 
 <!-- obj: front.p115.635a -->
 ```{r fig-rpm, fig.width = 6, fig.height = 8, fig.cap = "Reference-program coverage, edges and multiplicity by factorization rank $k$, for the unsupervised ($\\alpha = 0$) and supervised (best $\\alpha$ by cross-validated C-index) curves, computed from the same factor-to-reference-program correspondence analysis as Fig.\\ \\ref{fig:fig-nmf-k7-heatmap} and main-text Fig.\\ 2a,b (top 50 genes per factor, $\rho > 0.2$ threshold, same reference-program universe). Rank-wise points are single fits at fixed $\\lambda$, $\\xi$ and $n_{\\text{top}}$, not the 100-restart consensus fits used elsewhere; markers denote the three final-model anchors (the consensus fits for DeSurv $k = 3$ and the rank-optimized unsupervised control $k = 7$, and the best-of-30-run \\texttt{NMF::nmf} fit at matched rank $k = 3$). \\label{fig:fig-rpm}", fig.env='figure', fig.pos='t', out.width='0.72\\textwidth'}
-knitr::include_graphics(file.path("..", "figures", "fig_reference_program_multiplicity.pdf"), error = FALSE)
+knitr::include_graphics(paper_fig("fig_reference_program_multiplicity.pdf", "../figures"), error = FALSE)
 ```
 
 <!-- obj: front.p116.ad6a -->

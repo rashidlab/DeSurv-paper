@@ -144,15 +144,7 @@ saveRDS(fig_variation_explained, file.path(RESULTS_DIR, "fig_variation_explained
 
 # ── Gene overlap heatmaps ─────────────────────────────────────────────────
 # Reference gene lists from combined subtype data
-top_genes_path <- "data/derv/cmbSubtypes_formatted.RData"
-if (!file.exists(top_genes_path)) {
-  # Fall back to the original DeSurv-paper repo
-  top_genes_path <- "../DeSurv-paper/data/derv/cmbSubtypes_formatted.RData"
-}
-if (!file.exists(top_genes_path)) {
-  stop("Reference gene list not found. Copy data/derv/cmbSubtypes_formatted.RData ",
-       "from DeSurv-paper or set the path manually.")
-}
+top_genes_path <- cmb_subtypes_path()   # R/paths.R: DESURV_CMBSUBTYPES, errors if missing
 load(top_genes_path)  # loads: top_genes, colors, subtypeList, etc.
 
 # Factor labels — only apply when k matches the original run (k=3)
@@ -403,9 +395,9 @@ plot_3d <- plot_grid(
 # Panel E: DeSurv D1 score vs GATA6 RNA-ISH in COMPASS. Raw per-sample points are
 # cached (aggregate-level derived values, no raw expression) in the tracked
 # treated_cohort_stats.rds by code/11 (run out of band on the restricted data).
-# Read from the fixed base "results/" path (where code/11 writes it), NOT
-# RESULTS_DIR, so it resolves under quick/ntop subfolder modes too.
-.g6 <- readRDS(file.path("results", "treated_cohort_stats.rds"))$gata6
+# Read from the base results dir (RESULTS_BASE via res_path(), where code/11
+# writes it), NOT RESULTS_DIR, so it resolves under quick mode too.
+.g6 <- readRDS(res_path("treated_cohort_stats.rds"))$gata6
 plot_3e <- ggplot(.g6$points, aes(x = factor(gata6), y = D1)) +
   geom_boxplot(outlier.shape = NA, width = 0.6, fill = "grey92", linewidth = 0.3) +
   geom_jitter(width = 0.12, height = 0, size = 1.3, alpha = 0.75, colour = desurv_accent) +
@@ -575,7 +567,7 @@ km_legend_grob <- km_legend_gg$grobs[
   sapply(km_legend_gg$grobs, function(x) x$name) == "guide-box"][[1]]
 
 ## Fig 3C: tuned supervised scores vs DeSurv programs (|Pearson r|; axis_decomposition cache)
-.axd <- readRDS("results/desurv_vs_supervised_tuned.rds")$axis_decomposition
+.axd <- readRDS(res_path("desurv_vs_supervised_tuned.rds"))$axis_decomposition
 .hm_df <- data.frame(
   method  = factor(rep(c("Supervised PCA", "Lasso Cox"), each = 3),
                    levels = c("Supervised PCA", "Lasso Cox")),

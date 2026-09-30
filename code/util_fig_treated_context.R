@@ -10,10 +10,11 @@
 # The former Panel B (bulk trial x arm survival forest) was removed; see the
 # rationale block below.
 # ---------------------------------------------------------------------------
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({ library(ggplot2); library(cowplot) })
 
-t   <- readRDS("results/treated_cohort_stats.rds")
-out <- "figures/standalone_preview"; dir.create(out, showWarnings = FALSE, recursive = TRUE)
+t   <- readRDS(res_path("treated_cohort_stats.rds"))
+out <- fig_path("standalone_preview"); dir.create(out, showWarnings = FALSE, recursive = TRUE)
 blue <- "#08519c"
 
 ## --- Panel A: O'Kane per-arm D1 forest + arm-stratified diamond ------------
@@ -79,5 +80,5 @@ pC <- ggplot(long, aes(time, D2, group = pair)) +
 
 ## --- compose: a O'Kane arm-level forest | b Linehan paired pre/post ---------
 fig <- plot_grid(pA, pC, ncol = 2, labels = c("a", "b"), label_size = 12, rel_widths = c(1.2, 0.8))
-ggsave("figures/fig_treated_context.pdf", fig, width = 7.2, height = 3.4)
+ggsave(fig_path("fig_treated_context.pdf"), fig, width = 7.2, height = 3.4)
 cat("Wrote figures/fig_treated_context.pdf (Fig. 4: a OKane arm-stratified D1, b paired D2)\n")

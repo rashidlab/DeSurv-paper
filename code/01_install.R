@@ -1,36 +1,65 @@
 #!/usr/bin/env Rscript
 # code/01_install.R — Install the DeSurv package
 #
-# Installs from GitHub (rashidlab/DeSurv) or from a local checkout if available.
+# Installs from the source named in DESURV_PKG_SOURCE (local dir or GitHub spec); errors if unset.
 # Also verifies required dependencies are available.
 
 message("=== Step 1: Install DeSurv ===")
 
-# Pinned to the rashidlab/DeSurv tag that produced the cached .rds files in
-# results/precomputed/. Reviewers reproducing the manuscript should install
-# this exact version; the rashidlab/DeSurv tip may include post-submission
-# fixes (e.g., RNG seeding) that change numerical results.
-DESURV_REF <- "submission/pnas-2026"   # rashidlab/DeSurv @ afb00d5
+# Rev 3 (2026-09-30): the package source must be given EXPLICITLY. There is no
+# default and no silent fallback. In particular the sibling checkout ../DeSurv
+# (a fork, not the rev 3 package) is never installed.
+#
+#   DESURV_PKG_SOURCE  either a local package directory, e.g.
+#                        DESURV_PKG_SOURCE=~/Downloads/DeSurv-clean   (branch
+#                        feat/reported-estimator, 1f3d3f0, v1.2.0; unpushed)
+#                      or a GitHub spec "owner/repo@ref", e.g.
+#                        DESURV_PKG_SOURCE=rashidlab/DeSurv@<ref>
+#   DESURV_MIN_VERSION minimum acceptable installed version (default "1.2.0")
+#
+# The pre-rev-3 submission build was rashidlab/DeSurv@submission/pnas-2026
+# (afb00d5, v1.0.1); install it only with DESURV_PKG_SOURCE plus
+# DESURV_MIN_VERSION=1.0.1. Slurm jobs do not run this script; they use the
+# Longleaf library /work/users/n/u/nur2/desurv-rerun/lib/r4.5-rev3.
+pkg_source  <- Sys.getenv("DESURV_PKG_SOURCE", "")
+min_version <- Sys.getenv("DESURV_MIN_VERSION", "1.2.0")
+if (!nzchar(pkg_source)) {
+  stop("DESURV_PKG_SOURCE is not set. Set it to a local DeSurv package directory ",
+       "or to a GitHub spec 'owner/repo@ref'. Refusing to guess (no ../DeSurv fallback).",
+       call. = FALSE)
+}
+if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools", repos = "https://cloud.r-project.org")
 
-# Try local install first (for development), then GitHub
-local_path <- file.path("..", "DeSurv")
-if (dir.exists(local_path)) {
-  message("Installing DeSurv from local checkout: ", local_path)
-  message("  NOTE: local checkout is NOT pinned — confirm it is at tag '", DESURV_REF, "'")
-  message("        (rashidlab/DeSurv @ afb00d5) before relying on byte-exact reproduction.")
-  if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools", repos = "https://cloud.r-project.org")
-  devtools::install_local(local_path, upgrade = "never", force = FALSE)
+pkg_dir <- path.expand(pkg_source)
+if (dir.exists(pkg_dir)) {
+  sibling <- file.path("..", "DeSurv")
+  if (dir.exists(sibling) &&
+      identical(normalizePath(pkg_dir), normalizePath(sibling))) {
+    stop("DESURV_PKG_SOURCE points at ../DeSurv, which is not the rev 3 package. ",
+         "Point it at the rev 3 checkout explicitly.", call. = FALSE)
+  }
+  git_head <- tryCatch(system2("git", c("-C", shQuote(pkg_dir), "rev-parse", "--short", "HEAD"),
+                               stdout = TRUE, stderr = FALSE), error = function(e) NA_character_)
+  message("Installing DeSurv from local directory: ", normalizePath(pkg_dir),
+          " (git HEAD ", paste(git_head, collapse = ""), ")")
+  devtools::install_local(pkg_dir, upgrade = "never", force = TRUE)
+} else if (grepl("^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+@.+$", pkg_source)) {
+  message("Installing DeSurv from GitHub: ", pkg_source)
+  devtools::install_github(pkg_source, upgrade = "never", force = TRUE)
 } else {
-  message("Installing DeSurv from GitHub: rashidlab/DeSurv@", DESURV_REF)
-  if (!requireNamespace("devtools", quietly = TRUE)) install.packages("devtools", repos = "https://cloud.r-project.org")
-  devtools::install_github(paste0("rashidlab/DeSurv@", DESURV_REF), upgrade = "never", force = FALSE)
+  stop("DESURV_PKG_SOURCE='", pkg_source, "' is neither an existing directory nor ",
+       "a GitHub spec 'owner/repo@ref'.", call. = FALSE)
 }
 
 # Verify DeSurv loads
 library(DeSurv)
 message("DeSurv version: ", packageVersion("DeSurv"))
+if (packageVersion("DeSurv") < min_version) {
+  stop("Installed DeSurv ", packageVersion("DeSurv"), " < required ", min_version,
+       " (DESURV_MIN_VERSION).", call. = FALSE)
+}
 
-# NOTE: Cached figure .rds files in results/precomputed/ are saved using the
+# NOTE: Cached figure .rds files in results/ are saved using the
 # current ggplot2 version's class system (ggplot2 >= 4.0 uses S7 with @-slot
 # accessors). If you upgrade or downgrade ggplot2 across a major version, you
 # may need to regenerate the cached figures by re-running step 8.

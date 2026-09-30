@@ -18,22 +18,23 @@
 # used.
 # ---------------------------------------------------------------------------
 
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({ library(survival) })
 set.seed(1)
 
-fit  <- readRDS("results/tar_fit_desurv_tcgacptac.rds")
+fit  <- readRDS(res_path("tar_fit_desurv_tcgacptac.rds"))
 W    <- fit$W; beta <- as.numeric(fit$beta)
 
 ## ---- 1. DeSurv scores per cohort ------------------------------------------
 score_list <- list()
 # validation cohorts: exact scores from val_latent
-vv <- readRDS("results/val_latent_desurv_tcgacptac.rds")
+vv <- readRDS(res_path("val_latent_desurv_tcgacptac.rds"))
 for (e in vv) score_list[[e$dataset]] <- data.frame(
   id = rownames(e$latent), risk = as.numeric(e$risk_score),
   D1 = as.numeric(e$latent[, 1]), time = e$survival$time, event = e$survival$event,
   dataset = e$dataset, stringsAsFactors = FALSE)
 # training cohorts: mirror extract_val_latent projection (full W)
-tr <- readRDS("results/tar_data_filtered_tcgacptac.rds")
+tr <- readRDS(res_path("tar_data_filtered_tcgacptac.rds"))
 g  <- intersect(rownames(W), rownames(tr$ex))
 Ztr  <- t(tr$ex[g, , drop = FALSE]) %*% W[g, , drop = FALSE]
 lptr <- as.numeric(Ztr %*% beta)
@@ -143,7 +144,7 @@ for (ds in names(score_list)) {
                      purity_cor=m_purcor)
 }
 
-saveRDS(rows, "results/desurv_clinical_adjustment.rds")
+saveRDS(rows, res_path("desurv_clinical_adjustment.rds"))
 
 ## ---- 5. print summary -----------------------------------------------------
 fmt <- function(m) if (is.null(m)) "  --" else sprintf("HR=%.2f (%.2f-%.2f) p=%.1e [n=%d,e=%d]", m$hr,m$lo,m$hi,m$p,m$n,m$events)

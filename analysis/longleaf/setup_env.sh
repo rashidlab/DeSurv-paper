@@ -94,17 +94,27 @@ print(sessionInfo())
 RSCRIPT
 
 # --- testthat on installed package ---
-R_LIBS="$LIB" Rscript - <<RSCRIPT 2>&1 | tee "$LOGDIR/05_testthat.log"
+# Fixed 2026-09-30 (rev 3 step 2). The old invocation (library(DeSurv) + test_file())
+# ran the tests in an env that does not see the namespace, so internal functions
+# (cox_stats_cpp) were "not found" and local_mocked_bindings() could not find the
+# package (it asks pkgload, which only knows devtools-loaded packages). test_dir() with
+# package = "DeSurv", load_package = "installed" runs the tests inside the installed
+# namespace and registers the testing package for mocking. NOT_CRAN=true stops
+# skip_on_cran() from skipping the BO tests (devtools::test() sets it too).
+# Runs the WHOLE suite; test-consensus-fit.R no longer exists in the rev 3 package.
+# Verified locally against the rev 3 build (1.2.0, 1f3d3f0): 18 files / 124 blocks /
+# 458 expectations, 0 failed, 0 errors, 0 skipped (old invocation: test-cox-ties 5/5 errors).
+NOT_CRAN=true R_LIBS="$LIB" Rscript - <<RSCRIPT 2>&1 | tee "$LOGDIR/05_testthat.log"
 lib <- "$LIB"
 .libPaths(c(lib, .libPaths()))
-library(DeSurv, lib.loc = lib)
-library(testthat)
-
-for (f in c("$SRC/tests/testthat/test-cox-ties.R",
-            "$SRC/tests/testthat/test-consensus-fit.R")) {
-  cat("== Running", f, "==\n")
-  res <- test_file(f, reporter = "summary")
-}
+stopifnot(startsWith(normalizePath(find.package("DeSurv")), normalizePath(lib)))
+res <- as.data.frame(testthat::test_dir("$SRC/tests/testthat", package = "DeSurv",
+                                        load_package = "installed",
+                                        reporter = "summary", stop_on_failure = FALSE))
+cat(sprintf("files %d | blocks %d | expectations %d | failed %d | errors %d | skipped %d\n",
+            length(unique(res\$file)), nrow(res), sum(res\$nb), sum(res\$failed),
+            sum(res\$error), sum(res\$skipped)))
+if (sum(res\$failed) > 0 || any(res\$error)) quit(status = 1)
 RSCRIPT
 
 # --- HPC facts for later Slurm jobs ---

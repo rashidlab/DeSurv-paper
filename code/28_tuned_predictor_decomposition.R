@@ -19,16 +19,17 @@
 # secondary prognostic source, not noise.  Output:
 # results/tuned_predictor_decomposition.rds
 # ---------------------------------------------------------------------------
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({ library(survival); library(glmnet); library(superpc) })
 source("R/get_top_genes.R")
 QUICK <- identical(Sys.getenv("DESURV_QUICK"), "TRUE")
 NTHR  <- if (QUICK) 10L else 20L     # must match code/19 for the seed-1 fit to be identical
 
 ## ---- identical setup to code/19 ------------------------------------------
-dat <- readRDS("results/tar_data_filtered_tcgacptac.rds")
+dat <- readRDS(res_path("tar_data_filtered_tcgacptac.rds"))
 ex  <- dat$ex; si <- dat$sampInfo; y <- si$time; d <- si$event
-fit <- readRDS("results/tar_fit_desurv_tcgacptac.rds"); W <- fit$W; H <- fit$H
-dv  <- readRDS("results/data_val_filtered_tcgacptac.rds")
+fit <- readRDS(res_path("tar_fit_desurv_tcgacptac.rds")); W <- fit$W; H <- fit$H
+dv  <- readRDS(res_path("data_val_filtered_tcgacptac.rds"))
 genes <- rownames(W); Xtr <- t(ex[genes,,drop=FALSE])
 gsd <- apply(Xtr,2,sd); Xtr <- Xtr[,gsd>0,drop=FALSE]; genes <- colnames(Xtr)
 source("R/paca_dedup.R")
@@ -72,7 +73,7 @@ al <- function(w) if (cor(proj(ex,w),proj(ex,w_D1))<0) -w else w
 M <- lapply(list("DeSurv full LP"=w_LP,"DeSurv D1"=w_D1,"Sparse Cox"=w_SC,"Supervised PCA"=w_SP), al)
 
 ## ---- identity check against the reported C-index comparison ---------------
-ref <- readRDS("results/desurv_vs_supervised_tuned.rds")
+ref <- readRDS(res_path("desurv_vs_supervised_tuned.rds"))
 val <- t(sapply(M, transfer))
 ident <- data.frame(predictor = rownames(val), pooled_C_recomputed = val[, "POOLED"],
                     pooled_C_reported = ref$prediction[rownames(val), "POOLED"])
@@ -118,7 +119,7 @@ res <- list(meta = list(source = "code/19 seed-1 reference fits, rebuilt and ide
                         H_cor = cor(t(H))),
             identity = ident, decomposition = dec, sparse_cox_genes = scox_tab, superpc_genes = sp_tab,
             weights = M)
-saveRDS(res, "results/tuned_predictor_decomposition.rds")
+saveRDS(res, res_path("tuned_predictor_decomposition.rds"))
 cat("\n== DeSurv LP Cox coefficients on Z1..Z3 (re-estimated):", signif(b_lp,3), "\n")
 cat("== superpc seed 1: ncomp", pk1$ncomp, " thr", round(pk1$thr,2), " genes", length(sd1$genes), "; sparse Cox genes", sum(w_SC!=0), "\n\n")
 print(format(dec, digits = 3), row.names = FALSE)

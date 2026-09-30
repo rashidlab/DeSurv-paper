@@ -21,11 +21,12 @@
 # is moderate (I^2 approx 49%), so the homogeneity that would justify pooling does not hold;
 # the manuscript reports per-cohort results plus the full-vs-top-gene concordance only.
 # ---------------------------------------------------------------------------
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({library(survival)})
 
 # Run from the repository root: paths below are relative (consistent with the rest of the pipeline,
 # which is invoked from the repo root via make / run_pipeline.R).
-fit  <- readRDS(file.path("results", "tar_fit_desurv_tcgacptac.rds"))
+fit  <- readRDS(res_path("tar_fit_desurv_tcgacptac.rds"))
 W <- fit$W; Wg <- rownames(W)
 canon_path <- Sys.glob("~/research/rif-research/purist-twist/data/external/response_master_canonical.rds")
 stopifnot(length(canon_path) == 1)
@@ -163,7 +164,7 @@ treated_cohort_stats <- list(
     "analyses reported in the manuscript: arm-stratified D1 transportability in O'Kane/COMPASS",
     "and the within-patient D2 change in paired Linehan biopsies. No bulk program-by-survival",
     "association is computed or stored."))
-saveRDS(treated_cohort_stats, file.path("results", "treated_cohort_stats.rds"))
+saveRDS(treated_cohort_stats, res_path("treated_cohort_stats.rds"))
 cat("Wrote results/treated_cohort_stats.rds\n")
 cat("GATA6 rho:", round(gata6$rho, 2), "p:", signif(gata6$p, 2), "n:", gata6$n, "\n")
 cat("paired D2: n=", paired$n, " Wilcoxon p=", signif(paired$wilcox_p, 3), "\n", sep = "")

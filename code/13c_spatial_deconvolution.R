@@ -14,7 +14,7 @@
 .libPaths(c("~/R/x86_64-pc-linux-gnu-library/4.5", .libPaths()))
 suppressMessages({ library(Matrix); library(quadprog) })
 set.seed(1)
-setwd("/home/naimrashid/Downloads/DeSurv-paper-clean")
+stopifnot(file.exists("code/00_helpers.R"))  # run from the repo root; never setwd into another checkout
 STDIR <- "/tmp/unc_st"
 REF   <- "/home/naimrashid/Downloads/DeSurv-paper/data/derv/Elyada_umap.Rds"
 

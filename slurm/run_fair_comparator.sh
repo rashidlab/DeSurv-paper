@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # run_fair_comparator.sh
 # ---------------------------------------------------------------------------
+# PRE-REV-3 / LEGACY. Local-only (nohup), pinned to DeSurv 1.0.1 and to the tracked
+# results/. Not used for rev 3: in a rev 3 clean run code/03-05 build the fair
+# comparator objects in DESURV_RESULTS_DIR and code/22 runs via
+#   sbatch slurm/run_rev3_step.sh 22_fair_comparator_gate
+# (slurm/submit_rev3_downstream.sh). Its preflight now compares RESULTS_BASE,
+# so an exported DESURV_RESULTS_DIR also aborts it.
+# ---------------------------------------------------------------------------
 # Builds the fair matched-rank comparator (alpha = 0 at DeSurv's k, with its own
 # BO tuning budget) and then runs the pre-registered decision gate.
 #
@@ -29,7 +36,7 @@ say "PREFLIGHT"
 Rscript -e '
   suppressMessages(source("code/00_helpers.R"))
   stopifnot("DESURV_RECOMPUTE=FALSE is NOT in effect" = isFALSE(CONFIG$recompute))
-  stopifnot("RESULTS_DIR must be results/ (not quick)" = RESULTS_DIR == "results")
+  stopifnot("RESULTS_DIR must be results/ (not quick, no DESURV_RESULTS_DIR)" = RESULTS_DIR == "results" && RESULTS_BASE == "results")
   cat("  recompute =", CONFIG$recompute, "| ncores =", CONFIG$ncores,
       "| dir =", RESULTS_DIR, "\n")
   # The canonical objects must LOAD, never recompute. stop() inside the expr

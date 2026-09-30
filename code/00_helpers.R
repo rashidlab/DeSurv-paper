@@ -3,9 +3,10 @@
 #
 # Provides:
 #   CONFIG       — list with quick/ncores/recompute flags and hard-coded ntop bounds
-#   RESULTS_DIR  — "results" (flat, no subfolders)
-#   CV_GRID_DIR  — "results/cv_grid"
-#   FIGURE_DIR   — "figures"
+#   RESULTS_DIR:  "results" (flat, no subfolders; env DESURV_RESULTS_DIR overrides the base)
+#   CV_GRID_DIR:  "results/cv_grid" (under the same base)
+#   FIGURE_DIR:   "figures" (env DESURV_FIGURE_DIR overrides the base)
+#   RESULTS_BASE, FIGURE_BASE, res_path(), fig_path(): from R/paths.R
 #   precomputed_path(name) — returns path to a result RDS file
 #   cache_or_compute(name, expr) — load from cache or compute and save
 #   load_precomputed(name) — load a previously saved result (error if missing)
@@ -25,9 +26,12 @@ if (CONFIG$quick) {
 }
 
 # ── Paths ──────────────────────────────────────────────────────────────────
-RESULTS_DIR <- if (CONFIG$quick) "results/quick" else "results"
-CV_GRID_DIR <- "results/cv_grid"
-FIGURE_DIR  <- if (CONFIG$quick) "figures/quick" else "figures"
+# Base dirs come from R/paths.R (env DESURV_RESULTS_DIR / DESURV_FIGURE_DIR,
+# defaults "results" / "figures"). Unset, these are the historical values.
+source("R/paths.R")
+RESULTS_DIR <- if (CONFIG$quick) file.path(RESULTS_BASE, "quick") else RESULTS_BASE
+CV_GRID_DIR <- file.path(RESULTS_BASE, "cv_grid")
+FIGURE_DIR  <- if (CONFIG$quick) file.path(FIGURE_BASE, "quick") else FIGURE_BASE
 
 dir.create(RESULTS_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(CV_GRID_DIR, recursive = TRUE, showWarnings = FALSE)

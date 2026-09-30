@@ -26,11 +26,12 @@
 # expensive and writes no manuscript input.
 # ---------------------------------------------------------------------------
 
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({ library(survival) })
 source("R/reconstruction_helpers.R")
 
 rd <- function(n) {
-  p <- file.path("results", paste0(n, ".rds"))
+  p <- res_path(paste0(n, ".rds"))
   if (!file.exists(p)) stop("missing cached object: ", p, call. = FALSE)
   readRDS(p)
 }
@@ -99,5 +100,5 @@ cat("=============================================================\n")
 saveRDS(list(table = res, dl_D1 = dl_D1,
              thresholds = list(corr = c(0.55, 0.75), r2 = c(0.35, 0.60),
                                dl_frac = c(0.25, 0.50))),
-        "results/fair_comparator_gate.rds")
+        res_path("fair_comparator_gate.rds"))
 cat("\nSaved -> results/fair_comparator_gate.rds\n")

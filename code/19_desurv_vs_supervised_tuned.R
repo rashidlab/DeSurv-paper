@@ -29,6 +29,7 @@
 #
 # Output: results/desurv_vs_supervised_tuned.rds   (read by the manuscript)
 # ---------------------------------------------------------------------------
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({ library(survival); library(glmnet); library(superpc) })
 options(warn = -1)
 source("R/get_top_genes.R")
@@ -39,10 +40,10 @@ NTHR   <- if (QUICK) 10L else 20L     # superpc CV thresholds
 message(sprintf("[19] tuned supervised comparison (NSEED=%d, NTHR=%d)%s", NSEED, NTHR, if (QUICK) " [QUICK]" else ""))
 
 ## ---- data (shared training-only 1,970-gene universe; already rank-transformed) ----
-dat <- readRDS("results/tar_data_filtered_tcgacptac.rds")
+dat <- readRDS(res_path("tar_data_filtered_tcgacptac.rds"))
 ex  <- dat$ex; si <- dat$sampInfo; y <- si$time; d <- si$event
-fit <- readRDS("results/tar_fit_desurv_tcgacptac.rds"); W <- fit$W
-params_best <- readRDS("results/tar_params_best_tcgacptac.rds")
+fit <- readRDS(res_path("tar_fit_desurv_tcgacptac.rds")); W <- fit$W
+params_best <- readRDS(res_path("tar_params_best_tcgacptac.rds"))
 NTOP <- as.integer(params_best$ntop)
 stopifnot(length(NTOP) == 1L, !is.na(NTOP), NTOP > 0L)
 # The D1/D2/D3 decomposition, labels and "D2 (proCAF factor)" below assume three
@@ -51,7 +52,7 @@ if (ncol(W) != 3L || !identical(as.integer(params_best$k), 3L)) {
   stop("[19] written for k = 3 programs; selected k = ", params_best$k,
        ", ncol(W) = ", ncol(W), ". Needs a ruling before rerunning.")
 }
-dv  <- readRDS("results/data_val_filtered_tcgacptac.rds")
+dv  <- readRDS(res_path("data_val_filtered_tcgacptac.rds"))
 genes <- rownames(W); Xtr <- t(ex[genes,,drop=FALSE])
 gsd <- apply(Xtr,2,sd); Xtr <- Xtr[,gsd>0,drop=FALSE]; genes <- colnames(Xtr)
 
@@ -159,7 +160,7 @@ res <- list(
   stability = stab,
   ref_seed1 = list("Sparse Cox"=annot_set(genes[w_SC!=0]), "Supervised PCA"=annot_set(sd1$genes)),
   signature_sizes = sapply(sig,length))
-saveRDS(res, "results/desurv_vs_supervised_tuned.rds")
+saveRDS(res, res_path("desurv_vs_supervised_tuned.rds"))
 message("[19] saved results/desurv_vs_supervised_tuned.rds")
 
 cat("\n== prediction (pooled transfer C) ==\n"); print(res$prediction[,"POOLED",drop=FALSE])

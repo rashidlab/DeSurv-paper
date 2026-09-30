@@ -12,10 +12,7 @@
 # generates Fig 2, and renders the paper.
 # Use slurm/submit_all.sh to set up job dependencies automatically.
 
-module purge
-module load r/4.4.0
-
-cd $SLURM_SUBMIT_DIR
+source "${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}/slurm/rev3_env.sh"
 
 echo "=== Merging simulation results ==="
 echo "Start: $(date)"
@@ -28,7 +25,13 @@ Rscript code/09b_si_figures.R
 echo "=== Generating simulation figures ==="
 Rscript code/09c_sim_figures.R
 
-echo "=== Compiling manuscript ==="
-make paper
+# Rendering writes the tracked paper/paper.pdf and paper/si_appendix.pdf, needs LaTeX and
+# every static figure inside DESURV_FIGURE_DIR, so rev 3 does not render here by default.
+if [ "${REV3_RENDER:-0}" = 1 ]; then
+  echo "=== Compiling manuscript ==="
+  DESURV_RECOMPUTE=FALSE Rscript code/10_render_paper.R
+else
+  echo "=== Render skipped (set REV3_RENDER=1 to render from DESURV_RESULTS_DIR) ==="
+fi
 
 echo "=== Merge + paper complete: $(date) ==="

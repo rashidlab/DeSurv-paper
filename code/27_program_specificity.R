@@ -26,11 +26,12 @@
 # Output: results/program_specificity_stats.rds (not a cache_or_compute step).
 # ---------------------------------------------------------------------------
 
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
 suppressMessages({ library(survival); library(glmnet) })
 
-dat <- readRDS("results/tar_data_filtered_tcgacptac.rds")
+dat <- readRDS(res_path("tar_data_filtered_tcgacptac.rds"))
 ex  <- dat$ex; si <- dat$sampInfo
-fit <- readRDS("results/tar_fit_desurv_tcgacptac.rds")
+fit <- readRDS(res_path("tar_fit_desurv_tcgacptac.rds"))
 W   <- fit$W; H <- fit$H; k <- ncol(W)
 stopifnot(identical(rownames(W), rownames(ex)))
 source("R/get_top_genes.R")
@@ -163,7 +164,7 @@ res <- list(meta = list(n = ncol(ex), n_genes = nrow(W), k = k, ntop = NTOP,
                                    spec_entropy = spec_ent, dominant = dom, P),
             sets = sets, summary = summ, tests = tests, decomposition = dec, overlap = ovl,
             sparse_cox_genes = scox_tab, H_cor = cor(t(H)))
-saveRDS(res, "results/program_specificity_stats.rds")
+saveRDS(res, res_path("program_specificity_stats.rds"))
 
 cat("\n=============== PROGRAM SPECIFICITY OF GENE SETS ===============\n")
 cat(sprintf("n=%d, %d genes, k=%d, sparse Cox selected %d genes\n\n", ncol(ex), nrow(W), k, n_sparse))

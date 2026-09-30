@@ -9,7 +9,7 @@
 # If the coupling still does not appear, the negative result is robust.
 .libPaths(c("~/R/x86_64-pc-linux-gnu-library/4.5", .libPaths()))
 suppressMessages({ library(Matrix); library(quadprog) })
-set.seed(1); setwd("/home/naimrashid/Downloads/DeSurv-paper-clean")
+set.seed(1); stopifnot(file.exists("code/00_helpers.R"))  # run from the repo root; never setwd into another checkout
 STDIR <- "/tmp/unc_st"; REF <- "/home/naimrashid/Downloads/DeSurv-paper/data/derv/Elyada_umap.Rds"
 proCAF_sig  <- c("IGFL2","NOX4","VSNL1","BICD1","NPR3","ETV1","ITGA11","CNIH3","COL11A1")
 restCAF_sig <- c("CHRDL1","OGN","PI16","ANK2","ABCA8","TGFBR3","FBLN5","SCARA5","KIAA1217")

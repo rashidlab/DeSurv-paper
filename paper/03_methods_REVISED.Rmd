@@ -28,7 +28,7 @@ stopifnot(.fcv$final_config$params$k_grid == .ks$k_selected,
 # Rank-by-supervision sensitivity grid at the selected non-rank hyperparameters,
 # restricted to the ntop the final model uses. Two one-SE thresholds exist and are
 # distinguished in the prose: this grid's own, and the Bayesian-optimization one.
-.cvg    <- read.csv("results/cv_grid/cv_grid_summary.csv")
+.cvg    <- read.csv(file.path(CV_GRID_CSV_DIR, "cv_grid_summary.csv"))
 .cvg    <- .cvg[!is.na(.cvg$ntop) & .cvg$ntop == as.integer(round(.pbst$ntop)), ]
 .cvgb   <- do.call(rbind, lapply(split(.cvg, .cvg$k), function(d) d[which.max(d$mean_cindex), ]))
 .cvgi   <- which.max(.cvgb$mean_cindex)

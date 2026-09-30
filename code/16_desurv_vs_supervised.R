@@ -33,7 +33,10 @@
 # DeSurv loads from the R-4.5 library under R 4.6 (compiled deps compatible).
 # ---------------------------------------------------------------------------
 
-.libPaths(c("~/R/x86_64-pc-linux-gnu-library/4.5", .libPaths()))
+source("R/paths.R")  # res_path()/fig_path(): DESURV_RESULTS_DIR / DESURV_FIGURE_DIR, default results/ figures/
+# Rev 3: under slurm/rev3_env.sh (REV3_LIB set) the rev 3 library must stay first, so the
+# local R 4.5 user library is prepended only outside that environment.
+if (!nzchar(Sys.getenv("REV3_LIB"))) .libPaths(c("~/R/x86_64-pc-linux-gnu-library/4.5", .libPaths()))
 suppressMessages({ library(survival); library(glmnet); library(DeSurv) })
 set.seed(1)
 
@@ -45,12 +48,12 @@ N_SUB3 <- if (QUICK) 3L  else 15L    # Part 3 alpha-sweep subsamples
 NTOP <- 270L   # gene-screen / top-gene count, matching DeSurv's top-270 (PGENES) convention
 if (QUICK) cat("[DESURV_QUICK] reduced knobs: MAXIT=60, N_SUB2=4, N_SUB3=3, 3-point alpha grid\n")
 
-dat <- readRDS("results/tar_data_filtered_tcgacptac.rds")
+dat <- readRDS(res_path("tar_data_filtered_tcgacptac.rds"))
 ex  <- dat$ex; si <- dat$sampInfo
-fit <- readRDS("results/tar_fit_desurv_tcgacptac.rds"); W <- fit$W; Wg <- rownames(W)
+fit <- readRDS(res_path("tar_fit_desurv_tcgacptac.rds")); W <- fit$W; Wg <- rownames(W)
 sh  <- intersect(Wg, rownames(ex))
 refD1 <- W[sh, 1]                                  # reference D1 gene loadings
-HP  <- readRDS("results/tar_params_best_tcgacptac.rds")
+HP  <- readRDS(res_path("tar_params_best_tcgacptac.rds"))
 
 # uniform scoring: within-sample rank over sh, then project on a gene-weight vector
 rankM <- function(E){ g <- intersect(sh, rownames(E))
@@ -118,7 +121,7 @@ W_meth <- list(
   "Unsup. NMF (a=0)" = align(fit_desurv(ex, y, d, 0)),
   "Unsup. PCA (PC1)" = align(fit_pca(Xg_full, y, d)))
 
-dv <- readRDS("results/data_val_filtered_tcgacptac.rds")
+dv <- readRDS(res_path("data_val_filtered_tcgacptac.rds"))
 val_ci <- list(); pooled <- list()
 for (nm in names(W_meth)) {
   w <- W_meth[[nm]]; cis <- c(); nev <- c(); ps <- data.frame()
@@ -160,10 +163,10 @@ cat(sprintf("  %-16s mean top-100 Jaccard = %.3f\n", names(stab), stab))
 ## (3) ALPHA-SWEEP: prognosis (CV, from grid) and stability vs alpha
 ## ===========================================================================
 cat("\n== Part 3: alpha-sweep (k=3) ==\n")
-if (!file.exists("results/cv_grid/cv_grid_summary.csv"))
+if (!file.exists(res_path("cv_grid/cv_grid_summary.csv")))
   stop("results/cv_grid/cv_grid_summary.csv not found -- run code/06_cv_grid.R first ",
        "(it is produced earlier in `make all`).")
-grid <- read.csv("results/cv_grid/cv_grid_summary.csv")
+grid <- read.csv(res_path("cv_grid/cv_grid_summary.csv"))
 g3 <- grid[grid$k==3 & is.na(grid$ntop), c("alpha","mean_cindex")]
 # grid-aligned alphas so prognosis lookup and stability refit use the SAME value per row;
 # 0.35 is the grid point nearest the BO-selected alpha (0.334)
@@ -213,11 +216,11 @@ res <- list(meta=list(n=n, B_part2=B, B_part3=B3, bo_alpha=round(HP$alpha,2), bo
                       cohorts=sapply(cohorts, function(z) length(z$t))),
             val_cindex=ci_tab, pooled=pool_tab, stability=stab, alpha_sweep=asweep,
             cross_cohort=xcohort)
-saveRDS(res, "results/desurv_vs_supervised_stats.rds")
+saveRDS(res, res_path("desurv_vs_supervised_stats.rds"))
 cat("\nSaved -> results/desurv_vs_supervised_stats.rds\n")
 
 ## --- figure ---
-pdf("figures/fig_desurv_vs_supervised.pdf", width=12, height=4.3)
+pdf(fig_path("fig_desurv_vs_supervised.pdf"), width=12, height=4.3)
 par(mfrow=c(1,3), mar=c(5,4.5,3.6,1.2), mgp=c(2.6,0.7,0))
 # A: per-cohort validation C-index (parity among supervised; unsupervised fails; heterogeneity)
 mcols <- c("DeSurv (full LP)"="#67001F","DeSurv (D1)"="#B2182B","Sparse Cox"="#1B7837","Cox-PLS"="#5AAE61",

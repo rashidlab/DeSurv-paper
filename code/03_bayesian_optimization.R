@@ -14,7 +14,6 @@
 #          results/desurv_bo_finalists_tcgacptac.rds (+ _alpha0_): finalist
 #            re-evaluations and the paired 1-SE k selection
 #          (+ alpha0 and elbow variants)
-# Full mode requires DESURV_BO_CONSENSUS_R (R_BO from the Track 3a gate).
 #
 # Runtime: ~4-8 hours on HPC (30 cores), ~5 min in quick mode
 
@@ -24,18 +23,20 @@ library(DeSurv)
 library(NMF)
 source("R/bo_helpers.R")
 source("R/pick_k_elbow.R")
-source("R/consensus_settings.R")
+source("R/reported_settings.R")
 
 # ── Configuration ─────────────────────────────────────────────────────────
-# Robust-rerun plan rev 2.1 (docs/plans/2026-09-30-robust-rerun-plan.md),
-# section 2 Track 2: every BO evaluation scores consensus-DeSurv (the reported
-# estimator) at R_BO runs per training fold, on 3 repeated CV partitions with
-# the same partitions and per-fold seed banks for every configuration; the
-# incumbent is the GP posterior-mean argmax; k is chosen among re-evaluated
-# finalists by the 1-SE rule on the empirical paired SE.
-BO_ESTIMATOR    <- "consensus"          # "mean_starts" = pre-rev-2 evaluator
+# Rerun plan rev 3 (docs/plans/2026-09-30-rerun-plan-rev3.md), section 2:
+# every BO evaluation scores the reported estimator (the code/04 recipe: seed
+# fits -> consensus seed -> final fit, DeSurv::desurv_reported_fit) in each
+# training fold, with code/04's seed-fit count and tolerances, on 3 repeated CV
+# partitions with the same partitions and per-fold seed banks for every
+# configuration; the incumbent is the GP posterior-mean argmax; k is chosen
+# among re-evaluated finalists by the 1-SE rule on the empirical paired SE.
+BO_ESTIMATOR    <- "reported"           # "mean_starts" = pre-rev-2 evaluator
 BO_INCUMBENT    <- "posterior_mean"     # "observed" = pre-rev-2 argmax
-CONSENSUS       <- desurv_consensus_settings(CONFIG$quick)   # = final-fit settings
+REPORTED        <- desurv_reported_settings(CONFIG$quick)    # = final-fit settings
+BO_N_SEED_FITS  <- REPORTED$n_seed_fits # code/04 NINIT_FULL: 100 full, 3 quick
 CV_SEED_BANK_BASE <- 4000000L           # plan section 9: per-fold bank 4,000,001 onward
 if (CONFIG$quick) {
   NINIT          <- 2L                  # used only if BO_ESTIMATOR == "mean_starts"
@@ -48,7 +49,6 @@ if (CONFIG$quick) {
   BO_K_UPPER     <- 6L
   BO_NGENE       <- 500L
   BO_CV_SEEDS    <- 20261101L           # one partition in quick mode
-  BO_CONSENSUS_R <- 3L
   FINALISTS_PER_K <- 2L
 } else {
   NINIT          <- 30L                 # used only if BO_ESTIMATOR == "mean_starts"
@@ -61,18 +61,11 @@ if (CONFIG$quick) {
   BO_K_UPPER     <- 12L
   BO_NGENE       <- 3000L
   BO_CV_SEEDS    <- c(20261101L, 20261102L, 20261103L)   # plan section 9
-  # R_BO = the smallest R that passed the Track 3a gate (plan section 2). It is
-  # not known until the gate has run, so it must be supplied; no default.
-  BO_CONSENSUS_R <- as.integer(Sys.getenv("DESURV_BO_CONSENSUS_R", NA))
-  if (is.na(BO_CONSENSUS_R) || BO_CONSENSUS_R < 1L) {
-    stop("Set DESURV_BO_CONSENSUS_R to R_BO, the smallest R that passed the Track 3a ",
-         "convergence gate (plan section 2).")
-  }
   FINALISTS_PER_K <- 3L
 }
-# Constituent-run tolerances inside CV = the final fit's (one source).
-BO_TOL   <- CONSENSUS$tol
-BO_MAXIT <- CONSENSUS$maxit
+# Seed-fit and final-fit tolerances inside CV = the final fit's (one source).
+BO_TOL   <- REPORTED$tol
+BO_MAXIT <- REPORTED$maxit
 
 BO_BOUNDS <- list(
   k_grid     = list(lower = 2L, upper = BO_K_UPPER, type = "integer"),
@@ -115,9 +108,9 @@ BO_COMMON <- list(
   estimator         = BO_ESTIMATOR,
   incumbent         = BO_INCUMBENT,
   cv_seeds          = BO_CV_SEEDS,
-  consensus_runs    = BO_CONSENSUS_R,
-  consensus_seed_base = CV_SEED_BANK_BASE,
-  consensus_control = list(tol_init = CONSENSUS$tol_init, imaxit = CONSENSUS$imaxit)
+  n_seed_fits       = BO_N_SEED_FITS,
+  seed_bank_base    = CV_SEED_BANK_BASE,
+  reported_control  = list(tol_init = REPORTED$tol_init, imaxit = REPORTED$imaxit)
 )
 
 # Finalists: top FINALISTS_PER_K configurations per k by GP posterior mean,

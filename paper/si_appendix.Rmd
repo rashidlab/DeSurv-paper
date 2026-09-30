@@ -624,7 +624,7 @@ $\hat{\eta}_i$:
         \State set.seed$(r)$
         \State Apply Algorithm \ref{alg:desurv} with inputs $(X_{(-f)},y_{(-f)}, \delta_{(-f)})$, and $(k, \alpha, \lambda, \xi, \lambda_H)$
         \State Obtain $\hat{W}$ and $\hat{\beta}$ as output from Algorithm \ref{alg:desurv}
-        \State Restrict $\hat{W}$ to the top $n_{top}$ genes per factor (by factor-specificity score) and compute the estimated linear predictor on this support:
+        \State Restrict $\hat{W}$ to the union of the $k$ factors' top-$n_{top}$ gene sets (by factor-specificity score) and compute the estimated linear predictor on this union support:
         $
         \hat{\eta} = X_{(f)}^T\hat{W}\hat{\beta}
         $
@@ -933,13 +933,13 @@ were analyzed on a log scale: RNA-seq cohorts as log$_2$(TPM + 1); microarray co
 in descending order of mean expression and, independently, of variance; the
 3,000 genes with the lowest sum of these two ranks were retained, selecting
 genes that are both highly expressed and highly variable.
-The intersection of the two cohorts' gene sets yielded 1,970 genes used for model
-training. Validation datasets were restricted to this same 1,970-gene set.
+The intersection of the two cohorts' gene sets yielded `r format(nrow(read_result("tar_data_filtered_tcgacptac")$ex), big.mark = ",")` genes used for model
+training. Validation datasets were restricted to this same `r format(nrow(read_result("tar_data_filtered_tcgacptac")$ex), big.mark = ",")`-gene set.
 
 <!-- obj: front.p52.41df -->
 A within-sample rank transformation was then applied to every dataset to
 mitigate platform and scale effects. Specifically, for each sample the
-expression values across the 1,970 retained genes were replaced by their
+expression values across the `r format(nrow(read_result("tar_data_filtered_tcgacptac")$ex), big.mark = ",")` retained genes were replaced by their
 ascending ranks (ties resolved by average ranks), so that every sample carries
 the same nonnegative rank distribution over the shared gene set; ranks are
 inherently nonnegative and therefore preserve NMF compatibility. Validation
@@ -1196,7 +1196,7 @@ and myCAF signatures are displayed under the DeCAF nomenclature, restCAF and
 proCAF (Stromal resolution: which reference programs are recovered from bulk).
 Puleo's whole-tumor pure basal-like component and its tumor-compartment
 basal-like signature are distinct programs and are labeled as such in every
-figure. Many programs place only a minority of their genes inside the 1,970-gene
+figure. Many programs place only a minority of their genes inside the `r format(nrow(read_result("tar_data_filtered_tcgacptac")$ex), big.mark = ",")`-gene
 analysis set; the correlation for a program is computed over the genes it shares
 with that set, and a program with no such genes cannot be represented.
 
@@ -1217,7 +1217,7 @@ stopifnot(all(.ru$source_group %in% names(.src)), nrow(.ru) == 45)
                    check.names = FALSE, stringsAsFactors = FALSE)
 knitr::kable(.rut, format = "latex", booktabs = TRUE, linesep = "",
   align = "llrr",
-  caption = "The 45-program reference universe used for every factor-to-program correspondence analysis (main-text Fig. 2a,b; Supplementary Figs. \\ref{fig:fig-nmf-k7-heatmap} and \\ref{fig:fig-rpm}), generated from the same renamed and de-duplicated object the analyses read. Displayed alias is the row label used in the figures; Genes is the size of the published list; In analysis set is the number of those genes among the 1,970 analyzed genes, over which the Spearman correlation is computed. The SCISSORS restCAF and proCAF rows are the SCISSORS iCAF and myCAF signatures under DeCAF nomenclature. The two Puleo basal-like rows are different programs: the whole-tumor pure basal-like component and the tumor-compartment basal-like signature. \\label{tab:ref-universe}") |>
+  caption = paste0("The 45-program reference universe used for every factor-to-program correspondence analysis (main-text Fig. 2a,b; Supplementary Figs. \\ref{fig:fig-nmf-k7-heatmap} and \\ref{fig:fig-rpm}), generated from the same renamed and de-duplicated object the analyses read. Displayed alias is the row label used in the figures; Genes is the size of the published list; In analysis set is the number of those genes among the ", format(nrow(read_result("tar_data_filtered_tcgacptac")$ex), big.mark = ","), " analyzed genes, over which the Spearman correlation is computed. The SCISSORS restCAF and proCAF rows are the SCISSORS iCAF and myCAF signatures under DeCAF nomenclature. The two Puleo basal-like rows are different programs: the whole-tumor pure basal-like component and the tumor-compartment basal-like signature. \\label{tab:ref-universe}")) |>
   kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 7)
 ```
 
@@ -1467,7 +1467,7 @@ At the whole-matrix level, this reorganization carries a real but bounded recons
   stringsAsFactors = FALSE)
 colnames(.or) <- c("Model", "Centered $R^2$", "Uncentered $R^2$", "Residual fraction (centered)")
 knitr::kable(.or, format = "latex", escape = FALSE, booktabs = TRUE,
-  caption = sprintf("Whole-matrix reconstruction $R^2$ across the 1,970-gene analysis matrix for standard NMF versus DeSurv at $k = 3$. Two denominators are shown. The centered $R^2$ is the conventional definition, taken about the grand mean, and is the one to read as fraction of variation reconstructed. The uncentered $R^2$ divides by $\\sum X^2$; because the analysis matrix holds within-sample ranks with grand mean $p/2$, the mean alone accounts for about 75\\%% of that denominator, so uncentered values are high for any nonnegative low-rank fit and are reported for completeness. On the centered definition DeSurv gives up %.1f percentage points of reconstruction relative to NMF (%.1f on the uncentered scale). \\label{tab:overall-r2}", .gap_c, .gap_u)) |>
+  caption = sprintf("Whole-matrix reconstruction $R^2$ across the %s-gene analysis matrix for standard NMF versus DeSurv at $k = 3$. Two denominators are shown. The centered $R^2$ is the conventional definition, taken about the grand mean, and is the one to read as fraction of variation reconstructed. The uncentered $R^2$ divides by $\\sum X^2$; because the analysis matrix holds within-sample ranks with grand mean $p/2$, the mean alone accounts for about 75\\%% of that denominator, so uncentered values are high for any nonnegative low-rank fit and are reported for completeness. On the centered definition DeSurv gives up %.1f percentage points of reconstruction relative to NMF (%.1f on the uncentered scale). \\label{tab:overall-r2}", format(nrow(read_result("tar_data_filtered_tcgacptac")$ex), big.mark = ","), .gap_c, .gap_u)) |>
   kableExtra::kable_styling(latex_options = c("HOLD_position"), font_size = 9)
 ```
 
@@ -1535,7 +1535,7 @@ load_result("desurv_vs_supervised_tuned")
 \label{sec:tuned}
 
 <!-- obj: front.p105.df5e -->
-The preceding section establishes D1 as a survival-associated expression direction shared across supervised methods; here we ask what DeSurv adds beyond recovering that direction, using canonical, independently tuned comparators in place of the simple single-component versions above: supervised principal components (\texttt{superpc}; Bair--Tibshirani, with cross-validated screening threshold and component number) and lasso-penalized Cox regression (\texttt{glmnet}, mixing parameter 1, a single $\lambda_{\min}$ model). Cox partial least squares was not included in this comparison because a validated multi-component implementation was not available. All methods used the same 1,970-gene universe selected from the training data by expression and variance, and each performed its own feature selection; for this comparison DeSurv's program scores used per-program masks, each column zeroed outside its own top-$`r as.integer(round(.pbk$ntop))`$ gene set, rather than the union support used elsewhere in the manuscript, and the Cox weights combining the three program scores were re-estimated without penalty on the training scores, so that all three methods enter as training-fitted linear scores on an equal footing. Validation outcomes were never used: all scoring used the frozen, rank-transformed transfer with no validation refitting.
+The preceding section establishes D1 as a survival-associated expression direction shared across supervised methods; here we ask what DeSurv adds beyond recovering that direction, using canonical, independently tuned comparators in place of the simple single-component versions above: supervised principal components (\texttt{superpc}; Bair--Tibshirani, with cross-validated screening threshold and component number) and lasso-penalized Cox regression (\texttt{glmnet}, mixing parameter 1, a single $\lambda_{\min}$ model). Cox partial least squares was not included in this comparison because a validated multi-component implementation was not available. All methods used the same `r format(nrow(read_result("tar_data_filtered_tcgacptac")$ex), big.mark = ",")`-gene universe selected from the training data by expression and variance, and each performed its own feature selection; for this comparison DeSurv's program scores used per-program masks, each column zeroed outside its own top-$`r as.integer(round(.pbk$ntop))`$ gene set, rather than the union support used elsewhere in the manuscript, and the Cox weights combining the three program scores were re-estimated without penalty on the training scores, so that all three methods enter as training-fitted linear scores on an equal footing. Validation outcomes were never used: all scoring used the frozen, rank-transformed transfer with no validation refitting.
 
 <!-- obj: front.p91.9b60 -->
 External discrimination was similar: the pooled frozen-transfer C-index was $`r .stvp("DeSurv full LP")`$ for the DeSurv linear predictor, $`r .stvp("Supervised PCA")`$ for supervised PCA, and $`r .stvp("Sparse Cox")`$ for lasso Cox. Consistent with the score-level recovery above, both tuned methods aligned with the D1 direction (correspondence between each supervised risk score and the DeSurv programs was quantified in the training cohort by absolute Pearson correlation; $|r| = `r .stva("Sparse Cox","D1")`$ for lasso Cox and $`r .stva("Supervised PCA","D1")`$ for supervised PCA) and with the DeSurv linear predictor ($|r| = `r .stva("Sparse Cox","fullLP")`$ for lasso Cox and $`r .stva("Supervised PCA","fullLP")`$ for supervised PCA), but were only weakly correlated with the activated-stroma/proCAF program D2 ($|r| = `r .stva("Sparse Cox","D2")`$ for lasso Cox and $`r .stva("Supervised PCA","D2")`$ for supervised PCA): a single supervised risk axis captures the dominant tumor-axis signal but not the separate stromal program.
@@ -2231,7 +2231,7 @@ all methods (`r .srN["SCISSORS_proCAF","DeSurv"]` versus
 `r .srN["SCISSORS_proCAF","NMF_k3"]` of `r .sr2$sig_size["SCISSORS_proCAF"]` genes).
 
 <!-- obj: front.p123.ffcb -->
-In the full-gene view, which correlates loadings across all 1,970 analyzed genes
+In the full-gene view, which correlates loadings across all `r format(nrow(read_result("tar_data_filtered_tcgacptac")$ex), big.mark = ",")` analyzed genes
 with signature membership, no method separates restCAF from proCAF: every
 correspondence lies between
 $`r sprintf("%.2f", min(.srF[c("SCISSORS_restCAF","Elyada_iCAF","SCISSORS_proCAF","Elyada_myCAF"),]))`$
@@ -2239,7 +2239,7 @@ and
 $`r sprintf("%.2f", max(.srF[c("SCISSORS_restCAF","Elyada_iCAF","SCISSORS_proCAF","Elyada_myCAF"),]))`$,
 whereas the activated-stroma axis is recovered by all methods at
 $`r sprintf("%.2f", max(.srF["DECODER_ActivatedStroma",]))`$. This view is far
-more dilute for a 15--25 gene signature among 1,970 genes and correspondingly
+more dilute for a 15--25 gene signature among `r format(nrow(read_result("tar_data_filtered_tcgacptac")$ex), big.mark = ",")` genes and correspondingly
 low powered, but it bounds what can be claimed. We therefore report the
 restraining-stroma difference as marker-gene presence among the defining genes
 of each factorization, and do not claim to have resolved the single-cell CAF

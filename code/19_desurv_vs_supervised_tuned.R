@@ -12,7 +12,8 @@
 #    (generic preprocessing, survival- and DeSurv-blind; not circular).
 #  - Data is already within-sample rank-transformed (train + validation); project
 #    DIRECTLY (no re-ranking, no z-scoring of validation genes).
-#  - DeSurv scored exactly as published: BO-selected top-270-per-factor truncation.
+#  - DeSurv scored exactly as published: BO-selected top-ntop-per-factor truncation
+#    (ntop read from results/tar_params_best_tcgacptac.rds, not typed).
 #  - Comparators fit from the FULL 1,970 with their OWN training-only tuning:
 #      * Sparse Cox  = glmnet family="cox", one lambda.min model (its own genes).
 #      * Supervised PCA = superpc (Bair-Tibshirani), CV-tuned threshold + n.components.
@@ -41,6 +42,15 @@ message(sprintf("[19] tuned supervised comparison (NSEED=%d, NTHR=%d)%s", NSEED,
 dat <- readRDS("results/tar_data_filtered_tcgacptac.rds")
 ex  <- dat$ex; si <- dat$sampInfo; y <- si$time; d <- si$event
 fit <- readRDS("results/tar_fit_desurv_tcgacptac.rds"); W <- fit$W
+params_best <- readRDS("results/tar_params_best_tcgacptac.rds")
+NTOP <- as.integer(params_best$ntop)
+stopifnot(length(NTOP) == 1L, !is.na(NTOP), NTOP > 0L)
+# The D1/D2/D3 decomposition, labels and "D2 (proCAF factor)" below assume three
+# programs; if the rerun selects k != 3 this script needs a ruling first.
+if (ncol(W) != 3L || !identical(as.integer(params_best$k), 3L)) {
+  stop("[19] written for k = 3 programs; selected k = ", params_best$k,
+       ", ncol(W) = ", ncol(W), ". Needs a ruling before rerunning.")
+}
 dv  <- readRDS("results/data_val_filtered_tcgacptac.rds")
 genes <- rownames(W); Xtr <- t(ex[genes,,drop=FALSE])
 gsd <- apply(Xtr,2,sd); Xtr <- Xtr[,gsd>0,drop=FALSE]; genes <- colnames(Xtr)
@@ -64,8 +74,8 @@ transfer <- function(w){ ci<-nev<-c(); nm<-c()
     ci<-c(ci,cidx(proj(E[,ok,drop=FALSE],w),tt[ok],ee[ok]));nev<-c(nev,sum(ee[ok]));nm<-c(nm,dsn) }
   c(setNames(ci,nm), POOLED=sum(ci*nev)/sum(nev)) }
 
-## ---- DeSurv: top-270-per-factor truncated (published scoring) ----
-tg <- get_top_genes(W,270)$top_genes
+## ---- DeSurv: top-ntop-per-factor truncated (published scoring) ----
+tg <- get_top_genes(W,NTOP)$top_genes
 Wtr <- matrix(0,length(genes),3,dimnames=list(genes,colnames(W)))
 for(j in 1:3){ gj<-intersect(tg[[j]],genes); Wtr[gj,j]<-W[gj,j] }
 w_D1 <- Wtr[,1]
@@ -138,7 +148,7 @@ annot_set <- function(gs) sapply(gs, function(g){ a<-names(sig)[sapply(sig,funct
 res <- list(
   meta = list(n_genes=length(genes), n_train=nrow(Xtr), n_events=sum(d),
               val_events=sapply(dv,function(z) z$sampInfo$dataset[1]), nseed=NSEED,
-              methods=c("DeSurv (top-270 x3)","Sparse Cox (glmnet)","Supervised PCA (superpc)")),
+              methods=c(sprintf("DeSurv (top-%d x%d)",NTOP,ncol(W)),"Sparse Cox (glmnet)","Supervised PCA (superpc)")),
   prediction = round(val,3),
   axis_decomposition = round(abs(factor_dist),2),   # report |r| (orientation-invariant)
   stromal_carriage = stromal_carriage,              # |r| of each risk score with external stroma signature

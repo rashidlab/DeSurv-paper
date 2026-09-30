@@ -2,7 +2,8 @@
 # code/06_cv_grid.R — Cross-validation grid search for k × alpha × ntop
 #
 # Exhaustive 5-fold CV over k ∈ {2,...,12}, α ∈ {0,...,0.95},
-# ntop ∈ {NULL, 270} at fixed λ=0.349, ξ=0.056.
+# ntop ∈ {NULL, BO-selected ntop} at the BO-selected λ and ξ, all read from
+# results/tar_params_best_tcgacptac.rds (no typed hyperparameters).
 # Produces the training CV and external validation C-index curves
 # used in the SI "Cross-validated C-index across factorization rank" section.
 #
@@ -46,9 +47,13 @@ source("R/preprocess_helpers.R")
 # ── Configuration ─────────────────────────────────────────────────────────────
 CV_GRID_K_VALUES     <- 2:12
 CV_GRID_ALPHA_VALUES <- seq(0, 0.95, by = 0.05)
-CV_GRID_NTOP_VALUES  <- list(NULL, 270L)   # NULL = all genes; 270 = top 270 per factor
-CV_GRID_LAMBDA       <- 0.349
-CV_GRID_NU           <- 0.056
+# lambda, nu and ntop come from the BO selection (code/03), never typed here.
+tar_params_best      <- load_precomputed("tar_params_best_tcgacptac")
+stopifnot(!is.null(tar_params_best$lambda), !is.null(tar_params_best$nu),
+          !is.null(tar_params_best$ntop))
+CV_GRID_NTOP_VALUES  <- list(NULL, as.integer(tar_params_best$ntop))  # NULL = all genes
+CV_GRID_LAMBDA       <- as.numeric(tar_params_best$lambda)
+CV_GRID_NU           <- as.numeric(tar_params_best$nu)
 FIXED_PARAMS         <- list(lambdaW = 0, lambdaH = 0)
 NGENE                <- 3000L
 NFOLDS               <- 5L

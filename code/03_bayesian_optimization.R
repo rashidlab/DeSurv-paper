@@ -11,7 +11,10 @@
 #          results/precomputed/tar_k_selection_tcgacptac.rds
 #          results/precomputed/tar_params_best_tcgacptac.rds
 #          results/precomputed/tar_data_filtered_tcgacptac.rds
+#          results/desurv_bo_finalists_tcgacptac.rds (+ _alpha0_): finalist
+#            re-evaluations and the paired 1-SE k selection
 #          (+ alpha0 and elbow variants)
+# Full mode requires DESURV_BO_CONSENSUS_R (R_BO from the Track 3a gate).
 #
 # Runtime: ~4-8 hours on HPC (30 cores), ~5 min in quick mode
 
@@ -21,10 +24,21 @@ library(DeSurv)
 library(NMF)
 source("R/bo_helpers.R")
 source("R/pick_k_elbow.R")
+source("R/consensus_settings.R")
 
 # ── Configuration ─────────────────────────────────────────────────────────
+# Robust-rerun plan rev 2.1 (docs/plans/2026-09-30-robust-rerun-plan.md),
+# section 2 Track 2: every BO evaluation scores consensus-DeSurv (the reported
+# estimator) at R_BO runs per training fold, on 3 repeated CV partitions with
+# the same partitions and per-fold seed banks for every configuration; the
+# incumbent is the GP posterior-mean argmax; k is chosen among re-evaluated
+# finalists by the 1-SE rule on the empirical paired SE.
+BO_ESTIMATOR    <- "consensus"          # "mean_starts" = pre-rev-2 evaluator
+BO_INCUMBENT    <- "posterior_mean"     # "observed" = pre-rev-2 argmax
+CONSENSUS       <- desurv_consensus_settings(CONFIG$quick)   # = final-fit settings
+CV_SEED_BANK_BASE <- 4000000L           # plan section 9: per-fold bank 4,000,001 onward
 if (CONFIG$quick) {
-  NINIT          <- 2L
+  NINIT          <- 2L                  # used only if BO_ESTIMATOR == "mean_starts"
   BO_N_INIT      <- 4L
   BO_N_ITER      <- 4L
   NCORES_GRID    <- 1L
@@ -32,11 +46,12 @@ if (CONFIG$quick) {
   STD_NMF_NRUN   <- 2L
   STD_NMF_K_GRID <- 2:6
   BO_K_UPPER     <- 6L
-  BO_TOL         <- 1e-3
-  BO_MAXIT       <- 200L
   BO_NGENE       <- 500L
+  BO_CV_SEEDS    <- 20261101L           # one partition in quick mode
+  BO_CONSENSUS_R <- 3L
+  FINALISTS_PER_K <- 2L
 } else {
-  NINIT          <- 30L
+  NINIT          <- 30L                 # used only if BO_ESTIMATOR == "mean_starts"
   BO_N_INIT      <- 50L
   BO_N_ITER      <- 100L
   NCORES_GRID    <- CONFIG$ncores
@@ -44,10 +59,20 @@ if (CONFIG$quick) {
   STD_NMF_NRUN   <- 30L
   STD_NMF_K_GRID <- 2:12
   BO_K_UPPER     <- 12L
-  BO_TOL         <- 1e-5
-  BO_MAXIT       <- 4000L
   BO_NGENE       <- 3000L
+  BO_CV_SEEDS    <- c(20261101L, 20261102L, 20261103L)   # plan section 9
+  # R_BO = the smallest R that passed the Track 3a gate (plan section 2). It is
+  # not known until the gate has run, so it must be supplied; no default.
+  BO_CONSENSUS_R <- as.integer(Sys.getenv("DESURV_BO_CONSENSUS_R", NA))
+  if (is.na(BO_CONSENSUS_R) || BO_CONSENSUS_R < 1L) {
+    stop("Set DESURV_BO_CONSENSUS_R to R_BO, the smallest R that passed the Track 3a ",
+         "convergence gate (plan section 2).")
+  }
+  FINALISTS_PER_K <- 3L
 }
+# Constituent-run tolerances inside CV = the final fit's (one source).
+BO_TOL   <- CONSENSUS$tol
+BO_MAXIT <- CONSENSUS$maxit
 
 BO_BOUNDS <- list(
   k_grid     = list(lower = 2L, upper = BO_K_UPPER, type = "integer"),
@@ -57,11 +82,11 @@ BO_BOUNDS <- list(
 )
 
 BO_FIXED <- list(
-  n_starts     = NINIT,
   ngene        = BO_NGENE,
   lambdaW_grid = 0,
   lambdaH_grid = 0
 )
+if (identical(BO_ESTIMATOR, "mean_starts")) BO_FIXED$n_starts <- NINIT
 
 # ── ntop handling ──────────────────────────────────────────────────────────
 BO_BOUNDS$ntop <- list(lower = CONFIG$ntop_lower, upper = CONFIG$ntop_upper,
@@ -86,8 +111,38 @@ BO_COMMON <- list(
   refine_control    = NULL,
   verbose           = TRUE,
   parallel_grid     = PARALLEL,
-  ncores_grid       = NCORES_GRID
+  ncores_grid       = NCORES_GRID,
+  estimator         = BO_ESTIMATOR,
+  incumbent         = BO_INCUMBENT,
+  cv_seeds          = BO_CV_SEEDS,
+  consensus_runs    = BO_CONSENSUS_R,
+  consensus_seed_base = CV_SEED_BANK_BASE,
+  consensus_control = list(tol_init = CONSENSUS$tol_init, imaxit = CONSENSUS$imaxit)
 )
+
+# Finalists: top FINALISTS_PER_K configurations per k by GP posterior mean,
+# re-evaluated on the identical repeated CV (same partitions and seed banks).
+run_bo_finalists <- function(bo_results) {
+  DeSurv::desurv_bo_finalists(
+    bo_results,
+    X = tar_data$ex,
+    y = tar_data$sampInfo$time,
+    d = tar_data$sampInfo$event,
+    dataset = tar_data$sampInfo$dataset,
+    samp_keeps = tar_data$samp_keeps,
+    n_per_k = FINALISTS_PER_K,
+    cv_overrides = list(parallel_grid = PARALLEL, ncores_grid = NCORES_GRID)
+  )
+}
+
+# ngene is fixed in BO_FIXED (not tuned), so the filtered data use that value.
+bo_ngene <- function(params) {
+  if (!is.null(params$ngene) && !is.na(params$ngene)) {
+    as.integer(round(params$ngene))
+  } else {
+    as.integer(BO_FIXED$ngene)
+  }
+}
 
 # ── Load training data ────────────────────────────────────────────────────
 tar_data <- load_precomputed("tar_data_tcgacptac")
@@ -108,33 +163,30 @@ desurv_bo_results <- cache_or_compute("desurv_bo_results_tcgacptac", {
   ))
 })
 
-# K selection (1-SE rule)
-tar_k_selection <- cache_or_compute("tar_k_selection_tcgacptac", {
-  select_bo_k_by_cv_se(desurv_bo_results)
+# Finalists and k selection (1-SE rule on the empirical paired CV SE)
+desurv_bo_finalists <- cache_or_compute("desurv_bo_finalists_tcgacptac", {
+  run_bo_finalists(desurv_bo_results)
 })
 
-# Extract best params
-tar_params_best <- cache_or_compute("tar_params_best_tcgacptac", {
-  params <- standardize_bo_params(desurv_bo_results$overall_best$params)
-  if (!is.null(tar_k_selection$k_selected)) {
-    params$k <- tar_k_selection$k_selected
-  }
-  params
+tar_k_selection <- cache_or_compute("tar_k_selection_tcgacptac", {
+  k_selection_from_finalists(desurv_bo_finalists)
 })
+
+# All hyperparameters from the selected k's own (finalist) row.
+tar_params_best <- cache_or_compute("tar_params_best_tcgacptac", {
+  select_bo_params_finalists(desurv_bo_finalists)
+})
+stopifnot(identical(tar_params_best$k, tar_k_selection$k_selected))
 
 # Preprocess training data with BO-selected ngene
 source("R/preprocess_helpers.R")
 tar_data_filtered <- cache_or_compute("tar_data_filtered_tcgacptac", {
-  ngene_value <- if (!is.null(tar_params_best$ngene) && !is.na(tar_params_best$ngene)) {
-    as.integer(round(tar_params_best$ngene))
-  } else {
-    3000L
-  }
-  preprocess_training_data(data = tar_data, ngene = ngene_value,
+  preprocess_training_data(data = tar_data, ngene = bo_ngene(tar_params_best),
                            method_trans_train = "rank")
 })
 
-message("  DeSurv BO: k=", tar_params_best$k, ", alpha=", round(tar_params_best$alpha, 3))
+message("  DeSurv BO: k=", tar_params_best$k, " (runner-up k=", tar_k_selection$runner_up_k,
+        "), alpha=", round(tar_params_best$alpha, 3))
 
 # ── 2. Standard NMF BO (alpha = 0) ──────────────────────────────────────
 desurv_bo_results_alpha0 <- cache_or_compute("desurv_bo_results_alpha0_tcgacptac", {
@@ -155,22 +207,20 @@ desurv_bo_results_alpha0 <- cache_or_compute("desurv_bo_results_alpha0_tcgacptac
   ))
 })
 
-tar_k_selection_alpha0 <- select_bo_k_by_cv_se(desurv_bo_results_alpha0)
+# Same selection as the main BO (finalists + paired 1-SE), so the control's
+# hyperparameters also come from its selected k's own row.
+desurv_bo_finalists_alpha0 <- cache_or_compute("desurv_bo_finalists_alpha0_tcgacptac", {
+  run_bo_finalists(desurv_bo_results_alpha0)
+})
+tar_k_selection_alpha0 <- k_selection_from_finalists(desurv_bo_finalists_alpha0)
 
 tar_params_best_alpha0 <- cache_or_compute("tar_params_best_alpha0_tcgacptac", {
-  params <- standardize_bo_params(desurv_bo_results_alpha0$overall_best$params)
-  if (!is.null(tar_k_selection_alpha0$k_selected)) {
-    params$k <- tar_k_selection_alpha0$k_selected
-  }
+  params <- select_bo_params_finalists(desurv_bo_finalists_alpha0)
   params$alpha <- 0
   params
 })
 
-ngene_alpha0 <- if (!is.null(tar_params_best_alpha0$ngene) && !is.na(tar_params_best_alpha0$ngene)) {
-  as.integer(round(tar_params_best_alpha0$ngene))
-} else {
-  3000L
-}
+ngene_alpha0 <- bo_ngene(tar_params_best_alpha0)
 
 tar_data_filtered_alpha0 <- cache_or_compute("tar_data_filtered_alpha0_tcgacptac", {
   preprocess_training_data(data = tar_data, ngene = ngene_alpha0,
@@ -217,11 +267,7 @@ tar_params_best_elbowk <- cache_or_compute("tar_params_best_elbowk_tcgacptac", {
   standardize_bo_params(desurv_bo_results_elbowk$overall_best$params)
 })
 
-ngene_elbowk <- if (!is.null(tar_params_best_elbowk$ngene) && !is.na(tar_params_best_elbowk$ngene)) {
-  as.integer(round(tar_params_best_elbowk$ngene))
-} else {
-  3000L
-}
+ngene_elbowk <- bo_ngene(tar_params_best_elbowk)
 
 tar_data_filtered_elbowk <- cache_or_compute("tar_data_filtered_elbowk_tcgacptac", {
   preprocess_training_data(data = tar_data, ngene = ngene_elbowk,
@@ -273,7 +319,7 @@ tar_params_best_a0k3 <- cache_or_compute("tar_params_best_a0k3_tcgacptac", {
 # (ngene_value above is scoped inside a cache_or_compute expr and does not
 # exist here on a cache hit, so recompute the expectation from BO_FIXED.)
 local({
-  .want <- if (!is.null(BO_FIXED$ngene)) as.integer(BO_FIXED$ngene) else 3000L
+  .want <- as.integer(BO_FIXED$ngene)
   .got  <- tar_params_best_a0k3$ngene
   if (!is.null(.got) && !is.na(.got)) stopifnot(as.integer(round(.got)) == .want)
 })

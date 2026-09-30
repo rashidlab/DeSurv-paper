@@ -207,6 +207,64 @@ select_bo_params_1se <- function(bo_results) {
   out
 }
 
+# ── Finalist-based selection (robust-rerun plan rev 2.1, Track 2) ──────────
+# `finalists` is DeSurv::desurv_bo_finalists(): the top configurations per k by
+# GP posterior mean, re-evaluated on the identical repeated CV, with k chosen by
+# the 1-SE rule on the empirical paired SE (DeSurv::desurv_select_k_paired_1se).
+# Every hyperparameter is taken from the selected finalist's own BO row, never
+# from another k's row (the code/03:117-123 defect this replaces).
+select_bo_params_finalists <- function(finalists) {
+  if (!inherits(finalists, "desurv_bo_finalists")) {
+    stop("select_bo_params_finalists: expects a DeSurv::desurv_bo_finalists() result.")
+  }
+  sel <- finalists$selection
+  row <- finalists$configs[finalists$configs$finalist_id == sel$selected_finalist, ,
+                           drop = FALSE]
+  if (nrow(row) != 1L) {
+    stop("select_bo_params_finalists: selected finalist not found exactly once.")
+  }
+  out <- list()
+  for (nm in finalists$param_names) {
+    val <- row[[nm]]
+    if (is.factor(val)) val <- as.character(val)
+    out[[sub("_grid$", "", nm)]] <- val[[1]]
+  }
+  if (!is.null(out$k) && as.integer(round(out$k)) != sel$k_selected) {
+    stop("select_bo_params_finalists: selected row has k = ", out$k,
+         " but the selected k is ", sel$k_selected, ".")
+  }
+  if (!is.null(out$k)) out$k <- as.integer(round(out$k))
+  if (!is.null(out$ntop)) out$ntop <- as.integer(round(out$ntop))
+  attr(out, "k_selection") <- k_selection_from_finalists(finalists)
+  attr(out, "eval_id") <- row$eval_id[[1]]
+  out
+}
+
+# tar_k_selection-shaped summary of the paired 1-SE selection. Fields read by
+# the manuscript (k_selected, k_best, best_mean, best_se) keep their names.
+# There is no single threshold under the paired rule (each k has its own paired
+# SE), so lcb_threshold is NA; per-k thresholds are in `per_k`.
+k_selection_from_finalists <- function(finalists) {
+  sel <- finalists$selection
+  fc <- finalists$fold_cindex
+  best_vals <- fc$cindex[fc$finalist_id == sel$best_finalist]
+  best_vals <- best_vals[is.finite(best_vals)]
+  per_k <- sel$per_k
+  per_k$threshold <- sel$best_mean - per_k$se_diff
+  list(
+    k_selected    = sel$k_selected,
+    k_best        = sel$k_best,
+    runner_up_k   = sel$runner_up_k,
+    best_mean     = sel$best_mean,
+    best_se       = if (length(best_vals) > 1L) stats::sd(best_vals) / sqrt(length(best_vals)) else NA_real_,
+    lcb_threshold = NA_real_,
+    per_k         = per_k,
+    rule          = sel$rule,
+    se_definition = sel$se_definition,
+    reason        = "paired_1se_finalists"
+  )
+}
+
 collect_bo_diagnostics <- function(bo_results, history_df = NULL) {
   if (is.null(bo_results)) {
     return(NULL)
@@ -290,6 +348,10 @@ compute_bo_eval_se <- function(diagnostics) {
   }
 
   group_cols <- c("eval_id", "fold")
+  # Repeated CV (DeSurv >= 1.1 `cv_seeds`): fold f of partition r is its own unit.
+  if ("rep" %in% names(diagnostics)) {
+    group_cols <- c("rep", group_cols)
+  }
   if ("run_id" %in% names(diagnostics)) {
     group_cols <- c("run_id", group_cols)
   }

@@ -933,7 +933,7 @@ were analyzed on a log scale: RNA-seq cohorts as log$_2$(TPM + 1); microarray co
 in descending order of mean expression and, independently, of variance; the
 3,000 genes with the lowest sum of these two ranks were retained, selecting
 genes that are both highly expressed and highly variable.
-The intersection of these two gene sets yielded 1,970 genes used for model
+The intersection of the two cohorts' gene sets yielded 1,970 genes used for model
 training. Validation datasets were restricted to this same 1,970-gene set.
 
 <!-- obj: front.p52.41df -->
@@ -992,11 +992,9 @@ from GDC.
 \caption{Summary of PDAC cohorts used in this study. $N$ denotes the number of
 samples after all quality-control filters (histology, survival validity,
 dataset-specific exclusions). Patient-level metadata: OS = overall survival
-(time and event indicator); PurIST = tumor subtype classification
-(Rashid et al. 2020); DeCAF = CAF subtype classification
-(Peng et al. 2026). Expression data and molecular classifications
-for the validation cohorts were originally compiled for the DeCAF study
-(Peng et al. 2026). Events denotes the number of overall-survival events (deaths) with the corresponding event rate; outcome frequency was lower and more homogeneous in the training cohorts (`r .coh$train_lo`--`r .coh$train_hi`\%) than across the validation cohorts (`r .coh$val_lo`--`r .coh$val_hi`\%, pooled `r .coh$val_pooled`\%), a case-mix difference relevant to interpreting external-validation performance.}
+(time and event indicator); PurIST = tumor subtype classification;
+DeCAF = CAF subtype classification. Expression data and molecular classifications
+for the validation cohorts were originally compiled for the DeCAF study. Events denotes the number of overall-survival events (deaths) with the corresponding event rate; outcome frequency was lower and more homogeneous in the training cohorts (`r .coh$train_lo`--`r .coh$train_hi`\%) than across the validation cohorts (`r .coh$val_lo`--`r .coh$val_hi`\%, pooled `r .coh$val_pooled`\%), a case-mix difference relevant to interpreting external-validation performance.}
 \label{tab:cohorts}
 \footnotesize
 \resizebox{\textwidth}{!}{%
@@ -1843,8 +1841,8 @@ The idealized alternating scheme is not accompanied by a formal convergence guar
 ```
 
 <!-- obj: front.p139.3ca3 -->
-The previous section documents that the optimizer converges. It does not
-establish that the programs it converges to are the same ones each time, and
+The previous section documents that every run stops on its criterion with a monotonically decreasing objective. It does not
+establish that the programs it reaches are the same ones each time, and
 that is the property the manuscript relies on when it applies a frozen
 decomposition across cohorts. We therefore measured stability at the
 level of the recovered programs rather than the objective, using the same
@@ -2296,7 +2294,7 @@ supervised model's own $\lambda$, $\xi$ and $n_{\text{top}}$ fixed and varying
 only $\alpha$ gave the same conclusion. Matching the tuning budget therefore does not close the representational gap, supporting survival supervision rather than tuning effort alone as the source of the reorganization reported in the main text.
 
 <!-- obj: front.p126.c4e3 -->
-standard NMF at elbow-selected $k = 5$ and the rank-optimized unsupervised control at $k = 7$ both substantially improve over standard NMF at $k = 3$ across all cohorts (Table \ref{tab:tab-cindex-comparison}); additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, the rank-optimized control exceeds DeSurv's C-index in all five validation datasets, so unsupervised factorization given more factors discriminates at least as well as the supervised three-program model. The comparison also differs in representation size: the $k = 7$ control represents a broader set of established programs across seven factors (Fig. \ref{fig:fig-nmf-k7-heatmap}; Supplementary Fig. \ref{fig:fig-rpm}) rather than concentrating the prognostic signal in three programs. Both the $k = 7$ control and the DeSurv linear predictor retain significant prognostic value after adjustment for established classifiers (main-text Table \ref{tab:hr-adjusted}); DeSurv does so with fewer factors. Both models selected their rank by the same one-standard-error rule applied to their own Bayesian-optimization results; seven is the smallest rank at which the $\alpha = 0$ search came within one standard error of its best configuration (which had rank `r local({source("R/bo_helpers.R"); select_bo_k_by_cv_se(read_result("desurv_bo_results_alpha0_tcgacptac"))$k_best})`), not a general minimum rank for unsupervised recovery of comparable prognostic information.
+Standard NMF at elbow-selected $k = 5$ and the rank-optimized unsupervised control at $k = 7$ both improve over standard NMF at $k = 3$ in all five validation datasets (Table \ref{tab:tab-cindex-comparison}); additional unsupervised factors capture prognostically relevant variation missed at the matched rank. At $k = 7$, the rank-optimized control exceeds DeSurv's C-index in all five validation datasets, so unsupervised factorization given more factors discriminates at least as well as the supervised three-program model. The comparison also differs in representation size: the $k = 7$ control represents a broader set of established programs across seven factors (Fig. \ref{fig:fig-nmf-k7-heatmap}; Supplementary Fig. \ref{fig:fig-rpm}) rather than concentrating the prognostic signal in three programs. Both the $k = 7$ control and the DeSurv linear predictor retain significant prognostic value after adjustment for established classifiers (main-text Table \ref{tab:hr-adjusted}); DeSurv does so with fewer factors. Both models selected their rank by the same one-standard-error rule applied to their own Bayesian-optimization results; seven is the smallest rank at which the $\alpha = 0$ search came within one standard error of its best configuration (which had rank `r local({source("R/bo_helpers.R"); select_bo_k_by_cv_se(read_result("desurv_bo_results_alpha0_tcgacptac"))$k_best})`), not a general minimum rank for unsupervised recovery of comparable prognostic information.
 
 
 <!-- obj: front.p127.932f -->

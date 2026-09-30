@@ -992,7 +992,7 @@ dataset-specific exclusions). Patient-level metadata: OS = overall survival
 (Rashid et al. 2020); DeCAF = CAF subtype classification
 (Peng et al. 2026). Expression data and molecular classifications
 for the validation cohorts were originally compiled for the DeCAF study
-(Peng et al. 2026). Events denotes the number of overall-survival events (deaths) with the corresponding event rate; outcome frequency was lower and more homogeneous in the training cohorts (`r .coh$train_lo`--`r .coh$train_hi`\%) than across the validation cohorts (`r .coh$val_lo`--`r .coh$val_hi`\%, pooled `r .coh$val_pooled`\%), a case-mix difference relevant to the interpretation of external-validation performance.}
+(Peng et al. 2026). Events denotes the number of overall-survival events (deaths) with the corresponding event rate; outcome frequency was lower and more homogeneous in the training cohorts (`r .coh$train_lo`--`r .coh$train_hi`\%) than across the validation cohorts (`r .coh$val_lo`--`r .coh$val_hi`\%, pooled `r .coh$val_pooled`\%), a case-mix difference relevant to interpreting external-validation performance.}
 \label{tab:cohorts}
 \footnotesize
 \resizebox{\textwidth}{!}{%

@@ -1,10 +1,11 @@
 #!/bin/bash
 # render + full guard set; prints one line per check; exits nonzero if render or any guard fails
 # Usage: scripts/guards.sh   (from anywhere; renders with DESURV_RECOMPUTE=FALSE, never recomputes)
+# Render timeout: GUARDS_RENDER_TIMEOUT seconds (default 1200; 480 was too short under load 12+, killing TX-0010 and TX-0012 in pass 2)
 # Manuscript guard set: render, first-use terms, sentence-extractor selftest, build graph,
 # prose integrity, abstract HRs vs cache, unresolved refs, page counts, main-text and abstract word counts.
 cd "$(dirname "$0")/.."
-DESURV_RECOMPUTE=FALSE timeout 480 make paper > "${GUARDS_LOG:-/tmp/desurv-render.log}" 2>&1; rc=$?; echo "  render exit=$rc"
+DESURV_RECOMPUTE=FALSE timeout "${GUARDS_RENDER_TIMEOUT:-1200}" make paper > "${GUARDS_LOG:-/tmp/desurv-render.log}" 2>&1; rc=$?; echo "  render exit=$rc"
 [ $rc = 0 ] || { L=$(ls -t paper/*.log 2>/dev/null|head -1); [ -n "$L" ] && grep -n -A6 '^! ' "$L" | head -20; tail -20 "${GUARDS_LOG:-/tmp/desurv-render.log}"; exit 1; }
 rm -f paper/paper.aux paper/si_appendix.aux paper/si_appendix.lof paper/si_appendix.lot paper/si_appendix.toc
 fail=0

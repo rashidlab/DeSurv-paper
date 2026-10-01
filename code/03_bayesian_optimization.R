@@ -140,7 +140,15 @@ bo_ngene <- function(params) {
 # ── Load training data ────────────────────────────────────────────────────
 tar_data <- load_precomputed("tar_data_tcgacptac")
 
+# Rev 3 step 4 orchestration only: DESURV_BO_STAGE runs one BO section so the BOs can be
+# separate Slurm jobs ("main", "alpha0", "elbowk", "a0k3"; default "all" = unchanged
+# behavior). "a0k3" needs the main stage's tar_params_best in its results directory.
+BO_STAGE <- Sys.getenv("DESURV_BO_STAGE", "all")
+stopifnot(BO_STAGE %in% c("all", "main", "alpha0", "elbowk", "a0k3"))
+bo_stage_runs <- function(stage) BO_STAGE %in% c("all", stage)
+
 # ── 1. DeSurv BO (supervised) ────────────────────────────────────────────
+if (bo_stage_runs("main")) {
 desurv_bo_results <- cache_or_compute("desurv_bo_results_tcgacptac", {
   do.call(DeSurv::desurv_cv_bayesopt_refine, c(
     list(
@@ -181,7 +189,9 @@ tar_data_filtered <- cache_or_compute("tar_data_filtered_tcgacptac", {
 message("  DeSurv BO: k=", tar_params_best$k, " (runner-up k=", tar_k_selection$runner_up_k,
         "), alpha=", round(tar_params_best$alpha, 3))
 
+}  # end stage "main"
 # ── 2. Standard NMF BO (alpha = 0) ──────────────────────────────────────
+if (bo_stage_runs("alpha0")) {
 desurv_bo_results_alpha0 <- cache_or_compute("desurv_bo_results_alpha0_tcgacptac", {
   bounds_a0 <- BO_BOUNDS
   bounds_a0$alpha_grid <- NULL
@@ -222,7 +232,15 @@ tar_data_filtered_alpha0 <- cache_or_compute("tar_data_filtered_alpha0_tcgacptac
 
 message("  Alpha=0 BO: k=", tar_params_best_alpha0$k)
 
+}  # end stage "alpha0"
 # ── 3. Standard NMF for elbow k selection ────────────────────────────────
+if (bo_stage_runs("elbowk")) {
+if (!exists("tar_data_filtered")) {  # elbowk run alone: same object the main stage builds (ngene fixed in BO_FIXED)
+  source("R/preprocess_helpers.R")
+  tar_data_filtered <- cache_or_compute("tar_data_filtered_tcgacptac", {
+    preprocess_training_data(data = tar_data, ngene = as.integer(BO_FIXED$ngene), method_trans_train = "rank")
+  })
+}
 STD_NMF_SEED <- 20261201L   # rev 3: fixed seed for the standard-NMF rank survey (was unseeded)
 fit_std <- cache_or_compute("fit_std_tcgacptac", {
   # Numeric seed: NMF derives L'Ecuyer RNG streams from it for the nrun runs, so the
@@ -271,7 +289,10 @@ tar_data_filtered_elbowk <- cache_or_compute("tar_data_filtered_elbowk_tcgacptac
                            method_trans_train = "rank")
 })
 
+}  # end stage "elbowk"
 # ── 5. Fair matched-rank comparator: alpha = 0 at DeSurv's own k ─────────
+if (bo_stage_runs("a0k3")) {
+if (!exists("tar_params_best")) tar_params_best <- load_precomputed("tar_params_best_tcgacptac")  # from the main-stage job
 # The matched-rank comparison in the Results uses standard NMF at k = 3, which
 # receives neither DeSurv's consensus initialization nor its tuning budget, so
 # that contrast cannot separate supervision from tuning. This block removes both
@@ -326,4 +347,5 @@ message("  Fair matched-rank BO (alpha=0, k fixed): k=", tar_params_best_a0k3$k,
         " nu=", signif(tar_params_best_a0k3$nu, 3),
         " ntop=", tar_params_best_a0k3$ntop)
 
+}  # end stage "a0k3"
 message("=== Step 3 complete ===")

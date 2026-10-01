@@ -3,7 +3,7 @@
 # Standalone: reads tar_data_tcgacptac.rds from BENCH_DIR, writes bench_results.rds there.
 suppressMessages(library(DeSurv))
 stopifnot(packageVersion("DeSurv") >= "1.2.0")
-dir <- Sys.getenv("BENCH_DIR"); ncores <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "32"))
+dir <- Sys.getenv("BENCH_DIR"); stopifnot(nzchar(dir)); ncores <- as.integer(Sys.getenv("SLURM_CPUS_PER_TASK", "32"))
 td <- readRDS(file.path(dir, "tar_data_tcgacptac.rds"))
 # code/03 BO_COMMON / BO_FIXED / R/reported_settings.R (full mode)
 common <- list(X = td$ex, y = td$sampInfo$time, d = td$sampInfo$event,

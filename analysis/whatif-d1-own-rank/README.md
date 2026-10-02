@@ -113,3 +113,21 @@ and its classical factor matches the classical lists more strongly than D1 (0.67
 combination of two things this solution keeps apart: classical tumor (its F1) and the quiescent/immune stromal
 factor (its F2), matching the score regression above (D1 score r +0.59 with F1, +0.56 with F2). What k = 3 DeSurv
 offers over it is a compact supervised combination, not resolution of programs the unsupervised fit misses.
+
+## Per-factor pooled validation HR (code/09a pooled_factor_hr, Fig. 4a diamonds; HR per within-dataset SD)
+
+| fit | factor (program) | HR (95% CI) |
+|---|---|---|
+| DeSurv k = 3 | D1 classical + quiescent stroma | 0.75 (0.68-0.83) |
+| | D2 immune + activated stroma | 1.02 (0.92-1.12) |
+| | D3 basal-like | 1.09 (0.98-1.21) |
+| NMF k = 3 | N1 classical + basal mixed / N2 exocrine / N3 immune + stroma | 0.98 / 0.94 / 1.00, all n.s. |
+| alpha0 k = 6 | F1 classical | 0.79 (0.71-0.87) |
+| | F4 basal-like | 1.29 (1.16-1.43) |
+| | F3 exocrine | 0.93 (0.84-1.04) |
+| | F2 immune/quiescent, F5 activated stroma | 0.92, 1.08, n.s. |
+| | F6 (no reference match) | 0.87 (0.79-0.96) |
+| alpha0 k = 7 | F1 classical 0.79 (0.71-0.88); F3 basal-like 1.35 (1.22-1.50); F2 exocrine 0.93 n.s.; F4 activated stroma 1.08 n.s.; F5 immune/quiescent 0.94 n.s.; F6 ECM 1.13 (1.02-1.24); F7 immune 0.86 (0.78-0.94) | |
+
+Exocrine carries no survival signal at any rank. At its own rank the unsupervised fit has a classical factor about as
+prognostic as D1 (0.79 vs 0.75) and a basal-like factor stronger than D3 (1.29-1.35 vs 1.09 n.s.).

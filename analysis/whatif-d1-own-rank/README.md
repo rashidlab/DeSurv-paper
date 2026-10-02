@@ -120,14 +120,44 @@ offers over it is a compact supervised combination, not resolution of programs t
 |---|---|---|
 | DeSurv k = 3 | D1 classical + quiescent stroma | 0.75 (0.68-0.83) |
 | | D2 immune + activated stroma | 1.02 (0.92-1.12) |
-| | D3 basal-like | 1.09 (0.98-1.21) |
+| | D3 basal-like | 1.09 (0.98-1.21), n.s. |
 | NMF k = 3 | N1 classical + basal mixed / N2 exocrine / N3 immune + stroma | 0.98 / 0.94 / 1.00, all n.s. |
 | alpha0 k = 6 | F1 classical | 0.79 (0.71-0.87) |
 | | F4 basal-like | 1.29 (1.16-1.43) |
 | | F3 exocrine | 0.93 (0.84-1.04) |
 | | F2 immune/quiescent, F5 activated stroma | 0.92, 1.08, n.s. |
 | | F6 (no reference match) | 0.87 (0.79-0.96) |
-| alpha0 k = 7 | F1 classical 0.79 (0.71-0.88); F3 basal-like 1.35 (1.22-1.50); F2 exocrine 0.93 n.s.; F4 activated stroma 1.08 n.s.; F5 immune/quiescent 0.94 n.s.; F6 ECM 1.13 (1.02-1.24); F7 immune 0.86 (0.78-0.94) | |
+| alpha0 k = 7 | F1 classical | 0.79 (0.71-0.88) |
+| | F3 basal-like | 1.35 (1.22-1.50) |
+| | F2 exocrine | 0.93, n.s. |
+| | F4 activated stroma, F5 immune/quiescent | 1.08, 0.94, n.s. |
+| | F6 ECM | 1.13 (1.02-1.24) |
+| | F7 immune | 0.86 (0.78-0.94) |
 
 Exocrine carries no survival signal at any rank. At its own rank the unsupervised fit has a classical factor about as
 prognostic as D1 (0.79 vs 0.75) and a basal-like factor stronger than D3 (1.29-1.35 vs 1.09 n.s.).
+
+## Proposed framing for the text stage (owner + external read, 2026-10-02; not applied; recheck on Step 5 numbers)
+
+Adopt:
+- Thesis: unsupervised factorization gives a high-resolution description of transcriptional heterogeneity; DeSurv
+  gives a parsimonious representation of the part relevant to the outcome. They solve different problems, which
+  answers "the own-rank NMF looks biologically cleaner".
+- Exocrine: real biology that is non-prognostic for this endpoint (not "noise"); prominent in every alpha = 0 fit,
+  absent from DeSurv, pooled HR 0.93-0.94 n.s. The cleanest illustration that variance is not outcome relevance.
+- PDAC as a positive control: known taxonomy lets us ask whether supervision retains the prognostic components.
+- NMF rank selection, softened: standard NMF has no intrinsic mechanism for choosing a factorization for prognosis;
+  common criteria target reconstruction or stability and can disagree (SI L2035). State that the alpha = 0 control
+  had outcome-guided rank selection, an advantage standard NMF users lack.
+- Three changes and stop: explicit exocrine absence; a factor-level table (method, factor, reference
+  correspondence, pooled validation HR); Results/Discussion rewritten around parsimony and outcome relevance, not
+  discovery or superiority to optimized NMF.
+
+Caveats that must be in the text:
+- Only D1 is individually prognostic (0.75); D2 1.02 and D3 1.09 n.s., while the k = 7 control has 4 of 7
+  significant factors. Claim concentration of prognostic signal in D1 and the combined score, not "enriched factors".
+- Basal-like: the own-rank NMF basal factor is strongly prognostic (1.29-1.35); DeSurv's D3 is not. The positive-
+  control framing must say so. (Hypothesis, untested: D1 carries the classical-vs-basal contrast from the protective
+  side.)
+- "3 factors vs 6-7 for comparable prediction" and "DeSurv beats NMF" only against matched rank; both depend on the
+  new main BO (DeSurv k and CV) and Step 5 validation numbers.

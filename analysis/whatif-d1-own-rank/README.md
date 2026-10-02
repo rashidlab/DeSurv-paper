@@ -73,7 +73,7 @@ What D1's label rests on:
 Points a competitor would make:
 1. The label rests on 2-3 genes and is not significant after FDR (0.19); it is displayed because r clears 0.2.
 2. D1 carries myCAF genes as often as iCAF genes in its top 50.
-3. "restCAF" is a renamed single-cell iCAF list, not the DeCAF restCAF genes, which are absent.
+3. "restCAF" is a renamed single-cell iCAF list, not the DeCAF restCAF genes, which are absent from D1.
 4. "restCAF and iCAF corresponded to a DeSurv factor but to no standard NMF factor" (Results L440) holds only at
    matched rank. Fig. 2a's own function (make_gene_overlap_heatmap, same reference set, same r > 0.2 display rule)
    applied to each fit:
@@ -85,6 +85,8 @@ Points a competitor would make:
    | alpha0 k = 6 (F2) | 0.27, 1.2e-4, 8 | 0.24, 9.2e-4, 8 | 0.15, 0.057, 3 |
    | alpha0 k = 7 (F5) | 0.27, 6.2e-5, 9 | 0.25, 2.1e-4, 9 | 0.17, 0.016, 4 |
 
+   Caveat: the correlation universe is the union of all factors' top-50 genes and grows with k (75 genes at k = 3,
+   240 at k = 6, 251 at k = 7), so FDRs are smaller at k = 6/7 partly for that reason alone; compare r, not FDR.
    The correlation is about the same; the difference is support and significance (2 genes, FDR 0.19 for D1 vs 8-9
    genes, FDR 1e-4 for the own-rank control). At k = 7 the control also shows myCAF (r 0.20, FDR 0.004) and
    SCISSORS myCAF (0.23, 0.0013) on a separate factor (F4). By the paper's own metric, the own-rank unsupervised
@@ -93,3 +95,21 @@ Points a competitor would make:
    the abstract's "classical tumor + restCAF-like" label carries none of it.
 Claims-inventory note: the frozen label test (best reference overlap, per-program argmax) would pass on 2 genes; it
 tests stability across reruns, not strength. Repeat this check on the Step 5 fit.
+
+## Fig. 2a-style heatmaps, side by side (heatmap_*.png; programs with r > 0.2, * = FDR < 0.05)
+
+- DeSurv k = 3: D1 classical tumor (DECODER 0.40*, Puleo 0.32) + iCAF/restCAF (0.24, n.s.); D2 immune (0.42*) +
+  activated stroma (0.37*) + proCAF (0.23); D3 basal-like (0.34-0.39*). 16 programs shown.
+- NMF k = 3: N1 classical AND basal-like mixed; N2 exocrine (0.81*); N3 immune + activated stroma. 15 shown.
+- alpha0 k = 6 and k = 7 (near identical): a clean classical tumor factor (DECODER 0.65-0.67*, 9 classical lists), a
+  clean basal-like factor (DECODER 0.58-0.61*), exocrine, activated stroma / ECM (DECODER 0.63-0.64*, Maurer ECM
+  0.54-0.55*, proCAF 0.23*; k = 7 adds Elyada myCAF 0.20*), and an immune + endocrine + iCAF/restCAF factor
+  (Maurer Immune 0.34-0.40*, DECODER Endocrine 0.31-0.37*, iCAF 0.27*, restCAF 0.24-0.25*). k = 6 has one factor
+  with nothing above 0.2; k = 7 splits a second, weaker ECM factor and a weak immune factor. 27 / 32 shown.
+
+Reading: the own-rank unsupervised solution is cleaner and more interpretable than either k = 3 fit. It separates
+classical from basal-like (NMF k = 3 mixes them), separates activated stroma from the immune/quiescent compartment,
+and its classical factor matches the classical lists more strongly than D1 (0.67 vs 0.40). DeSurv's D1 is the
+combination of two things this solution keeps apart: classical tumor (its F1) and the quiescent/immune stromal
+factor (its F2), matching the score regression above (D1 score r +0.59 with F1, +0.56 with F2). What k = 3 DeSurv
+offers over it is a compact supervised combination, not resolution of programs the unsupervised fit misses.

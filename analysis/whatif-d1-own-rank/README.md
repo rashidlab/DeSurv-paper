@@ -66,7 +66,8 @@ What D1's label rests on:
 - Elyada iCAF: r 0.24, FDR 0.19, carried by 2 genes (S100A4, CXCL14).
 - "SCISSORS restCAF" (= SCISSORS iCAF): r 0.24, FDR 0.19, carried by 2 genes (LIF, CXCL14). CXCL14 is shared.
 - Elyada myCAF: 2 genes in D1's top 50 too (CST1, HOPX), r 0.14, FDR 0.43.
-- deCAF restCAF (the DeCAF classifier the "restCAF" name comes from): 0 genes in the correlation universe.
+- deCAF restCAF (the DeCAF classifier the "restCAF" name comes from): all 8 genes are in the 1,970-gene data and in
+  the reference set, but none is in any DeSurv factor's top 50, so the list contributes nothing to Fig. 2a.
 - Full-gene view (code/23): D1 |rho| <= 0.10 for every CAF-state list.
 
 Points a competitor would make:
@@ -74,9 +75,20 @@ Points a competitor would make:
 2. D1 carries myCAF genes as often as iCAF genes in its top 50.
 3. "restCAF" is a renamed single-cell iCAF list, not the DeCAF restCAF genes, which are absent.
 4. "restCAF and iCAF corresponded to a DeSurv factor but to no standard NMF factor" (Results L440) holds only at
-   matched rank. At its own selected rank the unsupervised fit has a factor with 8/25 Elyada iCAF and 7/17 SCISSORS
-   restCAF genes in its top 50 (k = 6 F2; k = 7 F5), far more than D1's 2. Those are quiescent-fibroblast genes,
-   but by the paper's own correspondence metric the unsupervised control matches these lists better than D1 does.
+   matched rank. Fig. 2a's own function (make_gene_overlap_heatmap, same reference set, same r > 0.2 display rule)
+   applied to each fit:
+
+   | fit | Elyada iCAF: best factor r, FDR, list genes in support | SCISSORS iCAF ("restCAF"): r, FDR, genes | deCAF restCAF: r, FDR |
+   |---|---|---|---|
+   | DeSurv k = 3 (D1) | 0.24, 0.19, 2 (S100A4, CXCL14) | 0.24, 0.19, 2 (LIF, CXCL14) | none in top 50 |
+   | NMF k = 3 | none in top 50 | none in top 50 | none in top 50 |
+   | alpha0 k = 6 (F2) | 0.27, 1.2e-4, 8 | 0.24, 9.2e-4, 8 | 0.15, 0.057, 3 |
+   | alpha0 k = 7 (F5) | 0.27, 6.2e-5, 9 | 0.25, 2.1e-4, 9 | 0.17, 0.016, 4 |
+
+   The correlation is about the same; the difference is support and significance (2 genes, FDR 0.19 for D1 vs 8-9
+   genes, FDR 1e-4 for the own-rank control). At k = 7 the control also shows myCAF (r 0.20, FDR 0.004) and
+   SCISSORS myCAF (0.23, 0.0013) on a separate factor (F4). By the paper's own metric, the own-rank unsupervised
+   fit matches the iCAF/restCAF lists more strongly than D1 does, through quiescent-fibroblast genes (section above).
 5. The text already hedges ("among the displayed top-ranked genes"; "not identifications of CAF cell states"), but
    the abstract's "classical tumor + restCAF-like" label carries none of it.
 Claims-inventory note: the frozen label test (best reference overlap, per-program argmax) would pass on 2 genes; it

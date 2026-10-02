@@ -1,6 +1,6 @@
 # Step 4 main BO diagnosis (2026-10-02)
 
-Status: diagnosis complete except the last noise cells (job 3500640). Step 5 PAUSED; job 3148778 (a0k3) HELD
+Status: diagnosis complete (noise job 3500640 complete). Step 5 PAUSED; job 3148778 (a0k3) HELD
 (`scontrol release 3148778` to resume). Owner decision needed (section 5).
 
 ## 1. Symptom
@@ -47,8 +47,9 @@ solution; refitting it to 1e-7 keeps fitting the training survival ordering. Lar
 Seed-bank noise (job 3500640; banks 4,000,000 = BO bank, 5,000,000, 6,000,000): k = 6 incumbent 0.6377 /
 0.6340 / 0.6336; published k = 3 0.6258 / 0.6282 / 0.6225; May-best k = 3 (alpha 0.44, lambda 0.24, ntop 299) 0.5803 / 0.5894 / 0.5884 (train C
 0.91). At 1e-7 the May-best k = 3 point is in the overfitting region; the published point
-(lambda 0.35, nu 0.056) is not. Noise ~0.002-0.003:
-small. The k = 6 vs published k = 3 gap (~0.01) is not seed noise.
+(lambda 0.35, nu 0.056) is not. Seed noise: 0.002-0.004 for well-behaved settings (k = 6
+incumbent, published k = 3), up to 0.009 for the overfitting May-best point. The k = 6 vs published k = 3 gap
+(~0.01) exceeds the noise at those two settings.
 
 ## 4. Conclusions
 

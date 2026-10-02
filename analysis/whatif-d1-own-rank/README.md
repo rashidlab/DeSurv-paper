@@ -30,3 +30,27 @@ Reading:
    across several programs, but does not produce D1's gene program. Consistent with D1 as a supervised combination
    ("classical tumor + restCAF-like") that NMF keeps in separate factors. "Did not recover D1" holds at the program
    level beyond matched rank; a statement about patient-level information would need the score result's caveat.
+
+## Follow-up: CAF states in the own-rank alpha = 0 factors (stroma.R, stroma_per_factor.csv)
+
+Same reference lists and views as code/23_stroma_resolution.R (SCISSORS iCAF/myCAF = the paper's restCAF/proCAF).
+Top-50 view, k = 6 (k = 7 is the same: its F5 and F4 match k = 6's F2 and F5):
+
+- F5 = activated stroma / myCAF-like. Moffitt Activated 8/24 (hypergeometric p 5e-8), SCISSORS proCAF 5/16
+  (3e-5), deCAF proCAF 3/4 (6e-5), Elyada myCAF 2/15 (0.05), DECODER Activated 39/108. Top genes COL11A1, ITGA11,
+  ADAM12, CTHRC1, COL10A1, LRRC15, GREM1, FAP, LOX, PRRX1. A clean activated-CAF program.
+- F2 = "iCAF-enriched" by list overlap (Elyada iCAF 8/25, p 8e-8; SCISSORS restCAF 7/17, 7e-8; deCAF restCAF 3/8),
+  but the hits are quiescent/adventitial fibroblast genes (PI16, DPT, TNXB, ADH1B, GPX3, SFRP1, FBLN5, PLA2G2A,
+  FOSB). The inflammatory iCAF genes present in the universe (CXCL1, CXCL2, CXCL12, LIF, C3, CFD, CCL2) are not in
+  its top 50. Its top genes are a normal-tissue mix: lymphoid (CCL19, CCL21, CR2), islet/neuroendocrine (CHGA, SCG2,
+  PCSK2), adipose (PLIN4, FABP4), plus PTGDS, NGFR.
+- Full-gene view is weak for every fit (|rho| <= 0.14 for CAF-state lists; DECODER Activated 0.33 for F5), as
+  code/23 already warns.
+- DeSurv D1 (k = 3) top 50: 2 Elyada iCAF, 2 SCISSORS restCAF, 2 Elyada myCAF, 3 DECODER Normal: mixed.
+  NMF k = 3: no CAF-state hits outside its activated factor.
+
+Reading: the own-rank unsupervised fit separates activated stroma (myCAF-like) from a normal / quiescent stromal
+compartment. It does not recover an inflammatory iCAF program; the iCAF-list overlap comes from quiescent
+fibroblast genes shared between single-cell iCAF signatures and normal stroma. This agrees with the prior bulk
+experience: activated vs normal stroma resolves, iCAF vs myCAF does not. Caveat: one fit, top-50 view, no
+stability assessment.

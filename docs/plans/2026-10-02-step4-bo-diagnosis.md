@@ -1,7 +1,7 @@
 # Step 4 main BO diagnosis (2026-10-02)
 
 Status: diagnosis complete (noise job 3500640 complete). Step 5 PAUSED; job 3148778 (a0k3) HELD
-(`scontrol release 3148778` to resume). Owner decision needed (section 5).
+(`scontrol release 3148778` to resume). Owner chose rank-stratified BO: amendment 1 (APPROVED 2026-10-02).
 
 ## 1. Symptom
 

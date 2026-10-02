@@ -146,6 +146,7 @@ tar_data <- load_precomputed("tar_data_tcgacptac")
 BO_STAGE <- Sys.getenv("DESURV_BO_STAGE", "all")
 stopifnot(BO_STAGE %in% c("all", "main", "alpha0", "elbowk", "a0k3"))
 bo_stage_runs <- function(stage) BO_STAGE %in% c("all", stage)
+source("R/preprocess_helpers.R")  # every stage that runs alone needs preprocess_training_data
 
 # ── 1. DeSurv BO (supervised) ────────────────────────────────────────────
 if (bo_stage_runs("main")) {

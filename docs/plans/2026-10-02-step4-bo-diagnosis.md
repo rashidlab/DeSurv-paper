@@ -26,7 +26,9 @@ New BO mean train C by k: 0.96-0.99 at k = 2-4 (val ~0.55); May 0.63-0.84. Old v
 
 Tie fix (local, analysis/tie-tol-check): single-start fits, fixed 80/20 split, 4 seeds, k = 3 weak (eval 46) and
 published. DeSurv 1.0.1 vs 1.2.0 identical within noise at both tolerances (weak: train 0.82-0.83, held-out
-0.55-0.57; published: 0.71 / 0.57). Ties: 15 of 139 training events in tie groups, max size 3. RULED OUT.
+0.55-0.57; published: 0.71 / 0.57). Ties: 15 of 139 training events in tie groups, max size 3. RULED OUT. Note: this local check used one 80/20 split of
+the already-filtered training data, not the BO's per-fold preprocessing and partitions (used by the Longleaf job
+below); the two agree in direction but are not identical replications.
 
 Tolerance x estimator (Longleaf job 3503385, eval 46 config, rev 3 partitions and seed bank):
 
@@ -43,7 +45,9 @@ solution; refitting it to 1e-7 keeps fitting the training survival ordering. Lar
 (published lambda 0.35: train 0.80, val 0.626).
 
 Seed-bank noise (job 3500640; banks 4,000,000 = BO bank, 5,000,000, 6,000,000): k = 6 incumbent 0.6377 /
-0.6340 / 0.6336; published k = 3 0.6258 / 0.6282 / (pending); May-best k = 3 (pending). Noise ~0.002-0.003:
+0.6340 / 0.6336; published k = 3 0.6258 / 0.6282 / 0.6225; May-best k = 3 (alpha 0.44, lambda 0.24, ntop 299) 0.5803 at bank
+4,000,000 (other banks pending). At 1e-7 the May-best k = 3 point is in the overfitting region; the published point
+(lambda 0.35, nu 0.056) is not. Noise ~0.002-0.003:
 small. The k = 6 vs published k = 3 gap (~0.01) is not seed noise.
 
 ## 4. Conclusions

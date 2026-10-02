@@ -54,3 +54,30 @@ compartment. It does not recover an inflammatory iCAF program; the iCAF-list ove
 fibroblast genes shared between single-cell iCAF signatures and normal stroma. This agrees with the prior bulk
 experience: activated vs normal stroma resolves, iCAF vs myCAF does not. Caveat: one fit, top-50 view, no
 stability assessment.
+
+## Competitor check: how D1 got its restCAF / iCAF label (published fit; read-only)
+
+Mechanism (R/figure_plot_helpers.R make_gene_overlap_heatmap, Fig. 2a): take the union of the three factors' top-50
+genes (150), keep those in any of the 45 reference lists (75 genes), and for each factor correlate its loadings over
+those 75 genes with 0/1 list membership (Spearman); display rows with r > 0.2. SCISSORS iCAF/myCAF are renamed
+restCAF/proCAF in the display.
+
+What D1's label rests on:
+- Elyada iCAF: r 0.24, FDR 0.19, carried by 2 genes (S100A4, CXCL14).
+- "SCISSORS restCAF" (= SCISSORS iCAF): r 0.24, FDR 0.19, carried by 2 genes (LIF, CXCL14). CXCL14 is shared.
+- Elyada myCAF: 2 genes in D1's top 50 too (CST1, HOPX), r 0.14, FDR 0.43.
+- deCAF restCAF (the DeCAF classifier the "restCAF" name comes from): 0 genes in the correlation universe.
+- Full-gene view (code/23): D1 |rho| <= 0.10 for every CAF-state list.
+
+Points a competitor would make:
+1. The label rests on 2-3 genes and is not significant after FDR (0.19); it is displayed because r clears 0.2.
+2. D1 carries myCAF genes as often as iCAF genes in its top 50.
+3. "restCAF" is a renamed single-cell iCAF list, not the DeCAF restCAF genes, which are absent.
+4. "restCAF and iCAF corresponded to a DeSurv factor but to no standard NMF factor" (Results L440) holds only at
+   matched rank. At its own selected rank the unsupervised fit has a factor with 8/25 Elyada iCAF and 7/17 SCISSORS
+   restCAF genes in its top 50 (k = 6 F2; k = 7 F5), far more than D1's 2. Those are quiescent-fibroblast genes,
+   but by the paper's own correspondence metric the unsupervised control matches these lists better than D1 does.
+5. The text already hedges ("among the displayed top-ranked genes"; "not identifications of CAF cell states"), but
+   the abstract's "classical tumor + restCAF-like" label carries none of it.
+Claims-inventory note: the frozen label test (best reference overlap, per-program argmax) would pass on 2 genes; it
+tests stability across reruns, not strength. Repeat this check on the Step 5 fit.

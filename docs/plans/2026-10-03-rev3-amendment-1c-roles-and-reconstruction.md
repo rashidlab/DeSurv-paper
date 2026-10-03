@@ -35,8 +35,14 @@ the sensitivity of rank choice to the modernized estimator and validation proced
 Mechanics:
 - B writes `tar_k_selection_fresh_tcgacptac` / `tar_params_best_fresh_tcgacptac` (tag selection_rule
   "fresh_partition_paired_1se") in `$STEP5A_ROOT/rescore-select/results`. Not a Step 5 input.
-- Step 5's `tar_params_best_tcgacptac` is written from the constants above with
-  `attr(, "model_role") = "published_configuration_k3"`.
+- Step 5's `tar_params_best_tcgacptac` is written by `code/03e_published_config.R` from the constants above
+  (full precision of May eval 129; value-identical to the published results/tar_params_best, checked) with
+  `attr(, "model_role") = "published_configuration_k3"` and `attr(, "source") =
+  "published_May_global_BO_optimum_with_k_replaced_by_3"`. code/04 reads no tar_k_selection, so no k object
+  is written; 03e refuses to run if tar_params_best or tar_k_selection already exists in the directory.
+- `slurm/run_rev3_step5.sh` is the only rev 3 path to code/04: it refuses a directory holding either
+  selection object, exports DESURV_REQUIRE_MODEL_ROLE, runs 03e then 04 in the same job.
+  `slurm/run_rev3_step.sh` refuses 03e and 04. Staging code/04's other inputs belongs to the Step 5 plan.
 - Guard: code/04 stops unless `attr(tar_params_best, "model_role")` equals DESURV_REQUIRE_MODEL_ROLE when that
   variable is set. ONLY the Step 5 submission sets it (to "published_configuration_k3"); it is not in
   rev3_env.sh or any other submitter, so other flows (run_main_pipeline.sh, submit_all.sh) are unaffected. A and

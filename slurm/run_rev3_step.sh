@@ -29,6 +29,7 @@ for s in "$@"; do
     21_*) echo "code/21 is replaced by the rev 3 sensitivity analysis; not run" >&2; exit 1;;
     01_*) echo "code/01 (install) is never run in a Slurm job; use REV3_LIB" >&2; exit 1;;
     13*)  echo "code/13* (withdrawn spatial) setwd() into the canonical repo; not run" >&2; exit 1;;
+    03e_*|04_*) echo "code/$s is Step 5: use slurm/run_rev3_step5.sh (amendment 1c model_role guard)" >&2; exit 1;;
   esac
   [ -f "$f" ] || { echo "no such script: $f" >&2; exit 1; }
   echo "###### START $f | $(date '+%F %T') ######"

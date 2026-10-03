@@ -75,6 +75,8 @@ recompute_mean_from_fold_rows <- function(diag_rows) {
 #' new provenance columns (source, prov_id) added to every row (NA for pre-existing rows).
 restore_inherited_diagnostics_from_main <- function(rank_k, rank_history, rank_diagnostics, main_bo) {
   main_history <- main_bo$history
+  # Limitation (noted, not generalized; owner 2026-10-03): reads runs[[1]] only. The step 4 main BO object
+  # (md5 ad25d534) has exactly one run holding all 150 evaluations' diagnostics.
   main_diag <- main_bo$runs[[1]]$diagnostics
   stopifnot(is.data.frame(main_history), is.data.frame(main_diag))
 

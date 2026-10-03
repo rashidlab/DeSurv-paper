@@ -76,3 +76,8 @@ reported estimator (100 seed fits -> consensus -> final). Also run the last two 
 diagnosis found a tolerance x estimator interaction). Questions: (A) why eval 136 fell from 0.646 to ~0.585;
 (B) how the published hyperparameters behave at k 3 under the May recipe. Do not expand beyond these three
 configurations unless the ladder fails to explain the discrepancy.
+
+## 5. Reproducibility hygiene (owner, 2026-10-03)
+Never round hyperparameters in any handoff, seed row, reconstruction input or script constant. Store and propagate
+the full numeric values read from the R object. Reason: the rounded published configuration (0.334 / 0.349 / 0.0557)
+scores C 0.6258 under the rev 3 estimator vs 0.6362 for the full-precision values (k3 ladder report, section 9).

@@ -64,7 +64,7 @@ I ran two anchors rather than one because each took under a minute and the brief
 - Data held fixed at the May input (results/tar_data_tcgacptac.rds, md5 877c2d44...) for every step;
   `submit_ladder.sh` refuses any other md5 unless overridden.
 
-## 4. Files created (all uncommitted, `analysis/k3-ladder/`)
+## 4. Files created (`analysis/k3-ladder/`, committed at d9950c9; rounding diagnostic at 9ee1f20)
 
 - `ladder_eval.R`: one (config, step) evaluation via `DeSurv::desurv_cv(cv_only = TRUE)`; config/step from args, env,
   or Slurm array index into `manifest.csv`; checks the DeSurv version each step needs; refuses output inside the
@@ -126,3 +126,45 @@ about 40 minutes wall if the arrays run concurrently. Before submitting: copy `r
    difference; the ladder itself holds data fixed. One `md5sum` on Longleaf answers it.
 2. Install 1.0.1 on Longleaf (recommended), or run S0/S1 locally and accept the platform step between S1 and S2?
 3. Should S0 also run on Longleaf to re-check the anchor on the cluster platform? It does as built (tasks 1-3).
+
+## 8. Results (arrays 3572629-31, all 18 tasks COMPLETED; collector output, 2026-10-03)
+
+| Step | eval 136 at k3 | published params at k3 | published params at k7 |
+|---|---|---|---|
+| S0 May recipe (1.0.1, mean_starts, tol 1e-5, May partition) | 0.6466 (May 0.6462) | 0.6419 | 0.6548 (May 0.6545) |
+| S1 rev 3 partitions (3 x 5) | 0.6150 (-0.032) | 0.6123 (-0.030) | 0.6317 (-0.023) |
+| S2 DeSurv 1.2.0 (tie fix) | 0.6147 (-0.000) | 0.6122 (-0.000) | 0.6320 (+0.000) |
+| S3 tol 1e-7 | 0.6210 (+0.006) | 0.6142 (+0.002) | 0.6162 (-0.016) |
+| S4 reported estimator | 0.5782 (-0.043; train 0.92) | 0.6362 (+0.022; train 0.79) | 0.5798 (-0.036; train 0.92) |
+Swapped path (S2 -> S3p reported at 1e-5 -> S4): 0.6058 / 0.6217 / 0.5972 at S3p; same direction.
+
+Readings (owner, 2026-10-03):
+1. The single May 5-fold partition was favorable: -0.023 to -0.032 for every configuration (largest ingredient).
+2. Tie fix ~0.000: not an explanation.
+3. Reported estimator: configuration-specific. Overfits eval 136 and the k7 point (train C 0.92, -0.04); improves
+   the published k3 configuration (+0.022, train 0.79).
+4. The published k3 configuration under the May recipe scores 0.6419, BELOW the May 1-SE threshold 0.64355; eval
+   136 is what admitted k3.
+5. May made the rank curve look both better and more precise (k7 point fold SD ~0.024 on the May partition vs ~0.060
+   over the rev 3 partitions).
+
+## 9. Rounding diagnostic (jobs 3578608/9, code 9ee1f20)
+
+| k = 3 reference | Parameters | Rev 3 C (S4) | Role |
+|---|---|---|---|
+| Exact published configuration | full-precision May eval 129 values, k 3 | 0.6362 (train 0.790) | the actual published model |
+| Rounded BO seed | alpha 0.334, lambda 0.349, nu 0.0557, ntop 270 | 0.6258 (train 0.802) | rounded neighbor used as the rev 3 k3 seed (and in noise job 3500640) |
+| May-best k3, eval 136 | exact | 0.5782 | the configuration that historically admitted k3 through the 1-SE rule |
+
+Both values reproduce exactly across separate jobs (deterministic). Footnote for every table that carries them:
+"The rev 3 BO included a rounded seed corresponding to the published configuration. Under the deterministic rev 3
+estimator, that rounded neighbor yielded C = 0.6258, whereas the full-precision published parameters yielded
+C = 0.6362; the two are reported separately and the rounded seed is not used as a surrogate for the published model."
+Interpretation: tiny parameter perturbations (<= 0.0005) can send the deterministic fitting procedure to a different
+solution, with materially different CV performance (0.0104); not a claim that such changes alter the biology.
+Corrects the earlier narrative: the published configuration did not fall from ~0.646 to ~0.626. The 0.646 was eval
+136; the published model is 0.6362 under rev 3; 0.6258 came from rounding.
+Use: the literal published-procedure reconstruction uses the rows the rev 3 BO actually holds (including the rounded
+seed); the published-model comparison and Step 5 use the full-precision values.
+Collector note: collect_ladder.R and submit_ladder.sh do not include pubr_k3 / manifest_diag_rounding.csv; the
+diagnostic was run directly and read from its logs (out/k3-ladder-d9950c9/diag-9ee1f20).

@@ -7,6 +7,8 @@ this_dir <- "analysis/published-procedure-reconstruction"
 source(file.path(this_dir, "reconstruct.R"))
 
 in_dir <- "/tmp/claude-1000/-home-naimrashid-Downloads-DeSurv-paper-clean/4d6f63f8-6e3b-4abd-8ce0-f3388c26d037/scratchpad/recon_inputs"
+# in_dir is the 2026-10-03 session scratch copy of the Longleaf inputs; to rerun elsewhere, copy the k2 rank
+# results, the step 4 main BO object and bench/noise_results.rds into one directory and set in_dir to it.
 k2_path <- file.path(in_dir, "desurv_bo_results_k2_tcgacptac.rds")
 main_path <- file.path(in_dir, "step4_main_desurv_bo_results_tcgacptac.rds")
 noise_path <- file.path(in_dir, "noise_results_3500640.rds")

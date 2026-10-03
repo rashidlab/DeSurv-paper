@@ -11,10 +11,23 @@
 #   k:      2  3  4  5  6  7  8  9 10 11 12
 #   new:   36 32 34 33 22 11 23 18 21 27 31
 #   hours: 12 12 12 12 12 12 12 12 13 18 22
+# Those hours were too short: observed minutes per evaluation on Longleaf (first 2-7 evaluations of
+# jobs 3516486-95, 2026-10-02) were 19-97, not 5-19. Hours are now 2 x the projection from the
+# observed rate (k = 12 from a single evaluation, so 120), rounded up.
+#
+# Resume (RESUME=1): reuse an existing STEP5A_ROOT and submit only RANKS (e.g. "3:12"). Each
+# resubmitted rank's old k<K> directory is moved to k<K>.cancelled-<stamp>. Ranks not resubmitted
+# must have finished (desurv_bo_finalists_k<K> present) or be listed in KEEP_JOBS ("2=3516485")
+# as still queued or running; the new select job waits on those too.
 set -euo pipefail
 : "${STEP5A_ROOT:?set STEP5A_ROOT}"
 export STEP4_ROOT="${STEP4_ROOT:-/work/users/n/u/nur2/desurv-rerun/out/step4-dd54827-r2}"
-[ ! -e "$STEP5A_ROOT" ] || { echo "$STEP5A_ROOT exists; use a new directory" >&2; exit 1; }
+RESUME="${RESUME:-0}"; RANKS="${RANKS:-2:12}"; KEEP_JOBS="${KEEP_JOBS:-}"
+if [ "$RESUME" = 1 ]; then
+  [ -d "$STEP5A_ROOT" ] || { echo "RESUME=1 but $STEP5A_ROOT does not exist" >&2; exit 1; }
+else
+  [ ! -e "$STEP5A_ROOT" ] || { echo "$STEP5A_ROOT exists; use a new directory" >&2; exit 1; }
+fi
 for f in "$STEP4_ROOT/base/results/tar_data_tcgacptac.rds" "$STEP4_ROOT/main/results/desurv_bo_results_tcgacptac.rds"; do
   [ -s "$f" ] || { echo "missing input $f" >&2; exit 1; }
 done
@@ -22,11 +35,25 @@ mkdir -p "$STEP5A_ROOT" slurm/logs
 export STEP5A_ROOT
 R=slurm/run_rev3_bo_rank.sh
 sub() { sbatch --parsable "$@"; }
-declare -A HOURS=([2]=12 [3]=12 [4]=12 [5]=12 [6]=12 [7]=12 [8]=12 [9]=12 [10]=13 [11]=18 [12]=22)
-JOBS=(); LINE=""
+declare -A HOURS=([2]=12 [3]=24 [4]=32 [5]=40 [6]=36 [7]=30 [8]=54 [9]=36 [10]=28 [11]=34 [12]=120)
+expand() { local p out=(); IFS=',' read -ra parts <<< "$1"
+  for p in "${parts[@]}"; do if [[ $p == *:* ]]; then out+=($(seq "${p%%:*}" "${p##*:}")); else out+=("$p"); fi; done
+  echo "${out[@]}"; }
+SUBMIT=" $(expand "$RANKS") "
+declare -A KEEP=(); for kv in $KEEP_JOBS; do KEEP[${kv%%=*}]=${kv#*=}; done
+JOBS=(); LINE=""; STAMP=$(date +%Y%m%d-%H%M)
 for k in 2 3 4 5 6 7 8 9 10 11 12; do
-  j=$(sub --job-name=bo-k$k --time=$(printf '%02d' "${HOURS[$k]}"):00:00 $R "$k")
-  JOBS+=("$j"); LINE="$LINE k$k=$j"
+  if [[ $SUBMIT == *" $k "* ]]; then
+    [ ! -e "$STEP5A_ROOT/k$k" ] || mv "$STEP5A_ROOT/k$k" "$STEP5A_ROOT/k$k.cancelled-$STAMP"
+    j=$(sub --job-name=bo-k$k --time=$(printf '%02d' "${HOURS[$k]}"):00:00 $R "$k")
+    JOBS+=("$j"); LINE="$LINE k$k=$j"
+  elif [ -n "${KEEP[$k]:-}" ] && squeue -h -j "${KEEP[$k]}" 2>/dev/null | grep -q .; then
+    JOBS+=("${KEEP[$k]}"); LINE="$LINE k$k=${KEEP[$k]}(kept)"
+  elif [ -s "$STEP5A_ROOT/k$k/results/desurv_bo_finalists_k${k}_tcgacptac.rds" ]; then
+    LINE="$LINE k$k=done"
+  else
+    echo "k$k: not resubmitted, not running, not finished" >&2; exit 1
+  fi
 done
 DEP=$(IFS=:; echo "${JOBS[*]}")
 JS=$(sub --job-name=bo-rank-select --cpus-per-task=4 --mem=16G --time=01:00:00 \
@@ -36,4 +63,4 @@ JS=$(sub --job-name=bo-rank-select --cpus-per-task=4 --mem=16G --time=01:00:00 \
   echo "jobs$LINE select=$JS"
   echo "inputs STEP4_ROOT=$STEP4_ROOT"
   ( cd "$STEP4_ROOT" && md5sum base/results/tar_data_tcgacptac.rds main/results/desurv_bo_results_tcgacptac.rds ) | sed 's/^/input_md5 /'
-  echo "command STEP5A_ROOT=$STEP5A_ROOT bash slurm/submit_rev3_bo_rank.sh"; } | tee "$STEP5A_ROOT/PROVENANCE.txt"
+  echo "command RESUME=$RESUME RANKS=$RANKS KEEP_JOBS='$KEEP_JOBS' STEP5A_ROOT=$STEP5A_ROOT bash slurm/submit_rev3_bo_rank.sh"; } | tee -a "$STEP5A_ROOT/PROVENANCE.txt"

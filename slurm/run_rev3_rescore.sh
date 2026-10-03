@@ -14,7 +14,8 @@
 #                                                k<K>'s desurv_bo_finalists_k<K> / desurv_bo_results_k<K>
 #   select  $STEP5A_ROOT/rescore-select/results inputs copied in: tar_data, every rescore-k<K> job's
 #                                                desurv_bo_rescore_k<K>, and k<K>'s finalists / results
-# rescore-select/results is the PRIMARY selection for Step 5; select/results (code/03c) is comparison only.
+# rescore-select/results is a robustness / sensitivity analysis of rank selection (amendment 1c);
+# select/results (code/03c) is comparison only. Neither is a Step 5 input (Step 5 = published configuration).
 # Submit with slurm/submit_rev3_rescore.sh, which sets walltimes and the afterok dependencies.
 
 : "${STEP5A_ROOT:?set STEP5A_ROOT}"

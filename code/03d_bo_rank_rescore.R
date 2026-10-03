@@ -26,7 +26,7 @@
 #   tar_params_best_fresh_tcgacptac     select_bo_params_finalists()   } "fresh_partition_paired_1se"
 #   tar_data_filtered_tcgacptac         as code/03c
 #   bo_rank_selection_side_by_side_tcgacptac (.rds + .csv, + _finalists.csv): per rank, B (fresh,
-#                                       primary), A (BO partitions), C (best GP mean), B minus A
+#                                       robustness / sensitivity), A (BO partitions), C (best GP mean), B minus A
 
 message("=== Step 3d: fresh-partition rescoring of the rank-BO finalists (rev 3 amendment 1b) ===")
 source("code/00_helpers.R")
@@ -235,7 +235,7 @@ if (!SELECT_MODE) {
                              method_trans_train = "rank")
   })
 
-  # ── Side-by-side: B (fresh, primary), A (BO partitions), C (best GP mean, descriptive) ──
+  # ── Side-by-side: B (fresh, robustness / sensitivity), A (BO partitions), C (best GP mean, descriptive) ──
   sel_B <- desurv_bo_finalists$selection
   hp <- fins[[1]]$param_names
   best_cols <- function(sel, cfg, tag) {
@@ -275,13 +275,14 @@ if (!SELECT_MODE) {
                           row.names = NULL)
     attr(sb, "finalists") <- fin_tab
     attr(sb, "selection") <- data.frame(
-      rule = c("B fresh_partition_paired_1se (PRIMARY)", "A bo_partition_paired_1se",
+      rule = c("B fresh_partition_paired_1se (robustness / sensitivity)", "A bo_partition_paired_1se",
                "C best GP mean (descriptive, no SE)"),
       k_selected = c(sel_B$k_selected, sel_A$k_selected, sb$k[sb$C_top]),
       k_best = c(sel_B$k_best, sel_A$k_best, NA), runner_up_k = c(sel_B$runner_up_k, sel_A$runner_up_k, NA))
     attr(sb, "note") <- paste(
       "B: fresh CV (cv_seeds", paste(FRESH_CV_SEEDS, collapse = ","), "; seed banks from",
-      FRESH_SEED_BANK_BASE, "), paired 1-SE over all ranks' finalists; PRIMARY.",
+      FRESH_SEED_BANK_BASE, "), paired 1-SE over all ranks' finalists; robustness / sensitivity",
+      "analysis of rank selection (amendment 1c); never a Step 5 input.",
       "A: the same finalists on the BO's own partitions (their stored fold C), same rule; comparison.",
       "C: max GP posterior mean in the rank BO history; descriptive only.",
       "B_minus_A_best mixes selection optimism with fresh-CV sampling variation (amendment 1b).",

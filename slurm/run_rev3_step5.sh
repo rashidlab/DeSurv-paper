@@ -24,7 +24,10 @@ source "${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}/slurm/rev3_env.sh
 
 # Isolation: no selection or rescoring artifact of any kind (A, B, or a stale Step 5 object) may be in
 # the directory; Step 5 takes its parameters only from code/03e.
-for p in 'tar_params_best*' 'tar_k_selection*' 'desurv_bo_finalists*' 'desurv_bo_rescore*' 'bo_rank_selection_*'; do
+# Exact names / A-B patterns only: code/04 needs tar_params_best_{elbowk,alpha0,a0k3}, so no broad
+# tar_params_best* glob. code/04 reads no tar_k_selection*, desurv_bo_finalists* or desurv_bo_rescore*.
+for p in 'tar_params_best_tcgacptac.rds' 'tar_k_selection*' '*_fresh_tcgacptac.rds' 'desurv_bo_finalists*' \
+         'desurv_bo_rescore*' 'bo_rank_selection_*'; do
   hit=$(find "$DESURV_RESULTS_DIR" -maxdepth 1 -name "$p" -print -quit)
   [ -z "$hit" ] || {
     echo "run_rev3_step5: $hit is a selection/rescoring artifact; Step 5 needs a clean directory" >&2; exit 1; }

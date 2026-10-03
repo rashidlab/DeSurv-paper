@@ -41,8 +41,9 @@ Mechanics:
   "published_May_global_BO_optimum_with_k_replaced_by_3"`. code/04 reads no tar_k_selection, so no k object
   is written; 03e refuses to run if tar_params_best or tar_k_selection already exists in the directory.
 - `slurm/run_rev3_step5.sh` is the only rev 3 path to code/04: it refuses a directory holding any
-  selection or rescoring artifact (tar_params_best*, tar_k_selection*, desurv_bo_finalists*,
-  desurv_bo_rescore*, bo_rank_selection_*), exports DESURV_REQUIRE_MODEL_ROLE, runs 03e then 04 in the same job.
+  selection or rescoring artifact (tar_params_best_tcgacptac, tar_k_selection*, *_fresh_tcgacptac,
+  desurv_bo_finalists*, desurv_bo_rescore*, bo_rank_selection_*; code/04's own tar_params_best_{elbowk,alpha0,a0k3}
+  inputs are allowed), exports DESURV_REQUIRE_MODEL_ROLE, runs 03e then 04 in the same job.
   `slurm/run_rev3_step.sh` and `slurm/run_main_pipeline.sh` refuse 03e and 04; `slurm/submit_all.sh` (whose
   chain starts with 04) refuses outright. Staging code/04's other inputs belongs to the Step 5 plan.
 - Guard: code/04 stops unless `attr(tar_params_best, "model_role")` equals DESURV_REQUIRE_MODEL_ROLE when that

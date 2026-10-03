@@ -16,6 +16,11 @@
 #   bash slurm/submit_all.sh
 set -euo pipefail
 
+# Rev 3 amendment 1c: this chain starts with code/04 (Step 5), which runs only through
+# slurm/run_rev3_step5.sh. Submit Step 5 there, then the later stages individually.
+echo "submit_all.sh: refused; its first stage is code/04 (Step 5). Use slurm/run_rev3_step5.sh (amendment 1c)." >&2
+exit 1
+
 PROJ_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$PROJ_DIR"
 mkdir -p "$PROJ_DIR/slurm/logs"

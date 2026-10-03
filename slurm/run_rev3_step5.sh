@@ -22,9 +22,12 @@
 
 source "${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}/slurm/rev3_env.sh"
 
-for f in tar_params_best_tcgacptac.rds tar_k_selection_tcgacptac.rds; do
-  [ ! -e "$DESURV_RESULTS_DIR/$f" ] || {
-    echo "run_rev3_step5: $DESURV_RESULTS_DIR/$f exists; Step 5 takes its parameters only from code/03e" >&2; exit 1; }
+# Isolation: no selection or rescoring artifact of any kind (A, B, or a stale Step 5 object) may be in
+# the directory; Step 5 takes its parameters only from code/03e.
+for p in 'tar_params_best*' 'tar_k_selection*' 'desurv_bo_finalists*' 'desurv_bo_rescore*' 'bo_rank_selection_*'; do
+  hit=$(find "$DESURV_RESULTS_DIR" -maxdepth 1 -name "$p" -print -quit)
+  [ -z "$hit" ] || {
+    echo "run_rev3_step5: $hit is a selection/rescoring artifact; Step 5 needs a clean directory" >&2; exit 1; }
 done
 export DESURV_REQUIRE_MODEL_ROLE=published_configuration_k3
 echo "run_rev3_step5: DESURV_REQUIRE_MODEL_ROLE=$DESURV_REQUIRE_MODEL_ROLE"

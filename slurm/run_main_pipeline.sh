@@ -25,6 +25,13 @@ source "${SLURM_SUBMIT_DIR:-$(cd "$(dirname "$0")/.." && pwd)}/slurm/rev3_env.sh
 
 STEPS="${DESURV_STEPS:-02 03 04 05 08 19}"
 
+# Rev 3 amendment 1c: Step 5 (code/03e, code/04) runs only through slurm/run_rev3_step5.sh.
+case " $STEPS " in
+  *" 04 "*|*" 03e "*)
+    echo "run_main_pipeline: steps 03e/04 are Step 5; use slurm/run_rev3_step5.sh (amendment 1c)" >&2
+    exit 1;;
+esac
+
 # The first stage must start from an EMPTY results directory (clean run).
 case " $STEPS " in
   *" 02 "*|*" 03 "*)

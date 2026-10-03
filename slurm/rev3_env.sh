@@ -50,10 +50,6 @@ export DESURV_RESULTS_DIR DESURV_FIGURE_DIR
 export DESURV_RECOMPUTE=TRUE
 export DESURV_QUICK="${DESURV_QUICK:-FALSE}"
 export DESURV_NCORES="${SLURM_CPUS_PER_TASK:-1}"
-# Amendment 1b safeguard: code/04 (the Step 5 primary fit) stops unless tar_params_best / tar_k_selection
-# carry this selection rule, i.e. come from rescore-select (B), never from select (A). Every rev 3 job
-# sources this file, so the guard fires whichever script submits code/04.
-export DESURV_REQUIRE_SELECTION_RULE="${DESURV_REQUIRE_SELECTION_RULE:-fresh_partition_paired_1se}"
 
 # DeSurv version and library check, before any work.
 Rscript -e '
@@ -70,5 +66,5 @@ Rscript -e '
 echo "rev3_env: results -> $DESURV_RESULTS_DIR"
 echo "rev3_env: figures -> $DESURV_FIGURE_DIR"
 echo "rev3_env: DESURV_CMBSUBTYPES=${DESURV_CMBSUBTYPES:-<unset; code/09a, 23, 24 need it>}"
-echo "rev3_env: DESURV_RECOMPUTE=$DESURV_RECOMPUTE DESURV_NCORES=$DESURV_NCORES DESURV_QUICK=$DESURV_QUICK DESURV_REQUIRE_SELECTION_RULE=$DESURV_REQUIRE_SELECTION_RULE"
+echo "rev3_env: DESURV_RECOMPUTE=$DESURV_RECOMPUTE DESURV_NCORES=$DESURV_NCORES DESURV_QUICK=$DESURV_QUICK"
 echo "rev3_env: job ${SLURM_JOB_ID:-local} on ${SLURM_NODELIST:-$(hostname)} at $(date)"

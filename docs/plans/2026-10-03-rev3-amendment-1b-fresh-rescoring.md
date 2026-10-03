@@ -1,5 +1,9 @@
 # Rev 3 amendment 1b: cross-rank selection on fresh-partition rescoring (APPROVED, owner, 2026-10-03 00:05)
 
+**SUPERSEDED IN PART by amendment 1c (2026-10-03-rev3-amendment-1c-roles-and-reconstruction.md): B is a robustness /
+sensitivity analysis, not the primary selection; its outputs are `_fresh` names and never feed Step 5. The rescoring
+design below is unchanged.**
+
 Amends the selection step of amendment 1 (docs/plans/2026-10-02-rev3-amendment-1-rank-stratified-bo.md). The
 per-rank BOs (jobs 3516485, 3529501-10) and their finalist choice are unchanged.
 

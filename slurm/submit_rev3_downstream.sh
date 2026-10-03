@@ -25,11 +25,6 @@ cd "$PROJ_DIR"
 mkdir -p "$PROJ_DIR/slurm/logs"
 : "${DESURV_RESULTS_DIR:?set DESURV_RESULTS_DIR}"
 : "${DESURV_FIGURE_DIR:?set DESURV_FIGURE_DIR}"
-# Rev 3 amendment 1b: code/04 stops unless its selection objects carry this rule (the
-# fresh-partition selection, $STEP5A_ROOT/rescore-select/results). Exported, so every job
-# below inherits it (sbatch passes the submit environment by default; no --export here).
-export DESURV_REQUIRE_SELECTION_RULE="${DESURV_REQUIRE_SELECTION_RULE:-fresh_partition_paired_1se}"
-echo "DESURV_REQUIRE_SELECTION_RULE=$DESURV_REQUIRE_SELECTION_RULE"
 
 dep_main=${MAIN_JOB:+--dependency=afterok:$MAIN_JOB}
 dep_cv=""

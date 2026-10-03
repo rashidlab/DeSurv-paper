@@ -22,8 +22,8 @@
 #                desurv_bo_results_k{K}
 # Select outputs (ORDINARY names; the directory defines authority, see the amendment):
 #   desurv_bo_finalists_tcgacptac       pooled desurv_bo_finalists object on the FRESH fold C
-#   tar_k_selection_tcgacptac           k_selection_from_finalists()   } attr selection_rule =
-#   tar_params_best_tcgacptac           select_bo_params_finalists()   } "fresh_partition_paired_1se"
+#   tar_k_selection_fresh_tcgacptac     k_selection_from_finalists()   } attr selection_rule =
+#   tar_params_best_fresh_tcgacptac     select_bo_params_finalists()   } "fresh_partition_paired_1se"
 #   tar_data_filtered_tcgacptac         as code/03c
 #   bo_rank_selection_side_by_side_tcgacptac (.rds + .csv, + _finalists.csv): per rank, B (fresh,
 #                                       primary), A (BO partitions), C (best GP mean), B minus A
@@ -216,12 +216,12 @@ if (!SELECT_MODE) {
   print(desurv_bo_finalists)
 
   # ── Selection objects, as code/03c, tagged with the rule ──
-  tar_k_selection <- cache_or_compute("tar_k_selection_tcgacptac", {
+  tar_k_selection <- cache_or_compute("tar_k_selection_fresh_tcgacptac", {
     x <- k_selection_from_finalists(desurv_bo_finalists)
     attr(x, "selection_rule") <- SELECTION_RULE
     x
   })
-  tar_params_best <- cache_or_compute("tar_params_best_tcgacptac", {
+  tar_params_best <- cache_or_compute("tar_params_best_fresh_tcgacptac", {
     x <- select_bo_params_finalists(desurv_bo_finalists)
     attr(x, "selection_rule") <- SELECTION_RULE
     x

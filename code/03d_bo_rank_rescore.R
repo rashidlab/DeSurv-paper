@@ -1,8 +1,10 @@
 #!/usr/bin/env Rscript
 # code/03d_bo_rank_rescore.R — fresh-partition rescoring of the rank-BO finalists and the
-# cross-rank selection on it (rev 3 amendment 1b)
+# cross-rank selection on it (rev 3 amendment 1b; role per amendment 1c: robustness / sensitivity
+# analysis of rank selection, never a Step 5 input)
 #
-# docs/plans/2026-10-03-rev3-amendment-1b-fresh-rescoring.md (APPROVED). desurv_bo_finalists()
+# docs/plans/2026-10-03-rev3-amendment-1b-fresh-rescoring.md and
+# docs/plans/2026-10-03-rev3-amendment-1c-roles-and-reconstruction.md (APPROVED). desurv_bo_finalists()
 # re-evaluates on the BO's own partitions and seed banks, so its C equals the BO value and the
 # cross-rank 1-SE rule compares selection-biased maxima. Here every finalist of code/03b is
 # re-evaluated with the identical estimator and settings (its stored cv_args) on FRESH CV:
@@ -20,11 +22,11 @@
 #                                                   BO-partition mean_cindex and gain mean_cindex_fresh
 # Select inputs: tar_data_tcgacptac and, per K, desurv_bo_rescore_k{K}, desurv_bo_finalists_k{K},
 #                desurv_bo_results_k{K}
-# Select outputs (ORDINARY names; the directory defines authority, see the amendment):
-#   desurv_bo_finalists_tcgacptac       pooled desurv_bo_finalists object on the FRESH fold C
+# Select outputs (all _fresh names, so none can be mistaken for a pipeline selection; amendment 1c):
+#   desurv_bo_finalists_fresh_tcgacptac pooled desurv_bo_finalists object on the FRESH fold C
 #   tar_k_selection_fresh_tcgacptac     k_selection_from_finalists()   } attr selection_rule =
 #   tar_params_best_fresh_tcgacptac     select_bo_params_finalists()   } "fresh_partition_paired_1se"
-#   tar_data_filtered_tcgacptac         as code/03c
+#   tar_data_filtered_fresh_tcgacptac   as code/03c (at B's selected ngene)
 #   bo_rank_selection_side_by_side_tcgacptac (.rds + .csv, + _finalists.csv): per rank, B (fresh,
 #                                       robustness / sensitivity), A (BO partitions), C (best GP mean), B minus A
 
@@ -195,7 +197,7 @@ if (!SELECT_MODE) {
   param_names <- c("k_grid", fins[[1]]$param_names)
   sel_A <- DeSurv::desurv_select_k_paired_1se(A$fold_cindex, A$configs)
 
-  desurv_bo_finalists <- cache_or_compute("desurv_bo_finalists_tcgacptac", {
+  desurv_bo_finalists <- cache_or_compute("desurv_bo_finalists_fresh_tcgacptac", {
     cv_args <- rss[[1]]$cv_args
     cv_args$k_grid <- NULL
     structure(
@@ -230,7 +232,7 @@ if (!SELECT_MODE) {
             identical(attr(tar_k_selection, "selection_rule"), SELECTION_RULE),
             identical(attr(tar_params_best, "selection_rule"), SELECTION_RULE))
 
-  tar_data_filtered <- cache_or_compute("tar_data_filtered_tcgacptac", {
+  tar_data_filtered <- cache_or_compute("tar_data_filtered_fresh_tcgacptac", {
     preprocess_training_data(data = tar_data, ngene = bo_ngene(tar_params_best),
                              method_trans_train = "rank")
   })
@@ -298,7 +300,7 @@ if (!SELECT_MODE) {
   print(attr(side, "selection"))
   if (sel_A$k_selected != sel_B$k_selected) {
     message("  NOTE: A (BO partitions) selects k = ", sel_A$k_selected, ", B (fresh) selects k = ",
-            sel_B$k_selected, "; B stands (amendment 1b).")
+            sel_B$k_selected, "; both reported (robustness / sensitivity, amendment 1c).")
   }
   message("  Fresh-partition selection: k=", tar_params_best$k, " (runner-up k=",
           tar_k_selection$runner_up_k, "), alpha=", round(tar_params_best$alpha, 3))

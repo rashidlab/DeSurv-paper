@@ -7,7 +7,7 @@
 #SBATCH --time=24:00:00
 #SBATCH --output=slurm/logs/rescore_%x_%j.log
 
-# Rev 3 amendment 1b (docs/plans/2026-10-03-rev3-amendment-1b-fresh-rescoring.md): fresh-partition
+# Rev 3 amendment 1b/1c (docs/plans/2026-10-03-rev3-amendment-1{b,c}-*.md; robustness / sensitivity): fresh-partition
 # rescoring of one rank's BO finalists (code/03d_bo_rank_rescore.R, rank mode), or the cross-rank
 # selection on the fresh fold C (select mode), each in its own immutable results directory:
 #   <K>     $STEP5A_ROOT/rescore-k<K>/results   inputs copied in: tar_data (step 4 base),

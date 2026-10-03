@@ -1,5 +1,5 @@
 #!/bin/bash
-# Rev 3 amendment 1b: submit the fresh-partition rescoring of the rank-BO finalists (one job per
+# Rev 3 amendment 1b/1c (robustness / sensitivity analysis; never a Step 5 input): submit the fresh-partition rescoring of the rank-BO finalists (one job per
 # rank, code/03d rank mode) and the cross-rank selection on it (code/03d select mode, afterok on
 # every rescoring job submitted here). Nothing downstream.
 #   STEP5A_ROOT=/work/users/n/u/nur2/desurv-rerun/out/step5a-<sha> \

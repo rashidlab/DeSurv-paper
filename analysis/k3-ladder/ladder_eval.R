@@ -40,7 +40,10 @@ CONFIGS <- list(
   pub_k3  = list(k = 3L, alpha = 0.333935556177224480, lambda = 0.349448737941329357,
                  nu = 0.055651216804573779, ntop = 270L, may_eval = NA_integer_),
   pub_k7  = list(k = 7L, alpha = 0.333935556177224480, lambda = 0.349448737941329357,
-                 nu = 0.055651216804573779, ntop = 270L, may_eval = 129L)
+                 nu = 0.055651216804573779, ntop = 270L, may_eval = 129L),
+  # Diagnostic (2026-10-03): the ROUNDED published values used by noise job 3500640 and the k = 3 rank-BO
+  # seed row (rev 3 value 0.6258); tests whether rounding explains pub_k3 S4 0.6362 vs 0.6258.
+  pubr_k3 = list(k = 3L, alpha = 0.334, lambda = 0.349, nu = 0.0557, ntop = 270L, may_eval = NA_integer_)
 )
 STEPS <- list(
   S0  = list(pkg = "1.0.1", estimator = "mean_starts", tol = 1e-5, partitions = "may"),

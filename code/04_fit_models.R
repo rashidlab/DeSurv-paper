@@ -46,6 +46,28 @@ if (.Platform$OS.type == "windows" && NCORES > 1L) {
 # ── Load prerequisites ────────────────────────────────────────────────────
 tar_data_filtered  <- load_precomputed("tar_data_filtered_tcgacptac")
 tar_params_best    <- load_precomputed("tar_params_best_tcgacptac")
+# Rev 3 amendment 1b: when DESURV_REQUIRE_SELECTION_RULE is set (slurm/submit_rev3_downstream.sh
+# sets "fresh_partition_paired_1se"), stop unless the selection objects carry that rule
+# (attr "selection_rule", written by code/03c and code/03d). tar_k_selection is not otherwise
+# used here; it is checked only if present in the results directory. Unset: no check.
+local({
+  rule <- Sys.getenv("DESURV_REQUIRE_SELECTION_RULE")
+  if (!nzchar(rule)) return(invisible())
+  check <- function(x, name) {
+    got <- attr(x, "selection_rule")
+    if (!identical(got, rule)) {
+      stop(name, " has selection_rule '", if (is.null(got)) "<none>" else got,
+           "', but DESURV_REQUIRE_SELECTION_RULE requires '", rule, "'.", call. = FALSE)
+    }
+    message("  ", name, ": selection_rule = ", got)
+  }
+  check(tar_params_best, "tar_params_best_tcgacptac")
+  if (file.exists(precomputed_path("tar_k_selection_tcgacptac"))) {
+    check(load_precomputed("tar_k_selection_tcgacptac"), "tar_k_selection_tcgacptac")
+  } else {
+    message("  tar_k_selection_tcgacptac not in ", RESULTS_DIR, "; not checked")
+  }
+})
 fit_std            <- load_precomputed("fit_std_tcgacptac")
 std_nmf_selected_k <- load_precomputed("std_nmf_selected_k_tcgacptac")
 tar_data_filtered_elbowk <- load_precomputed("tar_data_filtered_elbowk_tcgacptac")

@@ -90,12 +90,18 @@ desurv_bo_finalists <- cache_or_compute("desurv_bo_finalists_tcgacptac", {
 print(desurv_bo_finalists)
 
 # ── Selection objects, exactly as code/03's main stage after its finalists ──
+# Tagged with the rule (amendment 1b): code/04 refuses these objects when
+# DESURV_REQUIRE_SELECTION_RULE asks for the fresh-partition rule (code/03d).
 tar_k_selection <- cache_or_compute("tar_k_selection_tcgacptac", {
-  k_selection_from_finalists(desurv_bo_finalists)
+  x <- k_selection_from_finalists(desurv_bo_finalists)
+  attr(x, "selection_rule") <- "bo_partition_paired_1se"
+  x
 })
 
 tar_params_best <- cache_or_compute("tar_params_best_tcgacptac", {
-  select_bo_params_finalists(desurv_bo_finalists)
+  x <- select_bo_params_finalists(desurv_bo_finalists)
+  attr(x, "selection_rule") <- "bo_partition_paired_1se"
+  x
 })
 stopifnot(identical(tar_params_best$k, tar_k_selection$k_selected))
 

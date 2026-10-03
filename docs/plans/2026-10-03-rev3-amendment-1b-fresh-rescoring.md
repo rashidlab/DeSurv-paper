@@ -24,7 +24,9 @@ its best finalist's parameters, and the runner-up come from this.
 | B | fresh-partition C of the best finalist | paired, 15 fresh units | PRIMARY selection |
 | A | BO-partition C of the best finalist (job 3529511, amendment 1 as approved) | paired, 15 BO units | comparison |
 | C | best GP posterior mean | none | descriptive only (no paired SE; GP fits differ by rank) |
-Plus per rank: finalists' alpha, lambda, nu, ntop, training C, and B minus A (the size of the selection bias).
+Plus per rank: finalists' alpha, lambda, nu, ntop, training C, and B minus A: the change induced by fresh-partition
+evaluation. For one rank it mixes optimism (selection bias) with fresh-CV sampling variation; its systematic
+direction and size across the 11 ranks is the informative diagnostic.
 If A and B select different k, B stands and the disagreement is reported.
 
 ## Order of events (for the record)
@@ -37,8 +39,21 @@ If A and B select different k, B stands and the disagreement is reported.
 Paper-side only; DeSurv stays 1.2.0 (its `cv_overrides` deliberately refuses partition changes, so the new step
 calls `DeSurv::desurv_cv` with the stored `cv_args`, replacing only `cv_seeds` and `seed_bank_base`).
 - `code/03d_bo_rank_rescore.R`: one rank per job (DESURV_BO_K) -> `desurv_bo_rescore_k<K>_tcgacptac.rds`
-  (configs + fresh fold_cindex), and a select mode that applies the 1-SE rule across ranks ->
-  `tar_k_selection_fresh_tcgacptac.rds`, `tar_params_best_fresh_tcgacptac.rds`, and the A/B/C side-by-side table.
+  (configs + fresh fold_cindex), and a select mode that applies the 1-SE rule across ranks and writes the
+  ORDINARY downstream names `tar_k_selection_tcgacptac.rds` and `tar_params_best_tcgacptac.rds` into its own
+  directory `$STEP5A_ROOT/rescore-select/results`, plus the A/B/C side-by-side table. Both objects carry
+  `attr(, "selection_rule") = "fresh_partition_paired_1se"`.
+
+## Which selection is authoritative (amendment to the review fix, owner 2026-10-03)
+- The DIRECTORY, not the filename, defines authority. A and B both write unsuffixed names.
+  - `$STEP5A_ROOT/rescore-select/results` (B): PRIMARY. Step 5 takes `tar_k_selection` and `tar_params_best`
+    from here and nowhere else.
+  - `$STEP5A_ROOT/select/results` (A, job 3529511): comparison only; never an input to any later step.
+- Safeguard: Step 5 fails immediately unless its selection inputs identify themselves as the fresh rule.
+  `code/04_fit_models.R` checks `attr(tar_k_selection, "selection_rule")` and `attr(tar_params_best,
+  "selection_rule")` against `DESURV_REQUIRE_SELECTION_RULE` when that variable is set, and
+  `slurm/rev3_env.sh` (sourced by every rev 3 job, including whatever runs code/04 for Step 5) and `slurm/submit_rev3_downstream.sh` set it to `fresh_partition_paired_1se` by default. A's objects carry no
+  such attribute (or `bo_partition_paired_1se` if 03c is ever rerun), so feeding A to Step 5 stops.
 - Longleaf: one rescoring job per rank (afterok on that rank's BO job; k2 can start now), then one select job.
   Separate output directory; job 3529511 (A) runs untouched.
 - Cost: 3 finalists x (15 fold fits) per rank, about 1-5 h per rank at the observed pace.

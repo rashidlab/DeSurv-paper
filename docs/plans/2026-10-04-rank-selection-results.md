@@ -18,6 +18,11 @@ published configuration at k3 regardless of these results.
 | A BO partitions + paired 1-SE (comparison) | k12 0.6572 | 12 (runner-up 10) | k12 eval 31 | |
 | C best GP mean (descriptive) | k12 0.6462 | 12 | | |
 
+SE caveat (applies to every published-procedure row): `compute_bo_eval_se` groups by (run_id, eval_id, fold) and
+divides by sqrt(number of fold groups). Written for May's single 5-fold partition, on rev 3's 3 x 5 design it averages
+each fold INDEX across three unrelated partitions, so the 0.0251 behaves like a 5-unit SE, not a 15-unit one
+(reconstruction report, recording decision).
+
 Footnote (rounding): the rev 3 BO included a rounded seed for the published configuration. Under the deterministic
 rev 3 estimator that rounded neighbor yielded C 0.6258, whereas the full-precision published parameters yielded C
 0.6362 (k3 ladder report, section 9); the rounded seed is not a surrogate for the published model.
@@ -66,3 +71,14 @@ for k8 is 0.6300.) B paired differences vs k12: 0.016 (k11, SE 0.0066) to 0.041 
 - "Compact" framing: no modern rule supports k3; the published procedure on rev 3 gives k5 (k3 only in the
   full-precision counterfactual).
 - Report the k3 references with the rounding footnote.
+
+## 5. Owner rulings (2026-10-04)
+- Do NOT extend the rank grid beyond k12 until audit finding F2 (coefficient/W update inconsistent with the stated
+  objective; reported to persist in DeSurv 1.2.0) is independently verified. If F2 is refuted or numerically
+  negligible, extend the grid (k12 is right-censored). If F2 is confirmed and material, the rev 3 estimator may need
+  replacing first.
+- Do not reinterpret the manuscript around k12 until F2 is settled. Step 5 stays frozen at the published k3
+  configuration.
+- The published-procedure k5 result and the full-precision k3 counterfactual are historical diagnostics (the old
+  procedure is fragile: one rounded seed flips k3 vs k5), not the main decision criterion; the paired fresh-rescoring
+  result is the more informative one, conditional on F2.

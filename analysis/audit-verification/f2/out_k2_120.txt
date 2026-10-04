@@ -1,0 +1,23 @@
+== rev3 reported-recipe k2 consensus fit | DeSurv 1.2.0 from /tmp/claude-1000/-home-naimrashid-Downloads-DeSurv-paper-clean/da9c6c81-47b4-4511-8cfc-1c71451b090a/scratchpad/lib-rev3/DeSurv
+k=2 alpha=0.581688 lambda=0.535935 nu=0.037485 lambdaW=0 lambdaH=0 | iter=32 conv=TRUE lastWchg=1.48e-08 lastHchg=9.4e-08
+tied event-time groups among events: 8; n=273 events=139
+[1] objective: independent 5.150104262 stored 5.150104262 | surv -8.827006 vs -8.827006
+    stored b = beta*sd: -0.6258002 0.2775801 
+[2] dir. derivative random dir: analytic -1.355820e-02 FD -1.355820e-02
+    ||G||_F 7.063336e-01; derivative along -G/||G||: analytic -7.063336e-01 FD -7.063336e-01
+    projected-gradient norm 7.063336e-01 (0 at a stationary point)
+    feasible step pmax(W - 0.001 G): dL = -4.416228e-04
+    feasible step pmax(W - 0.01 G): dL = -4.027278e-03
+    feasible step pmax(W - 0.1 G): dL = -2.488387e-02
+    feasible step pmax(W - 1 G): dL = 6.733016e-01
+    ||G_nmf|| 8.7993e-03  ||G - G_nmf|| (survival+penalty) 7.0715e-01
+[3] KKT residual of stored b, stated (lambda): 0.335368 -0.1724 
+    KKT residual of stored b, 2*lambda        : -0.00753738 -0.00912224 
+    exact b* (lambda):   -0.7926119 0.3472684  KKT -1.7e-09 -5.86e-10 
+    exact b* (2 lambda): -0.6225987 0.2810277  KKT 1.39e-12 5.05e-13 
+    beta subobjective (stated): stored 8.8270064 exact 8.7930667 2lam-opt 8.8275078 | full-L gain from exact b -1.974227e-02
+    cos(stored, exact) 0.999990  cos(stored, 2lam) 0.999979
+[4] package update_beta_cpp, warm start = stored beta (raw): -0.6258002 0.2775801 
+    package update_beta_cpp, warm start = 0               : -0.6225988 0.2810277 
+    package update_beta_cpp, warm start = exact b*/sd      : -0.7926119 0.3472684 
+[5] train C: stored 0.7835 exact-beta 0.7835

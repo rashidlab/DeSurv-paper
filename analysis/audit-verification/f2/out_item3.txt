@@ -1,0 +1,30 @@
+
+== DeSurv k3 (alpha 0.334) (ntop 270, union 810 genes)
+                     own common_unpen common_enet
+train             0.7784       0.7784      0.7776
+Dijk              0.6074       0.5963      0.6051
+Moffitt_GEO_array 0.5617       0.5619      0.5609
+PACA_AU_array     0.6490       0.6549      0.6512
+PACA_AU_seq       0.6338       0.6394      0.6361
+Puleo_array       0.6360       0.6369      0.6363
+wmean             0.6181       0.6180      0.6182
+
+== alpha=0 fair comparator k3 (ntop 270, union 810 genes)
+                     own common_unpen common_enet
+train             0.5463       0.5501      0.5379
+Dijk              0.5157       0.4590      0.5416
+Moffitt_GEO_array 0.5162       0.4976      0.5152
+PACA_AU_array     0.4618       0.4912      0.4618
+PACA_AU_seq       0.4121       0.4815      0.3953
+Puleo_array       0.5326       0.5473      0.5259
+wmean             0.5095       0.5132      0.5085
+
+== alpha=0 fair comparator k3, own ntop (ntop 299, union 897 genes)
+                     own common_unpen common_enet
+train             0.5437       0.5425      0.5400
+Dijk              0.5165       0.4636      0.5413
+Moffitt_GEO_array 0.5158       0.4882      0.5180
+PACA_AU_array     0.4552       0.4537      0.4581
+PACA_AU_seq       0.4065       0.4580      0.3942
+Puleo_array       0.5304       0.5409      0.5263
+wmean             0.5073       0.5032      0.5087

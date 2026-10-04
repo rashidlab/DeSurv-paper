@@ -1,0 +1,23 @@
+== inline 1.2.0 k12, eval-40 config with nu=0 | DeSurv 1.2.0 from /tmp/claude-1000/-home-naimrashid-Downloads-DeSurv-paper-clean/da9c6c81-47b4-4511-8cfc-1c71451b090a/scratchpad/lib-rev3/DeSurv
+k=12 alpha=0.658658 lambda=0.748810 nu=0.000000 lambdaW=0 lambdaH=0 | iter=269 conv=TRUE lastWchg=1.11e-16 lastHchg=9.82e-08
+tied event-time groups among events: 8; n=273 events=139
+[1] objective: independent 5.443865851 stored 5.443865851 | surv -8.256388 vs -8.256388
+    stored b = beta*sd: -0.05321249 -0.1525642 -0.07040775 -0.01562293 0.05173924 0.01422805 0.248919 0.08431037 0.003201171 0.1323708 -0.1305255 -1.067996 
+[2] dir. derivative random dir: analytic -2.334051e-02 FD -2.334052e-02
+    ||G||_F 3.036600e+00; derivative along -G/||G||: analytic -3.036600e+00 FD -3.036600e+00
+    projected-gradient norm 2.976084e+00 (0 at a stationary point)
+    feasible step pmax(W - 0.001 G): dL = -6.291585e-03
+    feasible step pmax(W - 0.01 G): dL = 3.555235e-03
+    feasible step pmax(W - 0.1 G): dL = 4.106500e+00
+    feasible step pmax(W - 1 G): dL = 1.778461e+02
+    ||G_nmf|| 1.6804e-03  ||G - G_nmf|| (survival+penalty) 3.0366e+00
+[3] KKT residual of stored b, stated (lambda): 0.0126823 -0.00962316 -0.0112778 0.0355112 0.0251384 -0.0244242 -0.120987 0.0206845 0.0193691 0.036354 0.00565975 0.0139733 
+    KKT residual of stored b, 2*lambda        : -0.0271638 -0.123865 -0.0639998 0.0238126 0.0638813 -0.0137701 0.0654064 0.083817 0.0217661 0.135475 -0.092079 -0.785753 
+    exact b* (lambda):   -0.07140052 -0.1526427 -0.0903506 -0.02729486 0.06261484 0.01322482 0.3274047 0.09838914 0.01327788 0.1123578 -0.1298193 -1.071931  KKT -3.34e-13 -1.06e-13 1.84e-12 4.92e-13 3.87e-13 -5.21e-13 -6.99e-13 -6.79e-13 3.47e-13 -4.35e-13 -1.73e-13 -5.88e-13 
+    exact b* (2 lambda): -0.04619378 -0.1409261 -0.0760817 -0.01889549 0.05345856 0.00651336 0.2268082 0.07317725 0.009343792 0.1169543 -0.1113465 -0.7474186  KKT 3.53e-10 -4.96e-10 -9.87e-10 3.44e-10 -1.05e-09 1.17e-09 -9.53e-10 2.27e-10 -2.86e-10 -7.36e-10 -5.26e-10 -2.34e-10 
+    beta subobjective (stated): stored 8.2563883 exact 8.2514289 2lam-opt 8.3526496 | full-L gain from exact b -3.266557e-03
+    cos(stored, exact) 0.997244  cos(stored, 2lam) 0.995750
+[4] package update_beta_cpp, warm start = stored beta (raw): -0.05321249 -0.1525642 -0.07040775 -0.01562293 0.05173924 0.01422805 0.248919 0.08431037 0.003201171 0.1323708 -0.1305255 -1.067996 
+    package update_beta_cpp, warm start = 0               : -0.04619379 -0.140926 -0.0760814 -0.01889554 0.05345885 0.006512974 0.2268079 0.07317732 0.009343588 0.1169544 -0.1113466 -0.7474186 
+    package update_beta_cpp, warm start = exact b*/sd      : -0.07140052 -0.1526427 -0.0903506 -0.02729486 0.06261484 0.01322482 0.3274047 0.09838914 0.01327788 0.1123578 -0.1298193 -1.071931 
+[5] train C: stored 0.8756 exact-beta 0.8762

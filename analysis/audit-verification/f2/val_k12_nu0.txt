@@ -1,0 +1,7 @@
+                  archived reoptimized
+Dijk                0.5684      0.5465
+Moffitt_GEO_array   0.5573      0.4991
+PACA_AU_array       0.6153      0.6160
+PACA_AU_seq         0.5868      0.5655
+Puleo_array         0.5963      0.5753
+n-weighted mean: 0.5856 0.5592 

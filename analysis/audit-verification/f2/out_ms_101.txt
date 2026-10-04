@@ -1,0 +1,28 @@
+== manuscript consensus fit (k3) | DeSurv 1.0.1 from /home/naimrashid/R/x86_64-pc-linux-gnu-library/4.6/DeSurv
+k=3 alpha=0.333936 lambda=0.349449 nu=0.055651 lambdaW=0 lambdaH=0 | iter=28 conv=TRUE lastWchg=3.33e-16 lastHchg=9.47e-08
+tied event-time groups among events: 8; n=273 events=139
+[1] objective: independent 2.941507360 stored 2.941507360 | surv -8.746738 vs -8.746738
+    stored b = beta*sd: -0.8300312 0 0.1376692 
+[2] dir. derivative random dir: analytic -5.168960e-03 FD -5.168961e-03
+    ||G||_F 4.985242e-01; derivative along -G/||G||: analytic -4.985242e-01 FD -4.985242e-01
+    projected-gradient norm 4.985242e-01 (0 at a stationary point)
+    feasible step pmax(W - 0.001 G): dL = -2.197453e-04
+    feasible step pmax(W - 0.01 G): dL = -1.945908e-03
+    feasible step pmax(W - 0.1 G): dL = -1.111326e-02
+    feasible step pmax(W - 1 G): dL = 3.683505e-01
+    ||G_nmf|| 2.1562e-02  ||G - G_nmf|| (survival+penalty) 5.0014e-01
+[3] KKT residual of stored b, stated (lambda): 0.291672 0 -0.0656295 
+    KKT residual of stored b, 2*lambda        : -0.00168723 0 -0.000751184 
+    exact b* (lambda):   -1.010032 0 0.1723436  KKT 8.2e-12 0 -7.74e-13 
+    exact b* (2 lambda): -0.8291836 0 0.1379454  KKT 1.59e-12 0 -1.77e-13 
+    beta subobjective (stated): stored 8.7467381 exact 8.7193971 2lam-opt 8.7469679 | full-L gain from exact b -9.130147e-03
+    cos(stored, exact) 0.999989  cos(stored, 2lam) 1.000000
+[4] package update_beta_cpp, warm start = stored beta (raw): -0.8300555 0 0.1380482 
+    package update_beta_cpp, warm start = 0               : -0.8300555 0 0.1380482 
+    package update_beta_cpp, warm start = exact b*/sd      : -1.010032 0 0.1723436 
+[5] train C: stored 0.7860 exact-beta 0.7858
+    Dijk               C stored 0.6074 exact-beta 0.6071
+    Moffitt_GEO_array  C stored 0.5617 exact-beta 0.5621
+    PACA_AU_array      C stored 0.6490 exact-beta 0.6490
+    PACA_AU_seq        C stored 0.6338 exact-beta 0.6327
+    Puleo_array        C stored 0.6360 exact-beta 0.6358

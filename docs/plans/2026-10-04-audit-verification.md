@@ -254,10 +254,7 @@ full-data preprocessing equal to cache: all match the audit.
 
 ## 6. Provenance of this verification
 
-Scripts and outputs (session scratchpad,
-`/tmp/claude-1000/-home-naimrashid-Downloads-DeSurv-paper-clean/c176b796-1ecf-4ead-a7df-6d98b6875511/scratchpad/`):
-`f2/f2_lib.R` (independent objective, gradient, exact beta solver), `f2/f2_fast.R` (O(n log n) Breslow, checked
-against the reference to 1e-9 on the real tied data), `f2/f2_check.R`, `f2/f2_reopt.R`, `f2/f2_val.R`,
-`f2/item3_matched_beta.R`, `f2/item4_cv.R` with outputs `out_*.txt`, `reopt_*.txt`, `item4_full.txt`,
-`item4_full.rds`; subagent F1/F3-F7 report `F1_F3-F7_verification.md` and scripts in `sub/`. The scratchpad is
-session-local; copy into the repository if these are to be kept.
+Scripts, outputs and the subagent's F1/F3-F7 report are in `analysis/audit-verification/` (see its README).
+Scripts run from the root of `~/Downloads/DeSurv-paper-clean` against its cached `results/`; 1.2.0 runs read
+`DESURV_120_LIB`. Two relocated scripts (`f2_check.R` on the k3 fit, `item3_matched_beta.R`) were rerun from the
+repository copy and reproduced the reported values.

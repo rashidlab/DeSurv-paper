@@ -1,0 +1,4 @@
+it    1  L 5.5398301  projgrad 2.660e+00  step 2.00e-02
+it  100  L 5.1091850  projgrad 1.518e+00  step 1.25e-03
+it  200  L 5.0038534  projgrad 1.314e+00  step 1.25e-03
+it  300  L 4.9639865  projgrad 9.891e-01  step 6.25e-04

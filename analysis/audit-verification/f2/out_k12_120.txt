@@ -1,0 +1,23 @@
+== inline 1.2.0 fit at rank-selection k12 config (eval 40) | DeSurv 1.2.0 from /tmp/claude-1000/-home-naimrashid-Downloads-DeSurv-paper-clean/da9c6c81-47b4-4511-8cfc-1c71451b090a/scratchpad/lib-rev3/DeSurv
+k=12 alpha=0.658658 lambda=0.748810 nu=0.172850 lambdaW=0 lambdaH=0 | iter=334 conv=TRUE lastWchg=0 lastHchg=9.99e-08
+tied event-time groups among events: 8; n=273 events=139
+[1] objective: independent 5.569184445 stored 5.569184445 | surv -8.446983 vs -8.446983
+    stored b = beta*sd: 0 0 -0.04487534 0 0 0 0.1358723 0 -1.088901 0 0 0 
+[2] dir. derivative random dir: analytic 1.743051e-02 FD 1.743051e-02
+    ||G||_F 2.503747e+00; derivative along -G/||G||: analytic -2.503747e+00 FD -2.503747e+00
+    projected-gradient norm 2.384622e+00 (0 at a stationary point)
+    feasible step pmax(W - 0.001 G): dL = -3.983333e-03
+    feasible step pmax(W - 0.01 G): dL = -2.003986e-02
+    feasible step pmax(W - 0.1 G): dL = 1.225347e+00
+    feasible step pmax(W - 1 G): dL = 6.369247e+01
+    ||G_nmf|| 1.6987e-03  ||G - G_nmf|| (survival+penalty) 2.5037e+00
+[3] KKT residual of stored b, stated (lambda): 0 0 0.0278614 0 0 0 -0.0240849 0 0.025482 0 0 0 
+    KKT residual of stored b, 2*lambda        : 0 0 -0.129365 0 0 0 0.189503 0 -0.778391 0 0 0 
+    exact b* (lambda):   0 0 -0.05600783 0 0 0 0.1428007 0 -1.101389 0 0 0  KKT 0 0 3.27e-12 0 0 0 -4.77e-12 0 -1.28e-11 0 0 0 
+    exact b* (2 lambda): 0 0 -0.03290334 0 0 0 0.1255356 0 -0.7447655 0 0 0  KKT 0 0 -2.1e-13 0 0 0 3.37e-13 0 8.3e-13 0 0 0 
+    beta subobjective (stated): stored 8.4469828 exact 8.4465856 2lam-opt 8.5542167 | full-L gain from exact b -2.615748e-04
+    cos(stored, exact) 0.999943  cos(stored, 2lam) 0.999080
+[4] package update_beta_cpp, warm start = stored beta (raw): 0 0 -0.04487534 0 0 0 0.1358723 0 -1.088901 0 0 0 
+    package update_beta_cpp, warm start = 0               : 0 0 -0.03290332 0 0 0 0.1255356 0 -0.7447655 0 0 0 
+    package update_beta_cpp, warm start = exact b*/sd      : 0 0 -0.05600783 0 0 0 0.1428007 0 -1.101389 0 0 0 
+[5] train C: stored 0.8676 exact-beta 0.8672

@@ -91,6 +91,9 @@ restore_inherited_diagnostics_from_main <- function(rank_k, rank_history, rank_d
   #  this rank's fixed k, which is why rank_k is passed in explicitly and stamped onto each
   #  row inside the loop below rather than filtered here.)
   inh <- inherited_rows(rank_history, rank_diagnostics)
+  # Seed rows (stage "seed", k = 3 only) did not come from the main BO; restore_noise_bank_diagnostics()
+  # handles them (noise job 3500640, bank 4,000,000).
+  if ("stage" %in% names(inh)) inh <- inh[!(inh$stage %in% "seed"), , drop = FALSE]
 
   report <- data.frame(
     eval_id = integer(0), main_eval_id = integer(0),
@@ -192,7 +195,7 @@ restore_noise_bank_diagnostics <- function(rank_k, rank_history, rank_diagnostic
   if (!"prov_id" %in% names(base)) base$prov_id <- NA_character_
 
   inh <- inherited_rows(rank_history, base)
-  inh$k <- rank_k
+  if (nrow(inh)) inh$k <- rank_k   # 0 rows once fix 1 has restored every inherited row
 
   report <- data.frame(
     eval_id = integer(0), noise_label = character(0), history_mean = numeric(0),

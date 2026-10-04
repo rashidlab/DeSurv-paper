@@ -14,7 +14,7 @@ re-checked against source.
 | Finding | Audit | Verdict | Revised severity | Disclosed in manuscript |
 |---|---|---|---|---|
 | F1 tie derivative | HIGH | CONFIRMED (defect); CV impact negligible | MEDIUM | No (likelihood ties yes, derivative defect no) |
-| **F2 optimizer vs objective** | HIGH | **CONFIRMED in 1.0.1 and 1.2.0; consequence reversed** | **HIGH, different remedy** | Mechanisms yes (SI L414-440, L1816; Methods L81) |
+| **F2 optimizer vs objective** | HIGH | **CONFIRMED in 1.0.1 and 1.2.0; consequence reversed** | **HIGH: estimator definition and reporting; empirical conclusions supported by the implemented estimator** | Mechanisms yes (SI L414-440, L1816; Methods L81) |
 | F3 final config outside 1-SE | MEDIUM | CONFIRMED | LOW-MEDIUM | Yes (Methods L86, SI 811-879) |
 | F4 grid filter outside folds | MEDIUM | CONFIRMED | LOW | No |
 | F5 supervised-PCA surrogate | MEDIUM | CONFIRMED | LOW-MEDIUM | No; Methods L119 inaccurate |
@@ -152,14 +152,22 @@ outside these caveats.
   k12 the fit is 9 unsupervised columns (beta = 0, cosine 1 under exact descent) plus 3 lightly supervised ones,
   so "twelve survival-shaped programs" is not a supportable reading. The ruling against reinterpreting the
   manuscript around k12 should stand.
-- Remediation options: (a) manuscript: define the estimator as the algorithm (zeta-scaled block descent from
-  consensus initialization, terminated by the stated rule), with Eq. 1 as its guiding criterion and the stall
-  stated as implicit regularization, plus a sensitivity analysis; or (b) method: add an explicit,
-  scale-invariant regularizer tuned by BO, optimize it with a convergent algorithm, and revalidate. A design memo
-  for (b) is in preparation separately.
-- Smallest next decisive check for (a): repeat section 2.4 with the production recipe (fold-local filter,
-  consensus init) at the published configuration; for (b): the same 20-fold design with the regularized
-  estimator, target held-out C at least 0.638 with stable D1 top genes.
+- Remediation for this manuscript (owner direction 2026-10-04): (a) keep the implemented estimator and define it
+  as the algorithm (zeta-scaled block descent from consensus initialization, terminated by the stated rule), with
+  Eq. 1 as its guiding criterion and the stall stated as implicit regularization, plus the section 2.4 sensitivity
+  result. The Methods and SI already describe the algorithm and disclaim exact minimization (Methods L75-81, SI
+  L414-440, L1816); what is missing is the framing sentence beside Eq. 1 and the new evidence. Wording: the loading
+  changes induced by further optimization are consistently associated with poorer held-out discrimination (do not
+  call the entering genes "overfit genes").
+- Not a prerequisite for this manuscript: (b) an explicit, scale-invariant regularizer tuned by BO and optimized
+  by a convergent algorithm is a new estimator and future methodological work. Exploratory design memo:
+  `analysis/audit-verification/regularization_design_memo.md` once it lands.
+- Validation discipline for (b): the section 2.4 partitions and the external cohorts have been examined and are
+  development data. Do not choose a regularizer or its strength to recover held-out C 0.638, and do not make
+  matching the published D1 an optimization target. Specify the regularizer from principle, then evaluate under a
+  locked scheme (nested CV with fresh partitions, strength chosen only by inner-loop BO).
+- Smallest next check for (a): repeat section 2.4 with the production recipe (fold-local filter, consensus init)
+  at the published configuration.
 
 ## 3. alpha = 0 comparators and the second stage (question raised during verification)
 

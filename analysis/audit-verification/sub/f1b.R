@@ -1,7 +1,8 @@
 D <- path.expand("~/Downloads/DeSurv-paper-recompute/analysis/audit-verification/sub")
 suppressPackageStartupMessages(library(Rcpp)); sourceCpp(file.path(D,"cox101.cpp"), cacheDir=file.path(D,"rcppcache"))
 .libPaths(c(Sys.getenv("DESURV_120_LIB"), .libPaths()))
-s <- readRDS(file.path(D,"lp_sorted.rds")); y <- s$y; d <- s$d
+f0 <- readRDS("results/tar_fit_desurv_tcgacptac.rds"); o <- order(f0$data$y)  # run from DeSurv-paper-clean root
+s <- list(y = f0$data$y[o], d = f0$data$d[o], lp = as.vector(crossprod(f0$data$X, f0$W) %*% f0$beta)[o]); y <- s$y; d <- s$d
 tied <- y %in% y[duplicated(y)]
 cat("tied values", sum(duplicated(y)), "distinct tied values", length(unique(y[tied])), " subjects at tied times", sum(tied), " events at tied times", sum(d[tied]), "\n")
 a <- cox_stats_101(s$lp,d,y); b <- DeSurv:::cox_stats_cpp(s$lp,d,y)

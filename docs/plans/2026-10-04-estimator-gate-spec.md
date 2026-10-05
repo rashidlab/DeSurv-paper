@@ -65,52 +65,98 @@ F(W,H,b) = (1-alpha)[ ||X-WH||^2/(2||X||^2) + lambdaH ||H||^2/(2nk) ]
 
 l the Breslow partial log-likelihood, n_e the number of events. No zeta rescaling anywhere.
 
-- Fixed constants: lambdaH = 1e-6; eps = 1e-6 x median_j sigma_j at initialization.
+- Fixed constants: lambdaH = 1e-6. eps is one value per fit: 1e-6 x the median of sigma_j(W) (computed with
+  eps = 0) over j = 1..k and over all 30 starts' projected initial W. Every start of a fit therefore minimizes the
+  same F.
 - Normalization: the unit-norm gauge on W is a constraint, enforced by the projection; no post-hoc rescaling.
   Reported beta_j = b_j / sigma_j(W) (the floored scale in the objective, never the raw sd).
+- **Prediction vector (amendment 2).** v = W diag(1/sigma(W)) b and v~ = P v = v - mean(v) 1, both over the frozen
+  training gene universe. The scored predictor is X_G^T v~_G, where G is the gene support chosen by the unchanged
+  ntop rule (`desurv_get_top_genes` on W). Centering happens before support restriction. The fitted model stores
+  the training gene universe, v~ and G; test and external cohorts are scored with these stored values and v~ is
+  never recentered on the genes available in another dataset.
+- **Invalid input** fails deterministically, with no fallback constant: n < 2, n_e = 0, any nonfinite entry of X,
+  y or d, ||X|| = 0, or a pooled median sigma (above) <= 0.
 
-**Optimizer.** Block prox-linear (PALM) with an exact convex b block:
-1. H: one HALS sweep (Cichocki and Phan 2009). No multiplicative updates.
+**Optimizer.** Block prox-linear (PALM) with a convex b block solved to a certified tolerance:
+1. H: one HALS sweep (Cichocki and Phan 2009), rows j = 1..k in order. No multiplicative updates.
 2. W: W+ = P_S+(W - t grad_W Psi), column-wise closed form (v_+/||v_+||; if no positive entry, e_i for
-   i = argmax of the unclipped v). Backtracking from 2 t_prev by halving until
-   Psi(W+) <= Psi(W) + <grad, W+-W> + ||W+-W||^2/(4t).
-3. b: exact minimization (elastic-net Cox plus the rho quadratic) by FISTA, warm-started, stopped on the KKT
-   residual ||KKT_b||_inf < 1e-10 (not on successive coefficient change).
+   i = argmax of the unclipped v, first index on ties). Step t = min(2 t_prev, t_max) with t_max = 2 and
+   t_prev = 1 at the first iteration, halved until
+   Psi(W+) <= Psi(W) + <grad, W+-W> + ||W+-W||^2/(4t), so every accepted step decreases F by at least
+   ||W+-W||^2/8. If t falls below t_min = 1e-20 the start is a numerical failure; no step is accepted at the floor.
+3. b: convex block (elastic-net Cox plus the rho quadratic) solved by FISTA, warm-started from the current b
+   (FISTA's internal acceleration is allowed). Stop when the KKT residual of the alpha-free b subproblem, evaluated
+   by a routine separate from the solver, satisfies ||KKT_b||_inf <= 1e-10 (FISTA cap 1e5 iterations; reaching the
+   cap is a numerical failure). Acceptance: b+ replaces b only if F(W, H, b+) <= F(W, H, b); otherwise b is kept
+   and a rejected b step is recorded. This is an inexact block solve. The convergence theorem (Bolte, Sabach and
+   Teboulle 2014) is stated for exact blocks; the implementation certifies the block's subgradient error at
+   1e-10, five orders below the stopping tolerance, and makes no claim of mathematical exactness.
 
-No inertial extrapolation in the frozen version.
+No outer inertial extrapolation in the frozen version.
 
-**Stopping.** r = max( ||W - P_S+(W - grad_W Psi)||_F, ||min(H, grad_H Psi)||_F / ||H||_F, ||KKT_b||_inf ).
-Stop when r < 1e-5; maxit = 5000 outer iterations. Every fit records r, final F, iteration count, whether r
-reached tolerance, and the number of F increases (must be 0).
+**Stopping (amendment 2).** r = max(r_W, r_H, r_b), with G_W = grad_W Psi and G_H = grad_H Psi:
+- r_W = ||R_W||_F, the KKT residual on {w_j >= 0, ||w_j|| = 1}: R_W[i,j] = G_W[i,j] - (w_j^T G_W[,j]) W[i,j] if
+  W[i,j] > 0, and min(G_W[i,j], 0) if W[i,j] = 0 (the projection and HALS produce exact zeros).
+- r_H = ||min(H, G_H / a_H)||_F / max(1, ||H||_F), elementwise min, a_H = (1-alpha)(1/||X||^2 + lambdaH/(n k))
+  (the HALS row curvature): the relative size of a curvature-scaled projected step, defined at H = 0.
+- r_b = ||KKT_b||_inf of the alpha-free b subproblem (the stricter reading; it bounds the F-scaled residual
+  because alpha < 1).
+Stop when r < 1e-5; maxit = 5000 outer iterations. The original residual
+r_original = max( ||W - P_S+(W - G_W)||_F, ||min(H, G_H)||_F / ||H||_F, r_b ) is recorded alongside and binds
+nothing. An F increase is F_new > F_old + 1e-13 max(1, |F_old|), checked after each block; the largest raw
+increase is also recorded.
 
-**Initialization.** 30 starts per fit: W from the same `DeSurv` initializer as the comparator, projected onto
-S_+^k; H by 20 HALS sweeps at fixed W; b = 0. The fit returned is the start with the **lowest final F**. Training C
-is never used to choose among starts.
+**Start and fit status (amendment 2).** Each start ends in one status: *converged* (r < 1e-5 within maxit, no F
+increase), *nonconverged* (maxit reached, all values finite, no numerical failure), or *numerical failure*
+(nonfinite value, step floor, FISTA cap). Every start keeps its status and full diagnostics (r, r_W, r_H, r_b,
+r_original, final F, iterations, increases, rejected b steps, backtracking counts). A fit returns the
+lowest-final-F *converged* start. If no start converged, the fit is nonconverged and carries the lowest-F
+nonconverged start, flagged; if every start failed numerically, the fit failed. Numerical failures are never
+scored.
+
+**Initialization.** 30 starts per fit, drawn as the comparator's raw random draw (DeSurv 1.0.1
+`desurv_alpha_warmstart.R`): for start s = 1..30 of a fit with seed S, `set.seed(S + s - 1)`, then
+W0 = matrix(runif(p k, 0, max(X)), p, k) and H0 = matrix(runif(n k, 0, max(X)), k, n) in that order (H0 is drawn
+so the stream matches and is then discarded). W0 is projected onto S_+^k; H by 20 HALS sweeps at fixed W; b = 0.
+The comparator's `init()` short runs are not used (they run the zeta objective and choose by training C). Seeds:
+inner fold f = 1..5 of every BO evaluation in outer fold (outer_seed, outer_fold) uses
+S = outer_seed * 100 + outer_fold + 100 (f - 1) (the comparator's `seed_fold` rule with one hyperparameter set per
+call); the outer final fit uses S = outer_seed * 100 + outer_fold + 500. Training C is never used to choose among
+starts.
 
 **Tuning space (inner BO, k = 3 fixed).** logit(alpha) in [logit(1e-4), logit(0.9)]; log10 lambda in [-3, 3];
 nu in [0, 0.95] (nu < 1 keeps the b block strongly convex); log10 rho in [-2, 3]; ntop in [50, 300] (integer).
 alpha is searched on the logit scale because its meaning changes without zeta (the published alpha = 0.334
-corresponds to a stated-objective weight near 0.007).
+corresponds to a stated-objective weight near 0.007). Bounds are not changed after any outcome is seen;
+boundary hits are reported.
 
 **Inner BO.** Same BO engine, candidate pool, exploration weight and seed rule as the comparator. Budget
 n_init = 60, n_iter = 120 (20% above the comparator's 150 evaluations, for the extra dimension). Each evaluation:
 inner 5-fold CV C-index with 30 starts per fold, scored with the same ntop truncation and scoring code as the
-comparator.
+comparator, applied to the stored centered vector v~. A configuration is *feasible* only if all five inner-fold
+fits are converged. An infeasible configuration is passed to the BO with the fixed value 0.5 (chance
+concordance), recorded as infeasible, and is never selectable.
 
-**Selection.** The evaluated configuration with the highest mean inner-CV C (the same rule as the comparator),
-full precision.
+**Selection.** The feasible evaluated configuration with the highest mean inner-CV C (the same rule as the
+comparator), full precision. If no configuration is feasible, the outer-fold final fit is failed.
 
-**Final fit on the outer training set.** 30 starts at the selected configuration, lowest F returned.
+**Final fit on the outer training set.** 30 starts at the selected configuration; the fit returned under the
+status rule above. A converged final fit is scored. A nonconverged final fit is scored only as a flagged
+diagnostic prediction and counts against the 90% convergence precondition (section 6). If any outer fold has a
+failed final fit (no finite valid start, or no feasible configuration), Gate A is ineligible; no C-index is
+imputed.
 
 **Implementation preconditions** (before any outer-fold fit): gradient check against finite differences on every
-block; F monotone on test problems; b block KKT verified; the three pilot-code limits fixed (projection argmax,
-KKT stop, all three residuals recorded). Debugging uses simulated data only; no held-out C is computed during
-development.
+block; F monotone on test problems; b block KKT verified by an independent evaluator; the three pilot-code limits
+fixed (projection argmax, KKT stop, all residuals recorded). Debugging uses simulated data only; no held-out C is
+computed on real data during development.
 
 ## 5. Scoring
 
 For each outer fold and each arm: held-out C-index (Harrell, same code as the comparator's CV scoring) of the arm's
-final fit applied to the outer test fold, with the arm's selected ntop truncation. Paired difference
+final fit applied to the outer test fold, with the arm's selected ntop truncation (the candidate scores with its
+stored centered vector v~, section 4). Paired difference
 dC_f = C_candidate,f - C_comparator,f over the 20 outer folds.
 
 ## 6. Gate A: estimator selection (statistical criteria only)
@@ -123,8 +169,8 @@ interpreted as demonstrating statistical noninferiority. Results are described a
 prespecified performance criterion" with the interval, never as "noninferior" or "equivalent".
 
 **Convergence precondition.** The candidate exists to be a convergent estimator of a stated objective. It is
-eligible only if at least 90% of its 20 outer-fold final fits reach r < 1e-5 within maxit and no fit records an F
-increase. If this fails, the candidate is ineligible regardless of dC, and the result is reported as an
+eligible only if at least 90% of its 20 outer-fold final fits are converged (section 4: r < 1e-5 under the
+amendment-2 residual, within maxit, no F increase), no fit records an F increase, and no outer-fold final fit failed. If this fails, the candidate is ineligible regardless of dC, and the result is reported as an
 implementation or specification failure, not as evidence about D1.
 
 **Reported, not decision-binding:** training-test C gap per arm; start-to-start stability of W (median pairwise
@@ -141,7 +187,9 @@ A and the biology differs, that is a scientific result to confront and report, n
 estimator.
 
 **Fit evaluated.** The candidate's full-data model: inner-BO procedure of section 4 run on all 273 training
-samples (5-fold CV, fold and BO seed 3000), selected configuration, 30 starts, lowest F.
+samples (5-fold CV, fold and BO seed 3000; start seeds by the section 4 rule with outer_seed * 100 + outer_fold
+replaced by 3000), selected configuration, 30 starts, lowest-F converged start. Gate B requires this fit to be
+converged; otherwise the biology is reported as not evaluable.
 
 **D1 counterpart.** Hungarian matching of the candidate's three W columns to the published fit's three
 (`tar_fit_desurv_tcgacptac`) by Pearson correlation of loadings on the common gene set; D1's match is the D1
@@ -209,3 +257,16 @@ top-270 gene list (A12; covered by the top-ntop overlap metric in section 7), an
 - 2026-10-04 (before any step 1 output was read; codex review of bca989d): reported beta uses sigma_j(W), not
   sd(Z_j), to match the objective; Nadeau-Bengio variance factor and SE multiplier stated separately (numbers
   unchanged); A11 criterion reworded to remove pipe characters that split the table cell. No decision changed.
+- 2026-10-04, amendment 2 (before any step 1 output was read, on the PI's instruction; codex scientific review of
+  the candidate plan, `2026-10-04-candidate-optimizer-codex-review.md`, findings 1-6). (1) The b block is an
+  inexact convex solve with an independent KKT certificate at 1e-10 and an F-nonincrease acceptance check; "exact"
+  removed. (2) W step capped at t_max = 2, giving decrease >= ||W+-W||^2/8; no step accepted at the floor.
+  (3) The binding stopping residual is replaced: r_W is the sphere/nonnegativity KKT residual (the unit-step
+  projection residual need not vanish at a stationary point) and r_H is curvature-scaled with a zero convention;
+  the original r is recorded, not binding. (4) The candidate's scored predictor uses the gene-centered vector
+  v~ = P W diag(1/sigma) b, centered before ntop truncation over the frozen training gene universe and never
+  recentered on another dataset's genes, because truncation otherwise reintroduces the uniform direction that
+  the objective leaves unpenalized; the support rule G is unchanged. (5) Initializer (raw comparator draw, full
+  seed schedule) and eps (pooled median over 30 starts) written into the spec; deterministic invalid-input
+  failure. (6) Start statuses and failure propagation through starts, BO evaluations (infeasible = 0.5, never
+  selected), outer final fits (Gate A ineligible on any failed fit) and Gate B (requires a converged fit).

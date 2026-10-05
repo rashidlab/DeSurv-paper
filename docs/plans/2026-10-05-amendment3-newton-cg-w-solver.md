@@ -1,14 +1,17 @@
-# Amendment 3: active-face Newton-CG W solver (DRAFT, 2026-10-05, not yet approved)
+# Amendment 3: active-face Newton-CG W solver (APPROVED, PI, 2026-10-05; FROZEN)
 
-Amends `2026-10-04-estimator-gate-spec.md` section 4, "Optimizer", step 2 only. Written before any Newton-CG code
-exists and before any Newton-CG output has been seen. Sources: PI rulings 2026-10-05 (first, second, third) in
-`docs/HANDOFF-2026-10-05-candidate-optimizer.md`, and the PI's mechanics specification of the same day. The
-amendment window closed after amendment 2; this amendment is opened on the PI's explicit instruction and is
-limited to the problem S1-S5 established.
+Amends `2026-10-04-estimator-gate-spec.md` section 4, "Optimizer", step 2, and the maxit clause of "Stopping".
+Approved and frozen before any Newton-CG code exists and before any Newton-CG output has been seen. Sources: PI
+rulings 2026-10-05 (first, second, third) in `docs/HANDOFF-2026-10-05-candidate-optimizer.md`, the PI's
+mechanics specification of the same day, and the PI's ruling on the eight [PI] items of the draft (commit
+c2f5482), recorded in section 9.
 
-Items marked **[PI]** are places where the mechanics specification cannot be implemented literally against the
-frozen constraint set or the frozen spec. Each carries a proposed resolution. Nothing marked [PI] is final until
-ruled. All other text restates rulings already made.
+**Guiding principle (PI).** Make the numerical solver mathematically coherent without changing the objective,
+the statistical estimator, the tuning space or the convergence certificate.
+
+**After approval.** The amendment window is closed again. Bug fixes that make code conform to this text are
+permitted. No change to the numerical mechanics is permitted on the basis of whether the candidate looks
+favorable; any such change requires a new amendment under the failure rule (section 7).
 
 ## 1. Hierarchy
 
@@ -24,163 +27,157 @@ ruled. All other text restates rulings already made.
 ## 2. Frozen (unchanged by this amendment)
 
 Objective Psi and F, penalties, the H update (one HALS sweep), the b update (FISTA to KKT_b <= 1e-10 with
-F-nonincrease acceptance), sweep order H, W, b, normalization S_+^k = {W >= 0, ||w_j|| = 1}, initialization and
-seed schedule, the stopping residual r = max(r_W, r_H, r_b) < 1e-5 under the amendment-2 definitions, the
-F-increase definition, start statuses and the start-selection rule (lowest-F converged start, else lowest-F
-nonconverged start, flagged), and every element of BO, scoring, Gate A and Gate B.
+F-nonincrease acceptance), sweep order H, W, b, the feasible set S_+^k = {W >= 0, ||w_j|| = 1}, initialization and
+seed schedule, the stopping certificate r = max(r_W, r_H, r_b) < 1e-5 under the amendment-2 definitions, the
+F-increase definition, start statuses (converged, nonconverged, numerical failure) and the start-selection rule
+(lowest-F converged start, else lowest-F nonconverged start, flagged), and every element of BO, scoring, Gate A
+and Gate B.
 
 ## 3. The amended W step
 
-Replaces spec section 4, "Optimizer", step 2. Everything is evaluated at fixed (H, b).
+Replaces spec section 4, "Optimizer", step 2. Everything is evaluated at fixed (H, b). G_W = grad_W Psi
+(Euclidean).
 
-**Outer iteration.** One complete W-block update at fixed (H, b): identify the current active face, solve for a
-Newton-CG direction on its free coordinates, perform the line search, accept one W, then recompute the frozen
-KKT/residual quantities. One outer iteration is one W update. Because the PALM sweep makes exactly one W update,
-outer iterations and sweeps coincide one to one (see [PI-6]).
+**Sweep counter.** One sweep is one pass H, W, b. Each sweep counts once toward the per-start budget, whether the
+W step is a Newton-CG update or a no-op. This is the only per-start sweep counter (section 4).
 
-**Geometry [PI-1].** Each column w_j lies on the nonnegative part of the unit sphere. The specification's g_F and
-H_W, read literally as Euclidean quantities on the free coordinates, do not vanish or become meaningful at a
-stationary point. The Euclidean gradient keeps a radial component (w_j' g_j) w_j that the frozen residual r_W
-removes, so a forcing term built on the Euclidean ||g_F|| never tends to zero. Proposed: pose the Newton system
-in the tangent space of each sphere on the free face, which is the operator S1-S5 measured:
-- g_F = the binding residual R_W restricted to the free coordinates (tangent-projected gradient);
-- Hess[V]_j = P_j((d2Psi V)_j) - (w_j' g_j) V_j, where P_j projects onto the tangent space of column j on the
-  free face and d2Psi V is the analytic Euclidean HVP;
-- retraction = the existing column normalization (the frozen P_S+ applied to a nonnegative matrix).
-The Weingarten term -(w_j' g_j) V_j can make Hess indefinite; the negative-curvature rule below handles that.
+**Convergence guard.** At the start of the W block, compute r_W. If r_W < 1e-5 (the certificate's threshold), W is
+a no-op for this sweep: W is kept, no CG or line search is run, exit reason `w_converged`. H and b proceed as
+frozen. r_W is re-evaluated at the next sweep, after H and b have moved; if it then reaches the threshold, W is
+active again.
+
+**Gradient and geometry.** Newton-CG operates in the columnwise tangent space of the unit spheres, restricted to
+the free coordinates. The gradient used is the projected (Riemannian) gradient matrix g = R_W restricted to the
+free set, the matrix whose Frobenius norm defines the frozen r_W. The operator is the Riemannian Hessian already
+used and validated in S1-S5:
+Hess[V]_j = P_j((d2Psi V)_j) - (w_j' g_j) V_j,
+with P_j the projection onto the tangent space of column j on the free face (zero off the free set, orthogonal
+to w_j), g_j here the Euclidean gradient column G_W[, j] as in `wcond.R`, and d2Psi V the analytic Euclidean HVP.
+After a trial step, W is retracted to nonnegative unit-norm columns (below).
 
 **Analytic HVP.** d2Psi V is computed directly from every W-dependent term of Psi (reconstruction and survival
 contributions, including the W dependence of sigma_j(W)), restricted to the free coordinates. No explicit Hessian
 and no finite differences. If an analytic HVP proves infeasible, the implementer stops and reports to the PI; a
 finite-difference substitute is not adopted without a ruling.
 
-**Active face [PI-2].** The specification leaves the face rule open, and a face equal to {W > 0} can never release
-a zero coordinate. At the p = 3000 end points, S4 found W = 0 entries with negative gradient carrying a
-nonzero (under 50%) share of ||R_W||^2. With a face fixed at {W > 0}, r_W cannot reach 1e-5 whenever such entries
-exist. Proposed: free set = {W_ij > 0} union {W_ij = 0 and G_W[i,j] < 0}, matching exactly the two cases in the
-definition of R_W; all other coordinates are held at zero for the iteration.
+**Active face.** Free coordinates: W_ij > 0, plus W_ij = 0 with G_W[i,j] < 0 (the gradient points into the
+feasible region, so the coefficient may re-enter). These are exactly the two cases in the definition of R_W. All
+other coordinates are held at zero for the iteration.
 
-**CG.** Plain CG on Hess d = -g_F over the free coordinates, starting at d = 0, with no preconditioner. Stop at
-the first of: relative residual ||Hess d + g_F|| <= min(0.5, sqrt(||g_F||)) ||g_F|| (forcing sequence), 100 HVPs
-in this solve, or negative curvature.
+**CG.** Plain truncated CG on Hess d = -g over the free coordinates, starting at d = 0, no preconditioner. Stop at
+the first of:
+- forcing: ||Hess d + g|| <= min(0.5, sqrt(||g||)) ||g||;
+- 100 HVPs in this solve (the direction accumulated so far is used; the start continues);
+- nonpositive or numerically flat curvature (below).
 
-**Negative curvature [PI-7].** If a CG search direction p has p' Hess p <= 1e-12 s ||p||^2, with
-s = |Rayleigh quotient of the first CG direction| (recorded), truncate CG and use the direction accumulated so
-far. Record `negative_curvature = TRUE` for that outer iteration. The objective is not changed and no damping is
-added to make Hess positive definite. Gap: if negative curvature occurs on the first CG iteration the accumulated
-direction is zero. Proposed: use the steepest-descent direction -g_F in that case (the standard Steihaug choice),
-flagged separately as `nc_first_iter = TRUE`.
+**Negative or flat curvature.** For CG search direction p_j, q_j = p_j' Hess p_j / p_j' p_j. Let q_ref be the
+first finite positive Rayleigh quotient of this CG solve. Curvature is nonpositive or flat when
+q_j <= 1e-12 max(1, |q_ref|); for j = 1, q_ref is q_1 when q_1 is finite and positive, so the j = 1 test is
+q_1 <= 1e-12 max(1, |q_1|), which any nonpositive q_1 meets. On detection: if j = 1, terminate CG and use d = -g,
+flagged `nc_first_iter = TRUE`; if j > 1, terminate CG and use the direction accumulated so far, flagged
+`negative_curvature = TRUE`. The objective is not changed and no damping is added to make Hess positive
+definite. A nonfinite q_j at any j is a nonfinite quantity and therefore a numerical failure.
 
-**Feasibility and step [PI-3].** The specification caps the trial step at the largest step that preserves the W
-constraints, then applies the existing normalization. A nonzero straight-line step never stays on the sphere, so
-the cap can only be taken against nonnegativity: t_max = the largest t with W + t d >= 0 on the free set (capped
-at 1, the Newton step). Two consequences to rule on:
-- a freed zero coordinate with d_ij < 0, or a free coordinate at 1e-12, gives t_max at or near zero, the
-  "jamming" failure of capped active-set methods. At p = 3000 many W entries are near zero, so this is a live
-  risk of re-creating a stall by a different route;
-- the alternative used by projected Newton methods (Bertsekas 1982) searches along the projected path
-  W(t) = P_S+(W + t d), using only the existing projection, and lets coordinates hit zero inside the search.
-Proposed: keep the PI's cap (it is the more conservative change) and, in addition, exclude from the free set any
-freed zero coordinate whose CG direction is negative (it is returned to the active set before t_max is
-computed). Record t_max and the number of coordinates that hit zero at each iteration so jamming is visible. If
-the PI prefers the projected path, the line search below applies unchanged to W(t).
+**Retracted search path.** W(t) = N([W + t d]_+), where [.]_+ sets negative entries to zero and N renormalizes each
+column to unit norm. Coefficients may hit zero inside the search and the algorithm continues along the boundary;
+there is no straight-line feasibility cap. A trial t is rejected (and halved) if [W + t d]_+ annihilates an
+entire column, since N is then undefined.
 
-**Line search.** Monotone Armijo backtracking on the full objective F at fixed (H, b), starting at t = t_max,
-halving, accepting the first t with F(R(W + t d)) <= F(W) + 1e-4 t <g_F, d>, where R is the column normalization.
-Actual decrease is required: F(W_new) < F(W). No fallback to the old first-order step. If g_F = 0 exactly
-(the W block is stationary on its face), the W update is a no-op: W is kept, no line search is run, and the
-outer iteration is recorded with exit reason `w_stationary`. The H and b blocks proceed as frozen.
+**Line search.** Monotone Armijo backtracking on the actual retracted objective at fixed (H, b): start at t = 1
+(the Newton step), halve, and accept the first t with
+F(W(t)) <= F(W) + 1e-4 <G_W, W(t) - W>  and  F(W(t)) < F(W).
+The sufficient-decrease term uses the actual displacement of the retracted point (the projected-search form of
+Armijo, Bertsekas 1982), so clipping and renormalization are accounted for; for an unclipped step it equals
+1e-4 t <g, d> to first order. No fallback to the old first-order step. Face changes (coordinates entering and
+leaving the support) are recorded at every accepted step.
 
-**Line-search failure [PI-4].** The specification makes a line-search failure "nonconverged". Two gaps:
-- a floor is needed. Proposed: 60 halvings (t below about 1e-18 t_max), matching the scale of the frozen
-  t_min = 1e-20;
-- in the frozen spec, the step floor is a *numerical failure*, not nonconverged, and the third ruling says
-  production status logic is unchanged. Proposed: a W line-search failure ends the start with status
-  *nonconverged*, reason `line_search_failed`; it is not a numerical failure because all values are finite and F
-  did not increase. The start keeps its last accepted W and remains eligible for the lowest-F nonconverged
-  fallback. In the qualification benchmark it is a qualification failure.
-A related risk, not a decision: near stationarity, predicted decreases can fall below the F-increase tolerance
-1e-13 max(1, |F|), so Armijo can fail on rounding before r < 1e-5. If this happens, the qualification fails and
-is reported under the failure rule (section 6); the amendment does not prespecify a remedy. The same applies
-once r_W < 1e-5 while r_H or r_b has not yet converged: W steps then predict decreases near rounding, and a
-line-search failure there would end the start before H and b finish. Skipping the W update when r_W < 1e-5 would
-avoid this but changes the sweep, so it is listed as [PI-8] rather than adopted.
-
-**Budget (per start).** At most 1,000 outer iterations, at most 100 HVPs per W solve, at most 25,000 W-block
-HVPs in total. All three are per start; a 30-start fit has 30 independent budgets. The 25,000 total binds; it is
-not relaxed because 1,000 x 100 is larger. HVPs used by the directional-derivative test and by diagnostics do
-not count.
-
-**Status [PI-6].** The 100-HVP ceiling only truncates one CG solve: the direction accumulated so far goes to
-the line search and the start continues. Production: a start that reaches the per-start cap (1,000 outer
-iterations or 25,000 total HVPs) is *nonconverged*, reason `work_cap_reached`; the frozen start-selection rule is unchanged. Qualification: reaching a per-start cap is a failure.
-Consequence to rule on: the frozen maxit = 5000 sweeps cannot bind while the 1,000-outer-iteration cap exists,
-because each sweep makes one W update. In production the effective sweep limit becomes 1,000. Proposed: state
-this explicitly in the spec ("maxit = 5000 is superseded by the per-start Newton-CG budget"), since it changes
-which starts are nonconverged relative to the frozen spec.
+**Line-search failure.** The search terminates without acceptance after 60 halvings, or as soon as the retracted
+trial W(t) is numerically identical to W (every entry equal in floating point). Either ends the start with status
+*nonconverged*, reason `line_search_failed`; the start keeps its last accepted W and remains eligible for the
+lowest-F nonconverged fallback. Nonfinite quantities anywhere remain *numerical failure*. The frozen W step floor
+t_min = 1e-20 belonged to the replaced step and no longer applies.
 
 **Theory statement.** The PALM convergence theorem (Bolte, Sabach and Teboulle 2014) assumed the frozen
 prox-linear W step and its sufficient decrease ||W+ - W||^2/8. The Newton-CG step with Armijo decrease is not
 covered by that theorem. The spec makes no convergence claim for the amended algorithm; convergence is certified
 per start by the frozen residual r < 1e-5.
 
-## 4. Diagnostics recorded per start
+## 4. Budget and status
 
-Per outer iteration: F, r, r_W, r_H, r_b, face size, CG iterations, HVPs, CG exit reason (forcing, cap,
-negative curvature), negative_curvature flag, t_max, accepted t, halvings, coordinates hitting zero. Per start:
-wall time, total outer iterations, total HVPs, objective path, final KKT residuals, status and reason. Wall time
-is recorded, never a criterion.
+**Per-start budget.** At most 1,000 sweeps, at most 100 HVPs per W solve, at most 25,000 W-block HVPs in total.
+All are per start; a 30-start fit has 30 independent budgets. The 25,000 total is the binding work cap; it is not
+relaxed because 1,000 x 100 is larger. The 100-HVP ceiling only truncates one CG solve. HVPs used by the Q0 test
+and by diagnostics do not count.
 
-## 5. Qualification
+**maxit superseded.** For the candidate with the amended W solver, the per-start budget replaces maxit = 5000 in
+spec section 4, "Stopping". There is one binding per-start sweep rule, not two counters.
+
+**Status.** Production: a start that reaches the per-start cap (1,000 sweeps or 25,000 total HVPs) is
+*nonconverged*, reason `work_cap_reached`; the frozen start-selection rule is unchanged. Qualification: reaching a
+per-start cap is a failure.
+
+## 5. Diagnostics recorded per start
+
+Per sweep: F, r, r_W, r_H, r_b, W exit reason (`w_converged` or Newton step), face size, CG iterations, HVPs, CG
+exit reason (forcing, HVP ceiling, curvature), `negative_curvature` and `nc_first_iter` flags, accepted t,
+halvings, coordinates entering and leaving the support. Per start: wall time, total sweeps, total HVPs, objective
+path, final KKT residuals, status and reason. Wall time is recorded, never a criterion.
+
+## 6. Qualification
+
+**Q0. Analytic HVP test (precondition, simulated data).** On each T1 simulated problem, for 10 random directions
+V on the free face (seeded, unit Frobenius norm), compare d2Psi V with
+(grad_W F(W + eps V) - grad_W F(W - eps V)) / (2 eps) on the fixed grid eps = 1e-2, 1e-3, ..., 1e-8. Relative
+error e(eps) = ||fd - analytic||_F / ||analytic||_F. Pass, for every direction:
+- min over the grid of e(eps) <= 1e-6; and
+- empirical order log10(e(eps_k) / e(eps_k+1)) >= 1.5 over at least two consecutive refinements before roundoff
+  (the expected second-order decay of the central difference).
+Finite differences test the HVP; they are not used to implement it. The assembled Riemannian operator Hess is
+tested the same way, against the central difference composed with the tangent projection and the Weingarten term,
+as in `wcond.R`.
 
 **Q-T. Full simulated requalification (first ruling, item 4).** Rerun T1-T12 with the amended W step:
 gradients, zero material F increases, the same independent KKT oracle, recovery, timing, edge cases, mutation
 tests, fold-locality and transport. Every test passes under its existing criterion; none is relaxed. T7 is the
-test whose p = 3000 failure motivated this amendment; its outcome is reported, and Q1 below, not T7 timing, is the
+test whose p = 3000 failure motivated this amendment; its outcome is reported, and Q1, not T7 timing, is the
 binding realistic-size criterion.
 
-**Q0. Analytic HVP test (precondition, simulated data, small problems).** For random directions V on the free
-face, compare d2Psi V with (grad_W F(W + eps V) - grad_W F(W - eps V)) / (2 eps). Finite differences test the
-HVP; they are not used to implement it. Run at several eps and require the error to show the expected O(eps^2)
-decay before rounding takes over. Separately test the assembled Riemannian operator Hess against the same
-construction composed with the tangent projection and the Weingarten term, as in `wcond.R`. Pass threshold
-**[PI-5a]**: proposed minimum over eps of the relative error <= 1e-6, at all tested directions.
-
 **Q1. Binding realistic-size qualification.** Warm-start from each of the four stalled p = 3000, n = 218 end
-points (starts 1, 5, 9, 16), full sweeps (H, W, b) with the amended W step. Each must, within the per-start
-budget:
-- reach the frozen criterion r < 1e-5;
-- satisfy F_final <= F_stalled_endpoint (no minimum improvement prespecified).
-Loading and prediction agreement with the stalled end point are reported descriptively only.
-Reaching a per-start cap (1,000 outer iterations or 25,000 HVPs), a line-search failure or a numerical failure
-in any of the four fails Q1; a CG solve truncated at its 100-HVP ceiling does not.
+points (starts 1, 5, 9, 16), full sweeps (H, W, b) with the amended W step. All four (the prespecified proportion
+is 4 of 4) must:
+1. reach the unchanged certificate r < 1e-5;
+2. respect monotonicity (no F increase under the frozen scale-aware definition);
+3. stay within the per-start budget.
+Reaching a per-start cap, a line-search failure or a numerical failure in any of the four fails Q1; a CG solve
+truncated at its 100-HVP ceiling does not. F_final <= F_stalled_endpoint follows from criterion 2 (every block is
+monotone from the warm start) and is checked as part of it; the size of any improvement is reported, not
+required. Loading and prediction agreement with the stalled end point are reported descriptively only.
 
-**Q2. Estimator equivalence and non-regression at p = 150.** On the converged p = 150 control settings, from the
-same initializations, the amended and frozen solvers must agree on: convergence status; F within tolerance;
-fitted W, H, b within tolerance; predictions within tolerance; and, for the 30-start control fits, the same
-selected start (first ruling, item 4(ii)). **[PI-5b]** The third ruling refers to
-"already-defined equivalence tolerances". None are defined in the gate spec, the ruling, the handoff, or the
-candidate tests. Proposed, fixed now and before either solver is run for Q2:
-- F: |F_new - F_old| <= 1e-8 max(1, |F_old|);
-- W, H: after Hungarian column matching (identity expected), max column-wise 1 - cosine <= 1e-6 for W, and
-  ||H_new - H_old||_F / ||H_old||_F <= 1e-4;
-- b: ||b_new - b_old||_inf <= 1e-4 max(1, ||b_old||_inf);
-- predictions (linear predictor on the control's held-out samples): Pearson r >= 0.9999 and
-  max |difference| <= 1e-4 times the predictor's SD.
-Rationale: both solvers stop at r < 1e-5, so the solutions agree only to the accuracy that tolerance implies
-along well-conditioned directions; the F tolerance is tighter because F is second-order in the residual.
+**Q2. Estimator equivalence and non-regression at p = 150.** On the p = 150 control settings, both solvers run
+the frozen 30-start fit from the same initializations. Qualification requires:
+- both solvers converge under the same r < 1e-5 certificate;
+- the same start is selected;
+- relative objective difference |F_new - F_old| / max(1, |F_old|) <= 1e-6;
+- after optimal (Hungarian) column matching, every W-column cosine similarity >= 0.999;
+- fitted standardized risk scores eta~: Pearson r >= 0.9999 and
+  RMSE(eta~_new - eta~_old) / SD(eta~_old) <= 0.01.
+H and b differences are reported diagnostically and are not separate qualification gates. Rationale (PI): both
+solvers stop at KKT 1e-5 in an ill-conditioned model, so two converged points can share objective and predictions
+while differing in parameter space by much more than 1e-6. These criteria are invariant or near-invariant to that
+flat-basin freedom; a genuinely different solution would fail them.
 
 **Q3. End-to-end check (not the amendment-3 gate).** Full frozen 30-start p = 3000 fits with the amended W step.
-Reported, not pass/fail for amendment 3; must show sensible multi-start behavior (status counts, F spread
-across starts, selected start) before the amended solver is used for the definitive recomputation.
+Reported, not pass/fail for amendment 3; must show sensible multi-start behavior (status counts, F spread across
+starts, selected start) before the amended solver is used for the definitive recomputation. No numerical
+threshold for Q3 is fixed by this amendment.
 
-## 6. Failure rule
+## 7. Failure rule
 
-If Q0, Q1 or Q2 fails, Newton-CG is not tuned against T7 or Q1 outcomes. Diagnose, and write another amendment
-before changing the algorithm. A preconditioner enters only through a later amendment and only with evidence
-that CG itself has become the bottleneck.
+If Q0, Q-T, Q1 or Q2 fails, Newton-CG is not tuned against T7, Q1 or Q2 outcomes. Diagnose, and write another
+amendment before changing the algorithm. A preconditioner enters only through a later amendment and only with
+evidence that CG itself has become the bottleneck.
 
-## 7. Chronology (first ruling, item 5; verbatim for the spec and any write-up)
+## 8. Chronology (first ruling, item 5; verbatim for the spec and any write-up)
 
 "The statistical specification was frozen before implementation. Prespecified simulated-data qualification
 subsequently showed that the reference W-block optimizer failed to reach the frozen KKT tolerance at realistic
@@ -188,19 +185,26 @@ dimensionality despite monotone objective decrease. Before any real-data gate an
 amended once to replace only the W-block numerical solver; the objective, convergence certificate, tuning
 procedure, and gate rules were unchanged."
 
-On approval, the amendment window closes again. Amendment 3 is appended to the spec's Amendments list with its
-approval date.
+## 9. Record of the PI ruling on the draft's [PI] items (2026-10-05)
 
-## 8. Open items for the PI
-
-| Item | Question | Proposed |
+| Item | Draft proposal | Ruling |
 |---|---|---|
-| PI-1 | Euclidean or tangent-space Newton system? | Tangent space (the operator S1-S5 measured); g_F = R_W on the free face |
-| PI-2 | Face rule | {W > 0} union {W = 0, G_W < 0}, the two cases of R_W |
-| PI-3 | Step cap vs projected path | Keep the cap; drop freed zero coordinates with d < 0; record jamming metrics |
-| PI-4 | Line-search floor and status | 60 halvings; status nonconverged, reason `line_search_failed` |
-| PI-5a | HVP test threshold | min-over-eps relative error <= 1e-6 |
-| PI-5b | p = 150 equivalence tolerances (not defined anywhere yet) | as in Q2 |
-| PI-6 | maxit = 5000 vs 1,000-iteration cap | state that the per-start budget supersedes maxit |
-| PI-8 | W update once r_W < 1e-5 but r_H or r_b is not | Keep the frozen sweep (always attempt W); report any rounding-driven line-search failure |
-| PI-7 | Negative-curvature tolerance; first-iteration case | 1e-12 relative to first Rayleigh quotient; -g_F, flagged |
+| 1 Sphere | Tangent-space Newton system | Approved; wording fixed: g is the projected gradient matrix whose norm is r_W, not the scalar |
+| 2 Face | {W > 0} union {W = 0, G_W < 0} | Approved |
+| 3 Jamming | Keep straight-line cap, drop freed coordinates with d < 0 | **Changed**: retracted path N([W + t d]_+), no cap; reject only column annihilation; Armijo on the retracted objective; record face changes |
+| 4 Line-search failure | 60 halvings; nonconverged | Approved, plus no-change guard (trial identical to W); nonfinite remains numerical failure |
+| 5a HVP test | min relative error <= 1e-6 | Approved, plus deterministic eps grid and order >= 1.5 over two consecutive refinements |
+| 5b p = 150 equivalence | Parameter-level tolerances (1e-8 F, 1e-6 cosine, 1e-4 H and b) | **Changed**: invariant criteria in Q2; H and b diagnostic only |
+| 6 maxit | Budget supersedes maxit = 5000 | Approved; one sweep counter |
+| 7 Curvature | 1e-12 relative to first quotient | **Changed**: scale-aware Rayleigh test relative to the first finite positive quotient, floor 1; first-iteration hit uses -g |
+| 8 W after r_W converges | Always attempt W | **Changed**: W no-op when r_W is below threshold at the start of the block |
+
+Also ruled with the items: the p = 3000 qualification is the certificate, the prespecified proportion, monotonicity
+and the budget; a lower F is evidence, not the criterion. This replaces "F_final <= F_stalled_endpoint" as a
+separate binding criterion from the third ruling; it is retained as an implied check under monotonicity.
+
+Implementation choices made by the coordinator to write the rulings down, open to the PI's correction before code
+is written: the strict "<" in the W no-op guard (the certificate uses r < 1e-5); the projected-search Armijo term
+<G_W, W(t) - W>; t starting at 1; the Q0 grid (1e-2 to 1e-8), 10 directions per T1 problem and unit-norm V; Q1's
+proportion stated as 4 of 4 from the third ruling; Q2 applied to the frozen 30-start fit so that "same start
+selected" is defined.

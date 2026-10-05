@@ -190,3 +190,14 @@ convergence plus F_final <= F_endpoint (not endpoint equivalence); four warm end
 fits secondary/end-to-end.
 
 **Next:** write amendment 3 text from the second and third rulings; implement analytic W-block HVP.
+
+## PI ruling 2026-10-05, fourth: amendment 3 APPROVED and frozen; window closed
+
+Amendment 3 approved with items 1, 2, 4, 5a, 6 as proposed (with refinements) and items 3, 5b, 7, 8 changed
+(retracted path instead of step cap; invariant p = 150 criteria; scale-aware curvature test; W no-op once
+r_W < 1e-5). The p = 3000 criterion is certificate, proportion, monotonicity and budget; lower F is evidence, not
+the criterion. Full record: `docs/plans/2026-10-05-amendment3-newton-cg-w-solver.md` section 9. Window closed;
+bug fixes only.
+
+**Next:** implementation brief for the analytic W-block HVP and the Newton-CG W step (Q0 first), against the
+frozen text.

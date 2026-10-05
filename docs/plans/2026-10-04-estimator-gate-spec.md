@@ -289,3 +289,13 @@ top-270 gene list (A12; covered by the top-ntop overlap metric in section 7), an
   of other outer folds in 102 cases; no seed had been used); the F-increase failure uses the existing
   scale-aware tolerance.
 - **Amendment window closed** after amendment 2 (PI, 2026-10-04). No further amendments.
+- 2026-10-05, amendment 3 (PI, before any Newton-CG code existed and before any real-data gate analysis):
+  replaces only the candidate's W-block solver (section 4, "Optimizer", step 2) with active-face Riemannian
+  Newton-CG on a retracted search path, and replaces maxit = 5000 with a per-start budget (1,000 sweeps, 25,000
+  W-block HVPs, 100 HVPs per W solve). Objective, estimator, tuning space, certificate r < 1e-5, statuses,
+  start selection and gate rules unchanged. Full text and qualification (Q0, Q-T, Q1, Q2, Q3):
+  `2026-10-05-amendment3-newton-cg-w-solver.md`. Motivation: prespecified simulated qualification (T7) showed the
+  reference W-block optimizer failed to reach the frozen KKT tolerance at p = 3000 despite monotone decrease;
+  the W-block conditioning diagnostic S1-S5 (c4b6db6) identified the cause.
+- **Amendment window closed** again after amendment 3 (PI, 2026-10-05). Bug fixes conforming code to the text are
+  permitted; no change to numerical mechanics on the basis of candidate performance.

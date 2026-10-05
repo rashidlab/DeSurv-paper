@@ -1,0 +1,18 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T12_transport.txt"
+T12 transport | 2026-10-05 00:58:31 
+  [pass] stored v~ = v - mean(v) over the full training gene universe (independent recomputation)
+  [pass] v~ sums to 0 over the universe (|sum| 3.0e-17)
+  info: |G| = 75 of 200 genes; mean of v~ over G = -7.639e-04 (not recentered on G)
+  [pass] score = X_G^T v~_G
+  [pass] all genes reordered: score identical
+  [pass] half of the non-G genes removed and rows reordered: score identical
+  [pass] only G kept (reversed order): score identical
+  [pass] a scored gene missing: deterministic error, no silent rescoring
+
+descriptive: re-ranking within a reduced gene universe (rank construction, not centering)
+  universe  75% of non-G genes kept (169 genes): Pearson 0.9981, Spearman 0.9971 with full-universe scores, mean shift 1.95 (sd of full scores 0.715)
+  universe  50% of non-G genes kept (137 genes): Pearson 0.9958, Spearman 0.9907 with full-universe scores, mean shift 3.44 (sd of full scores 0.715)
+  universe  25% of non-G genes kept (106 genes): Pearson 0.9926, Spearman 0.9903 with full-universe scores, mean shift 5.5 (sd of full scores 0.715)
+
+T12 TOTAL: 7 checks, 7 passed
+VERDICT: PASS

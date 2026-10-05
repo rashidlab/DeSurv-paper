@@ -1,0 +1,47 @@
+T10 mutation tests | 2026-10-04 23:12:09 
+controls (unmutated):
+ test verdict secs
+   T1    PASS    9
+   T2    PASS    6
+   T3    PASS  288
+   T4    PASS   11
+   T5    PASS    2
+   T6    PASS   15
+   T7    PASS    9
+   T9    PASS    6
+  T11    PASS   35
+  T12    PASS   17
+
+mutants (defect injected; named test must FAIL):
+ id             test defect                                                                          verdict caught secs
+ B1             T1   W gradient omits the sigma_j(W) chain term in the survival (Cox) part           FAIL     TRUE    4 
+ B2_P           T1   rho-ridge W gradient omits P                                                    FAIL     TRUE    4 
+ B2_chain       T1   rho-ridge W gradient omits the 1/sigma chain term                               FAIL     TRUE    7 
+ B3             T2   rho-ridge outside the alpha bracket                                             FAIL     TRUE    4 
+ B4_ties        T2   Breslow ties broken by row order                                                FAIL     TRUE    4 
+ B4_sign        T1   eta-gradient sign flipped                                                       FAIL     TRUE    5 
+ B5             T3   b block stopped on coefficient change (pilot), not KKT                          FAIL     TRUE  257 
+ B6             T5   projection clips then takes argmax (all-nonpositive column -> first gene)       FAIL     TRUE    3 
+ B7             T4   backtracking accepts the step at the floor (pilot)                              PASS    FALSE   12 
+ B7             T9   backtracking accepts the step at the floor (pilot)                              FAIL     TRUE   11 
+ B8_k           T6   HALS lambdaH term without 1/k                                                   FAIL     TRUE   14 
+ B8_unit        T6   HALS denominator assumes ||w_j|| = 1                                            FAIL     TRUE   15 
+ B9             T4   F increases counted with loose tolerance 1e-6 (no increase present)             PASS    FALSE   16 
+ B9_inc         T4   loose increase tolerance plus an H block scaled by 1.001 (F rises, below 1e-6)  FAIL     TRUE   10 
+ B12            T7   eps computed per start                                                          FAIL     TRUE    9 
+ B13            T2   reported beta uses raw sd                                                       FAIL     TRUE    3 
+ B15            T5   start seed offset differs from the comparator stream                            FAIL     TRUE    4 
+ B16            T4   only the W residual recorded                                                    FAIL     TRUE    1 
+ B17_uncentered T12  scored vector v not centered                                                    FAIL     TRUE   20 
+ B17_recenter   T12  v~ recentered on the genes available in the new data                            FAIL     TRUE   29 
+ B18_pick       T9   nonconverged start returned although a converged one exists                     FAIL     TRUE    9 
+ B18_increase   T9   F increase not classed as numerical failure                                     FAIL     TRUE    9 
+ B18_increase   T4   F increase not classed as numerical failure                                     PASS    FALSE   13 
+ B19_accept     T9   b step accepted although F rose                                                 FAIL     TRUE    9 
+ B19_accept     T4   b step accepted although F rose                                                 PASS    FALSE   11 
+ B19_cap        T9   W step uncapped (t = 2 t_prev)                                                  FAIL     TRUE   11 
+ B19_cap        T4   W step uncapped (t = 2 t_prev)                                                  FAIL     TRUE   15 
+ B20            T11  test-sample expression leaks into preprocessing (gene centering on all samples) FAIL     TRUE   35 
+
+T10 TOTAL: 10 controls, 10 PASS; 28 mutant runs, 24 caught (named test failed), 4 not caught: B7 T4, B9 T4, B18_increase T4, B19_accept T4
+VERDICT: FAIL

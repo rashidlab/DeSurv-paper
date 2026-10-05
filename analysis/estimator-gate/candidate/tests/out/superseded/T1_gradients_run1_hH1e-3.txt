@@ -1,0 +1,19 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T1_gradients.txt"
+T1 gradients | 2026-10-04 21:48:11 
+data: p=80 n=50 events=28 tied times=22
+relW: 270 checks, 270 < 1e-06, worst 1.253e-08 (grid 50 pt 5)
+relH: 270 checks, 269 < 1e-06, worst 1.553e-06 (grid 53 pt 3)
+relb: 270 checks, 270 < 1e-06, worst 3.571e-08 (grid 31 pt 5)
+TOTAL: 810 gradient checks, 809 < 1e-06, worst 1.553e-06
+worst relative error by alpha x rho (max over lambda, nu, points, blocks):
+       rho
+alpha       0.01        1     1000
+  1e-04 3.99e-09 3.57e-08 7.25e-10
+  0.3   2.66e-08 2.18e-08 1.55e-06
+  0.9   8.24e-07 1.48e-08 7.14e-07
+
+breakage check (mutated gradients, alpha = 0.9 corners, 2 points each):
+  B1 sigma chain omitted (survival)    6 checks, 6 flagged (>= 1e-06), min rel err 3.30e-04
+  B2 sigma chain omitted (ridge)       6 checks, 6 flagged (>= 1e-06), min rel err 6.10e-03
+  B2 P omitted in ridge                6 checks, 6 flagged (>= 1e-06), min rel err 3.13e-02
+  B4 eta-gradient sign flipped         6 checks, 6 flagged (>= 1e-06), min rel err 2.08e-03

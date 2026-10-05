@@ -1,0 +1,44 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T1_gradients.txt"
+T1 gradients | 2026-10-05 01:04:54 
+data: p=80 n=50 events=28 tied times=22
+
+Part A: weighted Psi, Richardson central differences, random directions
+  relW: 270 checks, 270 < 1e-06, worst 1.253e-08
+  relH: 270 checks, 270 < 1e-06, worst 6.567e-09
+  relb: 270 checks, 270 < 1e-06, worst 3.571e-08
+  Part A TOTAL: 810 gradient checks, 810 < 1e-06, worst 3.571e-08
+  worst relative error by alpha x rho:
+       rho
+alpha       0.01        1     1000
+  1e-04 3.99e-09 3.57e-08 7.25e-10
+  0.3   1.64e-09 1.25e-08 1.40e-09
+  0.9   5.05e-09 4.51e-10 6.57e-09
+
+Part B: per-term gradients, h sweep, random + coordinate directions, eps fixed
+  block    term   n pass pass_richardson fail inconclusive worst_rel_pass
+1     b  bridge  72   72               0    0            0       2.91e-12
+2     b     cox  72   72               0    0            0       1.16e-09
+3     W     cox 120  120               0    0            0       1.20e-07
+4     H lambdaH  84   84               0    0            0       2.31e-09
+5     H   recon  84   84               0    0            0       6.99e-09
+6     W   recon 120  120               0    0            0       4.10e-09
+7     b     rho  72   72               0    0            0       2.66e-11
+8     W   ridge 120  119               1    0            0       2.15e-06
+  worst_abs
+1  4.26e-11
+2  1.93e-10
+3  7.23e-09
+4  8.02e-17
+5  5.35e-14
+6  6.98e-14
+7  5.90e-10
+8  1.40e-05
+  Part B TOTAL: 744 checks (420 coordinate), 744 pass (1 of them via Richardson), 0 fail, 0 inconclusive; worst best-h rel error (plain) 2.146e-06
+  checks not passing by plain differences:
+    block  term pt    dir          status best_rel best_abs best_h rich_rel
+520     W ridge  9 random pass_richardson 2.15e-06  2.7e-08  1e-04 8.23e-07
+        an
+520 0.0126
+
+T1 TOTAL: 1554 checks, 1554 pass, 0 fail, 0 inconclusive
+VERDICT: PASS

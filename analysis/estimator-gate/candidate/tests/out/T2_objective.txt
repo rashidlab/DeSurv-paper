@@ -1,0 +1,13 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T2_objective.txt"
+T2 objective | 2026-10-05 01:04:48 
+data: p=80 n=50 events=30 tied times=19
+F:       270 checks, 270 < 1e-10, worst 4.196e-16
+loglik:  270 checks, 270 < 1e-10, worst 4.413e-16
+beta:    270 checks, 270 < 1e-10, worst 0.000e+00 (reported beta = b / sigma_j(W))
+T2 TOTAL: 810 checks (F, loglik, beta x 270 points), 810 passed
+B13 control: at the 54 large-eps points b / sd differs from b / sigma by rel 4.142e-01 (min); palm beta agrees to 0.000e+00
+
+breakage check (mutated objectives, alpha = 0.3, 10 points):
+  B3: 10 checks, 10 flagged (>= 1e-10), min rel diff 1.34e-01
+  B4: 10 checks, 10 flagged (>= 1e-10), min rel diff 1.76e-03
+VERDICT: PASS

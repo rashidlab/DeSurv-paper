@@ -1,0 +1,285 @@
+MUTANT B1 
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/mutants/B1/T1_gradients.txt"
+T1 gradients | 2026-10-05 00:58:33 
+data: p=80 n=50 events=28 tied times=22
+
+Part A: weighted Psi, Richardson central differences, random directions
+  relW: 270 checks, 0 < 1e-06, worst 1.949e+00
+  relH: 270 checks, 270 < 1e-06, worst 6.567e-09
+  relb: 270 checks, 270 < 1e-06, worst 3.571e-08
+  Part A TOTAL: 810 gradient checks, 540 < 1e-06, worst 1.949e+00
+  worst relative error by alpha x rho:
+       rho
+alpha    0.01     1   1000
+  1e-04 0.273 0.239 0.0106
+  0.3   1.950 1.640 0.0469
+  0.9   1.790 1.200 0.0229
+
+Part B: per-term gradients, h sweep, random + coordinate directions, eps fixed
+  block    term   n pass pass_richardson fail inconclusive worst_rel_pass
+1     b  bridge  72   72               0    0            0       2.91e-12
+2     b     cox  72   72               0    0            0       1.16e-09
+3     W     cox 120    0               0   73           47       1.66e+00
+4     H lambdaH  84   84               0    0            0       2.31e-09
+5     H   recon  84   84               0    0            0       6.99e-09
+6     W   recon 120  120               0    0            0       4.10e-09
+7     b     rho  72   72               0    0            0       2.66e-11
+8     W   ridge 120  119               1    0            0       2.15e-06
+  worst_abs
+1  4.26e-11
+2  1.93e-10
+3  3.71e+00
+4  8.02e-17
+5  5.35e-14
+6  6.98e-14
+7  5.90e-10
+8  1.40e-05
+  Part B TOTAL: 744 checks (420 coordinate), 624 pass (1 of them via Richardson), 73 fail, 47 inconclusive; worst best-h rel error (plain) 1.661e+00
+  checks not passing by plain differences:
+    block  term pt    dir          status best_rel best_abs best_h rich_rel
+11      W   cox  1 random            fail 3.42e-01 2.17e-02  1e-03 3.42e-01
+12      W   cox  1 random    inconclusive 1.42e-01 3.47e-02  1e-08 1.42e-01
+13      W   cox  1 random    inconclusive 1.64e-02 4.33e-03  1e-08 1.64e-02
+14      W   cox  1 random            fail 1.69e-01 2.74e-02  1e-09 1.69e-01
+15      W   cox  1  coord            fail 6.55e-02 6.43e-03  1e-09 6.55e-02
+16      W   cox  1  coord            fail 5.39e-02 2.13e-04  1e-05 5.39e-02
+17      W   cox  1  coord    inconclusive 6.19e-02 1.25e-03  1e-08 6.19e-02
+18      W   cox  1  coord    inconclusive 7.11e-02 8.77e-03  1e-08 7.11e-02
+19      W   cox  1  coord            fail 2.09e-02 2.92e-04  1e-09 2.09e-02
+20      W   cox  1  coord            fail 1.53e+00 4.46e-02  1e-09 1.53e+00
+73      W   cox  2 random            fail 9.04e-01 1.27e+00  1e-09 9.04e-01
+74      W   cox  2 random            fail 6.29e-01 1.02e+00  1e-09 6.29e-01
+75      W   cox  2 random    inconclusive 5.50e-01 2.06e+00  1e-07 5.50e-01
+76      W   cox  2 random    inconclusive 6.48e-01 2.16e+00  1e-08 6.48e-01
+77      W   cox  2  coord    inconclusive 5.12e-01 8.88e-01  1e-08 5.12e-01
+78      W   cox  2  coord            fail 5.25e-01 2.42e-01  1e-09 5.25e-01
+79      W   cox  2  coord    inconclusive 5.76e-03 2.18e-03  1e-08 5.76e-03
+80      W   cox  2  coord            fail 6.13e-02 5.00e-03  1e-06 6.13e-02
+81      W   cox  2  coord    inconclusive 8.17e-02 3.48e-03  1e-08 8.17e-02
+82      W   cox  2  coord            fail 3.65e-01 1.11e+00  1e-08 3.65e-01
+135     W   cox  3 random    inconclusive 1.62e+00 1.18e-01  1e-08 1.62e+00
+136     W   cox  3 random    inconclusive 1.50e-01 4.47e-02  1e-08 1.50e-01
+137     W   cox  3 random            fail 2.56e-02 8.08e-03  1e-03 2.56e-02
+138     W   cox  3 random    inconclusive 8.05e-02 1.91e-02  1e-08 8.05e-02
+139     W   cox  3  coord    inconclusive 2.48e-01 7.13e-02  1e-08 2.48e-01
+140     W   cox  3  coord            fail 5.22e-03 4.88e-04  1e-09 5.23e-03
+141     W   cox  3  coord            fail 1.47e+00 1.31e-02  1e-09 1.47e+00
+142     W   cox  3  coord            fail 1.33e-02 5.62e-03  1e-09 1.33e-02
+143     W   cox  3  coord            fail 1.00e-01 8.96e-03  1e-09 1.00e-01
+144     W   cox  3  coord    inconclusive 4.10e-01 6.05e-02  1e-08 4.10e-01
+197     W   cox  4 random            fail 2.00e-01 8.68e-01  1e-07 2.00e-01
+198     W   cox  4 random            fail 4.16e-01 1.20e+00  1e-09 4.16e-01
+199     W   cox  4 random    inconclusive 3.29e-01 4.36e-01  1e-08 3.29e-01
+200     W   cox  4 random            fail 8.87e-01 1.17e+00  1e-09 8.87e-01
+201     W   cox  4  coord            fail 7.96e-02 5.61e-02  1e-09 7.96e-02
+202     W   cox  4  coord            fail 2.83e-01 1.67e-01  1e-09 2.83e-01
+203     W   cox  4  coord            fail 1.06e+00 3.71e+00  1e-09 1.06e+00
+204     W   cox  4  coord            fail 1.80e-01 3.11e-01  1e-03 1.80e-01
+205     W   cox  4  coord            fail 1.18e+00 1.49e+00  1e-08 1.18e+00
+206     W   cox  4  coord            fail 1.12e-01 8.95e-02  1e-09 1.12e-01
+259     W   cox  5 random    inconclusive 2.80e-01 2.03e-01  1e-07 2.80e-01
+260     W   cox  5 random    inconclusive 2.79e-01 2.01e-01  1e-08 2.79e-01
+261     W   cox  5 random    inconclusive 2.55e-01 2.43e-01  1e-07 2.55e-01
+262     W   cox  5 random            fail 1.49e+00 9.05e-01  1e-09 1.49e+00
+263     W   cox  5  coord            fail 1.97e-01 9.46e-03  1e-09 1.98e-01
+264     W   cox  5  coord            fail 4.53e-01 6.50e-02  1e-09 4.53e-01
+265     W   cox  5  coord            fail 5.99e-01 6.66e-01  1e-09 5.99e-01
+266     W   cox  5  coord            fail 5.49e-01 6.38e-01  1e-09 5.49e-01
+267     W   cox  5  coord    inconclusive 2.81e-01 3.05e-01  1e-08 2.81e-01
+268     W   cox  5  coord            fail 4.61e-01 4.74e-01  1e-07 4.61e-01
+321     W   cox  6 random            fail 3.64e-01 2.58e-01  1e-09 3.64e-01
+322     W   cox  6 random            fail 1.12e-01 6.11e-02  1e-09 1.12e-01
+323     W   cox  6 random            fail 1.92e-01 1.63e-01  1e-09 1.92e-01
+324     W   cox  6 random            fail 2.15e-01 1.04e-01  1e-03 2.15e-01
+325     W   cox  6  coord            fail 1.99e-01 4.86e-02  1e-09 1.99e-01
+326     W   cox  6  coord    inconclusive 3.06e-01 1.45e-01  1e-07 3.06e-01
+327     W   cox  6  coord            fail 5.66e-01 5.07e-03  1e-09 5.66e-01
+328     W   cox  6  coord    inconclusive 1.04e+00 3.92e-01  1e-08 1.04e+00
+329     W   cox  6  coord    inconclusive 3.21e-02 2.98e-03  1e-08 3.21e-02
+330     W   cox  6  coord            fail 1.05e-01 2.73e-02  1e-09 1.05e-01
+383     W   cox  7 random            fail 1.11e+00 3.26e-01  1e-09 1.11e+00
+384     W   cox  7 random    inconclusive 9.68e-02 2.64e-02  1e-07 9.68e-02
+385     W   cox  7 random    inconclusive 7.37e-01 2.85e-02  1e-07 7.37e-01
+386     W   cox  7 random    inconclusive 2.90e-02 1.84e-02  1e-08 2.90e-02
+387     W   cox  7  coord    inconclusive 7.29e-02 8.74e-03  1e-07 7.29e-02
+388     W   cox  7  coord    inconclusive 3.99e-03 2.44e-04  1e-08 4.00e-03
+389     W   cox  7  coord    inconclusive 1.26e+00 6.71e-02  1e-07 1.26e+00
+390     W   cox  7  coord            fail 5.49e-03 5.95e-04  1e-09 5.52e-03
+391     W   cox  7  coord            fail 5.05e-02 2.51e-03  1e-09 5.06e-02
+392     W   cox  7  coord    inconclusive 2.95e-01 1.48e-01  1e-08 2.95e-01
+445     W   cox  8 random            fail 5.65e-01 8.13e-02  1e-09 5.65e-01
+446     W   cox  8 random            fail 2.69e-01 4.63e-02  1e-03 2.69e-01
+447     W   cox  8 random    inconclusive 2.94e-01 1.01e-01  1e-08 2.94e-01
+448     W   cox  8 random            fail 9.15e-02 3.78e-02  1e-09 9.15e-02
+449     W   cox  8  coord    inconclusive 5.10e-01 1.09e-01  1e-03 5.10e-01
+450     W   cox  8  coord            fail 1.76e-01 1.44e-02  1e-09 1.76e-01
+451     W   cox  8  coord            fail 3.20e-01 7.35e-03  1e-08 3.20e-01
+452     W   cox  8  coord    inconclusive 7.31e-01 2.39e-02  1e-08 7.31e-01
+453     W   cox  8  coord            fail 2.20e-02 6.20e-03  1e-09 2.20e-02
+454     W   cox  8  coord            fail 7.56e-01 4.29e-02  1e-03 7.56e-01
+507     W   cox  9 random    inconclusive 1.13e-01 1.84e-02  1e-08 1.13e-01
+508     W   cox  9 random            fail 1.10e-01 3.74e-02  1e-09 1.10e-01
+509     W   cox  9 random            fail 2.84e-01 8.16e-02  1e-09 2.84e-01
+510     W   cox  9 random            fail 5.84e-01 2.42e-02  1e-09 5.85e-01
+511     W   cox  9  coord            fail 2.90e-01 1.90e-02  1e-09 2.90e-01
+512     W   cox  9  coord            fail 5.30e-02 8.39e-03  1e-09 5.30e-02
+513     W   cox  9  coord            fail 2.82e-01 2.11e-01  1e-07 2.82e-01
+514     W   cox  9  coord            fail 1.50e-01 2.61e-01  1e-09 1.50e-01
+515     W   cox  9  coord            fail 1.46e-01 2.47e-01  1e-09 1.46e-01
+516     W   cox  9  coord    inconclusive 1.76e-01 1.03e-02  1e-08 1.76e-01
+520     W ridge  9 random pass_richardson 2.15e-06 2.70e-08  1e-04 8.23e-07
+569     W   cox 10 random            fail 5.35e-02 6.19e-02  1e-09 5.35e-02
+570     W   cox 10 random            fail 2.64e-02 1.33e-02  1e-09 2.66e-02
+571     W   cox 10 random    inconclusive 5.38e-01 1.74e-01  1e-07 5.38e-01
+572     W   cox 10 random    inconclusive 1.66e+00 5.95e-01  1e-07 1.66e+00
+573     W   cox 10  coord            fail 7.19e-01 4.98e-01  1e-09 7.19e-01
+574     W   cox 10  coord    inconclusive 1.08e+00 3.85e-01  1e-08 1.08e+00
+575     W   cox 10  coord            fail 8.75e-01 1.97e-02  1e-09 8.75e-01
+576     W   cox 10  coord    inconclusive 6.12e-01 1.85e-02  1e-08 6.12e-01
+577     W   cox 10  coord    inconclusive 1.14e+00 2.23e+00  1e-03 1.14e+00
+578     W   cox 10  coord            fail 3.01e-01 2.26e-03  1e-03 3.01e-01
+631     W   cox 11 random    inconclusive 1.42e+00 7.73e-01  1e-08 1.42e+00
+632     W   cox 11 random            fail 1.01e+00 5.68e-01  1e-09 1.01e+00
+633     W   cox 11 random    inconclusive 8.83e-01 9.96e-01  1e-08 8.83e-01
+634     W   cox 11 random    inconclusive 8.87e-01 4.10e-01  1e-07 8.87e-01
+635     W   cox 11  coord    inconclusive 7.86e-01 3.44e-01  1e-08 7.86e-01
+636     W   cox 11  coord            fail 6.63e-01 8.33e-02  1e-03 6.63e-01
+637     W   cox 11  coord            fail 8.89e-01 4.00e-02  1e-07 8.89e-01
+638     W   cox 11  coord    inconclusive 7.13e-01 1.02e+00  1e-08 7.13e-01
+639     W   cox 11  coord            fail 1.15e-01 8.52e-03  1e-09 1.15e-01
+640     W   cox 11  coord            fail 8.29e-01 6.01e-02  1e-08 8.29e-01
+693     W   cox 12 random    inconclusive 3.03e-01 1.84e+00  1e-08 3.03e-01
+694     W   cox 12 random            fail 7.26e-02 3.60e-02  1e-09 7.27e-02
+695     W   cox 12 random    inconclusive 2.72e-01 1.27e+00  1e-08 2.72e-01
+696     W   cox 12 random            fail 1.53e-01 9.34e-01  1e-09 1.53e-01
+697     W   cox 12  coord            fail 3.21e-02 7.25e-02  1e-09 3.21e-02
+698     W   cox 12  coord            fail 2.76e-01 2.42e+00  1e-08 2.76e-01
+699     W   cox 12  coord    inconclusive 4.89e-01 5.05e-01  1e-08 4.89e-01
+700     W   cox 12  coord            fail 2.88e-03 2.23e-03  1e-03 2.88e-03
+701     W   cox 12  coord            fail 1.12e+00 3.21e-01  1e-09 1.12e+00
+702     W   cox 12  coord            fail 1.61e-01 3.89e-01  1e-08 1.61e-01
+          an
+11  -0.06335
+12   0.24430
+13  -0.25935
+14  -0.16250
+15   0.09819
+16  -0.00395
+17   0.01892
+18  -0.12338
+19   0.01367
+20   0.02909
+73   1.40083
+74  -1.61410
+75   3.74742
+76  -3.33396
+77   1.73427
+78   0.46195
+79  -0.37681
+80   0.08167
+81   0.04263
+82   3.03762
+135  0.07287
+136 -0.29699
+137 -0.30761
+138 -0.23671
+139 -0.21570
+140  0.09297
+141 -0.00423
+142 -0.41783
+143  0.08023
+144  0.14765
+197  4.34746
+198 -1.68274
+199 -0.88922
+200 -0.14941
+201 -0.70513
+202  0.42181
+203 -3.49001
+204 -1.72364
+205  1.25801
+206 -0.80062
+259 -0.72353
+260  0.72013
+261 -0.95410
+262 -0.29813
+263 -0.04788
+264 -0.14346
+265  1.11222
+266  1.16322
+267  1.08405
+268  1.02958
+321  0.70906
+322 -0.54573
+323  0.85234
+324 -0.48221
+325  0.24363
+326  0.47235
+327  0.00896
+328 -0.37646
+329 -0.09277
+330  0.26099
+383  0.29233
+384  0.27268
+385  0.03869
+386 -0.61521
+387  0.11113
+388 -0.06120
+389 -0.05348
+390  0.10841
+391  0.04723
+392  0.50118
+445  0.06259
+446 -0.12607
+447 -0.34202
+448  0.37510
+449  0.10473
+450  0.06752
+451 -0.02299
+452 -0.03263
+453  0.28219
+454 -0.05676
+507 -0.16294
+508  0.30200
+509 -0.20528
+510 -0.01724
+511  0.06539
+512  0.15832
+513 -0.74959
+514 -1.47539
+515 -1.44420
+516  0.04822
+520  0.01260
+569  1.09599
+570 -0.50342
+571  0.14931
+572  0.35809
+573  0.19441
+574 -0.35779
+575  0.02251
+576  0.03023
+577  0.27877
+578 -0.00748
+631  0.54500
+632  0.56474
+633  1.12845
+634 -0.46199
+635 -0.43702
+636 -0.12565
+637 -0.04498
+638 -1.42703
+639  0.06587
+640  0.07245
+693  6.08296
+694 -0.49641
+695 -4.68040
+696  6.11099
+697  2.18822
+698  8.75788
+699 -1.03460
+700 -0.77177
+701 -0.03557
+702  2.41490
+
+T1 TOTAL: 1554 checks, 1164 pass, 343 fail, 47 inconclusive
+VERDICT: FAIL

@@ -41,12 +41,12 @@ was run. Calibration is deterministic: rerunning it after freeze gives the same 
 
 | Scenario | Generator beta | cvec | Replicates R | Used for |
 |---|---|---|---|---|
-| S1, signal | (2, 1, 0) | (1, 1, 1) | 5 | grid, tuning, Q1-Q6 |
-| S2, null | (0, 0, 0) | (1, 1, 1) | 5 | grid, tuning, Q1-Q5 (Q6 reports S2 only) |
-| S3, competing directions (binding) | (2, 0, 0) | (0.1911, 1, 1) | **20** for tuning; replicates 1-5 also run the grid | grid, tuning, Q1-Q7 |
-| S3b, sensitivity (reported only) | (2, 0, 0) | (0.474, 1, 1) | 5, tuning only | V1-V3, D_AB reported; no binding criterion |
+| S1, signal | (2, 1, 0) | (1, 1, 1) | 5 for the grid; **3** for tuning (ruling 15) | grid, tuning, Q1-Q6 |
+| S2, null | (0, 0, 0) | (1, 1, 1) | 5 for the grid; **3** for tuning (ruling 15) | grid, tuning, Q1-Q5 (Q6 reports S2 only) |
+| S3, competing directions (binding) | (2, 0, 0) | (0.1911, 1, 1) | **10** for tuning (ruling 15; was 20); replicates 1-5 also run the grid | grid, tuning, Q1-Q7 |
+| S3b, sensitivity | (2, 0, 0) | (0.474, 1, 1) | **dropped from qualification (ruling 15)**; may be run later for the paper | none |
 
-**Why R = 20 for S3.** Q7 passes if mean D_AB - t_{0.95, R-1} SD / sqrt(R) > 0. That is, the replicate-level
+**Why R = 20 for S3 (superseded by ruling 15: R = 10; the table below gives its power).** Q7 passes if mean D_AB - t_{0.95, R-1} SD / sqrt(R) > 0. That is, the replicate-level
 standardized effect delta = mean / SD must exceed t_{0.95, R-1} / sqrt(R). The probability of passing when the true
 effect is delta (noncentral t) is:
 
@@ -127,8 +127,8 @@ Every qualification run checks these hashes before it generates data, and stops 
 ### 3.4 Realized-ratio check (binding harness check, before any fit)
 
 For S3, every replicate's realized ranked masked ratio must lie in [0.18, 0.37], which contains the full validation
-range. The median over the 20 S3 replicates must lie in [0.22, 0.29]: the validation SD is about 0.034, so the median
-of 20 has an SD near 0.01, and the window is about plus or minus 3 SD. A failure means the wrapper or the generator
+range. The median over the 10 S3 tuning replicates (ruling 15) must lie in [0.22, 0.29]: the validation SD is about 0.034,
+so the median of 10 has an SD near 0.013, and the window is about plus or minus 2.7 SD. A failure means the wrapper or the generator
 does not behave as calibrated. It stops the run before any fit and is reported. It is never fixed by replacing a
 replicate. S3b ratios are reported without a check.
 
@@ -179,7 +179,7 @@ rule (section 4). Every row below is one fit. nu = 0.5 and ntop = 150 in every r
 Grid fits and reference fits run on replicates 1-5 of S1, S2 and S3: 3 scenarios x 5 replicates x 12 fits = 180
 fits of 30 starts.
 
-**Tuning run (one per scenario and replicate: 5 + 5 + 20, plus 5 for S3b).** This is the candidate procedure of
+**Tuning run (one per scenario and replicate: 3 + 3 + 10 = 16 under ruling 15).** This is the candidate procedure of
 spec section 7 on the 218 training columns, with three changes: the reduced budget n_init = 20, n_iter = 40; inner
 folds stratified by event status only (there is no cohort); and the seeds of section 4. Everything else is
 unchanged: the same BO engine, candidate pool and exploration weight; the five-dimensional section 3 box (alpha,
@@ -235,11 +235,11 @@ Unit throughout: a *fit* is one 30-start fit, and a *cell* is (scenario, configu
   S2 and S3. Per fit: m = median over converged non-returned starts of (C_s - C_returned). Pass, per cell: the mean
   of m over replicates <= 0.01. This is a one-sided reading (section 10, P2). Loading r and the share of starts
   within 1e-4 relative F are reported.
-- **Q6.** Cells: tuned final fits in S1 (R = 5) and S3 (R = 20). Checkpoints t in {10, 50, 100, 500}, as frozen.
+- **Q6.** Cells: tuned final fits in S1 (R = 3) and S3 (R = 10) (ruling 15). Checkpoints t in {10, 50, 100, 500}, as frozen.
   Pass: for every t and both scenarios, the mean over replicates of (C_conv - C_t) >= -0.01. S2 is reported.
-- **Q7.** Cell: S3 tuned final fits, R = 20. On the 1,000 test columns, standardize eta_hat = X_G^T v~_G, true A
+- **Q7.** Cell: S3 tuned final fits, R = 10 (ruling 15). On the 1,000 test columns, standardize eta_hat = X_G^T v~_G, true A
   and true B (section 1). Fit the joint least-squares regression eta_hat ~ A + B and set
-  D_AB = |coef_A| - |coef_B|. Pass: mean D_AB - t_{0.95, 19} SD(D_AB) / sqrt(20) > 0. The marginal form and the
+  D_AB = |coef_A| - |coef_B|. Pass: mean D_AB - t_{0.95, 9} SD(D_AB) / sqrt(10) > 0. No top-up replicates (ruling 15). The marginal form and the
   realized A-B correlation on both scales are reported.
 
 **Verifier controls (run after Q0, before any qualification fit; a failure stops the run, is reported, and is never
@@ -279,6 +279,34 @@ only reductions available, in this order, are:
 
 Nothing else changes: not the grid, the BO budget, the starts, the cap or any criterion.
 
+### 9.1 PI ruling 15 (2026-10-05): ceiling, reduced design, fail-fast order
+
+Written after the first three timing fits (wall times only: about 700 s per 30-start fit on 15 cores, roughly
+3 core-hours per fit, on an oversubscribed machine) and before any qualification output exists.
+
+- **P6 = 18,000 projected core-hours.** A planning ceiling, not a mid-job kill switch. The frozen reduction order is
+  applied before submission until the projection is below it: (1) S3b dropped; (2) S1 and S2 tuning at 3 replicates
+  each; (3) S3 tuning at 10 replicates. Projection: 16 tuning runs x about 870 core-hours = about 13,900, plus about
+  500 for the 180-fit grid, leaving headroom for the verifier controls, timing variation and restarts.
+- **Unchanged:** the 180-fit grid (replicates 1-5 of S1, S2 and S3), 30 starts, five inner folds, the BO budget
+  (20 + 40), and every criterion. Reducing starts, folds or BO budget would test a different estimator.
+- **No top-up.** If Q7's prespecified lower bound at R = 10 does not clear zero, qualification does not pass; no
+  further replicates are added. Q7 passes at delta = 1 with probability 0.90 and at delta = 0.75 with 0.71.
+- **Fail-fast execution order (frozen).** Each stage is evaluated by `qual_eval.R` on that stage's complete job set
+  (counts from the manifest) before the next stage is submitted. A binding failure at any stage stops all remaining
+  stages, and the failure is diagnosed on that failure only.
+  1. **Stage 1, cheap and structural:** Q0 (already passed as smoke tests S1-S7 at p <= 300; rerun at the start of
+     the stage), the verifier controls, the S3 realized-ratio check on the replicates generated for the stage, and
+     the 180 grid and reference fits. Binding at this stage: Q1, Q3 and Q4 on grid and reference fits, Q5 at the
+     centre configuration (n = 175) and the reference fit (n = 218).
+  2. **Stage 2, S3 tuning (10 runs).** Binding: Q1, Q3, Q4, Q5 on the tuned fits; Q6 S3 part; Q7; the realized-ratio
+     median check.
+  3. **Stage 3, S1 tuning (3 runs).** Binding: Q1, Q3, Q4, Q5; Q6 S1 part.
+  4. **Stage 4, S2 tuning (3 runs).** Binding: Q1, Q3, Q4, Q5.
+  Qualification passes only if every stage passes. Q6 needs both S1 and S3; it is evaluated per scenario at its stage.
+- **Longleaf:** parallelize across independent scenario x replicate jobs, not by adding cores per fit beyond useful
+  scaling.
+
 ## 10. Readings and points for the PI
 
 - **P1. S3 SD-ratio space** (section 3.2). Reading: the ranked training X with unit-norm marker-masked loadings,
@@ -295,4 +323,4 @@ Nothing else changes: not the grid, the BO budget, the starts, the cap or any cr
 - **P5. RESOLVED by PI ruling 12 (review B1 = option (a)).** The H ridge is now lambdaH ||H||_F^2 / (2 ||X||_F^2),
   lambdaH = 1e-6 kept; HALS denominator 1 + lambdaH; a_H = (1 - alpha)(1 + lambdaH) / ||X||^2 (spec revision 4).
   Review B4 (test-set construction) is operational and is adopted in section 1.
-- **P6. Compute ceiling.** Section 9 needs the PI's core-hour allotment after the timing run.
+- **P6. RESOLVED by PI ruling 15:** 18,000 projected core-hours; reduced design and fail-fast order in section 9.1.

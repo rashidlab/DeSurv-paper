@@ -47,7 +47,7 @@ beta is optimized and penalized directly: the identity beta = b / sigma(W) appea
 
 Equivalent form, for intuition only: with theta = s0 beta, the penalty is lambda(nu ||theta||_1 +
 (1 - nu)/2 ||theta||^2) + (rho/2) ||P W theta||^2 and eta = Z_c theta / s0. The scaling of the penalty by s0
-(draft choice D1, section 9) sets the units. It is a fixed constant and does not depend on W.
+(draft choice D1, section 10) sets the units. It is a fixed constant and does not depend on W.
 
 **What the redesign does to the pathology.** Rotating w_j toward a direction with small g keeps eta fixed only if
 beta_j grows by sigma_j(old) / sigma_j(new). The lambda term and the rho term both grow with beta_j^2, so the
@@ -106,7 +106,7 @@ a new PI ruling and its own frozen text.
 candidate's terms at any W where sigma_j(W) = s0. They differ only by charging low-variance factors more per unit of
 effect, which is the intended change. The frozen box is therefore on a comparable scale. Bounds are not changed
 after any outcome is seen, and boundary hits are reported. If the PI rules raw beta instead (open item 2), the
-lambda range must be restated, because the elastic-net mix then changes meaning (section 9).
+lambda range must be restated, because the elastic-net mix then changes meaning (section 10, item 2).
 
 **Rho term.** (rho sigma_bar^2 / 2) ||P W beta||^2 is a ridge on the gene-level coefficient vector v = W beta, with
 the uniform gene direction removed. With beta = b / sigma(W) it is identical to the frozen term

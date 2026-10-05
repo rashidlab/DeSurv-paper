@@ -1,8 +1,8 @@
 # Estimator-redesign specification: rank-3 DeSurv in the theta parameterization (2026-10-05)
 
-**Status: DRAFT (revision 3, Q3 per ruling 11), awaiting independent Codex review, not frozen.** Written under PI ruling 8
+**Status: DRAFT (revision 4: revision 3 with the H-ridge rescaling of PI ruling 12), awaiting independent Codex review, not frozen.** Written under PI ruling 8
 (`docs/HANDOFF-2026-10-05-candidate-optimizer.md`, "PI ruling 2026-10-05, eighth"). Revision 2 applied PI ruling 9
-and revision 3 applies PI ruling 10 (both in section 10). Next: an independent Codex review, then the PI freezes
+revision 3 applies PI ruling 10, and revision 4 applies PI ruling 12 (all in section 10). Next: an independent Codex review, then the PI freezes
 this file. No implementation, no real data and no compute until then. Once frozen, every later output records this
 file's commit hash. Amendments then follow the rule in `2026-10-04-estimator-gate-spec.md`: dated, with a reason,
 and only before any Gate A output is read.
@@ -20,6 +20,11 @@ null-space direction of X shrinks z_j and sigma_j together. The standardized sco
 angle at most 0.13 degrees), while log sigma falls by 6 to 9, and more than 90% of that loss comes from g(v), not
 from ||Pw||. The 1/sigma factor in eta and in the rho term produces the 1e6-level curvature. Solving faster only moves
 faster along this direction. The fix is to remove 1/sigma(W) from the objective.
+
+**Scope of the D-Q evidence (ruling 12).** D-Q1 to D-Q4 diagnosed the old candidate under the unscaled H penalty
+(lambdaH ||H||^2 / (2 n k), a HALS denominator of about 1 + 3,000 at p = 3,000). Those diagnostics remain valid as
+evidence about that failed estimator. They are not assumed to describe the redesigned estimator, which also changes
+the H penalty scale (section 1).
 
 ## 1. Model, rank and normalization
 
@@ -42,7 +47,12 @@ faster along this direction. The fix is to remove 1/sigma(W) from the objective.
 - **W normalization (kept, ruling 9 D3):** W lies in S_+^k = {W >= 0, ||w_j||_2 = 1 for every j}. This is a
   constraint enforced by projection, not a post-hoc rescaling. It fixes the W-H and W-theta gauges: H and theta carry
   all scale. The unit ball is not used, because it would change the estimator and add a scale direction.
-- **H normalization:** H >= 0, with no norm constraint and a ridge lambdaH = 1e-6 (unchanged). H is not rescaled.
+- **H normalization (ruling 12):** H >= 0, with no norm constraint and the ridge lambdaH ||H||_F^2 / (2 ||X||_F^2),
+  lambdaH = 1e-6. H is not rescaled. The ridge is divided by ||X||_F^2, like the reconstruction term, so lambdaH is
+  dimensionless on the scale of the normalized reconstruction loss. The frozen candidate divided it by n k instead.
+  For ranks at p = 3,000 that made the HALS denominator 1 + lambdaH ||X||_F^2 / (n k), about 1 + 3,000, which
+  crushed H and left W governed almost entirely by the survival and penalty terms. The numerical value 1e-6 is
+  kept and not retuned.
 - **Scores:** Z_c(W) = C X^T W (n x k), the centered scores of the unit-norm loadings. No division by any
   W-dependent score SD anywhere in the objective.
 
@@ -51,7 +61,7 @@ faster along this direction. The fix is to remove 1/sigma(W) from the objective.
 The optimized survival coordinate is theta in R^k, with eta = Z_c(W) theta / s0. The reported raw-score Cox
 coefficient is beta = theta / s0.
 
-F(W, H, theta) = (1 - alpha) [ ||X - W H||_F^2 / (2 ||X||_F^2) + lambdaH ||H||_F^2 / (2 n k) ]
+F(W, H, theta) = (1 - alpha) [ ||X - W H||_F^2 / (2 ||X||_F^2) + lambdaH ||H||_F^2 / (2 ||X||_F^2) ]
                + alpha [ -(2/n_e) l(Z_c(W) theta / s0)
                          + lambda ( nu ||theta||_1 + (1 - nu)/2 ||theta||_2^2 )
                          + (rho / 2) ||P W theta||_2^2 ]
@@ -120,7 +130,7 @@ a new PI ruling and its own frozen text.
 | nu | L1 share of the elastic net | [0, 0.95] | linear (nu < 1 keeps the theta block strongly convex) |
 | rho | gene-space ridge on P W theta | [1e-2, 1e3] | log10 |
 | ntop | genes in the scored support | [50, 300] | integer |
-| lambdaH | H ridge | 1e-6 fixed | |
+| lambdaH | H ridge, divided by ||X||_F^2 (ruling 12) | 1e-6 fixed | |
 | k | rank | 3 fixed | |
 
 **Why these ranges carry over (ruling 9, items 2 and 3).** At any W where sigma_j(W) = s0, the lambda and rho terms
@@ -138,10 +148,12 @@ null space of C X^T), and it makes the null-space rotation costly.
 ## 4. Optimizer (ruling 9 D2: approved)
 
 The frozen PALM mechanics (gate spec section 4, steps 1-3, amendment 2) are reused unchanged except for the
-variable. This reuses existing block steps and is not new solver work. Newton-CG, Schur-complement and outer
+variable and the H-ridge scale (ruling 12, step 1). This reuses existing block steps and is not new solver work. Newton-CG, Schur-complement and outer
 acceleration are excluded (ruling 8.1).
 
-1. **H:** one HALS sweep, rows j = 1..k in order.
+1. **H:** one HALS sweep, rows j = 1..k in order. Because ||w_j|| = 1 and the H terms share the factor
+   (1 - alpha) / ||X||_F^2, the exact row update is h_j = max(0, w_j^T R_j / (1 + lambdaH)), with
+   R_j = X - sum_{l != j} w_l h_l (ruling 12; the frozen candidate's denominator was 1 + lambdaH ||X||_F^2 / (n k)).
 2. **W:** projected gradient step onto S_+^k (column-wise closed form, including the argmax rule when no entry is
    positive), with step t = min(2 t_prev, t_max), t_max = 2 and t_prev = 1 at the first iteration, halved until the
    sufficient-decrease condition holds, and t_min = 1e-20 counted as a numerical failure.
@@ -170,7 +182,7 @@ r = max(r_W, r_H, r_theta), with the amendment-2 definitions and theta in place 
 
 - r_W = ||R_W||_F, the KKT residual on {w_j >= 0, ||w_j|| = 1}. R_W[i,j] = G_W[i,j] - (w_j^T G_W[,j]) W[i,j] if
   W[i,j] > 0, and min(G_W[i,j], 0) if W[i,j] = 0.
-- r_H = ||min(H, G_H / a_H)||_F / max(1, ||H||_F), with a_H = (1 - alpha)(1/||X||^2 + lambdaH/(n k)).
+- r_H = ||min(H, G_H / a_H)||_F / max(1, ||H||_F), with a_H = (1 - alpha)(1 + lambdaH) / ||X||^2 (ruling 12).
 - r_theta = ||KKT_theta||_inf of the alpha-free theta subproblem.
 
 The estimator is defined by the certificate: a start is *converged* when r < 1e-5 with no recorded F increase. The
@@ -333,7 +345,19 @@ old log g and angle limits) are reported against the failed estimator, not used 
 qualification fails if the pathology recurs, not because a scalar crosses a number chosen from the previous
 failure. No further edits to substantive criteria before the Codex review.
 
-**Open items:** none from the PI rulings. One coordinator note for the reviewer and the PI:
+**PI ruling 2026-10-05, twelfth (on review item B1 of `2026-10-05-estimator-redesign-claude-review.md`).**
+(1) B1 = option (a). The H ridge is rescaled to lambdaH ||H||_F^2 / (2 ||X||_F^2), with HALS and r_H changed
+consistently (sections 1, 2, 4, 6). The old scaling was not strong regularization but inconsistent with the
+normalized reconstruction term: at p = 3,000 it crushed H and made the reconstruction term almost irrelevant, an
+artifact not carried into the redesign. lambdaH stays at 1e-6, not retuned prospectively. (2) The spec states that
+D-Q1 to D-Q4 describe the failed estimator under the unscaled penalty and are not assumed to describe the
+redesign. (3) No implementation before freeze. Allowed before freeze: the implementation brief, exact algebra and
+gradient derivations, the caller and breakage inventory, unit-test design, and file and folder scaffolding with no
+estimator logic. Not allowed: new objective or gradient code, small-p runs, timing or qualification, until the
+independent Codex review is complete and the spec is frozen. Review item B3 (Q3 persistence and compensation)
+remains open for a PI ruling.
+
+**Open items:** B3 (above). One coordinator note for the reviewer and the PI:
 - Q7's power depends on the S3 replicate count R, which the qualification prespec fixes. With R = 5 the one-sided
   bound needs mean D_AB above 2.13 SD / sqrt(5), about 0.95 SD of D_AB; a larger R for S3 alone may be
   worth its compute.

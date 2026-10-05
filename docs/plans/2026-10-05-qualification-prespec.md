@@ -1,7 +1,7 @@
 # Qualification prespecification for the estimator-redesign spec (2026-10-05)
 
 **Status: DRAFT, not frozen.** It operationalizes section 9 of `docs/plans/2026-10-05-estimator-redesign-spec.md`
-(revision 3, 568dea3, awaiting the independent Codex review). It freezes together with that spec, or immediately
+(revision 4, ruling 12 applied, awaiting the independent Codex review). It freezes together with that spec, or immediately
 after it. If the review or a PI ruling changes a section 9 criterion, this file follows the change before freezing.
 It never changes a criterion on its own authority. Once frozen, it must be committed before the timing-only run
 (section 8) and before any qualification fit, and every qualification output records the hashes of both files.
@@ -302,13 +302,7 @@ Nothing else changes: not the grid, the BO budget, the starts, the cap or any cr
   folded in here. Section 7 implements Q3 exactly as in spec revision 3 until the PI rules. Section 6 already records
   what (iv) and (v) need.
 - **P4. Q1 unit.** Per fit: at least 27 of 30 starts converged (review S2). Section 7 reworded the reason for Q1.
-- **P5. OPEN, awaiting PI ruling (review B1): lambdaH = 1e-6 shrinks H about 3,000-fold at p = 3,000.** The NMF
-  term is divided by ||X||_F^2 and the H ridge is not (`palm_lib.R:74`, `:244`). For ranks at p = 3,000,
-  each column of X is a permutation of 1..p (ties aside), so ||X||_F^2 = n p (p + 1)(2p + 1) / 6 = 1.576e12 at
-  n = 175. The HALS denominator is 1 + den0 with den0 = lambdaH ||X||_F^2 / (n k) = 1e-6 x 1.576e12 / (175 x 3)
-  = 3,001.5 (arithmetic and code lines checked 2026-10-05). The options in the review: (a) rescale the ridge to lambdaH ||H||^2 / (2 ||X||^2),
-  so the denominator is 1 + lambdaH, with a_H and HALS updated and the alpha-range rationale rechecked; (b) keep it and
-  state why in spec section 1. Either way, note that D-Q4 was obtained under this scaling. This changes the estimator,
-  so it is not folded in here. Review B4 (test-set construction) is operational and is adopted in section 1. The spec
-  text should say so too.
+- **P5. RESOLVED by PI ruling 12 (review B1 = option (a)).** The H ridge is now lambdaH ||H||_F^2 / (2 ||X||_F^2),
+  lambdaH = 1e-6 kept; HALS denominator 1 + lambdaH; a_H = (1 - alpha)(1 + lambdaH) / ||X||^2 (spec revision 4).
+  Review B4 (test-set construction) is operational and is adopted in section 1.
 - **P6. Compute ceiling.** Section 9 needs the PI's core-hour allotment after the timing run.

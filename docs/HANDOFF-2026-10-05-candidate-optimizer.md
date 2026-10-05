@@ -310,3 +310,17 @@ evidence the PI said would be needed to reopen the estimator. D-Q2 threshold NOT
 - Q-B. Cutoffs S >= 0.75 / S <= 0.25 (coordinator proposal).
 - Coverage note (section 6 of the draft): the D-Q3a window holds only about 5-22% of the log-sigma drop; most of it
   is in Q1 sweeps 1-1,000. Optional addition, same gate pattern.
+
+## PI ruling 2026-10-05, seventh: D-Q4 FROZEN (settles Q-A, Q-B, coverage above)
+
+- Q-A: the primary attribution is the exact loading identity, Delta log sigma = Delta log ||Pw|| + Delta log g(v).
+  Standardized-score angle is a separate direction-change diagnostic. No score-angle cutoff for the null-space case:
+  report the three pieces separately, and describe g-driven loss with a near-zero score angle as orientation into a
+  low-variance or null-space direction with the score direction preserved, not as rotation.
+- Q-B: no cutoffs. Continuous quantities only; "predominantly norm-driven" or "predominantly g(v)-driven" only when
+  one part is clearly larger in absolute magnitude.
+- Coverage: Q1 sweeps 1-1,000 added, gated exactly against `Q1_warm.rds` (plus D-Q1 per-sweep sigma). Q1 and D-Q3a
+  analyzed separately and combined. Solver settings unchanged.
+
+**NEXT (fresh session):** write `tests/DQ4_step_decomposition.R` per the frozen prespec, smoke-test at 30 sweeps per
+segment (discard outputs), run, commit results as observed. Still no real data, no Amendment 4, nothing pushed.

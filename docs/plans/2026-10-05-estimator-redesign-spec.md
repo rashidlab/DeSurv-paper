@@ -24,7 +24,7 @@ faster along this direction. The fix is to remove 1/sigma(W) from the objective.
 
 - **Rank:** k = 3, fixed in both arms (gate spec section 1).
 - **Data:** X is the p x n matrix of within-sample ranks (average ties) of the fit's training columns, p = 3,000 genes
-  (the frozen `ngene = 3000` filter), as in `palm_rank` / `palm_fold_data`. C is the n x n sample-centering matrix.
+  (the frozen `ngene = 3000` filter), as in `palm_fold_data` (`palm_rank` on the training columns, then `palm_data`). C is the n x n sample-centering matrix.
   P is the p x p gene-centering matrix. Because X has constant column sums (ranks), C X^T 1 = 0.
 - **Unit constant s0 (fixed, not adaptive).** s0^2 = sigma_bar^2 = (1/p) sum_{i=1..p} var_i(X), the mean over genes
   of the sample variance (denominator n - 1) of each gene's row of X. Equivalently,

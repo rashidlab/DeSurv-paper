@@ -109,7 +109,8 @@ increase is also recorded.
 
 **Start and fit status (amendment 2).** Each start ends in one status: *converged* (r < 1e-5 within maxit, no F
 increase), *nonconverged* (maxit reached, all values finite, no numerical failure), or *numerical failure*
-(nonfinite value, step floor, FISTA cap). Every start keeps its status and full diagnostics (r, r_W, r_H, r_b,
+(nonfinite value, step floor, FISTA cap, or any recorded F increase, which the block acceptance rules exclude in
+exact arithmetic). A start ends at the first of: r < 1e-5, maxit, or a numerical failure. Every start keeps its status and full diagnostics (r, r_W, r_H, r_b,
 r_original, final F, iterations, increases, rejected b steps, backtracking counts). A fit returns the
 lowest-final-F *converged* start. If no start converged, the fit is nonconverged and carries the lowest-F
 nonconverged start, flagged; if every start failed numerically, the fit failed. Numerical failures are never

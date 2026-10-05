@@ -38,13 +38,12 @@ wording below. I3-I6 and I8 remain interpretations.
   spec and is not used.
 - **I6 HALS row update** (||w_j|| = 1): h_j <- max(0, w_j^T R_j / (1 + lambdaH ||X||^2/(n k))), R_j = X - sum_{i != j}
   w_i h_i, rows j = 1..k in order.
-- **I7 Backtracking.** First iteration t_prev = 1. Try t = 2 t_prev, halve until the spec's sufficient-decrease
-  inequality holds. Floor t_min = 1e-20: reaching it is a recorded failure (W unchanged, flag set), never an
-  accepted step.
+- **I7 Backtracking.** Superseded by spec section 4 (amendment 2): t = min(2 t_prev, t_max = 2), t_prev = 1 at
+  the first iteration, floor 1e-20 is a numerical failure.
 - **I8 Constants.** sigma_bar^2 = mean over genes of var(X[g, ]) of the X passed to the fit; n_e = number of
   events; P = I_p - 11^T/p, C = I_n - 11^T/n, applied implicitly (never form p x p).
-- **I9 Residuals** exactly as frozen: ||W - P_S+(W - grad_W Psi)||_F (unit step), ||min(H, grad_H Psi)||_F /
-  ||H||_F, ||KKT_b||_inf (I3). All three recorded per fit.
+- **I9 Residuals.** Superseded by spec section 4 (amendment 2): binding r = max(r_W sphere KKT, r_H
+  curvature-scaled, r_b); the original r recorded as r_original, not binding.
 
 ## Breakage inventory (defect classes the tests must catch)
 
@@ -67,7 +66,7 @@ wording below. I3-I6 and I8 remain interpretations.
 | B15 | Start draws differ from the comparator's runif stream | T5 |
 | B16 | Only W residual recorded (pilot limit 3) | T4 output columns |
 | B17 | Scored predictor uses uncentered v, or recenters on test/external genes | T12 |
-| B18 | Start status wrong: failed or nonconverged start selected, or numerical failure scored | T9, T4 |
+| B18 | Start status wrong: nonconverged start returned although a converged one exists, numerically failed start returned or scored, or an F increase not classed as failure | T9, T4 |
 | B19 | b step accepted although F rose; W step uncapped | T4, T10 |
 | B20 | Test-set outcomes or expression leak into fit, sigma, eps or preprocessing | T11 |
 

@@ -1,0 +1,60 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/Q0_hvp.txt"
+Q0 analytic HVP | 2026-10-05 08:53:55 
+data: p=80 n=50 events=28 tied times=22
+
+Binding Q0 (eps grid 1e-2..1e-8; min e <= 1e-6 and two consecutive order >= 1.5 refinements)
+  euclid: 2700 directions, 1120 pass, 1580 fail | class a (min e > 1e-6) 0, b (flat <= 1e-9, order failed) 0, c (other) 1580 | worst min e 1.499e-07
+  failures by alpha x rho:
+       rho
+alpha   0.01   1 1000
+  1e-04  164 177  190
+  0.3    174 192  154
+  0.9    126 220  183
+  failures by class x alpha:
+   alpha
+cls 1e-04 0.3 0.9
+  c   531 520 529
+  riem: 2700 directions, 2624 pass, 76 fail | class a (min e > 1e-6) 0, b (flat <= 1e-9, order failed) 0, c (other) 76 | worst min e 9.239e-08
+  failures by alpha x rho:
+       rho
+alpha   0.01  1 1000
+  1e-04   14 25    0
+  0.3     19  1    1
+  0.9      6 10    0
+  failures by class x alpha:
+   alpha
+cls 1e-04 0.3 0.9
+  c    39  21  16
+
+  median e(eps) by alpha, Euclidean:
+         1e-02    1e-03    1e-04    1e-05    1e-06    1e-07    1e-08
+1e-04 1.27e-06 1.27e-08 1.21e-09 5.70e-09 5.67e-08 4.99e-07 5.60e-06
+0.3   1.16e-05 1.16e-07 1.24e-08 6.72e-08 6.97e-07 7.23e-06 7.15e-05
+0.9   1.15e-05 1.15e-07 1.23e-08 7.37e-08 7.47e-07 7.17e-06 7.02e-05
+  median e(eps) by alpha, Riemannian:
+         1e-02    1e-03    1e-04    1e-05    1e-06    1e-07    1e-08
+1e-04 7.33e-05 7.33e-07 7.44e-09 2.51e-09 2.18e-08 2.32e-07 2.30e-06
+0.3   2.79e-04 2.79e-06 2.83e-08 9.27e-09 9.36e-08 9.15e-07 9.65e-06
+0.9   3.08e-04 3.08e-06 3.07e-08 8.92e-09 9.21e-08 9.13e-07 8.81e-06
+
+Diagnostics (report only)
+  per-term unweighted checks:
+   term    n pass
+1   cox 2700 1160
+2 recon 2700    0
+3 ridge 2700 1119
+         cox        recon        ridge 
+1.510265e-07 3.852908e-12 1.465322e-07 
+  symmetry |<U,HV>-<V,HU>|/(|U||HV|): 270 pairs, max 2.467e-13, median 8.418e-15
+  g identity max |‖Pface(G_W)‖_F - resid_W|: ambient T1 points 0.000e+00, at N(W) 0.000e+00 (270 points each)
+  breslow_hvp fast vs forced log-sum-exp: 270 points, max rel diff 2.414e-14
+  fallback point 1: min S over events under single shift 0.000e+00 (fast path refused: TRUE)
+  fallback point 1: ||Hll v|| 2.355e-08; absolute FD error: 1.00e-11 5.12e-10 5.19e-09 5.17e-08 2.03e-08 1.73e-08 1.80e-08 
+  fallback point 2: min S over events under single shift 0.000e+00 (fast path refused: TRUE)
+  fallback point 2: ||Hll v|| 6.840e-01; e(eps) vs FD of breslow()$g: 6.67e-07 6.67e-09 6.94e-11 1.20e-10 5.88e-10 1.99e-08 1.18e-07 | Q0-style criterion TRUE 
+  boundary point p=150: W==0 228, of which free (G_W<0) 133; face size 355; g identity 0.000e+00
+  boundary point: Euclidean 10/10 pass (worst min e 1.37e-08), Riemannian 10/10 pass (worst min e 1.66e-08)
+
+wall time 27.1 s
+Q0 TOTAL: Euclidean 1120/2700 pass, Riemannian 2624/2700 pass
+VERDICT: FAIL

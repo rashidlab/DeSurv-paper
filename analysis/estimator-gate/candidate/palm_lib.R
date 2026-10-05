@@ -132,6 +132,78 @@ palm_grad_b <- function(W, b, D, hp) {
 # minimum-norm subgradient of the b subproblem (smooth gradient g plus lambda*nu*d|b|_1)
 kkt_b <- function(b, g, lam1) ifelse(b != 0, g + lam1 * sign(b), sign(g) * pmax(abs(g) - lam1, 0))
 
+# ---- W-block Hessian-vector products (amendment 3, section 3; analytic, no finite differences) -----
+# Breslow Hessian-vector product Hll[v] = d g(eta)[v] (exact ties, same sort and tie groups as breslow()).
+# Hll[v]_l = -e_l v_l h_l + e_l sum_{events i: y_i <= y_l} d_i T_i / S_i^2, T_i = sum_{m: y_m >= y_i} e_m v_m.
+# Fast path under exactly breslow()'s condition (one shift; e h and e T/S^2 are shift invariant); otherwise
+# log-sum-exp, with T split into its positive and negative parts. force_lse = TRUE is for testing only.
+lse2 <- function(a, b) { mx <- max(a, b); if (mx == -Inf) -Inf else mx + log(exp(a - mx) + exp(b - mx)) }
+breslow_hvp <- function(eta, D, v, force_lse = FALSE) {
+  o <- D$o; es <- eta[o]; ds <- D$d[o]; vs <- v[o]; m <- max(es); e <- exp(es - m)
+  S <- rev(cumsum(rev(e)))[D$gs]
+  if (!force_lse && min(S[ds > 0]) > 1e-200) {
+    ll <- sum((ds * (es - m - log(S)))[ds > 0])
+    h <- cumsum(ifelse(ds > 0, ds / S, 0))[D$ge]
+    if (is.finite(ll) && all(is.finite(ds - e * h))) {
+      T <- rev(cumsum(rev(e * vs)))[D$gs]
+      kk <- cumsum(ifelse(ds > 0, ds * (T / S) / S, 0))[D$ge]   # (T/S)/S: S^2 may underflow where S does not
+      out <- numeric(length(eta)); out[o] <- -e * vs * h + e * kk
+      return(out)
+    }
+  }
+  n <- length(es); lsuf <- numeric(n); lTp <- numeric(n); lTn <- numeric(n); acc <- -Inf; ap <- -Inf; an <- -Inf
+  for (i in n:1) {
+    acc <- lse2(acc, es[i]); lsuf[i] <- acc
+    if (vs[i] > 0) ap <- lse2(ap, es[i] + log(vs[i])); if (vs[i] < 0) an <- lse2(an, es[i] + log(-vs[i]))
+    lTp[i] <- ap; lTn[i] <- an
+  }
+  logS <- lsuf[D$gs]; lTp <- lTp[D$gs]; lTn <- lTn[D$gs]
+  lh <- numeric(n); lkp <- numeric(n); lkn <- numeric(n); acc <- -Inf; ap <- -Inf; an <- -Inf
+  for (i in 1:n) {
+    if (ds[i] > 0) {
+      acc <- lse2(acc, -logS[i]); ap <- lse2(ap, lTp[i] - 2 * logS[i]); an <- lse2(an, lTn[i] - 2 * logS[i])
+    }
+    lh[i] <- acc; lkp[i] <- ap; lkn[i] <- an
+  }
+  out <- numeric(length(eta))
+  out[o] <- -vs * exp(es + lh[D$ge]) + exp(es + lkp[D$ge]) - exp(es + lkn[D$ge])
+  out
+}
+
+# Directional derivatives along V (p x k) of the per-term W gradients of grad_W_terms (unweighted).
+# With s_j = c_j beta_j/((n-1) sigma_j^2), G = q beta^T - X Zc diag(s), the derivative is
+# dq beta^T + q dbeta^T - X Yc diag(s) - X Zc diag(ds), Yc = C X^T V, dsigma_j = <Zc_j, Yc_j>/((n-1) sigma_j),
+# dbeta = -beta dsigma/sigma, dc = V^T q + W^T dq, ds = (dc beta + c dbeta)/((n-1) sigma^2) - 2 s dsigma/sigma.
+hvp_W_terms <- function(W, H, b, D, hp, V) {
+  sc <- palm_scores(W, D, hp$eps); Zc <- sc$Zc; sig <- sc$sigma; beta <- b / sig; n1 <- D$n - 1
+  Y <- crossprod(D$X, V); Yc <- sweep(Y, 2, colMeans(Y))
+  dsig <- colSums(Zc * Yc) / (n1 * sig); dbeta <- -beta * dsig / sig
+  XZ <- D$X %*% Zc; XY <- D$X %*% Yc
+  dchain <- function(q, dq) {
+    cc <- as.vector(crossprod(W, q)); dc <- as.vector(crossprod(V, q)) + as.vector(crossprod(W, dq))
+    s <- cc * beta / (n1 * sig^2); dsv <- (dc * beta + cc * dbeta) / (n1 * sig^2) - 2 * s * dsig / sig
+    outer(dq, beta) + outer(q, dbeta) - sweep(XY, 2, s, "*") - sweep(XZ, 2, dsv, "*")
+  }
+  eta <- as.vector(Zc %*% beta); deta <- as.vector(Yc %*% beta + Zc %*% dbeta)
+  qc <- -(2 / D$ne) * as.vector(D$X %*% breslow(eta, D)$g)
+  dqc <- -(2 / D$ne) * as.vector(D$X %*% breslow_hvp(eta, D, deta))
+  Wc <- sweep(W, 2, colMeans(W)); Vc <- sweep(V, 2, colMeans(V))
+  qr <- hp$rho * D$sb2 * as.vector(Wc %*% beta); dqr <- hp$rho * D$sb2 * as.vector(Vc %*% beta + Wc %*% dbeta)
+  list(recon = V %*% tcrossprod(H) / D$X2, cox = dchain(qc, dqc), ridge = dchain(qr, dqr))
+}
+palm_hvp_W <- function(W, H, b, D, hp, V) {
+  ht <- hvp_W_terms(W, H, b, D, hp, V)
+  (1 - hp$alpha) * ht$recon + hp$alpha * (ht$cox + ht$ridge)
+}
+
+# Free face: W > 0, or W = 0 with G_W < 0 (the two cases of resid_W). face_tangent: zero off the face, then
+# remove the w_j component of each column (tangent to the unit sphere; ||Pface(G_W)||_F = resid_W).
+w_face <- function(W, GW) (W > 0) | (W == 0 & GW < 0)
+face_tangent <- function(V, W, free) { V <- V * free; V - sweep(W, 2, colSums(W * V), "*") }
+# Riemannian Hessian on the tangent face: Hess[V] = Pface(d2Psi V) - V diag(mu), mu_j = <w_j, G_W[, j]>.
+riem_hess_W <- function(W, H, b, D, hp, V, free, GW)
+  face_tangent(palm_hvp_W(W, H, b, D, hp, V), W, free) - sweep(V, 2, colSums(W * GW), "*")
+
 # ---- projection onto S_+^k ----------------------------------------------------------------------
 proj_S <- function(V) {
   for (j in seq_len(ncol(V))) {

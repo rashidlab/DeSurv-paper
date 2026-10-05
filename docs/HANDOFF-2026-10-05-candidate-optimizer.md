@@ -354,3 +354,14 @@ iterations. Not pushed. NEXT: PI reads section 8; estimator redesign scoping is 
 
 **NEXT (fresh session):** draft the estimator-redesign specification (docs/plans/), status DRAFT, open items listed
 for the PI. No implementation until it is frozen.
+
+Open items the spec draft must list for the PI (coordinator notes, not decisions):
+- F2 link: exact optimization of the published objective overfit (CV 0.638 -> 0.571; stall acted as implicit
+  regularization). Qualification should therefore include held-out discrimination on the simulations at
+  convergence, not only clean convergence, since a cleanly converging estimator that overfits still fails Gate A.
+- Penalizing raw beta is scale-dependent: a factor with larger score variance pays less penalty per unit of effect.
+  Tuning ranges for lambda (and nu) must be stated relative to the score scale (rank X, p = 3,000), and whether to
+  rescale is a spec choice.
+- The rho term moves from P W diag(1/sigma) b to P W beta; its scaling constant (currently sb2 / 2) needs restating.
+- Comparator: confirm "current implemented estimator" means the production DeSurv fit (published k = 3 config, full
+  precision), not the PALM candidate.

@@ -32,7 +32,7 @@ make the frozen spec wrong, unimplementable, ambiguous, or exploitable after the
    S3 is constructible with the generator as described (score standardization, H-row scaling, A/B independence);
    the Q7 statistic and its Monte Carlo bound; Q6 checkpoint scoring.
 6. Internal consistency and any statement that over-claims.
-7. Ruling 12: the HALS row update h_j = max(0, w_j^T R_j / (1 + lambdaH)) and a_H = (1 - alpha)(1 + lambdaH) / ||X||^2
+7. Ruling 12: the HALS row update h_j = max(0, w_j^T R_j / (1 + lambdaH)) and a_H = (1 - alpha)(1 + lambdaH) / ||X||_F^2
    under the rescaled H ridge.
 8. The qualification prespec: whether it implements section 9 faithfully (replicate counts, grid, seeds, scope and
    aggregation of each binding criterion, verifier controls), whether the S3 wrapper and calibration do what they

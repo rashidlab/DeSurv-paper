@@ -22,7 +22,7 @@ from ||Pw||. The 1/sigma factor in eta and in the rho term produces the 1e6-leve
 faster along this direction. The fix is to remove 1/sigma(W) from the objective.
 
 **Scope of the D-Q evidence (ruling 12).** D-Q1 to D-Q4 diagnosed the old candidate under the unscaled H penalty
-(lambdaH ||H||^2 / (2 n k), a HALS denominator of about 1 + 3,000 at p = 3,000). Those diagnostics remain valid as
+(lambdaH ||H||_F^2 / (2 n k), a HALS denominator of about 1 + 3,000 at p = 3,000). Those diagnostics remain valid as
 evidence about that failed estimator. They are not assumed to describe the redesigned estimator, which also changes
 the H penalty scale (section 1).
 
@@ -182,7 +182,7 @@ r = max(r_W, r_H, r_theta), with the amendment-2 definitions and theta in place 
 
 - r_W = ||R_W||_F, the KKT residual on {w_j >= 0, ||w_j|| = 1}. R_W[i,j] = G_W[i,j] - (w_j^T G_W[,j]) W[i,j] if
   W[i,j] > 0, and min(G_W[i,j], 0) if W[i,j] = 0.
-- r_H = ||min(H, G_H / a_H)||_F / max(1, ||H||_F), with a_H = (1 - alpha)(1 + lambdaH) / ||X||^2 (ruling 12).
+- r_H = ||min(H, G_H / a_H)||_F / max(1, ||H||_F), with a_H = (1 - alpha)(1 + lambdaH) / ||X||_F^2 (ruling 12).
 - r_theta = ||KKT_theta||_inf of the alpha-free theta subproblem.
 
 The estimator is defined by the certificate: a start is *converged* when r < 1e-5 with no recorded F increase. The
@@ -356,6 +356,14 @@ gradient derivations, the caller and breakage inventory, unit-test design, and f
 estimator logic. Not allowed: new objective or gradient code, small-p runs, timing or qualification, until the
 independent Codex review is complete and the spec is frozen. Review item B3 (Q3 persistence and compensation)
 remains open for a PI ruling.
+
+**PI ruling 2026-10-05, thirteenth (reverses item (3) of ruling 12, same day).** The PI directed implementation
+and smoke tests to start before freeze ("Implement and run smoke tests"). Allowed: implementation of revision 4 in
+`analysis/estimator-gate/redesign/` and smoke tests on small simulated data (p <= 300). Still not allowed before the
+independent Codex review and freeze: p = 3,000 runs, the timing-only run, qualification and real data. Chronology
+wording for any write-up: the implementation was written against DRAFT revision 4, before the independent review;
+any spec change the review causes is applied to the code afterwards, and smoke-test outputs are mathematical checks
+only, never used to change the objective, ranges, thresholds or algorithm.
 
 **Open items:** B3 (above). One coordinator note for the reviewer and the PI:
 - Q7's power depends on the S3 replicate count R, which the qualification prespec fixes. With R = 5 the one-sided

@@ -205,3 +205,18 @@ frozen text.
 **Closed 2026-10-05 (PI).** T4/T9/T10 remapping confirmed as a consistency correction; Armijo acceptance requires
 <G_W, Delta W(t)> < 0; B19 replacement mutant is B19_retraction. Amendment 3 closed. Next session implements
 against the frozen document, analytic HVP and Q0 first; no further solver-design changes.
+
+## Stage A DONE 2026-10-05: analytic HVP built; amended Q0 PASS; Stage B unblocked
+
+- Brief: `docs/plans/2026-10-05-amendment3-implementation-brief.md` (PI rulings on A5/B3 and the Q0 result
+  appended; all six coordinator choices approved; added Stage B diagnostic: direct ||Hess d + g|| vs recursive
+  CG residual at CG exit, every Q1 solve and a seeded Q-T sample, not a gate).
+- 045f593: HVP code in `palm_lib.R` (72 lines added, 0 deleted). Original Q0 FAILED on the order clause only
+  (Euclidean 1120/2700, Riemannian 2624/2700; accuracy held on all 5,400). Retained.
+- 68dc7e9: test-only Q0 amendment, amendment 3 section 10 (half-decade grid 1e-1..1e-8, order by eps ratio,
+  two consecutive p_k >= 1.5), committed before running. 2c9e29c: amended Q0 PASS 2700/2700 both, recomputed
+  independently by the coordinator. Report: `analysis/estimator-gate/candidate/AMENDMENT3_REPORT.md`.
+
+**Next (new session):** dispatch Stage B of the brief (Newton-CG W step, breakage inventory B2, Q-T, Q1, Q2, Q3 report)
+to a subagent; coordinator verifies Q-T verdicts, Q1 4/4, Q2 criteria, and the residual-drift diagnostic before
+committing. Do not touch the HVP. All commits on recompute/consensus-desurv unpushed; do not push without the PI.

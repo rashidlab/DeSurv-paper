@@ -89,3 +89,64 @@ Consequence for Amendment 4:
 - That would be a statistical-design question (estimator specification), not a solver question.
 - Recommend a pre-registered descriptive check before any Amendment 4 design: does sigma plateau? A suggested shape
   is in the handoff reply. It is not frozen and not run.
+
+## 6. D-Q3 results (prespec 50a79be; scripts aa3515f, d01d2b0)
+
+### D-Q3b, the one-dimensional collapse path (`tests/out/DQ3b_collapse_path.txt`)
+
+- Premise holds: sd of X'u over samples = 1.3e-10.
+- The stated prediction holds. Along the path, cor(eta(s), eta(1)) = 1.00000000. The survival and ridge terms at
+  fixed b change by at most 2e-9 for s >= 0.03, and drift only for s <= 1e-3, where sigma approaches eps.
+- In all three starts and both variants, F **increases** monotonically as s falls below 1. The rise comes from the
+  reconstruction term: +1.1e-4 to +1.2e-4 at s = 0.001 (starts 1 and 5) and +8e-5 (start 16).
+- Pre-stated reading: **not demonstrated along this path.** Shrinking the deviation from uniform with the score held
+  fixed is not a free descent direction. The supervised terms are exactly invariant along it, and reconstruction
+  pays.
+
+### D-Q3a, the extended continuation (`tests/out/DQ3a_continuation.txt`; the report comes from `DQ3a_report.R`)
+
+Gate PASS for all three starts. **No start reached 20,000 sweeps.** Each stopped on `line_search_failed`, which the
+prespec did not anticipate.
+
+| start | sweeps | min coefficient-carrying sigma, 1000 -> end | log-log slope | max \|cor\| | F, 1000 -> end | median r_W, 1000 -> end |
+|---|---|---|---|---|---|---|
+| 1 | 4,604 | 1.31 -> 0.643 | -0.48 | 1.00000 | 0.7309114204 -> 0.7309086246 | 3.1e-3 -> 2.0e-3 |
+| 5 | 2,859 | 1.51 -> 0.859 | -0.50 | 1.00000 | 0.7309089263 -> 0.7309073543 | 2.3e-3 -> 1.2e-3 |
+| 16 | 1,581 | 1.10 -> 0.980 | -0.31 | 1.00000 | 0.7328099851 -> 0.7328098467 | 1.5e-3 -> 1.3e-3 |
+
+- beta rises in proportion as sigma falls. The b sign pattern never changes.
+- Essentially all of the log-sigma drop (share 1.00) comes from the 4-33 sweeps that ran 10 or more CG iterations.
+- Terminal sweeps:
+  - The Newton-CG directional slope falls to between -1e-17 and -2e-20, and the per-sweep F change reaches 1e-15 to
+    1e-12, around the double-precision resolution of F (about 0.73).
+  - The backtracking search then fails after 39-49 halvings, while r_W stays at 1.2e-3 to 1.9e-3.
+  - The remaining residual lies entirely on free entries of ordinary size (W about 0.019). The zero-bound part is 0.
+
+### Post-hoc, outside the prespec: curvature along the stuck residual (`tests/DQ3c_curvature_posthoc.R`)
+
+Rayleigh quotient of the W-block Hessian along the face-tangent residual g:
+
+| start | T7 (sigma about 20) | D-Q1, sweep 1000 | D-Q3a end |
+|---|---|---|---|
+| 1 | 1.8 | 2.5e5 | 4.3e6 |
+| 5 | 3.8 | 1.4e5 | 1.3e6 |
+| 16 | 0.38 | 1.5e6 | 2.4e6 |
+
+- At the D-Q1 and D-Q3a end points, almost all of this curvature comes from the rho ridge term
+  (rho sigma_bar^2/2) ||P W diag(1/sigma) b||^2. Reconstruction contributes about 2e-7, and the Cox term is negative.
+- In start 1, curvature rises about 17x while sigma halves, consistent with sigma^-4 scaling.
+- The largest F decrease available along g, ||g||^2 / (2 g'Hg/g'g), falls from about 1e-8 (T7) to 3e-13 to 5e-13 at
+  the end points. That is close to the resolution of F.
+
+### Reading against the pre-stated categories (for the PI; not forced)
+
+- Over the whole window the solver could run, every "collapse continues" feature is present: sigma moves
+  systematically downward and the slope steepens, the score columns stay collinear, and F decreases while beta
+  compensates.
+- "Interior stabilization" is not observed: sigma never stabilizes.
+- The window ended early on a numerical-resolution failure that the prespec did not anticipate. The post-hoc
+  curvature check suggests a cause: along the collapse trajectory, the rho term makes the residual direction
+  increasingly stiff, so the frozen certificate (r_W < 1e-5) is not reachable in double precision from these end
+  points.
+- D-Q3b shows the mechanism is not a free shrink toward uniform. The descent that lowers sigma runs along a
+  different direction, which these diagnostics have not identified.

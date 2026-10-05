@@ -1,0 +1,9 @@
+s01 T7           min sigma_J 19.8 | ||g|| 2.626e-04 | g'Hg/g'g 1.798e+00 [recon 1.32e-07, cox 1.89e+00, ridge -9.13e-02] | ||g||^2/(2 g'Hg/g'g) 1.92e-08
+s01 DQ1 (1000)   min sigma_J 1.31 | ||g|| 2.968e-03 | g'Hg/g'g 2.496e+05 [recon 2.31e-07, cox -2.98e+02, ridge 2.50e+05] | ||g||^2/(2 g'Hg/g'g) 1.76e-11
+s01 DQ3a end     min sigma_J 0.643 | ||g|| 1.944e-03 | g'Hg/g'g 4.327e+06 [recon 2.30e-07, cox -1.09e+03, ridge 4.33e+06] | ||g||^2/(2 g'Hg/g'g) 4.37e-13
+s05 T7           min sigma_J 19.4 | ||g|| 2.696e-04 | g'Hg/g'g 3.761e+00 [recon 1.29e-07, cox 3.97e+00, ridge -2.13e-01] | ||g||^2/(2 g'Hg/g'g) 9.66e-09
+s05 DQ1 (1000)   min sigma_J 1.5 | ||g|| 1.961e-03 | g'Hg/g'g 1.376e+05 [recon 2.22e-07, cox -2.28e+02, ridge 1.38e+05] | ||g||^2/(2 g'Hg/g'g) 1.40e-11
+s05 DQ3a end     min sigma_J 0.859 | ||g|| 1.199e-03 | g'Hg/g'g 1.324e+06 [recon 2.16e-07, cox -5.64e+02, ridge 1.32e+06] | ||g||^2/(2 g'Hg/g'g) 5.43e-13
+s16 T7           min sigma_J 22.5 | ||g|| 2.683e-04 | g'Hg/g'g 3.771e-01 [recon 1.52e-07, cox 4.14e-01, ridge -3.73e-02] | ||g||^2/(2 g'Hg/g'g) 9.54e-08
+s16 DQ1 (1000)   min sigma_J 1.1 | ||g|| 1.526e-03 | g'Hg/g'g 1.480e+06 [recon 2.12e-07, cox -9.05e+02, ridge 1.48e+06] | ||g||^2/(2 g'Hg/g'g) 7.87e-13
+s16 DQ3a end     min sigma_J 0.979 | ||g|| 1.252e-03 | g'Hg/g'g 2.402e+06 [recon 2.12e-07, cox -1.15e+03, ridge 2.40e+06] | ||g||^2/(2 g'Hg/g'g) 3.27e-13

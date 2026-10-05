@@ -1,0 +1,9 @@
+GATE (D-Q1 end points == committed Q1 end points): 1 PASS; 5 PASS; 16 PASS 
+D-Q3a continuation (descriptive). Sweep numbers are totals: D-Q1's 1,000 plus the continuation.
+  WARNING: 3603 b-exit records for 3604 sweeps
+
+=== start 1: 3604 continuation sweeps, status nonconverged (line_search_failed), 233 s, HVPs 5658 ===
+  sweep  2000: F 0.7309101043 | sigma 1.871/1.732/1.028 | beta -0.2262/-0.2443/0.4108 | max|cor| 1.00000 | cos(w,u) 0.9057/0.9061/0.8759 | median rW (last 100) 2.081e-03
+Error in rec[k, 1:3] : subscript out of bounds
+Calls: cat -> sprintf -> paste -> sprintf
+Execution halted

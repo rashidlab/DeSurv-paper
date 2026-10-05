@@ -1,5 +1,5 @@
 [1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T9_edge_cases.txt"
-T9 edge cases | 2026-10-05 00:58:30 
+T9 edge cases | 2026-10-05 01:27:43 
 
 1. W, H, b boundary cases
   [pass] uniform column: sigma_2 = 8.422e-07 vs eps 8.422e-07 (sigma at the floor)

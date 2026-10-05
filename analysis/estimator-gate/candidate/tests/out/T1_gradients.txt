@@ -1,5 +1,5 @@
 [1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T1_gradients.txt"
-T1 gradients | 2026-10-05 01:04:54 
+T1 gradients | 2026-10-05 01:28:19 
 data: p=80 n=50 events=28 tied times=22
 
 Part A: weighted Psi, Richardson central differences, random directions

@@ -38,10 +38,10 @@ breslow <- function(eta, D) {
   o <- D$o; es <- eta[o]; ds <- D$d[o]; m <- max(es); e <- exp(es - m)
   S <- rev(cumsum(rev(e)))[D$gs]
   if (min(S[ds > 0]) > 1e-200) {
-    ll <- sum(ds * (es - m - log(S)))
-    h <- cumsum(ds / S)[D$ge]
+    ll <- sum((ds * (es - m - log(S)))[ds > 0])
+    h <- cumsum(ifelse(ds > 0, ds / S, 0))[D$ge]
     g <- numeric(length(eta)); g[o] <- ds - e * h
-    return(list(ll = ll, g = g))
+    if (is.finite(ll) && all(is.finite(g))) return(list(ll = ll, g = g))   # else fall through to log-sum-exp
   }
   n <- length(es); lsuf <- numeric(n); acc <- -Inf
   for (i in n:1) { mx <- max(acc, es[i]); acc <- mx + log(exp(acc - mx) + exp(es[i] - mx)); lsuf[i] <- acc }
@@ -304,9 +304,9 @@ palm_fit_one <- function(D, hp, W, H, b, maxit = 5000L, tol = 1e-5, trace = FALS
         if (!is.finite(Fb)) fail("nonfinite F after b block") else { inc(Fb, Fcur, "b"); Fcur <- Fb }
       }
     }
-    if (is.na(status)) {
+    if (is.na(status)) {   # finiteness checked on binding residuals only; r_original binds nothing
       r <- palm_resid(W, H, b, D, hp, defs)
-      if (any(!is.finite(r))) fail("nonfinite residual") else if (r[["r"]] < tol) status <- "converged"
+      if (any(!is.finite(r[c("r", "rW", "rH", "rb")]))) fail("nonfinite residual") else if (r[["r"]] < tol) status <- "converged"
     }
     if (trace) tr[[it]] <- c(iter = it, Fstart = Fit, FH = FH, FW = FW, Fb = Fb, r, t = t_prev, nbt = ws$nbt,
                              bit = sbit, b_rejected = rej, failed = identical(status, "failure"))

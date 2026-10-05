@@ -1,5 +1,5 @@
 [1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T2_objective.txt"
-T2 objective | 2026-10-05 01:04:48 
+T2 objective | 2026-10-05 01:28:21 
 data: p=80 n=50 events=30 tied times=19
 F:       270 checks, 270 < 1e-10, worst 4.196e-16
 loglik:  270 checks, 270 < 1e-10, worst 4.413e-16

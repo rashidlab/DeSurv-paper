@@ -1,5 +1,5 @@
 [1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T11_fold_local.txt"
-T11 fold-local | 2026-10-05 00:58:30 
+T11 fold-local | 2026-10-05 01:27:45 
   [pass] training matrix after preprocessing identical
   [pass] sigma_bar^2, ||X||^2, max(X) identical
   [pass] eps identical (2.022690e-06)

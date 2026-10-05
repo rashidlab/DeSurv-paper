@@ -107,3 +107,10 @@ I16 FISTA momentum restart on the gradient-mapping test.
 - Consequence under the frozen spec: if real folds behave like this simulation at moderate alpha, most inner-BO
   configurations are infeasible and the outer final fits nonconverged, so Gate A would be ineligible
   (decision table: specification failure). This is a simulated-data finding; no real data or outcome was used.
+- Commit-review fixes (codex review of b0d6b62), applied by the coordinator: (1) the fast Breslow path returned
+  NaN when censored risk sets underflowed (y = 1:3, d = (1,0,0), eta = (0,-1000,-1000)); it now falls through to
+  the log-sum-exp path unless ll and g are finite. (2) The KKT oracle used one global exponential shift; it now
+  uses per-risk-set log-sum-exp. (3) A start was marked a numerical failure when the non-binding r_original was
+  nonfinite (H = 0); finiteness is now checked on r, r_W, r_H, r_b only. After the fixes T1, T2, T3, T5, T6, T9,
+  T11 and T12 rerun with identical totals and VERDICT PASS. T4 and T7 were run on the pre-fix code; the fixes touch
+  only branches those runs never entered (0 numerical failures, no H = 0 state), so they stand.

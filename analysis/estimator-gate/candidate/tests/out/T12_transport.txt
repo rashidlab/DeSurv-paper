@@ -1,5 +1,5 @@
 [1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T12_transport.txt"
-T12 transport | 2026-10-05 00:58:31 
+T12 transport | 2026-10-05 01:28:01 
   [pass] stored v~ = v - mean(v) over the full training gene universe (independent recomputation)
   [pass] v~ sums to 0 over the universe (|sum| 3.0e-17)
   info: |G| = 75 of 200 genes; mean of v~ over G = -7.639e-04 (not recentered on G)

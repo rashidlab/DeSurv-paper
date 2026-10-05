@@ -13,9 +13,11 @@ kkt_oracle_grad <- function(b, W, O, eps, lambda, nu, rho) {
   cen <- sc - matrix(colMeans(sc), n, k, byrow = TRUE)
   sig <- sqrt(colSums(cen * cen) / (n - 1) + eps^2)
   Zs <- cen / matrix(sig, n, k, byrow = TRUE)
-  eta <- as.vector(Zs %*% b); w <- exp(eta - max(eta))
-  Ssum <- as.vector(O$atrisk %*% w)                         # risk-set sums at each sample's time
-  dl <- O$d - w * as.vector(crossprod(O$atrisk, O$d / Ssum))  # d l / d eta
+  eta <- as.vector(Zs %*% b)
+  E <- matrix(eta, n, n, byrow = TRUE); E[!O$atrisk] <- -Inf     # E[i, j] = eta_j for j in the risk set of i
+  mi <- apply(E, 1, max); lS <- mi + log(rowSums(exp(E - mi)))   # per-risk-set log-sum-exp
+  P <- exp(E - lS)                                                # P[i, j] = exp(eta_j) / S_i, 0 outside risk set
+  dl <- O$d - as.vector(crossprod(P, O$d))                        # d l / d eta
   Wc <- W - matrix(colMeans(W), nrow(W), k, byrow = TRUE)
   v <- Wc %*% (b / sig)
   -(2 / O$ne) * as.vector(crossprod(Zs, dl)) + lambda * (1 - nu) * b + rho * O$sb2 * as.vector(crossprod(Wc, v)) / sig

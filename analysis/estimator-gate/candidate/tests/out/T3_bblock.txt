@@ -1,5 +1,5 @@
 [1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T3_bblock.txt"
-T3 b block | 2026-10-05 00:58:29 | glmnet 5.0 | survival 3.8.6 
+T3 b block | 2026-10-05 01:28:23 | glmnet 5.0 | survival 3.8.6 
 data: p=80 n=60 events=31 tied times=30
 (a) KKT: 120 solves, 120 certified ||KKT||_inf <= 1e-10 by the independent evaluator, worst 9.989e-11; FISTA iterations median 41.5, max 171; 98 exact zeros
 (b) enumeration solver: 120 solves, 120 agree (objective(enum) - objective(ours) >= -1e-12 and max |b diff| <= 1e-6); objective diff min -2.665e-15 max 1.776e-15; max |b diff| 2.580e-09; max |linear predictor diff| 5.980e-09

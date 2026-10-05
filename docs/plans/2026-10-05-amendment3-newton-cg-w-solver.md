@@ -230,3 +230,37 @@ is written: the strict "<" in the W no-op guard (the certificate uses r < 1e-5);
 <G_W, W(t) - W>; t starting at 1; the Q0 grid (1e-2 to 1e-8), 10 directions per T1 problem and unit-norm V; Q1's
 proportion stated as 4 of 4 from the third ruling; Q2 applied to the frozen 30-start fit so that "same start
 selected" is defined.
+
+## 10. Q0 verification amendment (PI ruling 2026-10-05; test only, no algorithm change)
+
+**Record.** The original prespecified Q0 (section 6) was run at commit 045f593 and FAILED: Euclidean 1,120 of 2,700
+directions, Riemannian 2,624 of 2,700. The accuracy clause (min e <= 1e-6) held on all 5,400 directions (worst
+1.5e-7); every failure was the order clause. That result is retained permanently (`tests/out/Q0_hvp.txt`,
+`.rds`) and is not replaced.
+
+**Statement (verbatim for the report and any write-up).** "The original prespecified Q0 failed solely because its
+epsilon grid did not contain enough pre-roundoff points to evaluate the requested convergence order. The analytic
+HVP and algorithm were unchanged; only the finite-difference verification grid/order calculation was amended
+before Stage B."
+
+**Amended Q0 (binding; replaces the section 6 Q0 grid and order clause only).**
+- Same 270 T1 problems x 10 directions; same Euclidean and Riemannian tests; same e(eps).
+- Accuracy: min over the grid of e(eps) <= 1e-6 (unchanged).
+- Grid: eps = 10^seq(-1, -8, by = -0.5) (15 points).
+- Empirical order p_k = log(e_k / e_{k+1}) / log(eps_k / eps_{k+1}) (equivalently, log10 error ratio >= 0.75 per
+  half-decade step).
+- Pass per direction: accuracy, and p_k >= 1.5 and p_{k+1} >= 1.5 for some k (two consecutive refinements).
+- Amended Q0 PASS iff all 2,700 Euclidean and all 2,700 Riemannian directions pass.
+
+**Failure classification (descriptive, never binding).** For a failing direction with m = argmin e(eps):
+(a) min e > 1e-6; (b) roundoff-limited: accuracy holds, m is not the smallest eps, and e at the smallest eps is
+at least 10 e_m (error rises below the minimum), with fewer than two consecutive p_k >= 1.5 among refinements
+before m; (c) other. Replaces the coordinator's unreachable "e <= 1e-9 at every eps" class.
+
+**Scope.** No change to `palm_lib.R` or any HVP code. The amended test is committed before it is run. Stage B
+remains blocked until amended Q0 passes on all 5,400 directions. If it fails, the failure goes to the PI; no
+further change to the grid or criterion on the basis of its outcome.
+
+**Disclosure.** The half-decade grid was proposed after a 12-problem coordinator spot check (own seeds, grid 1 to
+1e-8) displayed clean second-order decay on it; the proposal is therefore not fully blind. The order
+calculation using the eps ratio is the PI's correction.

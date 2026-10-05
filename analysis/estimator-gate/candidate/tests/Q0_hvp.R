@@ -6,22 +6,31 @@
 #   eps = 1e-2, ..., 1e-8; e(eps) = ||fd - analytic||_F / ||analytic||_F. Pass per direction: min e <= 1e-6 AND
 #   two consecutive refinements with log10(e_k/e_k+1) >= 1.5 and log10(e_k+1/e_k+2) >= 1.5.
 #   Q0 PASS iff all 2,700 Euclidean and all 2,700 Riemannian directions pass.
+# Q0_AMENDED=1 runs the amended Q0 (amendment 3, section 10; PI 2026-10-05): eps = 10^seq(-1, -8, by = -0.5),
+#   order p_k = log(e_k/e_k+1) / log(eps_k/eps_k+1), two consecutive p_k >= 1.5; descriptive roundoff class (b).
+#   Writes Q0a_hvp.{txt,rds}. Default (unset) reproduces the original prespecified Q0 (retained, failed at 045f593).
 # Report-only: per-term checks, symmetry, a p = 150 boundary-face point, breslow_hvp paths, g identity.
 source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])), "common.R"))
-open_out("Q0_hvp.txt")
+AMEND <- identical(Sys.getenv("Q0_AMENDED"), "1"); TAG <- if (AMEND) "Q0a_hvp" else "Q0_hvp"
+open_out(paste0(TAG, ".txt"))
+if (AMEND) cat("AMENDED Q0 (section 10): half-decade grid, order by eps ratio\n")
 cat("Q0 analytic HVP |", format(Sys.time()), "\n")
 t0 <- proc.time()[["elapsed"]]
 s <- sim_data(11, 80, 50); D <- palm_data(s$X, s$y, s$d)
 cat(sprintf("data: p=%d n=%d events=%d tied times=%d\n", D$p, D$n, D$ne, s$n_tied))
-EPS <- 10^-(2:8); NDIR <- 10L
+EPS <- if (AMEND) 10^seq(-1, -8, by = -0.5) else 10^-(2:8); NDIR <- 10L
 fro <- function(A) sqrt(sum(A^2))
 cnorm <- function(W) sweep(W, 2, sqrt(colSums(W^2)), "/")
 fdgrad <- function(gf, W, V, e) (gf(W + e * V) - gf(W - e * V)) / (2 * e)      # test code only
 errs <- function(gf, W, V, an, post = identity) sapply(EPS, function(e) fro(post(fdgrad(gf, W, V, e)) - an) / fro(an))
 crit <- function(e) {
-  r <- log10(e[-length(e)] / e[-1]); ok <- isTRUE(min(e) <= 1e-6)
+  ok <- isTRUE(min(e) <= 1e-6)
+  r <- if (AMEND) log(e[-length(e)] / e[-1]) / log(EPS[-length(EPS)] / EPS[-1]) else log10(e[-length(e)] / e[-1])
   ord <- any(sapply(seq_len(length(r) - 1), function(k) isTRUE(r[k] >= 1.5 && r[k + 1] >= 1.5)))
-  cls <- if (ok && ord) "pass" else if (!ok) "a" else if (all(e <= 1e-9)) "b" else "c"
+  if (AMEND) {   # (b) roundoff-limited: minimum not at the smallest eps and error rises >= 10x below it
+    m <- which.min(e); rl <- m < length(e) && e[length(e)] >= 10 * e[m]
+    cls <- if (ok && ord) "pass" else if (!ok) "a" else if (rl) "b" else "c"
+  } else cls <- if (ok && ord) "pass" else if (!ok) "a" else if (all(e <= 1e-9)) "b" else "c"
   list(min = min(e), order = ord, pass = ok && ord, cls = cls)
 }
 
@@ -78,11 +87,12 @@ for (gi in seq_len(nrow(GRID))) for (pt in 1:5) {
 }
 R <- do.call(rbind, rows); TT <- do.call(rbind, terms)
 
-cat("\nBinding Q0 (eps grid 1e-2..1e-8; min e <= 1e-6 and two consecutive order >= 1.5 refinements)\n")
+cat(if (AMEND) "\nBinding amended Q0 (eps grid 1e-1..1e-8 by half decades; min e <= 1e-6 and two consecutive p_k >= 1.5)\n"
+    else "\nBinding Q0 (eps grid 1e-2..1e-8; min e <= 1e-6 and two consecutive order >= 1.5 refinements)\n")
 for (tst in c("euclid", "riem")) {
   r <- R[R$test == tst, ]
-  cat(sprintf("  %s: %d directions, %d pass, %d fail | class a (min e > 1e-6) %d, b (flat <= 1e-9, order failed) %d, c (other) %d | worst min e %.3e\n",
-              tst, nrow(r), sum(r$pass), sum(!r$pass), sum(r$cls == "a"), sum(r$cls == "b"), sum(r$cls == "c"), max(r$min_e)))
+  cat(sprintf("  %s: %d directions, %d pass, %d fail | class a (min e > 1e-6) %d, b (%s) %d, c (other) %d | worst min e %.3e\n",
+              tst, nrow(r), sum(r$pass), sum(!r$pass), sum(r$cls == "a"), if (AMEND) "roundoff-limited" else "flat <= 1e-9, order failed", sum(r$cls == "b"), sum(r$cls == "c"), max(r$min_e)))
   cat("  failures by alpha x rho:\n"); print(tapply(!r$pass, list(alpha = r$alpha, rho = r$rho), sum))
   if (any(!r$pass)) { cat("  failures by class x alpha:\n"); print(table(cls = r$cls[!r$pass], alpha = r$alpha[!r$pass])) }
 }
@@ -142,7 +152,7 @@ cat(sprintf("  boundary point: Euclidean %d/%d pass (worst min e %.2e), Riemanni
 wall <- proc.time()[["elapsed"]] - t0
 cat(sprintf("\nwall time %.1f s\n", wall))
 saveRDS(list(R = R, terms = TT, EE = EE, ER = ER, sym = sym, gid = gid, gidN = gidN, brs = brs, fallback = eb,
-             boundary = bres, wall = wall), file.path(OUT, "Q0_hvp.rds"))
+             boundary = bres, wall = wall), file.path(OUT, paste0(TAG, ".rds")))
 nE <- sum(R$test == "euclid"); nR <- sum(R$test == "riem")
 cat(sprintf("Q0 TOTAL: Euclidean %d/%d pass, Riemannian %d/%d pass\n", sum(R$pass[R$test == "euclid"]), nE,
             sum(R$pass[R$test == "riem"]), nR))

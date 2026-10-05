@@ -187,3 +187,10 @@ residual; report max relative disagreement and where it occurs. This checks fini
 recursive residual on the ill-conditioned system. It binds nothing unless the frozen amendment already requires it.
 
 **Sequence.** Stage A, then coordinator inspection of Q0, then Stage B dispatch. No Stage B work before that.
+
+## PI ruling 2026-10-05, Q0 result
+
+Q0 failed at 045f593 on the order clause only. PI ruling: defect of the test, not of the HVP. Test-only Q0
+amendment recorded in the frozen amendment, section 10 (half-decade grid 1e-1 to 1e-8, order by eps ratio, two
+consecutive p_k >= 1.5, descriptive roundoff classification). HVP code untouched. Original result retained;
+amended result appended. Stage B blocked until amended Q0 passes on all 5,400 directions.

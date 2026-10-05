@@ -216,3 +216,27 @@ Recorded and committed while the Stage B subagent was running, before it returne
 
 Qualification outcome: amendment 3 qualifies if Q-T passes, Q1 is 4/4, no tier-(c) event occurs, and Q2 meets
 the frozen equivalence criteria.
+
+## PI ruling 2026-10-05, Stage B outcome (after 0c44cca)
+
+Amendment 3 has failed (Q1 1/4, T9 55/56). 0c44cca is kept as the failure record. No budget, tolerance or CG
+change rescues it. The diagnosis it supports: the W block solves its local problem, and the obstacle is how
+W, H and b interact across sweeps.
+
+Test-contract rulings, prospective (they apply to the next qualification run, not to 0c44cca):
+- **T7** is mandatory Q-T in every qualification run. Excluding Q3 never excluded T7. A future brief's scope line
+  names T7 explicitly.
+- **T10.** A mutant that can never trigger on correct code makes the test contract defective. Success is not
+  redefined as 24/28. Before the next run, the four untriggerable mutants are replaced by branch-forcing mutations or
+  unit tests, so that every intended defect class is exercised. The standard stays at "all intended defects caught".
+- **Q1 budget boundary.** The check is strict: sweeps < 1,000 and HVPs < 25,000. Converging exactly at a cap does
+  not qualify. Production may still report such a start as converged; qualification is intentionally stricter.
+  `tests/Q1_warm.R` line 57 is changed accordingly. This does not change the 0c44cca verdict (the passing start used
+  9 sweeps and 119 HVPs).
+- **Q2.** No control definition is chosen now, since Q2 is moot after the amendment-3 failure. If a later amendment
+  reaches Q2, the PI chooses from the candidates in `AMENDMENT3_REPORT.md` (Stage B, Q2) before that run.
+- **T9.** The criterion is not relaxed. A diagnostic on the permutation pair decides between a malformed raw-parameter
+  test in a flat model and real numerical instability, with no threshold change.
+
+Sequence: no amendment 4 yet. The next two diagnostics are no-refit: (1) block-by-block residuals and objective over
+the last 50-100 sweeps of Q1 starts 1, 5 and 16; (2) T9 invariant-output comparison. Amendment 4 is designed from them.

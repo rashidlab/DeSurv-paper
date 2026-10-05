@@ -28,8 +28,8 @@ optional secondary analysis (section 9) and enters no decision.
   not been used before. Seeds 123-126 (item 4), 2001-2003 (feasibility check) and 1,000,001-1,000,400 (Track 3a)
   are excluded from every use here.
 - Why 4 partitions: the decision uses the mean paired difference; its sampling variance has a floor from the
-  test/train ratio (Nadeau and Bengio 2003: factor 1/J + 1/4) that further repeats barely reduce (factor 0.55 at
-  J = 20, 0.52 at J = 50), while compute scales with J.
+  test/train ratio (Nadeau and Bengio 2003: variance factor 1/J + 1/4, i.e. 0.30 at J = 20 and 0.27 at J = 50; SE
+  multiplier sqrt(1/J + 1/4) = 0.55 and 0.52) that further repeats barely reduce, while compute scales with J.
 - **Inner resampling:** inside each outer training set, 5-fold CV, stratified by cohort x event, fold seed
   derived as `outer_seed * 100 + outer_fold`. Identical inner folds for both arms.
 - External cohorts (Dijk, Moffitt, PACA-AU x2, Puleo) and all previously examined partitions are development data.
@@ -67,7 +67,7 @@ l the Breslow partial log-likelihood, n_e the number of events. No zeta rescalin
 
 - Fixed constants: lambdaH = 1e-6; eps = 1e-6 x median_j sigma_j at initialization.
 - Normalization: the unit-norm gauge on W is a constraint, enforced by the projection; no post-hoc rescaling.
-  Reported beta = b / sd(Z_j).
+  Reported beta_j = b_j / sigma_j(W) (the floored scale in the objective, never the raw sd).
 
 **Optimizer.** Block prox-linear (PALM) with an exact convex b block:
 1. H: one HALS sweep (Cichocki and Phan 2009). No multiplicative updates.
@@ -198,7 +198,7 @@ classification. "Weak" means |rho| < 0.5 throughout.
 | A8 | D1 retains prognostic value after PurIST + DeCAF adjustment (results:566; SI 1730-1767) | `d1_variance_partition_stats` procedure | Adjusted HR < 1 and LR chi-square for adding D1 > 0 with concordance not decreased |
 | A9 | D1 weakly correlated with purity in PACA-AU array and seq (results:569) | Spearman with purity, `desurv_clinical_adjustment` procedure | Weak in both |
 | A10 | D1 prognostic in treated metastatic O'Kane/COMPASS, protective in all three arms, no arm interaction (results:575; SI 2472-2478). The paper frames this as a test of D1's tumor-associated direction only (epithelial-enriched tissue); kept as a claim about the projected D1 score | Per-arm and arm-stratified Cox, interaction test | Stratified HR < 1 and per-arm HR < 1 in all three arms |
-| A11 | Independent supervised methods (superpc, Cox-PLS, lasso Cox, tuned versions) recover D1, while the leading unsupervised PC does not (results:612, 615; SI 1500-1560) | `supervised_recovery_stats`, `desurv_vs_supervised_tuned` with the D1 counterpart | Every supervised comparator |r| with the D1 counterpart > 0.5 and larger than with either other factor; leading PC weak |
+| A11 | Independent supervised methods (superpc, Cox-PLS, lasso Cox, tuned versions) recover D1, while the leading unsupervised PC does not (results:612, 615; SI 1500-1560) | `supervised_recovery_stats`, `desurv_vs_supervised_tuned` with the D1 counterpart | Every supervised comparator's absolute r with the D1 counterpart > 0.5 and larger than with either other factor; leading PC weak |
 
 Not targets: the composite D1 + D3 predictor HR (A7; reported, not classified, since it is not a D1-only claim), the
 top-270 gene list (A12; covered by the top-ntop overlap metric in section 7), and the bulk-not-cellular scope caveat
@@ -206,4 +206,6 @@ top-270 gene list (A12; covered by the top-ntop overlap metric in section 7), an
 
 ## Amendments
 
-(none)
+- 2026-10-04 (before any step 1 output was read; codex review of bca989d): reported beta uses sigma_j(W), not
+  sd(Z_j), to match the objective; Nadeau-Bengio variance factor and SE multiplier stated separately (numbers
+  unchanged); A11 criterion reworded to remove pipe characters that split the table cell. No decision changed.

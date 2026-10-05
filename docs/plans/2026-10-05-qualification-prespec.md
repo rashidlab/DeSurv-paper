@@ -117,6 +117,13 @@ c_B = c_3 = 1. c_A was set by bisection on log c_A over [0.01, 1] so that the me
 
 c is not recalibrated after any fit.
 
+**Frozen mechanics (PI, 2026-10-05).** The wrapper and calibration are fixed as committed. Changes require a PI
+ruling. Git blob hashes (first 12 characters): `sim_qual.R` 2379bb00de3f, `s3_calibrate.R` 0f2017a0ac58,
+`s3_calibration.rds` d8e7d1f9f534. Generator files: `simulate_data.R` 301920a23600, `simulate_W.R` f21b1af5d47a,
+`simulate_H.R` 77a66ef5fb8e, `simulate_X.R` d0e55aede746, `simulate_survival.R` ac52c17b1e01, `scenario_defaults.R`
+dca30349342d. Constants: c = (0.1911, 1, 1) for S3 and (0.474, 1, 1) for S3b, N = 218 + 1,000, the section 4 seeds.
+Every qualification run checks these hashes before it generates data, and stops on a mismatch.
+
 ### 3.4 Realized-ratio check (binding harness check, before any fit)
 
 For S3, every replicate's realized ranked masked ratio must lie in [0.18, 0.37], which contains the full validation
@@ -127,7 +134,7 @@ replicate. S3b ratios are reported without a check.
 
 ## 4. Seeds (disjoint namespaces, none used before)
 
-sc = 1, 2, 3, 4 for S1, S2, S3, S3b. r = replicate. g = grid index (section 5). f = inner fold. Start s of a fit with
+sc = 1, 2, 3, 4 for S1, S2, S3, S3b. r = replicate. g = fit index 1-12 (section 5 table). f = inner fold. Start s of a fit with
 seed S uses `set.seed(S + s - 1)`, s = 1..30, as in spec section 5.
 
 | Use | Seed |
@@ -148,17 +155,29 @@ use of 40,000,000-49,999,999.
 
 ## 5. Configurations
 
-**Grid (fixed, 11 configurations, inside the spec section 3 box; 12 fits per replicate, because g = 12 refits the centre configuration g = 5 at n = 218).** nu = 0.5, ntop = 150 throughout.
+**Grid (fixed, inside the spec section 3 box): 11 grid configurations at n = 175, plus 1 separate reference fit at
+n = 218, for 12 fits per replicate.** The *centre configuration* is defined by its values: alpha = 0.05,
+lambda = 1, rho = 1, nu = 0.5, ntop = 150. It is one of the 11 grid configurations (at n = 175). The reference fit
+is the same centre configuration on all 218 training columns. g is the fit index used by the harness and the seed
+rule (section 4). Every row below is one fit. nu = 0.5 and ntop = 150 in every row.
 
-| g | alpha | lambda | rho |
-|---|---|---|---|
-| 1-9 | {1e-3, 0.05, 0.5} x {1e-2, 1, 1e2}, alpha varying slowest | | 1 |
-| 10 | 0.05 | 1 | 1e-2 |
-| 11 | 0.05 | 1 | 1e3 |
-| 12 (centre, n = 218) | 0.05 | 1 | 1 |
+| g | alpha | lambda | rho | n | Role |
+|---|---|---|---|---|---|
+| 1 | 1e-3 | 1e-2 | 1 | 175 | grid |
+| 2 | 1e-3 | 1 | 1 | 175 | grid |
+| 3 | 1e-3 | 1e2 | 1 | 175 | grid |
+| 4 | 0.05 | 1e-2 | 1 | 175 | grid |
+| 5 | 0.05 | 1 | 1 | 175 | grid; centre configuration |
+| 6 | 0.05 | 1e2 | 1 | 175 | grid |
+| 7 | 0.5 | 1e-2 | 1 | 175 | grid |
+| 8 | 0.5 | 1 | 1 | 175 | grid |
+| 9 | 0.5 | 1e2 | 1 | 175 | grid |
+| 10 | 0.05 | 1 | 1e-2 | 175 | grid |
+| 11 | 0.05 | 1 | 1e3 | 175 | grid |
+| 12 | 0.05 | 1 | 1 | 218 | reference fit: centre configuration at n = 218 |
 
-The centre is g = 5 at n = 175 and g = 12 at n = 218. Grid fits run on replicates 1-5 of S1, S2 and S3:
-3 x 5 x 12 = 180 fits of 30 starts.
+Grid fits and reference fits run on replicates 1-5 of S1, S2 and S3: 3 scenarios x 5 replicates x 12 fits = 180
+fits of 30 starts.
 
 **Tuning run (one per scenario and replicate: 5 + 5 + 20, plus 5 for S3b).** This is the candidate procedure of
 spec section 7 on the 218 training columns, with three changes: the reduced budget n_init = 20, n_iter = 40; inner
@@ -217,7 +236,7 @@ Unit throughout: a *fit* is one 30-start fit, and a *cell* is (scenario, configu
   defect, and an estimate below it does not prove the bound. Pass: every estimate <= L_W (1 + 1e-8).
   Iterations used and nonconvergence of the power iteration are reported. Realized values are reported as in the
   spec.
-- **Q5.** Cells: the centre configuration at n = 175 and n = 218 (replicates 1-5) and the tuned final fits, in S1,
+- **Q5.** Cells: the centre configuration at n = 175 and the reference fit at n = 218 (replicates 1-5) and the tuned final fits, in S1,
   S2 and S3. Per fit: m = median over converged non-returned starts of (C_s - C_returned). Pass, per cell: the mean
   of m over replicates <= 0.01. This is a one-sided reading (section 10, P2). Loading r and the share of starts
   within 1e-4 relative F are reported.
@@ -244,7 +263,7 @@ answered by adjusting a criterion).**
 ## 8. Timing-only run (step 5, after this file is frozen)
 
 The timing-only run uses one dataset, `sim_qual(49,100,001, "S1")`, outside every qualification namespace. It fits
-the centre configuration at n = 175 and n = 218, with 30 starts each, and one inner-fold BO evaluation. The script
+the centre configuration at n = 175 (g = 5) and the reference fit at n = 218 (g = 12), with 30 starts each, and one inner-fold BO evaluation. The script
 writes wall time per start, sweeps per second, and cores used. It discards start status, F, residuals and C before
 writing, and its output file has no field for them. Its only use is compute planning, through section 9.
 
@@ -276,11 +295,19 @@ Nothing else changes: not the grid, the BO budget, the starts, the cap or any cr
   reason ("cannot cost more than one C point") implies, with the per-fit median averaged over replicates per cell.
   S2 is kept binding, because the spec does not exclude it. In the null scenario the start-to-start C differences
   are pure noise. Decide whether S2 should be reported only.
-- **P3. Q3 as written may fire on slow drift.** Review item B3 proposes two further comparisons: theta_j grows over
-  the window, and the conditions persist in both halves. That changes a binding criterion, so it belongs to the spec
-  and the Codex review, not this file. Section 6 already records what both comparisons need.
+- **P3. OPEN, awaiting PI ruling (review B3): Q3 as written may fire on slow drift.** The review proposes two
+  further comparisons: (iv) log |theta_j| rises over the window, so theta grows while sigma falls; (v) (i), (ii) and
+  (iv) each hold in both halves of the window. It also asks that the radians-to-log comparison in (iii) be stated as
+  a convention, and that the scope of "not converged" be stated. This changes what can pass or fail, so it is not
+  folded in here. Section 7 implements Q3 exactly as in spec revision 3 until the PI rules. Section 6 already records
+  what (iv) and (v) need.
 - **P4. Q1 unit.** Per fit: at least 27 of 30 starts converged (review S2). Section 7 reworded the reason for Q1.
-- **P5. Spec-level items from the same review, outside this file's scope.** B1 (lambdaH = 1e-6 shrinks H about
-  3,000-fold at p = 3,000) and B4 (test-set construction; resolved operationally by section 1, and the spec text
-  should say so).
+- **P5. OPEN, awaiting PI ruling (review B1): lambdaH = 1e-6 shrinks H about 3,000-fold at p = 3,000.** The NMF
+  term is divided by ||X||_F^2 and the H ridge is not (`palm_lib.R:74`, `:244`). For ranks at p = 3,000,
+  ||X||_F^2 = n p (p + 1)(2p + 1) / 6 = 1.576e12 at n = 175, so the HALS denominator is 1 + 3,001.5 (arithmetic and
+  code lines checked 2026-10-05). The options in the review: (a) rescale the ridge to lambdaH ||H||^2 / (2 ||X||^2),
+  so the denominator is 1 + lambdaH, with a_H and HALS updated and the alpha-range rationale rechecked; (b) keep it and
+  state why in spec section 1. Either way, note that D-Q4 was obtained under this scaling. This changes the estimator,
+  so it is not folded in here. Review B4 (test-set construction) is operational and is adopted in section 1. The spec
+  text should say so too.
 - **P6. Compute ceiling.** Section 9 needs the PI's core-hour allotment after the timing run.

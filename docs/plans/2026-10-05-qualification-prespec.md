@@ -130,7 +130,7 @@ For S3, every replicate's realized ranked masked ratio must lie in [0.18, 0.37],
 range. The median over the 10 S3 tuning replicates (ruling 15) must lie in [0.22, 0.29]: the validation SD is about 0.034,
 so the median of 10 has an SD near 0.013, and the window is about plus or minus 2.7 SD. A failure means the wrapper or the generator
 does not behave as calibrated. It stops the run before any fit and is reported. It is never fixed by replacing a
-replicate. S3b ratios are reported without a check.
+replicate. S3b is not part of qualification (ruling 15); if run later, its ratios are reported without a check.
 
 ## 4. Seeds (disjoint namespaces, none used before)
 

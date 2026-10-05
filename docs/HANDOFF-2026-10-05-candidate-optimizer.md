@@ -324,3 +324,10 @@ evidence the PI said would be needed to reopen the estimator. D-Q2 threshold NOT
 
 **NEXT (fresh session):** write `tests/DQ4_step_decomposition.R` per the frozen prespec, smoke-test at 30 sweeps per
 segment (discard outputs), run, commit results as observed. Still no real data, no Amendment 4, nothing pushed.
+
+**D-Q4 DONE (2026-10-05).** `tests/DQ4_step_decomposition.R`; all six start-segment gates exact; results in
+`tests/out/DQ4_step_decomposition.{rds,txt}` and section 8 of `docs/plans/2026-10-05-dq1-outliers-and-score-collapse.md`.
+Reading: sigma loss is predominantly g(v)-driven in every start and in both segments, with the standardized-score
+direction preserved (net angle <= 0.0023 rad). This is orientation into low-variance or null-space directions of X,
+a rescaling of the same score, not loading shrinkage. Nearly all of it comes from the 1-5% of steps with >= 10 CG
+iterations. Not pushed. NEXT: PI reads section 8; estimator redesign scoping is a PI call (no Amendment 4 yet).

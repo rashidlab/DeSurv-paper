@@ -163,3 +163,57 @@ observable trajectory. The runs terminated from loss of double-precision resolut
 so this does not prove the absence of a mathematical minimizer. It shows that no usable interior stationary point
 was approached before the parameterization became numerically singular/stiff. Do not claim "the objective has no
 minimizer". What is shown is enough to reject a solver-speed explanation and to stop Option A.
+
+## 8. D-Q4 results (prespec 21e5d88; script `tests/DQ4_step_decomposition.R`, output `tests/out/DQ4_step_decomposition.{rds,txt}`)
+
+Recorded as observed. Descriptive, non-gating. Smoke test (30 sweeps per segment) passed its prefix gates and was
+discarded before the full run.
+
+**Gates.** `palm_lib.R` unmodified (git diff --quiet). All six start-segments reproduce exactly: Q1 (1,000 sweeps,
+every trace column, status, reason, end-point W, H, b, F, and per-sweep W-exit sigma against the D-Q1 `blk` record)
+and D-Q3a (3,604 / 1,859 / 581 sweeps, every trace and `rec` column, terminal `line_search_failed` sweep, status,
+reason, end point). X'1 is exactly constant (ranks), so C X'1 = 0.
+
+**Section 4 check (read first).** Along in -> norm, max |d surv| <= 3.1e-11 and max |d ridge| <= 2.4e-11 in every
+start-segment, and the eps = 0 evaluation gives the same values, so the residual is rounding, not eps. W_norm and
+W_orient have unit columns to 3e-16. The identity residual is <= 1.0e-10 and the eps gap is <= 1.2e-10. The
+decomposition separates what it claims to separate.
+
+**Primary: cumulative Delta log sigma~ pooled over the coefficient-carrying columns J** (= Delta log r + Delta log g):
+
+| start (J) | segment Q1, sweeps 1-1,000 | segment D-Q3a, sweeps 1,001-end | combined |
+|---|---|---|---|
+| 1 ({1,2,3}) | -7.079 = -0.119 + -6.961 | -2.013 = +0.147 + -2.160 | -9.092 = +0.028 + -9.121 |
+| 5 ({1,2,3}) | -6.490 = +0.014 + -6.504 | -1.599 = +0.123 + -1.722 | -8.089 = +0.137 + -8.226 |
+| 16 ({1,2}) | -6.029 = +0.111 + -6.141 | -0.237 = +0.010 + -0.247 | -6.266 = +0.121 + -6.388 |
+
+Per carrying column and segment the same holds in every case: |sum Delta log g| is more than 10 times
+|sum Delta log r| (minimum ratio 10.4, start 1 D-Q3a), and |sum Delta log r| is at most 0.093, usually with the
+opposite sign (the loading norm ||Pw|| grows slightly). Per step, Delta log g < 0 in
+98-100% of accepted steps for most carrying columns. In a few columns (start 1 j=3, start 5 j=2, start 16 j=2) it is
+negative in only 4-12% of steps, and a small number of large steps carry the net loss.
+
+**CG stratification.** Steps with >= 10 CG iterations are 2.7-4.7% of Q1 steps and 0.7-1.5% of D-Q3a steps, and they
+carry nearly all of the pooled loss: Q1 -7.077 of -7.079, -6.482 of -6.490, -6.020 of -6.029; D-Q3a -2.013 of -2.013,
+-1.599 of -1.599, -0.237 of -0.237. Within both strata the loss is again g-driven.
+
+**Secondary: standardized-score direction.** Net angle between the standardized scores at sweep 1 and at the D-Q3a
+end point, carrying columns: 0.0015 / 0.0015 / 0.0023 rad (start 1), 0.0013 / 0.0020 / 0.0014 (start 5),
+0.0011 / 0.0011 (start 16), i.e. at most 0.13 degrees over the whole trajectory, against a combined loss of 2.5 to
+3.4 in log sigma per column. Cumulative per-step angles are larger than the net angles (Q1 0.02-0.12 rad, D-Q3a
+<= 0.009 rad per column), so the score direction moves back and forth by small amounts but has no net drift. Most of
+the Q1 cumulative angle (56-79%) comes from the CG >= 10 steps. Non-carrying start 16 j=3 (b_3 = 0) is the
+exception: its score direction turns by 1.73 rad net, almost entirely in CG >= 10 steps, while its sigma~ falls by
+0.51. It is reported, not read.
+
+**Term changes (summed, raw terms).** in -> norm lowers nmf only (about -3e-5 in Q1, at most 1.4e-6 in magnitude in D-Q3a; surv and
+ridge are zero to rounding). In Q1, in -> orient lowers nmf (about -1.5e-4) and surv (-9e-6 to -6e-5) and raises the ridge
+term (+7.6e-4 to +1.5e-3), with net d F < 0; D-Q3a has the same signs except surv for start 16 (+3.8e-7). The interaction residual is about 5e-6 to 2e-5 in F (Q1) and
+<= 7e-9 (D-Q3a).
+
+**Reading (prespec section 6, no thresholds).** Q1 and D-Q3a read the same way, read separately and combined.
+Sigma loss is **predominantly g(v)-driven** in every start and segment, with |sum Delta log g| at least 14 times
+|sum Delta log r| pooled over J (more than 10 times per column) in every case. The standardized-score angle is essentially zero. In the prespec's language this is
+orientation of the loadings into a low-variance or null-space direction of X with the score direction preserved, a
+rescaling of the same score. It is not literal loading shrinkage (||Pw|| does not shrink), and it is not the
+optimizer finding new score directions. Nothing here is a cutoff. No real data, no Amendment 4, nothing pushed.

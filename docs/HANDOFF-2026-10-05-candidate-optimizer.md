@@ -366,3 +366,15 @@ Open items the spec draft must list for the PI (coordinator notes, not decisions
 - Comparator: confirm "current implemented estimator" means the production DeSurv fitting procedure (k = 3, tuned
   by fresh inner BO in every outer fold per docs/plans/2026-10-04-estimator-gate-spec.md), not the PALM candidate
   and not the published hyperparameters.
+
+## PI ruling 2026-10-05, ninth (on redesign spec DRAFT revision 1, 8772b86)
+
+Beta redesign approved in principle, not frozen. Optimize theta = s0 beta with s0 = sigma_bar (fixed, from training X
+only, once per fit); binding F2 safeguard = converged vs frozen early checkpoints (mean paired dC >= -0.01 at each),
+oracle gap descriptive; rho and range kept; comparator DeSurv 1.0.1 confirmed (1.2.0 sensitivity only); PALM with
+maxit 5,000 as a work limit; unit sphere kept; qualification thresholds tied to the pathology, S3 = predictive
+low-variance vs nonpredictive high-variance; no convergence-theorem claim, PALM assumptions checked explicitly
+before implementation; score and loading recovery both assessed. Full record and the revision-2 open items 9a-9d:
+`docs/plans/2026-10-05-estimator-redesign-spec.md` section 10.
+
+**NEXT:** PI rules 9a-9d, then freeze. No implementation, real data or compute before freeze.

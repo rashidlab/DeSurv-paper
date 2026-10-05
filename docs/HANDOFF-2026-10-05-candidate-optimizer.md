@@ -220,3 +220,27 @@ against the frozen document, analytic HVP and Q0 first; no further solver-design
 **Next (new session):** dispatch Stage B of the brief (Newton-CG W step, breakage inventory B2, Q-T, Q1, Q2, Q3 report)
 to a subagent; coordinator verifies Q-T verdicts, Q1 4/4, Q2 criteria, and the residual-drift diagnostic before
 committing. Do not touch the HVP. All commits on recompute/consensus-desurv unpushed; do not push without the PI.
+
+## Stage B DONE 2026-10-05: amendment 3 FAILS; diagnostics localize the stall to a W-b zig-zag
+
+- b0330ab: PI interpretation ruling recorded before any Stage B result (drift tier (c) binding, other drift raw only).
+- 0c44cca: Stage B failure record. Q1 1/4 (starts 1, 5, 16 hit the 1,000-sweep cap at r_W 1.5e-3 to 3e-3, using
+  3.1k-3.7k of 25k HVPs); T9 55/56 (permutation W diff 7.3e-3 vs 1e-8); T7, T8, T10 not rerun; Q2 not run
+  (settings undefined, candidates in the report); drift tier (c) = 0.
+- 08ef292 + 86f0e88: PI rulings on the outcome (T7 mandatory; T10 untriggerable mutants to be replaced with
+  branch-forcing tests; Q1 budget strict <; Q2 moot; T9 not relaxed; no amendment 4 before diagnostics).
+- fad6dd3: diagnostics approved, settings frozen before running. 09801d6 + 450e3f0: results.
+  - D-Q1 (exact-replay gate PASS 3/3): r_W after H -> W -> b = 3.1e-3 -> 1.3e-4 -> 3.1e-3 (start 1), 2.3e-3 ->
+    8.7e-5 -> 2.3e-3 (5), 1.5e-3 -> 4.9e-5 -> 1.5e-3 (16). The W step pushes r_b from ~1e-10 to 1e-4..5e-4 and the
+    b step undoes W's stationarity. H is inert. |dW| ~1e-8, |db| ~2e-6 per sweep; sigma and beta medians do not move
+    at printed precision. Outlier sweeps: r_W after W reaches 0.32 (start 1) and 0.16 (start 16) in a few of the
+    last 100 sweeps (not yet examined).
+  - D-T9a (gate PASS): the truncated pair is the same fit on every invariant (cosines 1.0000, eta r 1.000000,
+    top-5 overlap 1.00, recovery within 1e-4). D-T9b: both converge (188/190 sweeps), W diff 7.2e-5, F diff 4.5e-11:
+    pre-stated interpretation (i). The raw-W T9 criterion is the wrong invariant for an NCG path; replacing it needs a
+    PI ruling.
+
+**Next (new session):** PI reads the D-Q1/D-T9 results, then amendment 4 design targeting W-b coordination (e.g. a
+joint W-b step or safeguarded acceleration of the full sweep map), plus the prospective test-contract fixes (T10
+mutants, T9 invariant criterion, T7 in scope). Do not touch the HVP or Newton-CG. All commits on
+recompute/consensus-desurv are unpushed; do not push without the PI.

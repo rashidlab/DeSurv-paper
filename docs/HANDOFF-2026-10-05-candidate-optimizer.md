@@ -150,3 +150,43 @@ lowest-curvature directions. That defines a specific numerical problem; it is no
    Newton-CG step); the HVP source (analytic, or central differences of the gradient as in wcond.R); handling of
    negative curvature in CG (Steihaug truncation, so the step stays a descent direction); the monotone line search
    along the projected Newton path with the same S_+^k projection; the CG relative-residual stopping rule.
+
+## PI ruling 2026-10-05, third (settles items 1-5 above; frozen for the amendment-3 draft)
+
+Proposals for items 2-4 adopted; item 3 refined; item 5 constrained on the HVP source.
+
+1. **Budget is per start.** A 30-start fit has up to 30 independent per-start budgets (1,000 outer iterations,
+   25,000 W-block HVPs, 100 HVPs per W solve, each per start). 25,000 HVPs is never a fit-wide pool. The 25,000
+   total is the binding global work cap per start; 100 is only the ceiling for one W solve. Do not relax 25,000
+   on the ground that 1,000 x 100 is larger.
+2. **Cap = failure applies to amendment-3 qualification only, not to the estimator's frozen status logic.** Do not
+   change the existing "nonconverged" status or the start-selection fallback. In production, a start that hits
+   the Newton-CG work cap is nonconverged, with a diagnostic reason recorded (e.g. `work_cap_reached`); the frozen
+   rule may still select the lowest-F nonconverged start if no start converges. In the amendment-3 benchmark, a
+   start that hits the cap means the new solver fails qualification. This keeps the amendment W-solver-only.
+3. **p = 3000: no numerical equivalence to the stalled end point** (that end point is what the solver must escape).
+   Binding requirements, per warm-started end point: (a) satisfy the already-frozen convergence/KKT criterion;
+   (b) F_final <= F_stalled_endpoint; (c) stay within the per-start work budget. No prespecified minimum
+   improvement in F (improvement is expected, not required). Loading and prediction agreement with the stalled end
+   point are reported descriptively only, never as acceptance criteria. Numerical equivalence (F, KKT, loadings,
+   predictions, selected start) applies at p = 150 only, where both algorithms reach stationary solutions and so
+   share a meaningful target.
+4. **Warm-started four end points (starts 1, 5, 9, 16) are the binding realistic-size qualification.** They test
+   the pathology S1-S5 established without mixing in initialization or multi-start selection. The full frozen
+   30-start p = 3000 fits are a secondary end-to-end check, not the amendment-3 pass/fail gate. Before the amended
+   solver is used for the definitive recomputation, those full fits must still show the unchanged multi-start
+   pipeline behaves sensibly under the new W solver. Two distinct questions:
+   - amendment-3 qualification: did Newton-CG fix the diagnosed W-block stall?
+   - end-to-end qualification: does the unchanged estimator pipeline work with the corrected W solver?
+5. **Mechanics are the draft's to specify, with one constraint: analytic Hessian-vector products, not finite
+   differences**, unless a compelling implementation obstacle arises (if one does, report it to the PI; do not
+   substitute differences silently). Rationale: the point is to fix conditioning cleanly; finite-difference noise
+   in the curvature operator makes both convergence and the HVP budget harder to interpret. The draft still fixes
+   the outer-iteration definition, Steihaug negative-curvature truncation, the monotone projected line search, and
+   the CG relative-residual stopping rule.
+
+**Frozen summary:** per-start budgets; cap failure only for qualification; p = 150 equivalence, p = 3000
+convergence plus F_final <= F_endpoint (not endpoint equivalence); four warm end points binding, full 30-start
+fits secondary/end-to-end.
+
+**Next:** write amendment 3 text from the second and third rulings; implement analytic W-block HVP.

@@ -66,3 +66,41 @@ same fit, faster": it needs a documented amendment and full simulated requalific
    numerical solver; the objective, convergence certificate, tuning procedure, and gate rules were unchanged."
 
 Open for amendment 3: the affordable per-fit compute budget (PI to set from real capacity).
+
+## Step 1 result 2026-10-05: conditioning hypothesis SUPPORTED
+
+`analysis/estimator-gate/candidate/tests/out/coordinator/wcond.R` (decision rule S1-S5 written in its header before
+the run), output `wcond.txt`. Simulated data only. Operator: Riemannian Hessian of Psi in W on the active face of
+S_+^k (H, b fixed), Hessian-vector products by central differences (h 1e-5 vs 1e-4 agree to 2e-6), Lanczos 300 steps
+with full reorthogonalization. Four T7 end points (n = 218, starts 1, 5, 9, 16) and a converged p = 150 control
+(dataset 401, n = 60, same hyperparameters; all 5 control starts converge in 270 to 556 iterations).
+
+| | lambda_max | lambda_min | kappa | R_W weight on theta <= 1e-2 lambda_max |
+|---|---|---|---|---|
+| p = 3000, four starts | 47 to 75 | 9.5e-5 to 2.0e-4 | 2.4e5 to 5.0e5 | 0.92 to 0.99 |
+| p = 150 control, two starts | 4.0 to 5.7 | 0.022 to 0.030 | 183 to 190 | 0.96 to 0.99 |
+
+S1-S5 all TRUE at all four end points:
+- S1: 3,000 W-only steps at fixed (H, b) leave r_W at 2.5e-4 to 5.4e-4 (no trend). The W block alone reproduces
+  the stall, so the cause is not W-H-b coupling.
+- S4: the boundary (W = 0, negative gradient) share of ||R_W||^2 is 0.000, so the cause is not active-set
+  identification. Support is essentially full (2,982 to 3,000 of 3,000 per column).
+- S5: no negative curvature, so the point is not a saddle.
+
+Mechanism (per-term Rayleigh quotients at Ritz vectors): the stiff directions are entirely survival curvature
+(3 outliers, 13 to 75). The bulk is reconstruction curvature at about 2e-4, roughly isotropic, which is
+(1 - alpha) H H' / ||X||^2 on the face. The backtracking step settles at t·lambda_max of 1.5 to 2.9, at the edge of
+stability on the stiff modes. That explains why t cycles between 0.008 and 0.125 and r_W oscillates. The bulk then
+contracts by 1 - t·lambda_min, about 1 - 6e-6 per iteration, which is 1e5 to 1e6 iterations per e-fold. The
+residual sits almost entirely in that slow bulk.
+
+Caveat: the control differs in both p and n (150 x 60 against 3000 x 218), so the 1,300x to 2,600x kappa ratio is
+not a pure p effect. Lanczos Ritz extremes bound the true kappa from below.
+
+Solver implication for amendment 3 (a proposal, not decided): the spectrum is a near-isotropic bulk plus a few
+stiff outliers. That is the case where Newton-CG / truncated Newton on the active face converges in roughly
+(outliers + a few) CG steps per outer iteration. A diagonal or k x k (H H') preconditioner alone would not separate
+the outliers from the bulk.
+
+Next: write amendment 3 BEFORE implementing (scope per the PI ruling). Open: the per-fit compute budget for the
+realistic-size convergence criterion (PI to set from real capacity). Do not push.

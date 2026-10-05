@@ -44,7 +44,7 @@ disagree, the frozen files win: stop on that item and report the mismatch. Do no
    output file is missing (counts from the job manifest), never silently on a subset.
 6. `qual_controls.R`: the verifier controls of prespec section 7: Q3 positive control on the failed candidate's four
    stalled T7 starts (1, 5, 9, 16; `sim_data(700, 3000, 218)`), using W at the window ends of the exact-gated D-Q4
-   replay (`candidate/tests/DQ4_step_decomposition.R` and its inputs; find which recorded trajectory gives the window
+   replay (`analysis/estimator-gate/candidate/tests/DQ4_step_decomposition.R` and its inputs; find which recorded trajectory gives the window
    and say so), theta-equivalent s0 b_j / sigma_j(W); must flag all four. Q3 negative control on a converged start.
    Q7 controls on S3 replicate 1's test set (true A > 0.9, true B < -0.9, A + B |D_AB| < 0.1). Q6 control. This uses
    the candidate code read-only and existing candidate outputs; if a needed trajectory is not stored, report what

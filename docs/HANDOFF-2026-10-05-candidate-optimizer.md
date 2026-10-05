@@ -266,3 +266,28 @@ Full record: docs/plans/2026-10-05-dq1-outliers-and-score-collapse.md. In short:
 that carry the end points further along a path where the score scale sigma of the coefficient-carrying factors
 shrinks with no plateau, and every end point has collinear score columns. This may be the statistical-design
 evidence the PI said would be needed to reopen the estimator. D-Q2 threshold NOT frozen; PI decision required.
+
+## D-Q3 DONE 2026-10-05 (prespec 50a79be; results 7b15de6). Amendment 4 ON HOLD for the PI
+
+- 70bb55e + 9964e70: D-Q1 follow-up record. Every end point has collinear score columns; the coefficient-carrying
+  sigma shrinks with no plateau.
+- d01d2b0: D-Q3b. The one-dimensional shrink-to-uniform path is NOT a descent direction. The supervised terms are
+  exactly invariant along it, and reconstruction pays.
+- 7b15de6: D-Q3a.
+  - All three continuations ended on `line_search_failed`, at 1,581-4,604 sweeps.
+  - sigma kept falling (slopes -0.31 to -0.50), scores stayed collinear, F kept decreasing.
+  - Post-hoc: curvature along the residual grew from about 1 to between 1e6 and 4e6, almost all from the rho ridge
+    term (about sigma^-4). From these end points, r_W < 1e-5 cannot be reached in double precision.
+- Full record: `docs/plans/2026-10-05-dq1-outliers-and-score-collapse.md`, section 6.
+
+**Open for the PI:**
+1. Category for D-Q3a: "collapse continues", or mixed, given the unanticipated early numerical termination.
+2. Whether to pre-specify a step-decomposition diagnostic. It would split the long-CG W steps that carry the sigma
+   drop into a shrink part and a rotation part relative to the score direction, using the saved runs only. The aim
+   is to name the descent direction before the estimator is redesigned; the likely targets are the sigma
+   standardization and the rho term's 1/sigma.
+
+**Standing rulings:**
+- No real-data diagnostics until the estimator mechanics are settled.
+- No Amendment 4 draft. Option A, if ever pursued, is a separately qualified Schur wrapper around the frozen H_WW.
+- Nothing pushed.

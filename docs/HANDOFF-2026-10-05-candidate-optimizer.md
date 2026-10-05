@@ -201,3 +201,7 @@ bug fixes only.
 
 **Next:** implementation brief for the analytic W-block HVP and the Newton-CG W step (Q0 first), against the
 frozen text.
+
+**Closed 2026-10-05 (PI).** T4/T9/T10 remapping confirmed as a consistency correction; Armijo acceptance requires
+<G_W, Delta W(t)> < 0; B19 replacement mutant is B19_retraction. Amendment 3 closed. Next session implements
+against the frozen document, analytic HVP and Q0 first; no further solver-design changes.

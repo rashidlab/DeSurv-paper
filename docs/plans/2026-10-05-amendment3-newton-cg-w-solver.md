@@ -84,9 +84,11 @@ there is no straight-line feasibility cap. A trial t is rejected (and halved) if
 entire column, since N is then undefined.
 
 **Line search.** Monotone Armijo backtracking on the actual retracted objective at fixed (H, b): start at t = 1
-(the Newton step), halve, and accept the first t with
-F(W(t)) <= F(W) + 1e-4 <G_W, W(t) - W>  and  F(W(t)) < F(W).
-The sufficient-decrease term uses the actual displacement of the retracted point (the projected-search form of
+(the Newton step), halve, and, with Delta W(t) = W(t) - W, accept the first nonzero trial with
+<G_W, Delta W(t)> < 0  and  F(W(t)) <= F(W) + 1e-4 <G_W, Delta W(t)>.
+Together these give strict decrease F(W(t)) < F(W). If <G_W, Delta W(t)> >= 0 (clipping and renormalization
+have turned the displacement away from descent), the trial is rejected and t is halved; without this guard the
+Armijo inequality could admit an objective increase. The sufficient-decrease term uses the actual displacement of the retracted point (the projected-search form of
 Armijo, Bertsekas 1982), so clipping and renormalization are accounted for; for an unclipped step it equals
 1e-4 t <g, d> to first order. No fallback to the old first-order step. Face changes (coordinates entering and
 leaving the support) are recorded at every accepted step.
@@ -152,7 +154,7 @@ the amended counterpart; every other criterion is unchanged.
 | maxit reached -> nonconverged (T9), maxit 5000 (T4, T7) | maxit = 5000 | per-start cap -> *nonconverged*, `work_cap_reached`; T4 and T7 run to the per-start budget |
 | W step cap test (T9) | t_max = 2 | trial annihilating a column is rejected and halved |
 | mutant B7, accept at the floor (T10) | floor | mutant accepting the last trial after 60 halvings must be killed |
-| mutant B19_cap, W step uncapped (T10) | cap | mutant dropping the Armijo condition (accept t = 1) must be killed |
+| mutant B19_cap, W step uncapped (T10) | cap | mutant B19_retraction, Armijo slope computed as t <G_W, d> instead of <G_W, W(t) - W>, must be killed |
 
 Added assertions: W no-op when r_W < 1e-5 at the start of the block; `nc_first_iter` path uses -g.
 
@@ -216,6 +218,11 @@ procedure, and gate rules were unchanged."
 Also ruled with the items: the p = 3000 qualification is the certificate, the prespecified proportion, monotonicity
 and the budget; a lower F is evidence, not the criterion. This replaces "F_final <= F_stalled_endpoint" as a
 separate binding criterion from the third ruling; it is retained as an implied check under monotonicity.
+
+Post-approval consistency corrections (PI, 2026-10-05, not a reopening): (a) the T4/T9/T10 remapping in Q-T,
+confirmed; (b) the Armijo acceptance requires <G_W, Delta W(t)> < 0 for a nonzero trial, closing a hole in the
+approved rule; (c) the B19 replacement mutant is B19_retraction (slope t <G_W, d>), the implementation error
+specific to the retracted path. The coordinator choices below were confirmed. Amendment 3 is closed.
 
 Implementation choices made by the coordinator to write the rulings down, open to the PI's correction before code
 is written: the strict "<" in the W no-op guard (the certificate uses r < 1e-5); the projected-search Armijo term

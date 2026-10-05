@@ -1,6 +1,6 @@
 # Estimator-redesign specification: rank-3 DeSurv in the theta parameterization (2026-10-05)
 
-**Status: DRAFT (revision 3), ready for independent review, not frozen.** Written under PI ruling 8
+**Status: DRAFT (revision 3, Q3 per ruling 11), awaiting independent Codex review, not frozen.** Written under PI ruling 8
 (`docs/HANDOFF-2026-10-05-candidate-optimizer.md`, "PI ruling 2026-10-05, eighth"). Revision 2 applied PI ruling 9
 and revision 3 applies PI ruling 10 (both in section 10). Next: an independent Codex review, then the PI freezes
 this file. No implementation, no real data and no compute until then. Once frozen, every later output records this
@@ -267,7 +267,7 @@ A *carrying column* is one with |theta_j| > 1e-3 at the endpoint, a numerical ze
 | Q0 | Math | Implementation | Gradient checks against finite differences on every block, F monotone, theta-block KKT verified by an independent evaluator: floating-point tolerances as in gate spec section 4 preconditions |
 | Q1 | Pathology | Ordinary convergence | At every grid configuration and every tuned configuration, at least 90% of starts are converged, with no F increase and no numerical failure. Reason: this is the Gate A convergence precondition applied to the same procedure; a design that fails it on simulations cannot pass it on data |
 | Q2 | Validity (demoted, ruling 10) | Scale trajectory | For every carrying column of every converged start, log(sigma_j(end) / sigma_j(sweep 50)) and the sigma_j trace are reported. Not binding: S3 contains a genuinely predictive low-variance factor, and a proper estimator must be allowed to find low variance. The pathology is cost-free collapse with the score preserved, which Q3 tests |
-| Q3 | Pathology | No preserved-score collapse | Using the D-Q4 decomposition (`analysis/estimator-gate/candidate/tests/DQ4_step_decomposition.R`; log sigma = log r + log g and the score angle depend on W only, so the adaptation changes only the objective-term accounting, b to theta), no carrying column has cumulative change in log g <= -1 while its net standardized-score angle is <= 0.01 rad, over the whole trajectory. Reason: the conjunction is the mechanism (scale lost with the same score preserved), not low sigma alone; the D-Q4 signature was a log g loss of 6 or more with a net angle of at most 0.0023 rad, so both limits sit well inside it |
+| Q3 | Pathology (binding on mechanism, ruling 11) | No recurrence of the score-preserving collapse | The D-Q4 mechanism is scale lost along a low-variance or null-space direction while the same standardized predictor is preserved, without the run converging. Using the D-Q4 decomposition (`analysis/estimator-gate/candidate/tests/DQ4_step_decomposition.R`; log sigma = log r + log g and the score angle depend on W only, so the adaptation changes only the objective-term accounting, b to theta), a start shows recurrence if it is not converged (section 6) and, for some carrying column over its last 25% of sweeps, all of the following hold: (i) the summed change in log sigma_j is negative; (ii) the loss is g-driven, abs(sum Delta log g) > abs(sum Delta log r); (iii) the score is preserved relative to the scale change, net standardized-score angle (rad) < abs(sum Delta log sigma_j). Each condition is a comparison, not a magnitude. Qualification fails if any start at any grid or tuned configuration shows recurrence. A converged start cannot show recurrence: a large legitimate change in score variance (as S3 invites) passes. Together with Q1 (KKT convergence) and Q4 (the sigma-free analytic curvature bound), this is the binding test of the pathology. Reported descriptively against the failed estimator, never as pass/fail limits: cumulative log g and log sigma changes and net angles per carrying column, compared with the D-Q4 reference (log sigma loss 6 to 9, net angle at most 0.0023 rad), and realized curvature compared with the old 1e6 level |
 | Q4 | Math (binding); realized values reported | Bounded curvature | The largest eigenvalue of the W-block Hessian on the active face, by power iteration on HVPs at sweeps 1, 10, 100 and the end, never exceeds the section 2 analytic bound L_W beyond floating-point tolerance. The realized curvature, its ratio across recorded sweeps, the condition number and the slope of log lambda_max on log min_j sigma_j are reported, with no fixed limit (ruling 10: the old factor-100 contrast is historical, not a property of the new estimator) |
 | Q5 | Pathology (predictive part binding) | Multi-start stability | At the centre and tuned configurations, among converged starts, the median across starts of the test-C difference from the returned start is within 0.01, the F2 margin, so that the choice among converged starts cannot cost more than one C point. Reported, not binding: the median Hungarian-matched loading Pearson r of carrying columns with the returned start (0.80 is the Gate B reference value, shown for context), and the share of starts within 1e-4 relative F of the best |
 | Q6 | Pathology (binding F2 safeguard) | Convergence does not destroy generalization | In S1 and S3, at the tuned configuration, for every checkpoint t in T: mean over replicates of the paired difference C_conv - C_t (test C of the converged returned start minus test C of its checkpoint-t iterate) >= -0.01, with each iterate scored by v~ on its own ntop support. Reason (ruling 9): a properly converged estimator may not give up more than one C point to its own finite trajectory. This is deliberately stricter than Gate A's -0.02 against the published estimator. S2 is reported |
@@ -325,10 +325,15 @@ an independent Codex review and, if no substantive problem is found, is frozen b
   (section 2).
 - The Q6 checkpoint set {10, 50, 100, 500} stays exactly as frozen; no checkpoints are added after implementation.
 
-**Open items:** none from the PI rulings. Two coordinator notes for the reviewer and the PI:
-- Q3 keeps its D-Q4-derived limits (log g loss of 1 with net angle <= 0.01 rad). Ruling 10 did not address Q3
-  directly. Under its principle it is the remaining criterion whose numbers come from the failed run's magnitudes,
-  although it does test the mechanism (scale loss with the same score preserved) and not low sigma by itself.
+**PI ruling 2026-10-05, eleventh (on revision 3, 4c0fa56).** (1) Review route: wait for the independent Codex review
+(available 2026-10-09); revision 3 stays unfrozen and nothing is implemented until it is in. (2) Q3 is reworded to bind
+only on the mechanism: KKT convergence (Q1), the derived curvature bound (Q4), and no recurrence of the D-Q4
+score-preserving collapse (Q3). Historical magnitudes (one sixth of the old log sigma loss, curvature below 1e2, the
+old log g and angle limits) are reported against the failed estimator, not used as pass/fail limits. Principle:
+qualification fails if the pathology recurs, not because a scalar crosses a number chosen from the previous
+failure. No further edits to substantive criteria before the Codex review.
+
+**Open items:** none from the PI rulings. One coordinator note for the reviewer and the PI:
 - Q7's power depends on the S3 replicate count R, which the qualification prespec fixes. With R = 5 the one-sided
   bound needs mean D_AB above 2.13 SD / sqrt(5), about 0.95 SD of D_AB; a larger R for S3 alone may be
   worth its compute.

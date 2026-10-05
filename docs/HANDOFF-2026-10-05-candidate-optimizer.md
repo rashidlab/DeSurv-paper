@@ -389,3 +389,9 @@ optional reported. 9d: keep HALS/FISTA, decline a classical PALM theorem claim. 
 **NEXT:** independent Codex review of revision 3 with `docs/plans/2026-10-05-estimator-redesign-codex-prompt.md`. Attempted 2026-10-05: Codex usage limit, available again 2026-10-09 17:11. Re-run from the repo root:
 `codex exec --sandbox read-only -c model_reasoning_effort=medium -o docs/plans/2026-10-05-estimator-redesign-codex-review.md "$(cat docs/plans/2026-10-05-estimator-redesign-codex-prompt.md)"`.
 Then PI freeze, then implementation.
+
+## PI ruling 2026-10-05, eleventh (on spec revision 3)
+
+Wait for the independent Codex review (Oct 9); no freeze or implementation before it. Q3 reworded to bind only on the
+mechanism (non-converged start with g-driven scale loss and a score preserved relative to the scale change, all
+comparisons); historical D-Q4 magnitudes reported descriptively. No further substantive edits before the review.

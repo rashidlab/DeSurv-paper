@@ -109,8 +109,9 @@ increase is also recorded.
 
 **Start and fit status (amendment 2).** Each start ends in one status: *converged* (r < 1e-5 within maxit, no F
 increase), *nonconverged* (maxit reached, all values finite, no numerical failure), or *numerical failure*
-(nonfinite value, step floor, FISTA cap, or any recorded F increase, which the block acceptance rules exclude in
-exact arithmetic). A start ends at the first of: r < 1e-5, maxit, or a numerical failure. Every start keeps its status and full diagnostics (r, r_W, r_H, r_b,
+(nonfinite value, step floor, FISTA cap, or any recorded F increase under the scale-aware definition above,
+which the block acceptance rules exclude in exact arithmetic; differences within that floating-point tolerance
+are not increases). A start ends at the first of: r < 1e-5, maxit, or a numerical failure. Every start keeps its status and full diagnostics (r, r_W, r_H, r_b,
 r_original, final F, iterations, increases, rejected b steps, backtracking counts). A fit returns the
 lowest-final-F *converged* start. If no start converged, the fit is nonconverged and carries the lowest-F
 nonconverged start, flagged; if every start failed numerically, the fit failed. Numerical failures are never
@@ -123,8 +124,14 @@ so the stream matches and is then discarded). W0 is projected onto S_+^k; H by 2
 The comparator's `init()` short runs are not used (they run the zeta objective and choose by training C). Seeds:
 inner fold f = 1..5 of every BO evaluation in outer fold (outer_seed, outer_fold) uses
 S = outer_seed * 100 + outer_fold + 100 (f - 1) (the comparator's `seed_fold` rule with one hyperparameter set per
-call); the outer final fit uses S = outer_seed * 100 + outer_fold + 500. Training C is never used to choose among
-starts.
+call). Start s always uses S + s - 1. Seed namespaces, disjoint by construction (nothing run with them before):
+- inner-fold fits (both arms' comparable randomness): S = outer_seed * 100 + outer_fold + 100 (f - 1), the
+  comparator's rule, range 300101-300834;
+- candidate outer final fit: S = 10,000,000 + 1000 (outer_seed - 3000) + 100 outer_fold, range
+  10,001,100-10,004,529;
+- Gate B full-data inner-fold fits: S = 3000 + 100 (f - 1), range 3000-3429; Gate B full-data final fit:
+  S = 20,000,000, range 20,000,000-20,000,029.
+None overlaps another or the excluded seeds of section 2. Training C is never used to choose among starts.
 
 **Tuning space (inner BO, k = 3 fixed).** logit(alpha) in [logit(1e-4), logit(0.9)]; log10 lambda in [-3, 3];
 nu in [0, 0.95] (nu < 1 keeps the b block strongly convex); log10 rho in [-2, 3]; ntop in [50, 300] (integer).
@@ -136,8 +143,11 @@ boundary hits are reported.
 n_init = 60, n_iter = 120 (20% above the comparator's 150 evaluations, for the extra dimension). Each evaluation:
 inner 5-fold CV C-index with 30 starts per fold, scored with the same ntop truncation and scoring code as the
 comparator, applied to the stored centered vector v~. A configuration is *feasible* only if all five inner-fold
-fits are converged. An infeasible configuration is passed to the BO with the fixed value 0.5 (chance
-concordance), recorded as infeasible, and is never selectable.
+fits are converged. An infeasible configuration has no performance value: it is recorded with an explicit
+infeasible flag and its score is NA, never a number. The engine fits the surrogate and takes the best only over
+rows with status "ok" and a non-missing score (DeSurv 1.0.1 `desurv_cv_bayesopt.R:361`), so infeasible
+evaluations enter neither the GP nor selection. They count toward the n_init + n_iter budget. No feasibility
+surrogate is added (same engine as the comparator).
 
 **Selection.** The feasible evaluated configuration with the highest mean inner-CV C (the same rule as the
 comparator), full precision. If no configuration is feasible, the outer-fold final fit is failed.
@@ -215,6 +225,7 @@ association, pathway enrichment, as in ruling step 1.
 | Clears | Partial or materially different | Candidate becomes primary; narrow the D1 interpretation to what reproduces; hold the paper if the central conclusion disappears |
 | Does not clear (dC < -0.02) | Recovers | Implemented estimator stays primary; candidate reported as a major robustness analysis |
 | Does not clear | Partial or materially different | Implemented estimator stays primary; report which D1 findings depend on the estimator and narrow claims accordingly |
+| Clears | Not evaluable (the frozen procedure yields no converged full-data fit) | Candidate is not eligible to become primary. Report the full-data convergence failure; do not interpret biology. No refitting outside the frozen procedure |
 | Ineligible (convergence precondition fails) | not run | Report as specification failure; another principled route needed (simpler supervised factor model or different regularization structure) |
 
 ## 9. Optional secondary analysis (no decision weight)
@@ -271,3 +282,10 @@ top-270 gene list (A12; covered by the top-ntop overlap metric in section 7), an
   seed schedule) and eps (pooled median over 30 starts) written into the spec; deterministic invalid-input
   failure. (6) Start statuses and failure propagation through starts, BO evaluations (infeasible = 0.5, never
   selected), outer final fits (Gate A ineligible on any failed fit) and Gate B (requires a converged fit).
+- 2026-10-04, amendment 2 rulings (PI, same day, before any step 1 output was read): decision-table row for Gate A
+  clears with Gate B not evaluable (candidate not eligible; technical failure, no biology); infeasible BO
+  configurations carry NA plus an infeasible flag and are excluded from the surrogate and selection, replacing
+  the 0.5 value; seeds given as disjoint namespaces (the earlier +500 final-fit offset overlapped inner-fold seeds
+  of other outer folds in 102 cases; no seed had been used); the F-increase failure uses the existing
+  scale-aware tolerance.
+- **Amendment window closed** after amendment 2 (PI, 2026-10-04). No further amendments.

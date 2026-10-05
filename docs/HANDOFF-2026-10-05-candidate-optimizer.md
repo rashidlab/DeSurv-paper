@@ -409,3 +409,14 @@ P3 Q3 drift = spec-level, P4 Q1 per fit, P5 review B1/B4, P6 compute ceiling).
 The fresh-context review `docs/plans/2026-10-05-estimator-redesign-claude-review.md` (another session, uncommitted,
 4 blocking) bears on the spec freeze alongside Codex.
 **NEXT:** Codex review (Oct 9), PI rules on the review(s) and P1-P6, freeze spec + prespec, then timing-only run.
+
+## Rulings 12-13 and redesign implementation (2026-10-05, late)
+
+Ruling 12: B1 = (a), H ridge lambdaH ||H||_F^2 / (2 ||X||_F^2), lambdaH 1e-6 kept; spec revision 4 (08d378c). Ruling 13
+(same day) reversed 12(3): implementation + p <= 300 smoke tests allowed before freeze; p = 3,000, timing,
+qualification, real data still wait. Implementation `analysis/estimator-gate/redesign/` (6f0c862): smoke S1-S10 all
+PASS; coordinator verification independent (F 1.7e-16, FD gradients 8.8e-9, HALS 2.8e-13; rejected theta steps are
+1-2 ulp roundoff). Reported only: S8 46/108 starts converged within 5,000 sweeps (alpha 1e-4 and lambda 1e-3 corners).
+Prespec: grid = 11 configurations + 1 reference fit (12 fits), S3 wrapper frozen by blob hashes; B3 OPEN.
+**NEXT:** PI rules B3; Codex review (Oct 9, prompt covers rev 4 + prespec; also re-review commits 3739798, 6f0c862);
+freeze; then the timing-only run.

@@ -386,4 +386,6 @@ before implementation; score and loading recovery both assessed. Full record and
 curvature bound and KKT binding; Q5 0.01 predictive binding, 0.80 loading descriptive. 9c: 0.25 primary, 0.50
 optional reported. 9d: keep HALS/FISTA, decline a classical PALM theorem claim. Spec revision 3 applies these.
 
-**NEXT:** independent Codex review of revision 3 with `docs/plans/2026-10-05-estimator-redesign-codex-prompt.md`. Attempted 2026-10-05: Codex usage limit, available again 2026-10-09 17:11. Then PI freeze, then implementation.
+**NEXT:** independent Codex review of revision 3 with `docs/plans/2026-10-05-estimator-redesign-codex-prompt.md`. Attempted 2026-10-05: Codex usage limit, available again 2026-10-09 17:11. Re-run from the repo root:
+`codex exec --sandbox read-only -c model_reasoning_effort=medium -o docs/plans/2026-10-05-estimator-redesign-codex-review.md "$(cat docs/plans/2026-10-05-estimator-redesign-codex-prompt.md)"`.
+Then PI freeze, then implementation.

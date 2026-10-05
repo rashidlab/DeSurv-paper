@@ -244,3 +244,25 @@ committing. Do not touch the HVP. All commits on recompute/consensus-desurv unpu
 joint W-b step or safeguarded acceleration of the full sweep map), plus the prospective test-contract fixes (T10
 mutants, T9 invariant criterion, T7 in scope). Do not touch the HVP or Newton-CG. All commits on
 recompute/consensus-desurv are unpushed; do not push without the PI.
+
+## PI ruling 2026-10-05, Amendment 4 boundary (Option A)
+
+Option A (variable-projection W step) is allowed only through Amendment 4. Amendment 3's `H_WW[V]` is frozen and
+stays byte-for-byte unchanged. Amendment 4 may build a separately derived reduced-objective operator around it,
+H_red[V] = H_WW[V] - H_Wb H_bb^{-1} H_bW[V], and explicitly supersedes "do not touch the HVP" for this wrapper only.
+Three protections are required before it becomes the solver:
+1. Qualify H_red independently, like Q0: compare it to a finite difference of the reduced gradient
+   grad_W F{W, b*(W)}, not the fixed-b gradient. The existing H_WW Q0 stays valid and is not rerun.
+2. b has an L1 term, so the Schur formula holds only on a locally fixed b active/sign set. Record that set at the
+   stalled end points and along the proposed perturbations. If it flips, stop and rethink the derivative.
+3. The line search evaluates the profiled objective phi(W) = F{W, b*(W)}, re-solving b with the frozen solver at
+   every trial W(t).
+Inspect the r_W = 0.32 / 0.16 outlier sweeps and b active-set behaviour before freezing any D-Q2 decision threshold.
+
+## Outlier and active-set inspection 2026-10-05 (descriptive; nothing frozen, nothing run beyond reading saved fits)
+
+Full record: docs/plans/2026-10-05-dq1-outliers-and-score-collapse.md. In short: the b sign/active set never changes
+(protection 2 is met at the end points). The outlier sweeps are not a separate mechanism; they are the long-CG steps
+that carry the end points further along a path where the score scale sigma of the coefficient-carrying factors
+shrinks with no plateau, and every end point has collinear score columns. This may be the statistical-design
+evidence the PI said would be needed to reopen the estimator. D-Q2 threshold NOT frozen; PI decision required.

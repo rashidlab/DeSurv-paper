@@ -194,3 +194,25 @@ Q0 failed at 045f593 on the order clause only. PI ruling: defect of the test, no
 amendment recorded in the frozen amendment, section 10 (half-decade grid 1e-1 to 1e-8, order by eps ratio, two
 consecutive p_k >= 1.5, descriptive roundoff classification). HVP code untouched. Original result retained;
 amended result appended. Stage B blocked until amended Q0 passes on all 5,400 directions.
+
+## PI ruling 2026-10-05, Stage B interpretation (recorded before any Stage B result exists)
+
+Recorded and committed while the Stage B subagent was running, before it returned any result.
+
+- **Residual drift, tier (c), binding.** At a CG exit whose reason is forcing, the recursive residual met
+  min(0.5, sqrt(||g||)) ||g|| but the directly computed ||Hess d + g|| did not. Any such event in an
+  instrumented solve (every Q1 solve, the seeded Q-T sample) is a qualification failure.
+- **All other drift is descriptive only.** There is no negligible/appreciable threshold, now or later, and it has
+  no effect on qualification. Report the raw quantities: maximum relative disagreement, quantiles (median, IQR and
+  tails), broken down by CG exit reason, plus a statement of whether any tier-(c) event occurred. This supersedes
+  the (a)/(b) split in the instruction sent to the subagent.
+- **Q2 settings.** If the frozen documents do not uniquely fix the dataset, seed and hyperparameters for "the
+  p = 150 control settings", Q2 is not run, not even exploratory. The subagent returns the candidate definitions
+  with file:line, and the PI selects one prospectively.
+- **Stop on failure.** A failure of any Q-T test, Q1 below 4/4, a tier-(c) event, or Q2 failing any frozen
+  criterion is recorded and the run stops. No tolerance changes, CG changes, budget increases, or reruns under
+  altered settings (amendment section 7).
+- **Q3 not run** in Stage B. It is descriptive and not part of amendment-3 qualification.
+
+Qualification outcome: amendment 3 qualifies if Q-T passes, Q1 is 4/4, no tier-(c) event occurs, and Q2 meets
+the frozen equivalence criteria.

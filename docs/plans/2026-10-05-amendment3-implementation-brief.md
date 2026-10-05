@@ -231,7 +231,7 @@ Test-contract rulings, prospective (they apply to the next qualification run, no
   unit tests, so that every intended defect class is exercised. The standard stays at "all intended defects caught".
 - **Q1 budget boundary.** The check is strict: sweeps < 1,000 and HVPs < 25,000. Converging exactly at a cap does
   not qualify. Production may still report such a start as converged; qualification is intentionally stricter.
-  `tests/Q1_warm.R` line 57 is changed accordingly. This does not change the 0c44cca verdict (the passing start used
+  `tests/Q1_warm.R` line 58 is changed accordingly. This does not change the 0c44cca verdict (the passing start used
   9 sweeps and 119 HVPs).
 - **Q2.** No control definition is chosen now, since Q2 is moot after the amendment-3 failure. If a later amendment
   reaches Q2, the PI chooses from the candidates in `AMENDMENT3_REPORT.md` (Stage B, Q2) before that run.

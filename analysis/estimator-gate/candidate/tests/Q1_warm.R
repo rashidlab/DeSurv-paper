@@ -55,7 +55,7 @@ cat("\ndescriptive agreement with the stalled end point (not criteria): min colu
 print(tab[, c("start", "cos_min", "eta_pearson")], digits = 6)
 c1 <- tab$status == "converged" & tab$r < 1e-5
 c2 <- tab$inc_counter == 0 & tab$inc_recount == 0 & tab$first_sweep_vs_stalled <= 1e-13 * pmax(1, abs(tab$F_stalled)) & tab$F_final <= tab$F_stalled
-c3 <- tab$sweeps <= 1000 & tab$hvp_total <= 25000 & tab$reason != "work_cap_reached"
+c3 <- tab$sweeps < 1000 & tab$hvp_total < 25000 & tab$reason != "work_cap_reached"
 cat(sprintf("\ncriteria per start (1 certificate, 2 monotone incl. F_final <= F_stalled, 3 budget): %s\n",
             paste(sprintf("start %d: %s/%s/%s", tab$start, c1, c2, c3), collapse = "; ")))
 npass <- sum(c1 & c2 & c3)

@@ -291,3 +291,22 @@ evidence the PI said would be needed to reopen the estimator. D-Q2 threshold NOT
 - No real-data diagnostics until the estimator mechanics are settled.
 - No Amendment 4 draft. Option A, if ever pursued, is a separately qualified Schur wrapper around the frozen H_WW.
 - Nothing pushed.
+
+## PI ruling 2026-10-05, fifth and sixth (settle the two open items above)
+
+1. D-Q3a = "collapse continues", with the numerical-endpoint caveat (wording in the D-Q1 record, section 7). Option A
+   stops. The burden of proof is on any fourth solver amendment: it would have to explain why a better optimizer
+   helps on a trajectory whose curvature is becoming singular.
+2. Step-decomposition diagnostic (D-Q4) approved: pre-specify, then an instrumentation-only deterministic replay of
+   the D-Q3a runs (starts 1, 5, 16), gated on exact reproduction of the saved trajectory, decomposition computed
+   online at every accepted W step, summaries only saved. Primary decomposition in centered score space; PW space
+   secondary. Every accepted step, stratified afterwards by recorded CG count. Descriptive, non-gating.
+3. No Amendment 4 draft. 4. No real data.
+
+**D-Q4 draft:** `docs/plans/2026-10-05-dq4-step-decomposition-prespec.md`, NOT frozen. Open for the PI:
+- Q-A. In score space the orthogonal part can only raise ||z|| (Pythagoras), so all sigma loss is assigned to shrink
+  by construction and "mostly rotation" is unobservable. Proposal: attribute sigma loss with the exact loading
+  identity sigma~ = ||P w|| g(v), keep score space as the description of direction change.
+- Q-B. Cutoffs S >= 0.75 / S <= 0.25 (coordinator proposal).
+- Coverage note (section 6 of the draft): the D-Q3a window holds only about 5-22% of the log-sigma drop; most of it
+  is in Q1 sweeps 1-1,000. Optional addition, same gate pattern.

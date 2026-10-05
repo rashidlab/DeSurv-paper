@@ -150,3 +150,16 @@ Rayleigh quotient of the W-block Hessian along the face-tangent residual g:
   points.
 - D-Q3b shows the mechanism is not a free shrink toward uniform. The descent that lowers sigma runs along a
   different direction, which these diagnostics have not identified.
+
+## 7. PI classification of D-Q3a (ruling 2026-10-05, fifth)
+
+D-Q3a = **"collapse continues"**, with a numerical-endpoint caveat; not "mixed". All pre-specified signals occurred:
+sustained downward sigma, persistent score collapse, continued decline in F, compensating growth in beta, no
+interior stabilization. The `line_search_failed` ending is read as a consequence of the same trajectory (curvature
+growing to 1e6 and beyond while useful F changes fall to machine precision), not as a contradiction of it.
+
+Wording to use: D-Q3 supports the pre-specified "collapse continues" interpretation over the entire numerically
+observable trajectory. The runs terminated from loss of double-precision resolution before the planned sweep limit,
+so this does not prove the absence of a mathematical minimizer. It shows that no usable interior stationary point
+was approached before the parameterization became numerically singular/stiff. Do not claim "the objective has no
+minimizer". What is shown is enough to reject a solver-speed explanation and to stop Option A.

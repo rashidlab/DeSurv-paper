@@ -363,5 +363,6 @@ Open items the spec draft must list for the PI (coordinator notes, not decisions
   Tuning ranges for lambda (and nu) must be stated relative to the score scale (rank X, p = 3,000), and whether to
   rescale is a spec choice.
 - The rho term moves from P W diag(1/sigma) b to P W beta; its scaling constant (currently sb2 / 2) needs restating.
-- Comparator: confirm "current implemented estimator" means the production DeSurv fit (published k = 3 config, full
-  precision), not the PALM candidate.
+- Comparator: confirm "current implemented estimator" means the production DeSurv fitting procedure (k = 3, tuned
+  by fresh inner BO in every outer fold per docs/plans/2026-10-04-estimator-gate-spec.md), not the PALM candidate
+  and not the published hyperparameters.

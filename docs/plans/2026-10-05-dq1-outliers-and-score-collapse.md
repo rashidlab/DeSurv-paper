@@ -42,7 +42,7 @@ Standardized score columns Zs = Zc / sigma(W) at the end points:
 - Every start's Cox predictor is a single score direction. When columns are collinear, b is split equally across
   them, which is the ridge grouping effect.
 - Lower F goes with more collinear columns. The lowest-F class (three collinear) is the most degenerate.
-- Q1 start 3 is the one start that converged (9 sweeps). It is in the single class.
+- Q1 start 9 (the third saved Q1 fit) is the one start that converged (9 sweeps). It is in the single class.
 - The three stalled Q1 starts (1, 5, 16) are in the collinear classes. Their W columns have moved from cosine about
   0.8 (T7) to 0.993-0.999, and their H rows have |cor| 1.000.
 
@@ -77,7 +77,8 @@ Shown:
 
 Not shown:
 - Whether F reaches a minimum at a finite sigma above eps, or keeps decreasing until the eps floor.
-- Whether the same thing happens on real data, which is not rank-transformed per sample in the same way.
+- Whether the same thing happens on real data. The frozen spec also uses within-sample ranks there (spec lines 25, 56),
+  so X'u is constant across samples on real data as well; the structural precondition is not specific to the fixture.
 - Whether scale invariance (standardization by sigma(W), with the rho term built from P W diag(1/sigma) b) makes the
   supervised part of the objective nearly free to move away from reconstruction. That is a hypothesis, not a result.
 

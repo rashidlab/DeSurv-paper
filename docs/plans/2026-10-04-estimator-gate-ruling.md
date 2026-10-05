@@ -43,14 +43,19 @@ justified by a properly specified model.
 | Any | Materially different | Determine which parts of the D1 interpretation survive and narrow claims; hold or rework if the central conclusion disappears |
 | Fails badly | Different | Not evidence against D1 (poor estimator, poor control); needs another principled route (simpler supervised factor model or different regularization structure) |
 
-Prior evidence, stated so it is not forgotten: every regularized pilot so far lost held-out C against the
-implemented procedure (best -0.017). The candidate is a competing method, not a presumed improvement.
+Prior evidence, stated so it is not forgotten: on fresh partitions (seeds 2001-2003) every regularized pilot arm
+lost held-out C against the implemented procedure (best -0.017). One arm gained +0.023 on the already-examined
+item-4 folds, and that gain did not replicate on fresh folds (-0.030); see
+`analysis/audit-verification/regularization_design_memo.md` section 5. The candidate is a competing method, not a
+presumed improvement.
 
 ## Process safeguards (coordinator)
 
 - The specification (step 2) and the selection rule (step 3) are committed before step 1 results are read, so
   the triage cannot steer the regularizer's design. The commit hash of the frozen specification is recorded in
   every later output.
+- Partition seeds 123-126 (item 4) and 2001-2003 (feasibility check) have been examined and may not be reused for
+  tuning, selection or evaluation.
 - Selection scripts compute no biology outputs; the step-4 script runs only against a committed selection.
 - Open PI decision required before step 2 is frozen: the noninferiority margin for held-out C.
 - The closure items (F1 disclosure, F4 sentence, 09a fallback, manifest) proceed independently. The F2 wording

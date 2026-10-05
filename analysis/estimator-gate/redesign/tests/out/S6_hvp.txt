@@ -1,0 +1,16 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/redesign/tests/out/S6_hvp.txt"
+S6 W-block HVP | 2026-10-05 17:45:17 
+data: p=30 n=50 events=26 tied times=21 s0=2.1189 lambda_1(XCX^T)=3.1230e+03
+  pt 1: alpha 1e-03 rho 1e-02 |theta| 7.01  breslow_hvp vs FD(g) 6.93e-12  HVP vs FD 6.32e-12  asym 3.07e-16  lambda_max 1.3931e+00  L_W 3.4185e+01  ratio 4.075e-02
+  pt 2: alpha 5e-01 rho 1e-02 |theta| 15.34  breslow_hvp vs FD(g) 3.89e-11  HVP vs FD 5.97e-11  asym 1.14e-15  lambda_max 3.8502e+02  L_W 8.1797e+04  ratio 4.707e-03
+  pt 3: alpha 5e-01 rho 1e+03 |theta| 1.60  breslow_hvp vs FD(g) 2.72e-12  HVP vs FD 3.56e-13  asym 1.14e-17  lambda_max 1.3204e+03  L_W 2.1655e+03  ratio 6.097e-01
+  pt 4: alpha 9e-01 rho 1e+00 |theta| 27.41  breslow_hvp vs FD(g) 7.67e-11  HVP vs FD 2.15e-11  asym 8.75e-16  lambda_max 4.3008e+03  L_W 4.7116e+05  ratio 9.128e-03
+  pt 5: alpha 9e-01 rho 1e+03 |theta| 15.15  breslow_hvp vs FD(g) 2.82e-11  HVP vs FD 2.95e-13  asym 6.77e-18  lambda_max 2.0741e+05  L_W 3.5014e+05  ratio 5.924e-01
+
+  breslow_hvp = d g / d eta (sign convention)             checks    5  passed    5  max err 7.667e-11  (tol 1e-06)
+  palm_hvp_W vs FD of palm_grad_W                         checks    5  passed    5  max err 5.966e-11  (tol 1e-06)
+  dense Hessian symmetry                                  checks    5  passed    5  max err 1.138e-15  (tol 1e-08)
+  lambda_max <= L_W (1 + 1e-8): excess ratio              checks    5  passed    5  max err 0.000e+00  (tol 0e+00)
+
+S6 TOTAL: checks run 20, passed 20, max error 7.667e-11
+VERDICT: PASS

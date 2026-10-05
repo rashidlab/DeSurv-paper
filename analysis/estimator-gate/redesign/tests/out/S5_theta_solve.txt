@@ -1,0 +1,20 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/redesign/tests/out/S5_theta_solve.txt"
+S5 theta solve | 2026-10-05 17:45:17 
+data: p=80 n=50 events=31 tied times=23
+  cfg  1: alpha 2.65e-01 lambda 6.01e-02 nu 0.695 rho 3.03e-01  conv TRUE it 64  theta = (0.07178, -0.1078, -2.256)  oracle KKT 8.57e-11
+  cfg  2: alpha 4.40e-01 lambda 1.96e+02 nu 0.053 rho 6.33e+01  conv TRUE it 0  theta = (0, 0, 0)  oracle KKT 0.00e+00
+  cfg  3: alpha 1.27e-01 lambda 9.60e-03 nu 0.207 rho 2.28e-01  conv TRUE it 46  theta = (0.1114, 0.977, 2.403)  oracle KKT 1.71e-11
+  cfg  4: alpha 5.03e-03 lambda 6.73e+01 nu 0.949 rho 1.15e-01  conv TRUE it 0  theta = (0, 0, 0)  oracle KKT 0.00e+00
+  cfg  5: alpha 4.46e-04 lambda 1.06e+00 nu 0.095 rho 2.84e-02  conv TRUE it 34  theta = (0, -0.2083, -0.5097)  oracle KKT 6.50e-11
+  cfg  6: alpha 8.02e-02 lambda 3.87e+01 nu 0.034 rho 1.55e+00  conv TRUE it 0  theta = (0, 0, 0)  oracle KKT 0.00e+00
+  cfg  7: alpha 6.21e-01 lambda 4.11e-02 nu 0.772 rho 5.38e-01  conv TRUE it 35  theta = (-1.027, 0.09512, 1.724)  oracle KKT 9.11e-11
+  cfg  8: alpha 8.70e-03 lambda 3.62e+02 nu 0.179 rho 1.19e-02  conv TRUE it 0  theta = (0, 0, 0)  oracle KKT 0.00e+00
+  cfg  9: alpha 1.71e-01 lambda 2.12e+00 nu 0.024 rho 5.04e-02  conv TRUE it 41  theta = (0.1687, 0, -0.07282)  oracle KKT 6.27e-11
+  cfg 10: alpha 8.98e-01 lambda 4.48e-01 nu 0.432 rho 2.02e+01  conv TRUE it 30  theta = (-0, -0.03718, 0.01423)  oracle KKT 3.89e-11
+
+  solve_theta converged flag (1 = not converged)          checks   10  passed   10  max err 0.000e+00  (tol 0e+00)
+  oracle KKT after solve_theta                            checks   10  passed   10  max err 9.110e-11  (tol 1e-10)
+  theta_lib vs oracle gradient (10 x 4 points)            checks   40  passed   40  max err 7.648e-16  (tol 1e-10)
+
+S5 TOTAL: checks run 60, passed 60, max error 9.110e-11
+VERDICT: PASS

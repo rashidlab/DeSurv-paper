@@ -1,0 +1,19 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/redesign/tests/out/S3_candidate_identity.txt"
+S3 identity with the frozen candidate | 2026-10-05 17:45:16 
+data: p=80 n=50 events=28 tied times=22
+  point  1: rho 2.749e+02  surv 8.653426962843682e+00 vs 8.653426962843684e+00 (rel 2.05e-16)  ridge 5.229936680859623e+02 vs 5.229936680859623e+02 (rel 0.00e+00)
+  point  2: rho 8.581e+01  surv 7.973339033830149e+00 vs 7.973339033830149e+00 (rel 0.00e+00)  ridge 2.827042680495711e+02 vs 2.827042680495711e+02 (rel 2.01e-16)
+  point  3: rho 5.704e-02  surv 1.579166756481289e+01 vs 1.579166756481289e+01 (rel 1.12e-16)  ridge 1.911732265469344e-01 vs 1.911732265469350e-01 (rel 3.48e-15)
+  point  4: rho 2.056e-02  surv 7.456679938001259e+00 vs 7.456679938001258e+00 (rel 1.19e-16)  ridge 4.762080351845488e-02 vs 4.762080351845466e-02 (rel 4.66e-15)
+  point  5: rho 6.227e+02  surv 6.428309742744696e+00 vs 6.428309742744696e+00 (rel 0.00e+00)  ridge 2.383930836948597e+02 vs 2.383930836948597e+02 (rel 1.19e-16)
+  point  6: rho 2.488e+02  surv 6.847064527221162e+00 vs 6.847064527221161e+00 (rel 1.30e-16)  ridge 1.843629449816491e+02 vs 1.843629449816491e+02 (rel 0.00e+00)
+  point  7: rho 1.326e+00  surv 1.269570472423508e+01 vs 1.269570472423508e+01 (rel 0.00e+00)  ridge 7.283301375232318e+00 vs 7.283301375232320e+00 (rel 2.44e-16)
+  point  8: rho 5.116e-02  surv 6.505364184553678e+00 vs 6.505364184553677e+00 (rel 1.37e-16)  ridge 1.249348820494384e-01 vs 1.249348820494385e-01 (rel 5.55e-16)
+  point  9: rho 1.711e+02  surv 1.299780339067084e+01 vs 1.299780339067084e+01 (rel 1.37e-16)  ridge 5.923749443811570e+02 vs 5.923749443811570e+02 (rel 0.00e+00)
+  point 10: rho 3.261e+00  surv 9.620239015780726e+00 vs 9.620239015780726e+00 (rel 0.00e+00)  ridge 4.168824181906599e+00 vs 4.168824181906601e+00 (rel 4.26e-16)
+
+  survival term: theta_lib vs candidate ref_F             checks   10  passed   10  max err 2.053e-16  (tol 1e-12)
+  rho term: theta_lib vs candidate ref_F                  checks   10  passed   10  max err 4.663e-15  (tol 1e-12)
+
+S3 TOTAL: checks run 20, passed 20, max error 4.663e-15
+VERDICT: PASS

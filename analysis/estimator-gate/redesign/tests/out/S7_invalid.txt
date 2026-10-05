@@ -1,0 +1,14 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/redesign/tests/out/S7_invalid.txt"
+S7 invalid input | 2026-10-05 17:45:18 
+  n < 2        -> palm_data: need n >= 2 samples (columns of X)  [ok]
+  n_e = 0      -> palm_data: no events (n_e = 0)  [ok]
+  nonfinite X  -> palm_data: X has non-finite entries (NA, NaN or Inf)  [ok]
+  nonfinite y  -> palm_data: y has non-finite or non-numeric entries  [ok]
+  nonfinite d  -> palm_data: d has non-finite entries  [ok]
+  ||X|| = 0    -> palm_data: ||X|| = 0  [ok]
+  s0 = 0       -> palm_data: s0 = 0 (every gene is constant across samples)  [ok]
+
+  invalid input errors with the expected message (1 = fail) checks    7  passed    7  max err 0.000e+00  (tol 0e+00)
+
+S7 TOTAL: checks run 7, passed 7, max error 0.000e+00
+VERDICT: PASS

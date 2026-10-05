@@ -1,0 +1,22 @@
+S9 end to end | 2026-10-05 17:50:38 
+train: p=300 n=120 events=71 tied times=74 s0=6.090044 lambda_1(XCX^T)=5.700651e+05 | test n=200 events=122
+ start    status reason         F iter            r           rW           rH       rtheta   r_original ninc theta_rejected w_backtracks w_null_steps theta_iters
+     1 converged        0.3451401 3236 9.991308e-06 9.991308e-06 7.172512e-06 7.113410e-08 9.971456e-06    0             80         2694            0      158213
+     2 converged        0.3455519 4336 9.652008e-06 6.749371e-06 9.652008e-06 6.006728e-11 6.749317e-06    0              0           98            0       75678
+     3 converged        0.3455519 4797 9.989260e-06 6.580522e-06 9.989260e-06 5.708167e-11 6.580471e-06    0              0          112            0       87611
+     4 converged        0.3502610 2390 9.987181e-06 6.145558e-06 9.987181e-06 5.456735e-11 6.145555e-06    0            352            6            0       28632
+     5 converged        0.3502612 3103 9.992565e-06 7.373314e-06 9.992565e-06 1.895595e-08 7.373318e-06    0            483           91            0       44029
+
+fit status converged, returned start 1, final F 3.4514010608e-01
+theta = (0, 0.268326, -0.136773); beta = theta/s0 = (0, 0.0440598, -0.0224585)
+support |G| = 147 genes; held-out C = 0.8513; cor(score, true linear predictor) = 0.9736 (descriptive only)
+recording: 323 column-statistic rows (every 10th sweep of 3236 sweeps); checkpoints stored: 10, 50, 100, 500, 3750, end
+
+  fit returned a start (1 = status failed)                checks    1  passed    1  max err 0.000e+00  (tol 0e+00)
+  test scores finite (1 = any nonfinite)                  checks    1  passed    1  max err 0.000e+00  (tol 0e+00)
+  rerun bit-identical (1 = differs)                       checks    1  passed    1  max err 0.000e+00  (tol 0e+00)
+  recording complete (1 = missing checkpoint or column rows) checks    1  passed    1  max err 0.000e+00  (tol 0e+00)
+  F increases over the 5 starts (reported only): 0
+
+S9 TOTAL: checks run 4, passed 4, max error 0.000e+00
+VERDICT: PASS

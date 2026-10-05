@@ -1,0 +1,9 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/redesign/tests/out/S10_draw.txt"
+S10 initial draw | 2026-10-05 17:45:18 
+
+  W0 identical (1 = differs), 3 seeds x 30 starts         checks   90  passed   90  max err 0.000e+00  (tol 0e+00)
+  proj_S(W0) identical (1 = differs)                      checks   90  passed   90  max err 0.000e+00  (tol 0e+00)
+  RNG stream after the draw identical (1 = differs)       checks   90  passed   90  max err 0.000e+00  (tol 0e+00)
+
+S10 TOTAL: checks run 270, passed 270, max error 0.000e+00
+VERDICT: PASS

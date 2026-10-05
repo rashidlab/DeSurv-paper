@@ -1,0 +1,18 @@
+S4 HALS | 2026-10-05 17:45:43 
+data: p=80 n=50 events=31 tied times=22
+  alpha 1e-04 rep 1: zero entries after sweep 1 = 0 of 150
+  alpha 1e-04 rep 2: zero entries after sweep 1 = 0 of 150
+  alpha 1e-04 rep 3: zero entries after sweep 1 = 100 of 150
+  alpha 3e-01 rep 1: zero entries after sweep 1 = 0 of 150
+  alpha 3e-01 rep 2: zero entries after sweep 1 = 0 of 150
+  alpha 3e-01 rep 3: zero entries after sweep 1 = 100 of 150
+  alpha 9e-01 rep 1: zero entries after sweep 1 = 0 of 150
+  alpha 9e-01 rep 2: zero entries after sweep 1 = 0 of 150
+  alpha 9e-01 rep 3: zero entries after sweep 1 = 100 of 150
+
+  row KKT after one sweep (9 configs x 3 rows)            checks   27  passed   27  max err 4.547e-15  (tol 1e-12)
+  F increase over 50 sweeps (relative, 9 x 50)            checks  450  passed  450  max err 1.790e-16  (tol 1e-13)
+  strict raw increases (fn > f, any size): 7
+
+S4 TOTAL: checks run 477, passed 477, max error 4.547e-15
+VERDICT: PASS

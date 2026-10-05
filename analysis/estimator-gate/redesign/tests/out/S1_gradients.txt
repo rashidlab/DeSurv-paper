@@ -1,0 +1,17 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/redesign/tests/out/S1_gradients.txt"
+S1 gradients | 2026-10-05 17:45:15 
+data: p=80 n=50 events=28 tied times=22 s0=2.556672
+
+per block (12 points x 3 directions):
+  grad_W vs FD of Psi                                     checks   36  passed   36  max err 3.753e-10  (tol 1e-06)
+  grad_H vs FD of Psi                                     checks   36  passed   36  max err 1.422e-09  (tol 1e-06)
+  alpha * theta-subproblem grad vs FD of Psi              checks   36  passed   36  max err 1.310e-10  (tol 1e-06)
+
+worst relative error by alpha x rho:
+       rho
+alpha       0.01     1000
+  0.001 1.39e-10 4.47e-12
+  0.5   3.75e-10 1.42e-09
+
+S1 TOTAL: checks run 108, passed 108, max error 1.422e-09
+VERDICT: PASS

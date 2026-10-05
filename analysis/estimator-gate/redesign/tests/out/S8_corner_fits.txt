@@ -1,0 +1,49 @@
+S8 corner fits | 2026-10-05 17:46:19 
+data: p=80 n=50 events=35 tied times=20 s0=3.389016 lambda_1=2.351167e+04
+ cfg alpha lambda   rho   nu          fit conv noncv fail finc numfail th_rej iter_max    r_max reasons
+   1 1e-04  1e-03 1e-02 0.00    converged    1     2    0    0       0      0     5000 3.37e-05        
+   2 3e-01  1e-03 1e-02 0.00 nonconverged    0     3    0    0       0      0     5000 3.57e-02        
+   3 9e-01  1e-03 1e-02 0.00 nonconverged    0     3    0    0       0      0     5000 1.52e-01        
+   4 1e-04  1e+00 1e-02 0.00    converged    1     2    0    0       0      0     5000 1.21e-04        
+   5 3e-01  1e+00 1e-02 0.00    converged    3     0    0    0       0      0     1477 9.97e-06        
+   6 9e-01  1e+00 1e-02 0.00    converged    3     0    0    0       0      0      487 1.00e-05        
+   7 1e-04  1e+03 1e-02 0.00    converged    1     2    0    0       0      0     5000 3.41e-05        
+   8 3e-01  1e+03 1e-02 0.00    converged    3     0    0    0       0      0      873 9.96e-06        
+   9 9e-01  1e+03 1e-02 0.00    converged    3     0    0    0       0      9      318 1.00e-05        
+  10 1e-04  1e-03 1e+03 0.00    converged    1     2    0    0       0      0     5000 3.45e-05        
+  11 3e-01  1e-03 1e+03 0.00 nonconverged    0     3    0    0       0      0     5000 2.39e-05        
+  12 9e-01  1e-03 1e+03 0.00 nonconverged    0     3    0    0       0      0     5000 1.55e-04        
+  13 1e-04  1e+00 1e+03 0.00    converged    1     2    0    0       0      0     5000 3.41e-05        
+  14 3e-01  1e+00 1e+03 0.00    converged    1     2    0    0       0      0     5000 2.16e-05        
+  15 9e-01  1e+00 1e+03 0.00 nonconverged    0     3    0    0       0      0     5000 2.76e-05        
+  16 1e-04  1e+03 1e+03 0.00    converged    1     2    0    0       0      0     5000 3.41e-05        
+  17 3e-01  1e+03 1e+03 0.00    converged    3     0    0    0       0      0     4053 9.99e-06        
+  18 9e-01  1e+03 1e+03 0.00    converged    3     0    0    0       0    108     1617 1.00e-05        
+  19 1e-04  1e-03 1e-02 0.95    converged    1     2    0    0       0      0     5000 3.40e-05        
+  20 3e-01  1e-03 1e-02 0.95 nonconverged    0     3    0    0       0      0     5000 4.41e-02        
+  21 9e-01  1e-03 1e-02 0.95 nonconverged    0     3    0    0       0      0     5000 1.18e-01        
+  22 1e-04  1e+00 1e-02 0.95    converged    3     0    0    0       0      0     3646 1.00e-05        
+  23 3e-01  1e+00 1e-02 0.95    converged    3     0    0    0       0    686     2960 9.99e-06        
+  24 9e-01  1e+00 1e-02 0.95 nonconverged    0     3    0    0       0      0     5000 1.15e-04        
+  25 1e-04  1e+03 1e-02 0.95    converged    1     2    0    0       0      0     5000 3.45e-05        
+  26 3e-01  1e+03 1e-02 0.95    converged    1     2    0    0       0      0     5000 3.34e-05        
+  27 9e-01  1e+03 1e-02 0.95    converged    1     2    0    0       0      0     5000 4.64e-05        
+  28 1e-04  1e-03 1e+03 0.95    converged    1     2    0    0       0      0     5000 3.45e-05        
+  29 3e-01  1e-03 1e+03 0.95    converged    1     2    0    0       0      0     5000 4.79e-05        
+  30 9e-01  1e-03 1e+03 0.95 nonconverged    0     3    0    0       0      0     5000 4.63e-05        
+  31 1e-04  1e+00 1e+03 0.95    converged    1     2    0    0       0      0     5000 3.43e-05        
+  32 3e-01  1e+00 1e+03 0.95    converged    3     0    0    0       0    280     2851 9.98e-06        
+  33 9e-01  1e+00 1e+03 0.95    converged    2     1    0    0       0   2122     5000 1.35e-04        
+  34 1e-04  1e+03 1e+03 0.95    converged    1     2    0    0       0      0     5000 3.45e-05        
+  35 3e-01  1e+03 1e+03 0.95    converged    1     2    0    0       0      0     5000 3.34e-05        
+  36 9e-01  1e+03 1e+03 0.95    converged    1     2    0    0       0      0     5000 4.64e-05        
+
+starts: 108; converged 46, nonconverged 62, failure 0
+fits: converged 27, nonconverged 9, failed 0 (reported only)
+theta steps rejected (F would increase): 3205
+
+  F increases per start (108 starts)                      checks  108  passed  108  max err 0.000e+00  (tol 0e+00)
+  numerical failures per start (1 = failure without F increase) checks  108  passed  108  max err 0.000e+00  (tol 0e+00)
+
+S8 TOTAL: checks run 216, passed 216, max error 0.000e+00
+VERDICT: PASS

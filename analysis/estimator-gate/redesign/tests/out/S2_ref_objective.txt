@@ -1,0 +1,29 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/redesign/tests/out/S2_ref_objective.txt"
+S2 reference objective | 2026-10-05 17:45:16 
+data: p=80 n=50 events=30 tied times=19
+  point  1: alpha 9.777e-02 lambda 1.002e-02 nu 0.347 rho 1.579e-02  F lib 1.399114582767461e+00 ref 1.399114582767461e+00 rel 0.00e+00
+  point  2: alpha 4.348e-04 lambda 1.049e+01 nu 0.313 rho 1.044e-01  F lib 4.606834618998576e-01 ref 4.606834618998576e-01 rel 0.00e+00
+  point  3: alpha 6.989e-04 lambda 6.391e-01 nu 0.440 rho 8.599e-02  F lib 3.981776878803182e-01 ref 3.981776878803182e-01 rel 0.00e+00
+  point  4: alpha 1.197e-02 lambda 2.273e-03 nu 0.000 rho 1.669e+02  F lib 6.175292884661801e+00 ref 6.175292884661801e+00 rel 0.00e+00
+  point  5: alpha 8.785e-01 lambda 5.215e-03 nu 0.494 rho 5.440e+01  F lib 1.981429578132472e+01 ref 1.981429578132471e+01 rel 3.59e-16
+  point  6: alpha 6.459e-01 lambda 6.667e-01 nu 0.804 rho 2.610e-02  F lib 7.518561372408822e+00 ref 7.518561372408821e+00 rel 1.18e-16
+  point  7: alpha 7.301e-03 lambda 4.633e+02 nu 0.573 rho 3.128e-02  F lib 4.544039733953559e+01 ref 4.544039733953559e+01 rel 0.00e+00
+  point  8: alpha 1.203e-01 lambda 7.213e-01 nu 0.909 rho 2.456e+02  F lib 7.975924091061054e+01 ref 7.975924091061056e+01 rel 1.78e-16
+  point  9: alpha 8.507e-01 lambda 1.122e+00 nu 0.434 rho 1.807e+00  F lib 2.217740252479067e+01 ref 2.217740252479068e+01 rel 1.60e-16
+  point 10: alpha 3.326e-02 lambda 1.025e+02 nu 0.848 rho 1.699e+00  F lib 1.155325874065230e+01 ref 1.155325874065229e+01 rel 1.54e-16
+  point 11: alpha 1.454e-03 lambda 2.701e+02 nu 0.921 rho 5.261e-01  F lib 2.076064070002306e+00 ref 2.076064070002307e+00 rel 2.14e-16
+  point 12: alpha 1.010e-02 lambda 1.172e+02 nu 0.713 rho 7.673e-02  F lib 1.639074930640006e+01 ref 1.639074930640006e+01 rel 0.00e+00
+  point 13: alpha 1.290e-04 lambda 1.264e-01 nu 0.598 rho 8.235e+00  F lib 3.836898302261422e-01 ref 3.836898302261421e-01 rel 1.45e-16
+  point 14: alpha 3.834e-03 lambda 3.892e+02 nu 0.490 rho 1.256e+00  F lib 2.466764593564589e+01 ref 2.466764593564589e+01 rel 1.44e-16
+  point 15: alpha 1.192e-01 lambda 1.235e-01 nu 0.141 rho 2.663e+02  F lib 3.622228680025379e+01 ref 3.622228680025379e+01 rel 0.00e+00
+  point 16: alpha 8.322e-01 lambda 3.051e-03 nu 0.813 rho 3.343e+02  F lib 2.037546786938304e+03 ref 2.037546786938303e+03 rel 1.12e-16
+  point 17: alpha 1.160e-02 lambda 7.618e-03 nu 0.246 rho 1.487e+02  F lib 6.341996867768413e+00 ref 6.341996867768414e+00 rel 1.40e-16
+  point 18: alpha 7.095e-01 lambda 1.303e+02 nu 0.048 rho 4.194e+01  F lib 1.399746328958931e+03 ref 1.399746328958931e+03 rel 1.62e-16
+  point 19: alpha 4.729e-04 lambda 1.725e-01 nu 0.018 rho 3.286e+00  F lib 3.857582300313672e-01 ref 3.857582300313673e-01 rel 1.44e-16
+  point 20: alpha 3.887e-04 lambda 1.995e+02 nu 0.801 rho 1.038e-01  F lib 7.596980343858672e-01 ref 7.596980343858672e-01 rel 0.00e+00
+
+  F: theta_lib vs ref_F_theta                             checks   20  passed   20  max err 3.586e-16  (tol 1e-10)
+  s0: theta_lib vs ref_F_theta                            checks   20  passed   20  max err 0.000e+00  (tol 1e-10)
+
+S2 TOTAL: checks run 40, passed 40, max error 3.586e-16
+VERDICT: PASS

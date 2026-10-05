@@ -304,8 +304,9 @@ Nothing else changes: not the grid, the BO budget, the starts, the cap or any cr
 - **P4. Q1 unit.** Per fit: at least 27 of 30 starts converged (review S2). Section 7 reworded the reason for Q1.
 - **P5. OPEN, awaiting PI ruling (review B1): lambdaH = 1e-6 shrinks H about 3,000-fold at p = 3,000.** The NMF
   term is divided by ||X||_F^2 and the H ridge is not (`palm_lib.R:74`, `:244`). For ranks at p = 3,000,
-  ||X||_F^2 = n p (p + 1)(2p + 1) / 6 = 1.576e12 at n = 175, so the HALS denominator is 1 + 3,001.5 (arithmetic and
-  code lines checked 2026-10-05). The options in the review: (a) rescale the ridge to lambdaH ||H||^2 / (2 ||X||^2),
+  each column of X is a permutation of 1..p (ties aside), so ||X||_F^2 = n p (p + 1)(2p + 1) / 6 = 1.576e12 at
+  n = 175. The HALS denominator is 1 + den0 with den0 = lambdaH ||X||_F^2 / (n k) = 1e-6 x 1.576e12 / (175 x 3)
+  = 3,001.5 (arithmetic and code lines checked 2026-10-05). The options in the review: (a) rescale the ridge to lambdaH ||H||^2 / (2 ||X||^2),
   so the denominator is 1 + lambdaH, with a_H and HALS updated and the alpha-range rationale rechecked; (b) keep it and
   state why in spec section 1. Either way, note that D-Q4 was obtained under this scaling. This changes the estimator,
   so it is not folded in here. Review B4 (test-set construction) is operational and is adopted in section 1. The spec

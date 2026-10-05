@@ -1,10 +1,11 @@
 # Estimator-redesign specification: rank-3 DeSurv in the theta parameterization (2026-10-05)
 
-**Status: DRAFT (revision 2), not frozen.** Written under PI ruling 8 (`docs/HANDOFF-2026-10-05-candidate-optimizer.md`,
-"PI ruling 2026-10-05, eighth"). Revision 2 applies PI ruling 9 (section 10), which approved the redesign in principle
-and ruled on the four open items and draft choices D2-D4. No implementation, no real data and no compute until the PI
-freezes this file. Once frozen, every later output records this file's commit hash. Amendments then follow the rule in
-`2026-10-04-estimator-gate-spec.md`: dated, with a reason, and only before any Gate A output is read.
+**Status: DRAFT (revision 3), ready for independent review, not frozen.** Written under PI ruling 8
+(`docs/HANDOFF-2026-10-05-candidate-optimizer.md`, "PI ruling 2026-10-05, eighth"). Revision 2 applied PI ruling 9
+and revision 3 applies PI ruling 10 (both in section 10). Next: an independent Codex review, then the PI freezes
+this file. No implementation, no real data and no compute until then. Once frozen, every later output records this
+file's commit hash. Amendments then follow the rule in `2026-10-04-estimator-gate-spec.md`: dated, with a reason,
+and only before any Gate A output is read.
 
 **Relation to the frozen gate spec.** This is a new estimator specification, not Amendment 4. It replaces the
 candidate arm (section 4 of `2026-10-04-estimator-gate-spec.md`, including amendments 2 and 3 as they apply to that
@@ -73,19 +74,13 @@ are bounded. For fixed (H, theta), the survival, rho and NMF terms are convex in
 the only nonconvexity in the W block is the sphere constraint. For fixed W, the theta block is the convex elastic-net
 Cox problem plus a positive semidefinite quadratic, strongly convex when nu < 1.
 
-This spec makes no convergence-theorem claim. Before implementation, the PALM convergence assumptions are checked
-explicitly, one by one, for the block updates of section 4. The results go in a written assumption memo, committed
-before any qualification run. The memo either proves each condition or states which one fails. In the latter case
-the operational definition in section 6 (monotone decrease plus the r < 1e-5 KKT certificate) is the only claim
-made. The checklist:
-
-| # | Condition (Bolte, Sabach and Teboulle 2014 framework) | To check for this objective |
-|---|---|---|
-| A1 | Nonsmooth parts are proper and lower semicontinuous, with computable proximal maps | iota_{S+} (nonconvex set, projection possibly multivalued, the argmax tie rule), iota_{>=0}, the L1 term on theta |
-| A2 | Smooth coupling term has block gradients that are Lipschitz, with moduli bounded above and below on the iterates' bounded set | The Cox term is C^2, so it is locally Lipschitz. Use the sublevel-set bound on ||theta|| and the curvature bound below |
-| A3 | Bounded iterates | Monotone decrease plus bounded sublevel sets; holds if every accepted block step decreases F |
-| A4 | KL property of F | The Breslow log-likelihood involves log-sum-exp, so definability is in the log-exp o-minimal structure, not the semialgebraic one; cite the precise result |
-| A5 | Each block update is the prox-linear step of the theorem (or is covered by a stated extension) | H uses HALS (exact row minimization, not a prox-linear step). W uses projected gradient with backtracking (prox-linear; needs a step lower bound). theta uses an inexact FISTA solve with a KKT certificate and an F-acceptance check (inexact block minimization). Each needs a cited extension or a proof, or the gap is recorded |
+**Convergence claim (ruling 10, 9d).** The block updates are not claimed to instantiate the exact Bolte, Sabach
+and Teboulle (2014) PALM iteration: H is an exact row minimization (HALS), W a projected gradient step with
+backtracking, and theta an inexact convex solve to a KKT certificate with an F-acceptance check. Qualification
+therefore relies on monotone objective descent, bounded iterates, independently checked block and KKT residuals,
+and convergence of the full residual r (section 6). Formal convergence under the mixed exact and inexact block
+updates is not claimed here. The H block is not changed to fit a theorem. A broader block-coordinate convergence
+result may be investigated later; it is not a precondition for implementation.
 
 **Curvature bound (sigma-free).** The Hessian of -(2/n_e) l in eta has largest eigenvalue at most 1: each event
 contributes a softmax covariance with eigenvalue at most 1/2, and there are n_e events, with Breslow ties included.
@@ -227,23 +222,29 @@ thresholds or algorithm.
 **Three kinds of criterion (ruling 9 D4).**
 - *Mathematical checks* use tolerances set by floating-point accuracy. A failure is an implementation defect, not a
   qualification outcome.
-- *Pathology criteria* (binding) are tied to a specific failure mode: the D-Q4 collapse, its opposite bias, or the F2
-  overfit. Each one states the reason for its number.
-- *Validity measures* (reported, not binding) show whether the simulation was informative: the oracle C gap, and
-  score and loading recovery.
+- *Pathology criteria* (binding) test whether a failure mechanism recurs: the D-Q4 collapse (cost-free loss of
+  scale with the same score preserved), its opposite bias (the effect attached to a high-variance nonpredictive
+  direction), or the F2 overfit. They are not scalar ranges copied from the failed run (ruling 10, 9b).
+- *Validity measures* (reported, not binding) show whether the simulation was informative and how the fit
+  represents the truth: the oracle C gap, score and loading recovery, realized curvature and sigma trajectories.
 
 **Scenarios** (all built on the repo generator through `analysis/estimator-gate/candidate/sim.R`, scenario R0, with
 within-sample ranks and integer-rounded tied times):
 - **S1, signal:** R0 with generator beta = (2, 1, 0).
 - **S2, null:** R0 with beta = (0, 0, 0).
-- **S3, competing directions:** a genuinely predictive low-variance factor A competes with a higher-variance
-  nonpredictive factor B. The generator's survival linear predictor is computed on standardized scores
-  (`simulate_survival.R:189-200`), so scaling the rows of the true H changes a factor's variance in X without changing
-  its predictive strength. S3 is R0 with generator beta = (2, 0, 0), where factor 1 is A, and true H rows multiplied
-  by c = (c_A, c_B, 1) before X is formed. c_A and c_B are chosen so that A's true score SD is at most 0.25 times B's.
-  The generator has no per-factor variance argument, so the qualification prespec specifies a wrapper and its own
-  check that the realized SD ratio is at most 0.25. S3 is where direct penalization of theta could attach the
-  survival effect to B, the bias opposite to the old estimator's.
+- **S3, competing directions (ruling 10, 9c):** a genuinely predictive low-variance factor A competes with a
+  higher-variance nonpredictive factor B. The generator computes the survival linear predictor on standardized
+  scores (`simulate_survival.R:189-200`), so scaling the rows of the true H changes a factor's variance in X without
+  changing its predictive strength. S3 is R0 with generator beta = (2, 0, 0), where factor 1 is A and factor 2 is B,
+  and true H rows multiplied by c = (c_A, c_B, 1) before X is formed, with c_A and c_B set so that A's true score SD
+  is 0.25 times B's (variance ratio 1/16). This is the primary and only binding stress case. A and B are kept
+  uncorrelated by construction: R0's H rows are independent (`correlated_H = FALSE`) and markers do not overlap
+  (`marker_overlap = 0`). The realized test-set correlation of the true A and B scores is reported. The generator has
+  no per-factor variance argument, so the qualification prespec specifies the wrapper and checks the realized SD
+  ratio. S3 tests the bias opposite to the old estimator's: direct theta penalization could favor B, because a
+  smaller coefficient on a high-variance score buys the same linear-predictor magnitude.
+- **S3b, sensitivity (reported only):** as S3 with an SD ratio of 0.50, run if compute allows. No binding
+  criterion applies to S3b.
 
 **Sizes.** n = 175 (inner-training size) and n = 218 (outer-training size). Each training set gets an independent
 test set of n = 1,000 from the same generator.
@@ -265,15 +266,15 @@ A *carrying column* is one with |theta_j| > 1e-3 at the endpoint, a numerical ze
 |---|---|---|---|
 | Q0 | Math | Implementation | Gradient checks against finite differences on every block, F monotone, theta-block KKT verified by an independent evaluator: floating-point tolerances as in gate spec section 4 preconditions |
 | Q1 | Pathology | Ordinary convergence | At every grid configuration and every tuned configuration, at least 90% of starts are converged, with no F increase and no numerical failure. Reason: this is the Gate A convergence precondition applied to the same procedure; a design that fails it on simulations cannot pass it on data |
-| Q2 | Pathology | No sigma -> 0 | For every carrying column of every converged start, log(sigma_j(end) / sigma_j(sweep 50)) >= -1. Reason: the D-Q4 collapse lost 6 to 9 in log sigma per carrying column, so a loss of 1 (a factor of e) is under one sixth of the smallest observed collapse |
-| Q3 | Pathology | No preserved-score collapse | Using the D-Q4 decomposition (`analysis/estimator-gate/candidate/tests/DQ4_step_decomposition.R`; log sigma = log r + log g and the score angle depend on W only, so the adaptation changes only the objective-term accounting, b to theta), no carrying column has cumulative change in log g <= -1 while its net standardized-score angle is <= 0.01 rad, over the whole trajectory. Reason: the D-Q4 signature was a log g loss of 6 or more with a net angle of at most 0.0023 rad, so both limits sit well inside the pathology |
-| Q4 | Math (a), Pathology (b) | Bounded curvature | (a) The largest eigenvalue of the W-block Hessian on the active face, by power iteration on HVPs at sweeps 1, 10, 100 and the end, never exceeds the section 2 bound L_W beyond floating-point tolerance. (b) Its largest recorded value per start is within a factor of 100 of its smallest. Reason: the pathology was 1e6-level growth tracking sigma^-4, so 1e2 is four orders below it. The slope of log lambda_max on log min_j sigma_j is reported |
-| Q5 | Pathology | Multi-start stability | At the centre and tuned configurations, among converged starts: (i) the median Hungarian-matched loading Pearson r of carrying columns with the returned start is >= 0.80, the Gate B "recovers" threshold, so that a Gate B classification cannot depend on which start was returned; (ii) the median across starts of the test-C difference from the returned start is within 0.01, the F2 margin below. The share of starts within 1e-4 relative F of the best is reported |
+| Q2 | Validity (demoted, ruling 10) | Scale trajectory | For every carrying column of every converged start, log(sigma_j(end) / sigma_j(sweep 50)) and the sigma_j trace are reported. Not binding: S3 contains a genuinely predictive low-variance factor, and a proper estimator must be allowed to find low variance. The pathology is cost-free collapse with the score preserved, which Q3 tests |
+| Q3 | Pathology | No preserved-score collapse | Using the D-Q4 decomposition (`analysis/estimator-gate/candidate/tests/DQ4_step_decomposition.R`; log sigma = log r + log g and the score angle depend on W only, so the adaptation changes only the objective-term accounting, b to theta), no carrying column has cumulative change in log g <= -1 while its net standardized-score angle is <= 0.01 rad, over the whole trajectory |
+| Q4 | Math (binding); realized values reported | Bounded curvature | The largest eigenvalue of the W-block Hessian on the active face, by power iteration on HVPs at sweeps 1, 10, 100 and the end, never exceeds the section 2 analytic bound L_W beyond floating-point tolerance. The realized curvature, its ratio across recorded sweeps, the condition number and the slope of log lambda_max on log min_j sigma_j are reported, with no fixed limit (ruling 10: the old factor-100 contrast is historical, not a property of the new estimator) |
+| Q5 | Pathology (predictive part binding) | Multi-start stability | At the centre and tuned configurations, among converged starts, the median across starts of the test-C difference from the returned start is within 0.01, the F2 margin, so that the choice among converged starts cannot cost more than one C point. Reported, not binding: the median Hungarian-matched loading Pearson r of carrying columns with the returned start (0.80 is the Gate B reference value, shown for context), and the share of starts within 1e-4 relative F of the best |
 | Q6 | Pathology (binding F2 safeguard) | Convergence does not destroy generalization | In S1 and S3, at the tuned configuration, for every checkpoint t in T: mean over replicates of the paired difference C_conv - C_t (test C of the converged returned start minus test C of its checkpoint-t iterate) >= -0.01, with each iterate scored by v~ on its own ntop support. Reason (ruling 9): a properly converged estimator may not give up more than one C point to its own finite trajectory. This is deliberately stricter than Gate A's -0.02 against the published estimator. S2 is reported |
-| Q7 | Pathology (opposite bias) | Effect lands on the predictive direction | In S3, see open item 9a |
+| Q7 | Pathology (binding, predictor level, ruling 10) | The effect lands on the predictive direction, not the high-variance one | In S3, at the tuned configuration, per replicate on the held-out test set: standardize the fitted predictor eta_hat = X_G^T v~_G and the true scores A and B, regress eta_hat on (A, B) jointly, and set D_AB = abs(coef_A) - abs(coef_B). Pass if the one-sided Monte Carlo 95% lower confidence bound for mean D_AB over replicates (mean - t_{0.95, R-1} SD / sqrt(R), R the number of S3 replicates) is above 0. The joint-regression form equals the marginal form abs(cor(eta_hat, A)) - abs(cor(eta_hat, B)) when A and B are uncorrelated and stays unambiguous if they are not; the marginal form is reported alongside |
 | V1 | Validity | Oracle gap | Test C of the fit vs test C of the true linear predictor, per scenario and size. Reported only, because it depends on signal strength and censoring (ruling 9, item 1) |
-| V2 | Validity | Predictive-score recovery | Pearson and Spearman correlation, on the test set, of the fitted predictor X_G^T v~_G with the true linear predictor, in S1 and S3; in S3 also its correlation with factor B's true score |
-| V3 | Validity | Loading and program recovery | In S1 and S3, where the generative W is identifiable: Hungarian-matched cosine of fitted vs true W columns, the matched cosine of the carrying column with the true predictive factor, and top-ntop marker overlap with the true marker set. Reported because Gate B concerns loadings, and D-Q4 showed that loadings can move while prediction barely does |
+| V2 | Validity | Predictive-score recovery | Pearson and Spearman correlation, on the test set, of the fitted predictor X_G^T v~_G with the true linear predictor, in S1, S3 and S3b; in S3 and S3b also the marginal D_AB |
+| V3 | Validity | Loading and program recovery | In S1, S3 and S3b: Hungarian-matched cosine of fitted vs true W columns, whether the column with the largest abs(theta_j) is matched to A (S3, S3b) or to the true predictive factor (S1), and top-ntop marker overlap with the true marker set. Reported, not binding: factorizations can split or mix a predictive direction while producing the correct predictor (ruling 10, 9a). Reported because Gate B concerns loadings, and D-Q4 showed that loadings can move while prediction barely does |
 
 **Outcome.** If every binding criterion passes, Gate A compute is authorized. Otherwise the failure is reported,
 mechanics are not adjusted to the outcome, and the PI decides whether to open the fallback.
@@ -302,22 +303,32 @@ frozen.
    direction competing with a higher-variance nonpredictive one. A timing-only simulated run is allowed after
    freeze, for compute planning only.
 8. **Theorem language:** no claim that the Bolte-Sabach-Teboulle theorem applies. State coercivity and boundedness,
-   and check the PALM assumptions explicitly before implementation (section 2 checklist).
+   and check the PALM assumptions explicitly before implementation (superseded by ruling 10, 9d: no theorem claim, gap recorded).
 9. **Recovery:** qualification assesses both predictive-score recovery and loading/program recovery in S1 and S3.
 
-**Open items for the PI (revision 2):**
+**PI ruling 2026-10-05, tenth (on draft revision 2, 593a4d1).** Pre-freeze changes, after which the spec goes to
+an independent Codex review and, if no substantive problem is found, is frozen before any implementation code.
+- **9a:** the S3 bias test is binding at the predictor level only (Q7): the Monte Carlo lower 95% confidence bound
+  for mean D_AB must exceed 0, with standardized regression coefficients on (A, B) used so the comparison is
+  unambiguous if A and B correlate. "Largest abs(theta) matches A" is not binding; it is reported after optimal
+  factor matching as a representation-validity measure (V3).
+- **9b:** qualification fails on the same mechanism recurring, not on a scalar entering a range reminiscent of the
+  old run. The KKT/convergence criterion stays binding (Q1). The raw log sigma limit is reported, not binding (Q2).
+  The fixed factor-100 curvature limit is dropped; the derived analytic bound is the binding mathematical check and
+  realized curvature and condition number are reported (Q4). In Q5 the 0.01 predictive component is binding as
+  part of the F2 safeguard, and the 0.80 loading threshold is descriptive, because rotational ambiguity should not
+  sink an otherwise correct estimator.
+- **9c:** SD ratio 0.25 is the primary and only binding S3 stress case. 0.50 is an optional reported sensitivity
+  (S3b). No 0.10 case. A and B must not be strongly correlated by construction, or the regression form is used.
+- **9d:** HALS and the FISTA theta solve are kept. The spec declines a classical PALM theorem claim and relies on
+  monotone descent, bounded iterates, independently checked residuals and convergence of the full residual
+  (section 2).
+- The Q6 checkpoint set {10, 50, 100, 500} stays exactly as frozen; no checkpoints are added after implementation.
 
-- **9a. Q7, opposite-bias criterion in S3: binding or reported?** Proposed binding form, which uses comparisons
-  rather than a numeric cutoff: averaged over replicates, the fitted predictor's test correlation with the true
-  linear predictor (A) exceeds its correlation with B's true score, and the column with the largest |theta_j| is
-  Hungarian-matched to A rather than B in a majority of replicates. The alternative is to report V2 and V3 in S3
-  without a binding rule. Ruling 9 says S3 must test this bias but does not say whether it gates.
-- **9b. Pathology limits in Q2, Q3, Q4b and Q5.** Each now carries a stated derivation: the D-Q4 magnitudes for Q2
-  to Q4b, and the Gate B 0.80 and F2 0.01 margins for Q5. Confirm that these count as tied to the pathology, or
-  demote any of them to reported.
-- **9c. S3 variance ratio.** A true score SD of at most 0.25 times B's (variance ratio at most 1/16) is a DGP
-  choice, not a threshold. Confirm, or set a second ratio to run as well.
-- **9d. Assumption memo timing.** The section 2 checklist is completed before implementation. If A5 cannot be met
-  as written (HALS and the inexact theta solve are not prox-linear steps), choose between recording the gap and
-  relying on the operational certificate, or replacing the H step with a prox-linear step. The second changes the
-  optimizer and needs a ruling before freeze.
+**Open items:** none from the PI rulings. Two coordinator notes for the reviewer and the PI:
+- Q3 keeps its D-Q4-derived limits (log g loss of 1 with net angle <= 0.01 rad). Ruling 10 did not address Q3
+  directly. Under its principle it is the remaining criterion whose numbers come from the failed run's magnitudes,
+  although it does test the mechanism (scale loss with the same score preserved) and not low sigma by itself.
+- Q7's power depends on the S3 replicate count R, which the qualification prespec fixes. With R = 5 the one-sided
+  bound needs mean D_AB above 2.13 SD / sqrt(5), about 0.95 SD of D_AB; a larger R for S3 alone may be
+  worth its compute.

@@ -378,3 +378,12 @@ before implementation; score and loading recovery both assessed. Full record and
 `docs/plans/2026-10-05-estimator-redesign-spec.md` section 10.
 
 **NEXT:** PI rules 9a-9d, then freeze. No implementation, real data or compute before freeze.
+
+## PI ruling 2026-10-05, tenth (on spec DRAFT revision 2, 593a4d1)
+
+9a: S3 bias test binding at predictor level (Q7, lower 95% MC bound of mean D_AB > 0; factor match descriptive).
+9b: fail on mechanism recurrence, not historical magnitudes: raw sigma and factor-100 curvature descriptive; analytic
+curvature bound and KKT binding; Q5 0.01 predictive binding, 0.80 loading descriptive. 9c: 0.25 primary, 0.50
+optional reported. 9d: keep HALS/FISTA, decline a classical PALM theorem claim. Spec revision 3 applies these.
+
+**NEXT:** independent Codex review of revision 3 (ask before running), then PI freeze, then implementation.

@@ -1,5 +1,7 @@
 > **Status: EXPLORATORY, future methodological work, not for the current manuscript** (owner ruling 2026-10-04: keep the implemented estimator). On fresh partitions (seeds 2001-2003) no pre-specified strength of the primary design matched the stalled estimator on held-out C. The pilot runs on seeds 124-125 used already-examined folds before the scope change and are development data. Pilot scripts and outputs are archived as run in `regularization/`; they reference session-scratch paths and need `f2/f2_lib.R` and `f2/f2_fast.R`.
 
+> **Known limits of the pilot code (codex review of e24641c, not fixed; future work will be rewritten):** (1) the projection onto the nonnegative unit sphere clips before `which.max`, so a column that goes entirely nonpositive is mapped to the first gene rather than the least-negative one (degenerate case; not known to have occurred); (2) `solve_bQ` stops on successive coefficient change, not on the KKT residual, so "exact b" is asserted rather than verified in the pilots; (3) the pilots record only the W stationarity residual, not the H and coefficient residuals, so they do not show that the full stopping rule on r is workable. Read the feasibility numbers as indicative only.
+
 # DeSurv: a future regularized, truly optimized estimator (design memo)
 
 Date: 2026-10-04. Scope (revised by owner direction mid-task): a FUTURE principled estimator, not a replacement for the submitted one. Nothing in the protected repositories was edited or run. All computation is in `scratchpad/reg/`.

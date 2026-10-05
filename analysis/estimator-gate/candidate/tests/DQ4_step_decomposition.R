@@ -184,8 +184,11 @@ cat("D-Q4 step decomposition (descriptive, non-gating) |", format(Sys.time()), "
 cat(sprintf("palm_lib.R byte-identical to HEAD (git diff --quiet): %s\n", palm_lib_unchanged))
 cat(sprintf("X'1 constant across samples: range of column sums %.3g (ranks; C X'1 = 0)\n", diff(range(xcs))))
 cat("\nGATES (exact reproduction):\n")
-for (nm in names(res)) cat(sprintf("  %-9s %s -- %s | %d sweeps, %s (%s), %.0f s\n", nm, if (gate[[nm]]$pass) "PASS" else "FAIL",
-                                   gate[[nm]]$detail, res[[nm]]$f$iter, res[[nm]]$f$status, res[[nm]]$f$reason, res[[nm]]$secs))
+for (nm in names(res)) {
+  if (inherits(res[[nm]], "try-error")) { cat(sprintf("  %-9s FAIL -- %s\n", nm, gate[[nm]]$detail)); next }
+  cat(sprintf("  %-9s %s -- %s | %d sweeps, %s (%s), %.0f s\n", nm, if (gate[[nm]]$pass) "PASS" else "FAIL",
+              gate[[nm]]$detail, res[[nm]]$f$iter, res[[nm]]$f$status, res[[nm]]$f$reason, res[[nm]]$secs))
+}
 
 # J: coefficient-carrying columns at the D-Q3a end point (committed)
 Jof <- function(i) which(dq3$res[[match(i, vapply(dq3$res, `[[`, 0L, "start"))]]$f$b != 0)
@@ -238,7 +241,8 @@ all_pass <- all(vapply(gate, `[[`, TRUE, "pass"))
 cat(sprintf("\nD-Q4 GATES: %s (%d of %d start-segments)\n", if (all_pass) "PASS" else "FAIL",
             sum(vapply(gate, `[[`, TRUE, "pass")), length(gate)))
 sink()
-saveRDS(list(res = lapply(res, function(r) r[c("seg", "start", "M", "Zs_first", "Zs_last", "secs")]),
-             fits = lapply(res, function(r) r$f[c("iter", "status", "reason", "F", "b", "sigma")]),
+ok_job <- function(r) !inherits(r, "try-error")
+saveRDS(list(res = lapply(res, function(r) if (ok_job(r)) r[c("seg", "start", "M", "Zs_first", "Zs_last", "secs")] else r),
+             fits = lapply(res, function(r) if (ok_job(r)) r$f[c("iter", "status", "reason", "F", "b", "sigma")] else NULL),
              gate = gate, jobs = JOBS, palm_lib_unchanged = palm_lib_unchanged, smoke = SMOKE, sweeps = SWEEPS),
         file.path(OUTD, "DQ4_step_decomposition.rds"))

@@ -215,5 +215,6 @@ term (+7.6e-4 to +1.5e-3), with net d F < 0; D-Q3a has the same signs except sur
 Sigma loss is **predominantly g(v)-driven** in every start and segment, with |sum Delta log g| at least 14 times
 |sum Delta log r| pooled over J (more than 10 times per column) in every case. The standardized-score angle is essentially zero. In the prespec's language this is
 orientation of the loadings into a low-variance or null-space direction of X with the score direction preserved, a
-rescaling of the same score. It is not literal loading shrinkage (||Pw|| does not shrink), and it is not the
+rescaling of the same score. Literal loading shrinkage is secondary: ||Pw|| shrinks a little only in start 1's Q1 segment
+(pooled Delta log r -0.12 against Delta log g -6.96) and grows in every other start-segment. It is also not the
 optimizer finding new score directions. Nothing here is a cutoff. No real data, no Amendment 4, nothing pushed.

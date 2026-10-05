@@ -85,8 +85,9 @@ entire column, since N is then undefined.
 
 **Line search.** Monotone Armijo backtracking on the actual retracted objective at fixed (H, b): start at t = 1
 (the Newton step), halve, and, with Delta W(t) = W(t) - W, accept the first nonzero trial with
-<G_W, Delta W(t)> < 0  and  F(W(t)) <= F(W) + 1e-4 <G_W, Delta W(t)>.
-Together these give strict decrease F(W(t)) < F(W). If <G_W, Delta W(t)> >= 0 (clipping and renormalization
+<G_W, Delta W(t)> < 0  and  F(W(t)) <= F(W) + 1e-4 <G_W, Delta W(t)>  and  F(W(t)) < F(W).
+In exact arithmetic the first two give the third; it is checked explicitly because in floating point
+F(W) + 1e-4 <G_W, Delta W(t)> can round to F(W) when the slope is tiny. If <G_W, Delta W(t)> >= 0 (clipping and renormalization
 have turned the displacement away from descent), the trial is rejected and t is halved; without this guard the
 Armijo inequality could admit an objective increase. The sufficient-decrease term uses the actual displacement of the retracted point (the projected-search form of
 Armijo, Bertsekas 1982), so clipping and renormalization are accounted for; for an unclipped step it equals

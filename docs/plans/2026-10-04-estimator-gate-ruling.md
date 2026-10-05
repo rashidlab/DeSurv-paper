@@ -36,6 +36,8 @@ justified by a properly specified model.
 
 ## Pre-declared outcomes
 
+Superseded by the decision table in `2026-10-04-estimator-gate-spec.md` section 8 (Gate B cannot reverse Gate A).
+
 | Prediction (step 3) | Biology (step 4) | Consequence |
 |---|---|---|
 | Passes margin | Recovers D1 biology | Candidate may become primary |
@@ -57,7 +59,10 @@ presumed improvement.
 - Partition seeds 123-126 (item 4) and 2001-2003 (feasibility check) have been examined and may not be reused for
   tuning, selection or evaluation.
 - Selection scripts compute no biology outputs; the step-4 script runs only against a committed selection.
-- Open PI decision required before step 2 is frozen: the noninferiority margin for held-out C.
+- Resolved 2026-10-04 (PI): 0.02 is a decision threshold on the mean paired held-out C difference (Gate A), not a
+  noninferiority test; a corrected 95% interval at n = 273 is about +/-0.05 to 0.08, so a CI-bound rule could not be
+  passed. k is fixed at 3 in both arms, every other hyperparameter tuned independently per arm. Frozen in
+  `2026-10-04-estimator-gate-spec.md`.
 - The closure items (F1 disclosure, F4 sentence, 09a fallback, manifest) proceed independently. The F2 wording
   fixes ("continued gradient-based optimization", "the finite fitting procedure provides substantial implicit
   regularization") apply regardless of the outcome.

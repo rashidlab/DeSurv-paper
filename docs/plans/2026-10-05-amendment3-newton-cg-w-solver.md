@@ -142,6 +142,20 @@ tests, fold-locality and transport. Every test passes under its existing criteri
 test whose p = 3000 failure motivated this amendment; its outcome is reported, and Q1, not T7 timing, is the
 binding realistic-size criterion.
 
+*Replaced-mechanism assertions.* Assertions that test mechanisms this amendment removes are replaced one for one by
+the amended counterpart; every other criterion is unchanged.
+
+| Frozen assertion (test) | Removed mechanism | Amended counterpart |
+|---|---|---|
+| accepted W steps <= 2 (T4) | step cap t_max = 2 | accepted t <= 1 on the retracted path; every accepted step satisfies the Armijo condition of section 3 |
+| W step floor -> numerical failure, W unchanged (T9) | t_min = 1e-20 floor | 60 halvings or no-change guard -> *nonconverged*, `line_search_failed`, W unchanged |
+| maxit reached -> nonconverged (T9), maxit 5000 (T4, T7) | maxit = 5000 | per-start cap -> *nonconverged*, `work_cap_reached`; T4 and T7 run to the per-start budget |
+| W step cap test (T9) | t_max = 2 | trial annihilating a column is rejected and halved |
+| mutant B7, accept at the floor (T10) | floor | mutant accepting the last trial after 60 halvings must be killed |
+| mutant B19_cap, W step uncapped (T10) | cap | mutant dropping the Armijo condition (accept t = 1) must be killed |
+
+Added assertions: W no-op when r_W < 1e-5 at the start of the block; `nc_first_iter` path uses -g.
+
 **Q1. Binding realistic-size qualification.** Warm-start from each of the four stalled p = 3000, n = 218 end
 points (starts 1, 5, 9, 16), full sweeps (H, W, b) with the amended W step. All four (the prespecified proportion
 is 4 of 4) must:

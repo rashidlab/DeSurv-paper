@@ -1,0 +1,37 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/DQ1_block_replay.txt"
+D-Q1 instrumented block replay | 2026-10-05 12:54:04 | wall 2.197838 mins 
+palm_lib.R byte-identical to HEAD (git diff --quiet): TRUE
+
+GATE (replay trace vs committed tests/out/Q1_warm.rds):
+  start 1: PASS -- exact match
+  start 5: PASS -- exact match
+  start 16: PASS -- exact match
+
+All three starts reproduced exactly. Block-level diagnostics follow.
+
+--- start 1: 1000 sweeps, final status nonconverged (work_cap_reached) ---
+  block H, last 100 sweeps (n=100): F median 0.730911 [0.730911, 0.730912]; rW median 3.124e-03 [2.555e-03, 3.702e-03]; rH median 3.739e-14 [3.171e-14, 1.480e-07]; rb median 9.816e-11 [9.217e-11, 9.997e-11]; |dH| median 6.522e-08 [5.482e-08, 4.276e-01]
+  block W, last 100 sweeps (n=100): F median 0.730911 [0.730911, 0.730912]; rW median 1.288e-04 [8.033e-05, 3.179e-01]; rH median 8.143e-11 [6.831e-11, 5.359e-04]; rb median 5.307e-04 [4.633e-04, 5.334e-02]; |dW| median 1.396e-08 [1.196e-08, 8.214e-03]
+  block b, last 100 sweeps (n=100): F median 0.730911 [0.730911, 0.730912]; rW median 3.124e-03 [2.555e-03, 3.702e-03]; rH median 8.143e-11 [6.831e-11, 5.359e-04]; rb median 9.816e-11 [9.217e-11, 9.997e-11]; |db| median 2.231e-06 [1.982e-06, 2.100e-04]
+  sigma at W-block exit, median over last 100 sweeps: 2.322, 2.157, 1.311; beta: -0.1823, -0.1963, 0.3217
+  sigma at b-block exit, median over last 100 sweeps: 2.322, 2.157, 1.311; beta: -0.1823, -0.1963, 0.3217
+  pattern vs hypothesis (r_W ~3e-3 -(W)-> ~1e-4 -(b)-> ~3e-3, r_H negligible): rW after H 3.124e-03 -> after W 1.288e-04 -> after b 3.124e-03; rH max over blocks 5.359e-04
+
+--- start 5: 1000 sweeps, final status nonconverged (work_cap_reached) ---
+  block H, last 100 sweeps (n=100): F median 0.730909 [0.730909, 0.730909]; rW median 2.256e-03 [1.977e-03, 2.653e-03]; rH median 3.509e-14 [2.767e-14, 2.292e-10]; rb median 9.573e-11 [6.635e-11, 9.985e-11]; |dH| median 7.103e-08 [5.524e-08, 6.312e-04]
+  block W, last 100 sweeps (n=100): F median 0.730909 [0.730909, 0.730909]; rW median 8.661e-05 [5.944e-05, 1.224e-04]; rH median 8.867e-11 [6.901e-11, 7.885e-07]; rb median 4.437e-04 [3.867e-04, 5.195e-04]; |dW| median 1.675e-08 [1.436e-08, 2.268e-05]
+  block b, last 100 sweeps (n=100): F median 0.730909 [0.730909, 0.730909]; rW median 2.251e-03 [1.961e-03, 2.653e-03]; rH median 8.867e-11 [6.901e-11, 7.885e-07]; rb median 9.588e-11 [6.635e-11, 9.985e-11]; |db| median 2.357e-06 [2.049e-06, 4.055e-06]
+  sigma at W-block exit, median over last 100 sweeps: 2.769, 1.504, 2.808; beta: 0.1529, -0.2805, 0.1507
+  sigma at b-block exit, median over last 100 sweeps: 2.769, 1.504, 2.808; beta: 0.1529, -0.2805, 0.1507
+  pattern vs hypothesis (r_W ~3e-3 -(W)-> ~1e-4 -(b)-> ~3e-3, r_H negligible): rW after H 2.256e-03 -> after W 8.661e-05 -> after b 2.251e-03; rH max over blocks 7.885e-07
+
+--- start 16: 1000 sweeps, final status nonconverged (work_cap_reached) ---
+  block H, last 100 sweeps (n=100): F median 0.73281 [0.73281, 0.73281]; rW median 1.531e-03 [1.310e-03, 1.681e-03]; rH median 2.535e-15 [2.296e-15, 3.489e-08]; rb median 7.835e-11 [1.450e-11, 9.924e-11]; |dH| median 4.787e-09 [3.612e-09, 6.868e-02]
+  block W, last 100 sweeps (n=100): F median 0.73281 [0.73281, 0.73281]; rW median 4.888e-05 [3.386e-05, 1.613e-01]; rH median 5.950e-12 [4.496e-12, 8.551e-05]; rb median 1.223e-04 [1.106e-04, 1.271e-02]; |dW| median 1.135e-09 [1.033e-09, 3.865e-03]
+  block b, last 100 sweeps (n=100): F median 0.73281 [0.73281, 0.73281]; rW median 1.531e-03 [1.310e-03, 1.681e-03]; rH median 5.950e-12 [4.496e-12, 8.551e-05]; rb median 7.823e-11 [1.450e-11, 9.924e-11]; |db| median 3.354e-07 [3.154e-07, 3.313e-05]
+  sigma at W-block exit, median over last 100 sweeps: 1.101, 1.132, 6.613; beta: 0.5355, -0.5205, 0
+  sigma at b-block exit, median over last 100 sweeps: 1.101, 1.132, 6.613; beta: 0.5355, -0.5205, 0
+  pattern vs hypothesis (r_W ~3e-3 -(W)-> ~1e-4 -(b)-> ~3e-3, r_H negligible): rW after H 1.531e-03 -> after W 4.888e-05 -> after b 1.531e-03; rH max over blocks 8.551e-05
+
+D-Q1 GATE: PASS (3 of 3 starts)
+VERDICT: PASS

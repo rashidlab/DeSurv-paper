@@ -1,0 +1,39 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/DT9_perm.txt"
+D-T9a/b permutation-pair diagnostic | 2026-10-05 12:56:48 
+
+=== D-T9a: seeded replay of the T9 permutation pair (40 iterations, as T9 runs it) ===
+GATE (vs committed tests/out/T9_edge_cases.txt line 45): replay W 7.3e-03, b 5.4e-05, F 5.3e-07, H 5.2e-03 | committed W 7.3e-03, b 5.4e-05, F 5.3e-07, H 5.2e-03
+GATE: PASS (matches committed T9 line 45 to printed precision)
+
+[D-T9a: 40-iteration (truncated) pair]
+  F: a 1.679994938, b 1.679994054, rel diff 5.264e-07
+  KKT residuals a: r 8.493e-03 rW 1.827e-04 rH 8.493e-03 rb 6.060e-11
+  KKT residuals b: r 6.203e-03 rW 1.088e-03 rH 6.203e-03 rb 5.960e-11
+  Hungarian-matched (k=3, exhaustive over 3! perms) W-column cosines: 1.0000, 1.0000, 1.0000 (perm 1,2,3)
+  risk-score (eta) Pearson correlation (b's order, a matched via pm): 1.000000; SD ratio (b/a): 1.0000
+  top-5-loading overlap per matched column (markers_per_factor for p=60): 1.00, 1.00, 1.00
+  recovery of simulated truth (T8_recovery.R match_cos convention) a: 0.3944, 0.4307, 0.4794
+  recovery of simulated truth (T8_recovery.R match_cos convention) b: 0.3945, 0.4308, 0.4795
+
+
+=== D-T9b: same pair, run to convergence (SEPARATE, NONBINDING); settings frozen in the brief: ===
+w_solver = ncg, tol = 1e-5, per-start budget 1,000 sweeps / 25,000 HVPs (palm_fit_one defaults)
+  member a: status converged (), sweeps 188, HVPs 5157, final F 1.679845161, r 9.731e-06
+  member b: status converged (), sweeps 190, HVPs 5295, final F 1.679845162, r 9.946e-06
+
+[D-T9b: converged-path pair]
+  F: a 1.679845161, b 1.679845162, rel diff 4.543e-11
+  KKT residuals a: r 9.731e-06 rW 9.731e-06 rH 8.390e-06 rb 6.804e-11
+  KKT residuals b: r 9.946e-06 rW 9.946e-06 rH 9.010e-06 rb 7.777e-11
+  Hungarian-matched (k=3, exhaustive over 3! perms) W-column cosines: 1.0000, 1.0000, 1.0000 (perm 1,2,3)
+  risk-score (eta) Pearson correlation (b's order, a matched via pm): 1.000000; SD ratio (b/a): 1.0000
+  top-5-loading overlap per matched column (markers_per_factor for p=60): 1.00, 1.00, 1.00
+  recovery of simulated truth (T8_recovery.R match_cos convention) a: 0.3988, 0.4346, 0.4828
+  recovery of simulated truth (T8_recovery.R match_cos convention) b: 0.3988, 0.4346, 0.4828
+
+--- interpretation (fixed in advance; no threshold change) ---
+both converged: TRUE. truncated W rel diff 7.293e-03; converged-path W rel diff 7.152e-05
+(i) truncated differ, converged agree: TRUE
+(ii) converged differ materially: FALSE
+(iii) parameters differ but objective/predictions/recovery agree (flat/nonidentifiable): FALSE
+VERDICT: PASS

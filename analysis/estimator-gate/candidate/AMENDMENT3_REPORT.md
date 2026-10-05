@@ -450,3 +450,109 @@ The choice is the PI's, prospectively.
   - `tests/out/T4_monotone.{txt,rds,log}`
   - rerun T1, T2, T3, T5, T6, T9, T11 and T12 `.txt`
 - Preserved: `tests/out/superseded/pre-amendment3/`.
+
+## Post-failure diagnostics (D-Q1, D-T9a, D-T9b)
+
+Run 2026-10-05, per "PI approval 2026-10-05: post-failure diagnostics" in
+`docs/plans/2026-10-05-amendment3-implementation-brief.md`. Descriptive only: nothing here changes the amendment-3
+FAIL recorded at 0c44cca, and no threshold or setting was altered after a result was seen. `palm_lib.R` is
+byte-identical to HEAD throughout (`git diff --quiet -- palm_lib.R` confirmed before and after every run).
+Instrumentation is by wrapper only, in the global environment, following the pattern in `tests/drift_hook.R`;
+every wrapper calls the unmodified original and returns its result unchanged. New files:
+`tests/DQ1_block_replay.R`, `tests/DT9_perm.R`; outputs `tests/out/DQ1_block_replay.{txt,rds}`,
+`tests/out/DT9_perm.{txt,rds}`. No existing test file was changed, no commits made.
+
+### D-Q1: instrumented block replay of Q1 starts 1, 5, 16
+
+`tests/DQ1_block_replay.R` wraps `hals_sweep`, `w_step_ncg` and `PALM_DEFS$b_accept`/`solve_b` so the state after
+each H, W and b block can be read off, while `palm_fit_one` runs its real, unmodified control flow (the wrappers
+call the originals and pass their return values through unchanged; the added computations are `palm_resid` and
+`palm_scores`, both pure and RNG-free). Inputs exactly as Q1: the four stalled end points at
+`tests/out/superseded/pre-amendment3/T7_fit.rds`, `sim_data(700, 3000L, 218L)`, `hp <- fit$hp`, `palm_fit_one`
+defaults (`w_solver = "ncg"`, `maxit = 1000`, `tol = 1e-5`, `hvp_cap = 25000`). Wall time 2.2 min (3 starts, 3
+cores).
+
+**GATE: PASS, 3 of 3 starts.** The replay's own trace (produced by the unwrapped control flow) is an exact match
+to the committed `tests/out/Q1_warm.rds` trace for `Fstart`, `FH`, `FW`, `Fb`, `rW_start` and `rW` over all 1,000
+sweeps, and the final status (`nonconverged`, `work_cap_reached`) for starts 1, 5 and 16. (This is expected: the
+wrappers add a side channel only and never touch the arguments or return values on the path `palm_fit_one` itself
+uses, so the gate is a sanity check on the instrumentation, not a reproducibility test of the optimizer.)
+
+Block pattern, medians [range] over the last 100 sweeps, against the pre-stated hypothesis (r_W ~3e-3 -(W)->
+~1e-4 -(b)-> ~3e-3, r_H negligible):
+
+| Start | r_W after H | r_W after W | r_W after b | r_H (max over the three blocks) |
+|---|---|---|---|---|
+| 1 | 3.124e-3 [2.555e-3, 3.702e-3] | 1.288e-4 [8.033e-5, 3.179e-1]* | 3.124e-3 [2.555e-3, 3.702e-3] | 5.359e-4 |
+| 5 | 2.256e-3 [1.977e-3, 2.653e-3] | 8.661e-5 [5.944e-5, 1.224e-4] | 2.251e-3 [1.961e-3, 2.653e-3] | 7.885e-7 |
+| 16 | 1.531e-3 [1.310e-3, 1.681e-3] | 4.888e-5 [3.386e-5, 1.613e-1]* | 1.531e-3 [1.310e-3, 1.681e-3] | 8.551e-5 |
+
+\* the upper end of the post-W range at starts 1 and 16 comes from a small number of sweeps with a face change
+(`n_enter`/`n_leave` != 0) in the last 100; the median is representative of the steady-state sweep.
+
+**The observed pattern matches the pre-stated hypothesis closely** at all three starts: r_W collapses by one to
+two orders of magnitude on the W block (median 2.4-3.0x to ~2.4e2-2.6e2 relative drop, i.e. to the 1e-4/1e-5
+range) and is restored to its pre-H-block value by the b block in the same sweep; r_H stays at or below 1e-3
+throughout and is typically 1e-7 to 1e-14 (negligible by any reasonable reading). sigma(W) and beta = b/sigma are
+essentially static across the window (medians stable to 3-4 significant figures start to start, consistent with
+the 2026-10-04 Stage B diagnosis that the run sits in a stiff-sigma regime). The zig-zag is therefore a real,
+repeating W-then-b cycle, not an artifact of the residual definition or of the instrumentation.
+
+### D-T9a: seeded replay of the T9 permutation pair
+
+`tests/DT9_perm.R` reproduces `tests/T9_edge_cases.R` sections 1-3 verbatim (output suppressed via
+`capture.output`, which does not touch the RNG stream) to put the RNG in the same state T9 reaches at
+`pm <- sample(D$n)`, then builds the pair exactly as T9 does (`W0`, `palm_init_H`, `b = 0`, `hp`, `maxit = 40`,
+default `w_solver`).
+
+**GATE: PASS.** Printed to T9's own precision (`%.1e`): replay W 7.3e-03, b 5.4e-05, F 5.3e-07, H 5.2e-03,
+identical to the committed `tests/out/T9_edge_cases.txt` line 45.
+
+Comparison (40-iteration, truncated pair; no D1 claim):
+
+| Quantity | Member a | Member b |
+|---|---|---|
+| F | 1.679994938 | 1.679994054 |
+| r / r_W / r_H / r_b | 8.493e-3 / 1.827e-4 / 8.493e-3 / 6.060e-11 | 6.203e-3 / 1.088e-3 / 6.203e-3 / 5.960e-11 |
+
+Hungarian-matched (k = 3, exhaustive over the 3! permutations) W-column cosines: 1.0000, 1.0000, 1.0000. Risk-score
+(eta) Pearson correlation, b matched into a's order via `pm`: 1.000000; SD ratio (b/a): 1.0000. Top-5-loading
+overlap per matched column: 1.00, 1.00, 1.00 (N = 5 chosen in advance: it is `markers_per_factor` for p = 60 in
+`sim.R`'s generator, `max(5, round(150*60/3000))`, i.e. the true marker-set size, not a post hoc choice). Recovery
+of the simulated truth (T8_recovery.R's `match_cos` convention, cosine to `W_true` after exhaustive column
+matching): a 0.3944, 0.4307, 0.4794; b 0.3945, 0.4308, 0.4795.
+
+So at the parameter level the permutation sensitivity reported in Stage B (W rel diff 7.3e-3) sits on top of a
+pair that is, by every descriptive measure above, the same fit: identical column correspondence, identical
+predictions, identical recovery. The KKT residuals differ by about 2x (both well above tol), consistent with two
+different not-yet-converged iterates on the same basin rather than two different basins.
+
+### D-T9b: the same pair, run to convergence (nonbinding)
+
+Settings frozen in the brief: same D, Dp, W0, H init, b = 0, hp as D-T9a; `w_solver = "ncg"`, `tol = 1e-5`,
+amendment-3 per-start budget (1,000 sweeps, 25,000 HVPs) -- i.e. `palm_fit_one` defaults.
+
+| Member | Status | Sweeps | HVPs | Final F | r |
+|---|---|---|---|---|---|
+| a | converged | 188 | 5,157 | 1.679845161 | 9.731e-6 |
+| b | converged | 190 | 5,295 | 1.679845162 | 9.946e-6 |
+
+Both members converged inside the budget (outcome, not a tuning choice). Comparison at convergence: F rel diff
+4.543e-11; r/r_W/r_H/r_b a = 9.731e-6/9.731e-6/8.390e-6/6.804e-11, b = 9.946e-6/9.946e-6/9.010e-6/7.777e-11;
+Hungarian-matched W-column cosines 1.0000, 1.0000, 1.0000; eta Pearson 1.000000, SD ratio 1.0000; top-5 overlap
+1.00/1.00/1.00; recovery a 0.3988, 0.4346, 0.4828, b 0.3988, 0.4346, 0.4828 (matches a to 4 decimal places).
+Converged-path W rel diff 7.152e-5, two orders of magnitude below the truncated-path 7.293e-3.
+
+**Interpretation: (i) fits** -- the truncated fits differ (W rel diff 7.3e-3) but the converged fits agree (W rel
+diff 7.2e-5, identical cosines, Pearson, overlap and recovery to 4 decimal places). (ii) is false (the converged
+fits do not differ materially) and (iii) does not apply (there is no persistent parameter disagreement at
+convergence to begin with). Reading, consistent with the Stage B diagnosis: unpreconditioned CG on the
+ill-conditioned W-H-b system loses floating-point reproducibility under data permutation during the transient,
+early part of the trajectory, and this washes out once both members reach the certificate. The raw-W T9 criterion,
+unchanged in this run, is probably the wrong invariant to hold a truncated NCG path to; a future test should
+target a model invariant (prediction, recovery) rather than raw W at a fixed, small iteration count.
+
+### Conflicts and deviations
+
+None. Both gates passed on the first run; no settings were changed; no existing test was touched; `palm_lib.R`
+is unmodified (confirmed by `git diff --quiet`).

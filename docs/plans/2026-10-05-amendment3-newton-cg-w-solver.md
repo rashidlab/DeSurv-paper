@@ -87,7 +87,9 @@ the PI prefers the projected path, the line search below applies unchanged to W(
 
 **Line search.** Monotone Armijo backtracking on the full objective F at fixed (H, b), starting at t = t_max,
 halving, accepting the first t with F(R(W + t d)) <= F(W) + 1e-4 t <g_F, d>, where R is the column normalization.
-Actual decrease is required: F(W_new) < F(W). No fallback to the old first-order step.
+Actual decrease is required: F(W_new) < F(W). No fallback to the old first-order step. If g_F = 0 exactly
+(the W block is stationary on its face), the W update is a no-op: W is kept, no line search is run, and the
+outer iteration is recorded with exit reason `w_stationary`. The H and b blocks proceed as frozen.
 
 **Line-search failure [PI-4].** The specification makes a line-search failure "nonconverged". Two gaps:
 - a floor is needed. Proposed: 60 halvings (t below about 1e-18 t_max), matching the scale of the frozen
@@ -99,15 +101,19 @@ Actual decrease is required: F(W_new) < F(W). No fallback to the old first-order
   fallback. In the qualification benchmark it is a qualification failure.
 A related risk, not a decision: near stationarity, predicted decreases can fall below the F-increase tolerance
 1e-13 max(1, |F|), so Armijo can fail on rounding before r < 1e-5. If this happens, the qualification fails and
-is reported under the failure rule (section 6); the amendment does not prespecify a remedy.
+is reported under the failure rule (section 6); the amendment does not prespecify a remedy. The same applies
+once r_W < 1e-5 while r_H or r_b has not yet converged: W steps then predict decreases near rounding, and a
+line-search failure there would end the start before H and b finish. Skipping the W update when r_W < 1e-5 would
+avoid this but changes the sweep, so it is listed as [PI-8] rather than adopted.
 
 **Budget (per start).** At most 1,000 outer iterations, at most 100 HVPs per W solve, at most 25,000 W-block
 HVPs in total. All three are per start; a 30-start fit has 30 independent budgets. The 25,000 total binds; it is
 not relaxed because 1,000 x 100 is larger. HVPs used by the directional-derivative test and by diagnostics do
 not count.
 
-**Status [PI-6].** Production: a start that reaches any budget cap is *nonconverged*, reason
-`work_cap_reached`; the frozen start-selection rule is unchanged. Qualification: reaching a cap is a failure.
+**Status [PI-6].** The 100-HVP ceiling only truncates one CG solve: the direction accumulated so far goes to
+the line search and the start continues. Production: a start that reaches the per-start cap (1,000 outer
+iterations or 25,000 total HVPs) is *nonconverged*, reason `work_cap_reached`; the frozen start-selection rule is unchanged. Qualification: reaching a per-start cap is a failure.
 Consequence to rule on: the frozen maxit = 5000 sweeps cannot bind while the 1,000-outer-iteration cap exists,
 because each sweep makes one W update. In production the effective sweep limit becomes 1,000. Proposed: state
 this explicitly in the spec ("maxit = 5000 is superseded by the per-start Newton-CG budget"), since it changes
@@ -127,6 +133,12 @@ is recorded, never a criterion.
 
 ## 5. Qualification
 
+**Q-T. Full simulated requalification (first ruling, item 4).** Rerun T1-T12 with the amended W step:
+gradients, zero material F increases, the same independent KKT oracle, recovery, timing, edge cases, mutation
+tests, fold-locality and transport. Every test passes under its existing criterion; none is relaxed. T7 is the
+test whose p = 3000 failure motivated this amendment; its outcome is reported, and Q1 below, not T7 timing, is the
+binding realistic-size criterion.
+
 **Q0. Analytic HVP test (precondition, simulated data, small problems).** For random directions V on the free
 face, compare d2Psi V with (grad_W F(W + eps V) - grad_W F(W - eps V)) / (2 eps). Finite differences test the
 HVP; they are not used to implement it. Run at several eps and require the error to show the expected O(eps^2)
@@ -144,7 +156,8 @@ Any cap, line-search failure or numerical failure in any of the four fails Q1.
 
 **Q2. Estimator equivalence and non-regression at p = 150.** On the converged p = 150 control settings, from the
 same initializations, the amended and frozen solvers must agree on: convergence status; F within tolerance;
-fitted W, H, b within tolerance; predictions within tolerance. **[PI-5b]** The third ruling refers to
+fitted W, H, b within tolerance; predictions within tolerance; and, for the 30-start control fits, the same
+selected start (first ruling, item 4(ii)). **[PI-5b]** The third ruling refers to
 "already-defined equivalence tolerances". None are defined in the gate spec, the ruling, the handoff, or the
 candidate tests. Proposed, fixed now and before either solver is run for Q2:
 - F: |F_new - F_old| <= 1e-8 max(1, |F_old|);
@@ -166,7 +179,18 @@ If Q0, Q1 or Q2 fails, Newton-CG is not tuned against T7 or Q1 outcomes. Diagnos
 before changing the algorithm. A preconditioner enters only through a later amendment and only with evidence
 that CG itself has become the bottleneck.
 
-## 7. Open items for the PI
+## 7. Chronology (first ruling, item 5; verbatim for the spec and any write-up)
+
+"The statistical specification was frozen before implementation. Prespecified simulated-data qualification
+subsequently showed that the reference W-block optimizer failed to reach the frozen KKT tolerance at realistic
+dimensionality despite monotone objective decrease. Before any real-data gate analysis, the specification was
+amended once to replace only the W-block numerical solver; the objective, convergence certificate, tuning
+procedure, and gate rules were unchanged."
+
+On approval, the amendment window closes again. Amendment 3 is appended to the spec's Amendments list with its
+approval date.
+
+## 8. Open items for the PI
 
 | Item | Question | Proposed |
 |---|---|---|
@@ -177,4 +201,5 @@ that CG itself has become the bottleneck.
 | PI-5a | HVP test threshold | min-over-eps relative error <= 1e-6 |
 | PI-5b | p = 150 equivalence tolerances (not defined anywhere yet) | as in Q2 |
 | PI-6 | maxit = 5000 vs 1,000-iteration cap | state that the per-start budget supersedes maxit |
+| PI-8 | W update once r_W < 1e-5 but r_H or r_b is not | Keep the frozen sweep (always attempt W); report any rounding-driven line-search failure |
 | PI-7 | Negative-curvature tolerance; first-iteration case | 1e-12 relative to first Rayleigh quotient; -g_F, flagged |

@@ -105,3 +105,48 @@ the outliers from the bulk.
 
 Next: write amendment 3 BEFORE implementing (scope per the PI ruling). Open: the per-fit compute budget for the
 realistic-size convergence criterion (PI to set from real capacity). Do not push.
+
+## PI ruling 2026-10-05, second (amendment 3 scope and budget; supersedes "Open" above)
+
+Proceed with amendment 3. Basis: the W block alone reproduces the stall, and 92-99% of the residual sits in the
+lowest-curvature directions. That defines a specific numerical problem; it is not licence to redesign the estimator.
+
+- **Budget (algorithmic, not wall clock):** at most 1,000 Newton-CG outer iterations per fit; at most 100
+  Hessian-vector products per W update; at most 25,000 W-block HVPs per fit. Convergence must occur under the frozen
+  KKT/residual criterion before a cap; hitting a cap is failure, not convergence. Record wall time, outer
+  iterations, HVP count, objective path and final KKT residual for every benchmark fit (wall clock is not a pass/fail
+  criterion: it depends on hardware, BLAS and parallelization).
+- **Realistic-size qualification:** on the frozen p = 3000, n = 218 benchmark end points, the amended optimizer
+  converges all four previously stalled fits (starts 1, 5, 9, 16) within the budget, without worsening the objective
+  or changing the fitted solution beyond a prespecified numerical-equivalence tolerance.
+- **Non-regression control:** p = 150. The new solver reaches the same solution and does not materially degrade a
+  case the current algorithm already solves.
+- **Amendment scope:** (1) problem: pathological W-block conditioning at realistic p, established prospectively by
+  S1-S5; (2) permitted change: the W update only, replaced by active-face Newton-CG; (3) frozen: objective,
+  penalties, H update, b update, normalization, initialization, stopping criterion, estimator definition;
+  (4) acceptance: numerical equivalence on small/converged controls plus convergence of all four stalled end points
+  within the budget; (5) failure rule: if Newton-CG does not pass, do not tune it against T7 outcomes; diagnose and
+  write another amendment before changing the algorithm.
+- **No preconditioner in amendment 3.** Test plain active-face Newton-CG first. A preconditioner needs evidence
+  that CG itself is now the bottleneck. Do not prespecify "a handful of CG steps" (a hypothesis from the spectrum,
+  not established).
+
+### Items the amendment-3 draft must settle (raised by the coordinator, for the PI)
+
+1. "Per fit": per start or per 30-start fit? The budget figures read as per start (palm_fit_one); state it.
+2. Cap = failure changes status semantics. The frozen spec has "nonconverged" (maxit reached, finite, no failure)
+   as a separate status, and the frozen start-selection rule falls back to the lowest-F nonconverged start. Does
+   cap = failure apply only to the qualification benchmark, or does it replace "nonconverged" in the estimator? The
+   latter touches the frozen start-selection rule.
+3. Equivalence at p = 3000 is "relative to what"? The stalled end points are not stationary, so the solution is
+   expected to move off them. Proposal: at p = 3000 require F_new <= F_endpoint and report loading correlation and
+   prediction agreement against the end point descriptively; apply the numerical-equivalence tolerance (F, KKT,
+   loadings, predictions, selected start) at p = 150 only, where both solvers reach r < 1e-5.
+4. Benchmark start: warm start from the stalled end points (tests the local problem, which is what S1-S5
+   diagnosed) or from the frozen initialization (tests the full path)? The ruling says "end points"; the
+   earlier ruling's item 4(i) said "realistic-size final fits". Proposal: end points binding, full 30-start fits
+   from initialization recorded as secondary.
+5. Specification details the draft fixes: what counts as one outer iteration (one H-W-b sweep with the W block a
+   Newton-CG step); the HVP source (analytic, or central differences of the gradient as in wcond.R); handling of
+   negative curvature in CG (Steihaug truncation, so the step stays a descent direction); the monotone line search
+   along the projected Newton path with the same S_+^k projection; the CG relative-residual stopping rule.

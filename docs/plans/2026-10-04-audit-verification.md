@@ -161,7 +161,7 @@ outside these caveats.
   call the entering genes "overfit genes").
 - Not a prerequisite for this manuscript: (b) an explicit, scale-invariant regularizer tuned by BO and optimized
   by a convergent algorithm is a new estimator and future methodological work. Exploratory design memo:
-  `analysis/audit-verification/regularization_design_memo.md` once it lands.
+  `analysis/audit-verification/regularization_design_memo.md` (fresh-fold feasibility: no pre-specified strength matched the stalled estimator; held-out C vs stalled: exact descent -0.085, rho 30 -0.030, rho 300 -0.017).
 - Validation discipline for (b): the section 2.4 partitions and the external cohorts have been examined and are
   development data. Do not choose a regularizer or its strength to recover held-out C 0.638, and do not make
   matching the published D1 an optimization target. Specify the regularizer from principle, then evaluate under a

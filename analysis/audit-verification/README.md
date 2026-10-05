@@ -21,3 +21,4 @@ The k12 inline fits (`fit_k12_120.rds`, `fit_k12_nu0.rds`, 1.4 MB each) are not 
 `desurv_fit(..., k = 12, alpha = 0.658658, lambda = 0.74881, nu = 0.17285 or 0, lambdaW = 0, lambdaH = 0,
 seed = 1, tol = 1e-7, maxit = 4000, ninit = 30)` under DeSurv 1.2.0 (see `run_nu0.sh`). Header lines of the
 `out_*.txt` files record the session-scratch library path that was used.
+| `regularization_design_memo.md`, `regularization/` | Exploratory future-estimator memo and its pilot runs (archived as run; not for this manuscript) | |

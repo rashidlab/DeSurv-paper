@@ -1,7 +1,7 @@
 # Qualification prespecification for the estimator-redesign spec (2026-10-05)
 
-**Status: DRAFT, not frozen.** It operationalizes section 9 of `docs/plans/2026-10-05-estimator-redesign-spec.md`
-(revision 4, ruling 12 applied, awaiting the independent Codex review). It freezes together with that spec, or immediately
+**Status: FROZEN 2026-10-05 with spec revision 4 (PI ruling 14).** It operationalizes section 9 of `docs/plans/2026-10-05-estimator-redesign-spec.md`
+(revision 4, frozen under ruling 14; the Codex review runs in parallel as quality control). It freezes together with that spec, or immediately
 after it. If the review or a PI ruling changes a section 9 criterion, this file follows the change before freezing.
 It never changes a criterion on its own authority. Once frozen, it must be committed before the timing-only run
 (section 8) and before any qualification fit, and every qualification output records the hashes of both files.
@@ -194,7 +194,7 @@ procedure cannot produce an estimator.
 
 Per start: status and reason; sweeps run; final F, r_W, r_H, r_theta; every F increase (there should be none). Every
 10th sweep, per column j: sigma_j, r_j = ||P w_j||, g_j = sigma_j / r_j, and theta_j. (W, theta) at sweeps 10, 50,
-100, 500, 3,750 and the endpoint. For a start that converges before one of these sweeps, the endpoint stands in
+100, 500, 3,750, 4,375 and the endpoint. For a start that converges before one of these sweeps, the endpoint stands in
 (spec section 9). Per fit: s0, lambda_1(X C X^T), the returned start, and the Q4 power-iteration records (section 7,
 Q4). Test C of every converged start and of every checkpoint iterate of the returned start, each scored by its own v~
 on its own ntop support. The test-C scorer is the gate-spec section 5 scorer.
@@ -221,12 +221,7 @@ Unit throughout: a *fit* is one 30-start fit, and a *cell* is (scenario, configu
   reported as such. Q1 is stricter than the fit-level Gate A precondition and is meant to be: BO feasibility needs
   all five inner-fold fits converged, and a design whose starts do not converge ordinarily cannot supply that.
 - **Q2 (reported).** As in the spec, from the section 6 records.
-- **Q3.** Scope: every start that ends nonconverged (cap reached) in a Q1-scope fit. Numerical-failure starts already
-  fail Q1. Window: sweeps 3,751-5,000. The summed changes telescope, so (W, theta) at sweeps 3,750 and 5,000 give
-  sum Delta log sigma_j, sum Delta log g_j, sum Delta log r_j and the net standardized-score angle exactly.
-  Carrying column: |theta_j| > 1e-3 at sweep 5,000. Conditions (i)-(iii) exactly as in spec revision 3. The angle
-  (radians) and the log change are compared at an exchange rate of 1, as the spec writes. Pass: no start shows
-  recurrence. (Section 10, P3, records a pending review point on this criterion.)
+- **Q3.** As frozen in spec section 9 (rulings 11 and 14): window sweeps 3,751-5,000, halves split at 4,375; (W, theta) stored at 3,750, 4,375 and 5,000; conditions (i)-(v); scope, not-evaluable and numerical-failure rules and active-set transitions as stated there. Pass: no evaluable start shows recurrence.
 - **Q4.** Scope: the returned start of every grid fit and every tuned final fit, at sweeps 1, 10, 100 and the
   endpoint. Object: the Euclidean Hessian, in vec(W), of the smooth part of F at fixed (H, theta), restricted to the
   free coordinates W_ij > 0. A principal submatrix of a PSD matrix has lambda_max no larger than the full matrix's,
@@ -295,12 +290,7 @@ Nothing else changes: not the grid, the BO budget, the starts, the cap or any cr
   reason ("cannot cost more than one C point") implies, with the per-fit median averaged over replicates per cell.
   S2 is kept binding, because the spec does not exclude it. In the null scenario the start-to-start C differences
   are pure noise. Decide whether S2 should be reported only.
-- **P3. OPEN, awaiting PI ruling (review B3): Q3 as written may fire on slow drift.** The review proposes two
-  further comparisons: (iv) log |theta_j| rises over the window, so theta grows while sigma falls; (v) (i), (ii) and
-  (iv) each hold in both halves of the window. It also asks that the radians-to-log comparison in (iii) be stated as
-  a convention, and that the scope of "not converged" be stated. This changes what can pass or fail, so it is not
-  folded in here. Section 7 implements Q3 exactly as in spec revision 3 until the PI rules. Section 6 already records
-  what (iv) and (v) need.
+- **P3. RESOLVED by PI ruling 14 (review B3 approved with refinements; spec section 9, Q3).**
 - **P4. Q1 unit.** Per fit: at least 27 of 30 starts converged (review S2). Section 7 reworded the reason for Q1.
 - **P5. RESOLVED by PI ruling 12 (review B1 = option (a)).** The H ridge is now lambdaH ||H||_F^2 / (2 ||X||_F^2),
   lambdaH = 1e-6 kept; HALS denominator 1 + lambdaH; a_H = (1 - alpha)(1 + lambdaH) / ||X||^2 (spec revision 4).

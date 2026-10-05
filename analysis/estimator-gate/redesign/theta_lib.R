@@ -323,7 +323,7 @@ palm_colstats <- function(W, theta, D) {
   c(setNames(sig, paste0("sigma", seq_along(sig))), setNames(r, paste0("r", seq_along(r))),
     setNames(sig / r, paste0("g", seq_along(r))), setNames(theta, paste0("theta", seq_along(theta))))
 }
-PALM_CHECKPOINTS <- c(10L, 50L, 100L, 500L, 3750L)
+PALM_CHECKPOINTS <- c(10L, 50L, 100L, 500L, 3750L, 4375L)   # 4375: Q3 window midpoint (ruling 14)
 
 # ---- one start ----------------------------------------------------------------------------------
 # Status: converged (r < tol), nonconverged (maxit sweeps reached; finite, no failure) or failure (nonfinite

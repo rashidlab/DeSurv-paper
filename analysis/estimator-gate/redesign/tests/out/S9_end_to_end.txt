@@ -1,4 +1,4 @@
-S9 end to end | 2026-10-05 17:50:38 
+S9 end to end | 2026-10-05 18:01:24 
 train: p=300 n=120 events=71 tied times=74 s0=6.090044 lambda_1(XCX^T)=5.700651e+05 | test n=200 events=122
  start    status reason         F iter            r           rW           rH       rtheta   r_original ninc theta_rejected w_backtracks w_null_steps theta_iters
      1 converged        0.3451401 3236 9.991308e-06 9.991308e-06 7.172512e-06 7.113410e-08 9.971456e-06    0             80         2694            0      158213
@@ -10,7 +10,7 @@ train: p=300 n=120 events=71 tied times=74 s0=6.090044 lambda_1(XCX^T)=5.700651e
 fit status converged, returned start 1, final F 3.4514010608e-01
 theta = (0, 0.268326, -0.136773); beta = theta/s0 = (0, 0.0440598, -0.0224585)
 support |G| = 147 genes; held-out C = 0.8513; cor(score, true linear predictor) = 0.9736 (descriptive only)
-recording: 323 column-statistic rows (every 10th sweep of 3236 sweeps); checkpoints stored: 10, 50, 100, 500, 3750, end
+recording: 323 column-statistic rows (every 10th sweep of 3236 sweeps); checkpoints stored: 10, 50, 100, 500, 3750, 4375, end
 
   fit returned a start (1 = status failed)                checks    1  passed    1  max err 0.000e+00  (tol 0e+00)
   test scores finite (1 = any nonfinite)                  checks    1  passed    1  max err 0.000e+00  (tol 0e+00)

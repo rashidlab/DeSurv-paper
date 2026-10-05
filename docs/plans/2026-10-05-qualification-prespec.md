@@ -148,7 +148,7 @@ use of 40,000,000-49,999,999.
 
 ## 5. Configurations
 
-**Grid (fixed, 11 configurations, inside the spec section 3 box).** nu = 0.5, ntop = 150 throughout.
+**Grid (fixed, 11 configurations, inside the spec section 3 box; 12 fits per replicate, because g = 12 refits the centre configuration g = 5 at n = 218).** nu = 0.5, ntop = 150 throughout.
 
 | g | alpha | lambda | rho |
 |---|---|---|---|

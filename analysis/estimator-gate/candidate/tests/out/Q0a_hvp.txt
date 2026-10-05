@@ -1,0 +1,69 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/Q0a_hvp.txt"
+AMENDED Q0 (section 10): half-decade grid, order by eps ratio
+Q0 analytic HVP | 2026-10-05 09:07:53 
+data: p=80 n=50 events=28 tied times=22
+
+Binding amended Q0 (eps grid 1e-1..1e-8 by half decades; min e <= 1e-6 and two consecutive p_k >= 1.5)
+  euclid: 2700 directions, 2700 pass, 0 fail | class a (min e > 1e-6) 0, b (roundoff-limited) 0, c (other) 0 | worst min e 6.920e-08
+  failures by alpha x rho:
+       rho
+alpha   0.01 1 1000
+  1e-04    0 0    0
+  0.3      0 0    0
+  0.9      0 0    0
+  riem: 2700 directions, 2700 pass, 0 fail | class a (min e > 1e-6) 0, b (roundoff-limited) 0, c (other) 0 | worst min e 5.181e-08
+  failures by alpha x rho:
+       rho
+alpha   0.01 1 1000
+  1e-04    0 0    0
+  0.3      0 0    0
+  0.9      0 0    0
+
+  median e(eps) by alpha, Euclidean:
+      1.000000e-01 3.162278e-02 1.000000e-02 3.162278e-03 1.000000e-03
+1e-04     0.000126     1.27e-05     1.27e-06     1.27e-07     1.27e-08
+0.3       0.001160     1.16e-04     1.16e-05     1.16e-06     1.16e-07
+0.9       0.001150     1.15e-04     1.15e-05     1.15e-06     1.15e-07
+      3.162278e-04 1.000000e-04 3.162278e-05 1.000000e-05 3.162278e-06
+1e-04     2.61e-09     1.21e-09     1.97e-09     5.70e-09     1.93e-08
+0.3       1.86e-08     1.24e-08     2.36e-08     6.72e-08     2.25e-07
+0.9       1.62e-08     1.23e-08     2.39e-08     7.37e-08     2.30e-07
+      1.000000e-06 3.162278e-07 1.000000e-07 3.162278e-08 1.000000e-08
+1e-04     5.67e-08     2.00e-07     4.99e-07     1.91e-06     5.60e-06
+0.3       6.97e-07     2.29e-06     7.23e-06     2.28e-05     7.15e-05
+0.9       7.47e-07     2.23e-06     7.17e-06     2.23e-05     7.02e-05
+  median e(eps) by alpha, Riemannian:
+      1.000000e-01 3.162278e-02 1.000000e-02 3.162278e-03 1.000000e-03
+1e-04      0.00726     0.000733     7.33e-05     7.33e-06     7.33e-07
+0.3        0.02780     0.002790     2.79e-04     2.79e-05     2.79e-06
+0.9        0.03010     0.003070     3.08e-04     3.08e-05     3.08e-06
+      3.162278e-04 1.000000e-04 3.162278e-05 1.000000e-05 3.162278e-06
+1e-04     7.33e-08     7.44e-09     1.52e-09     2.51e-09     7.79e-09
+0.3       2.79e-07     2.83e-08     6.02e-09     9.27e-09     2.77e-08
+0.9       3.08e-07     3.07e-08     6.03e-09     8.92e-09     2.83e-08
+      1.000000e-06 3.162278e-07 1.000000e-07 3.162278e-08 1.000000e-08
+1e-04     2.18e-08     7.35e-08     2.32e-07     8.00e-07     2.30e-06
+0.3       9.36e-08     2.73e-07     9.15e-07     2.79e-06     9.65e-06
+0.9       9.21e-08     2.66e-07     9.13e-07     2.82e-06     8.81e-06
+
+Diagnostics (report only)
+  per-term unweighted checks:
+   term    n pass
+1   cox 2700 2700
+2 recon 2700    0
+3 ridge 2700 2700
+         cox        recon        ridge 
+4.937454e-08 3.781180e-13 6.913107e-08 
+  symmetry |<U,HV>-<V,HU>|/(|U||HV|): 270 pairs, max 2.467e-13, median 8.418e-15
+  g identity max |‖Pface(G_W)‖_F - resid_W|: ambient T1 points 0.000e+00, at N(W) 0.000e+00 (270 points each)
+  breslow_hvp fast vs forced log-sum-exp: 270 points, max rel diff 2.414e-14
+  fallback point 1: min S over events under single shift 0.000e+00 (fast path refused: TRUE)
+  fallback point 1: ||Hll v|| 2.355e-08; absolute FD error: 4.69e-12 1.30e-11 1.00e-11 1.10e-10 5.12e-10 1.53e-09 5.19e-09 9.00e-09 5.17e-08 4.30e-08 2.03e-08 1.73e-08 1.73e-08 1.75e-08 1.80e-08 
+  fallback point 2: min S over events under single shift 0.000e+00 (fast path refused: TRUE)
+  fallback point 2: ||Hll v|| 6.840e-01; e(eps) vs FD of breslow()$g: 6.67e-05 6.67e-06 6.67e-07 6.67e-08 6.67e-09 6.67e-10 6.94e-11 1.79e-11 1.20e-10 4.50e-10 5.88e-10 9.30e-09 1.99e-08 2.27e-08 1.18e-07 | Q0-style criterion TRUE 
+  boundary point p=150: W==0 228, of which free (G_W<0) 133; face size 355; g identity 0.000e+00
+  boundary point: Euclidean 10/10 pass (worst min e 1.05e-08), Riemannian 10/10 pass (worst min e 4.99e-09)
+
+wall time 51.2 s
+Q0 TOTAL: Euclidean 2700/2700 pass, Riemannian 2700/2700 pass
+VERDICT: PASS

@@ -169,3 +169,21 @@ took one session.
 - `tests/out/Q0_hvp.txt`, `tests/out/Q0_hvp.rds`: new.
 - `tests/out/T1_gradients.txt`, `tests/out/T2_objective.txt`: rerun outputs.
 - This report.
+
+## Stage A, amended Q0 (amendment 3 section 10; appended, the original result above is retained)
+
+"The original prespecified Q0 failed solely because its epsilon grid did not contain enough pre-roundoff points to
+evaluate the requested convergence order. The analytic HVP and algorithm were unchanged; only the finite-difference
+verification grid/order calculation was amended before Stage B."
+
+- Amendment text and script committed at 68dc7e9 before the amended run; `palm_lib.R` unchanged since 045f593.
+  The default script path still reproduces the original failed run (rerun output identical apart from the timestamp).
+- Run: `Q0_AMENDED=1 Rscript tests/Q0_hvp.R` -> `tests/out/Q0a_hvp.{txt,rds}`, wall time 51.2 s.
+- **Amended Q0 PASS.** Euclidean 2,700/2,700, Riemannian 2,700/2,700; classes a/b/c all 0. Worst min e 6.9e-8
+  (Euclidean), 5.2e-8 (Riemannian).
+- Coordinator recomputation from the saved 2,700 x 15 error matrices with independent criterion code: 2,700/2,700
+  on both; median empirical order over the first four refinements 2.00, 2.00, 2.00, 2.00 (Euclidean) and
+  1.99, 2.00, 2.00, 2.00 (Riemannian).
+- Diagnostics unchanged: symmetry max 2.5e-13; g identity exact; boundary-face point 10/10 on both tests.
+
+Stage B is unblocked.

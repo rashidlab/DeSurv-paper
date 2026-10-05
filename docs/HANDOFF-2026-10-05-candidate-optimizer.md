@@ -395,3 +395,17 @@ Then PI freeze, then implementation.
 Wait for the independent Codex review (Oct 9); no freeze or implementation before it. Q3 reworded to bind only on the
 mechanism (non-converged start with g-driven scale loss and a score preserved relative to the scale change, all
 comparisons); historical D-Q4 magnitudes reported descriptively. No further substantive edits before the review.
+
+## Qualification prespec DRAFT (2026-10-05, step 4 of the post-review sequence)
+
+`docs/plans/2026-10-05-qualification-prespec.md`, DRAFT, freezes with the redesign spec after the Codex review. Fixes:
+R = 5 (S1, S2), 20 (S3, sets Q7 power), 5 (S3b, reported); 11-configuration grid + centre at n = 218; reduced BO
+20 + 40; seed namespaces 40-44 million; per-fit recording that makes Q3 computable; scope and aggregation of each
+binding criterion; verifier controls (Q3 detector must flag the four stalled T7 starts); timing run writes wall times
+only. S3 wrapper (`analysis/estimator-gate/qualification/sim_qual.R`): one joint generator draw N = 218 + 1,000,
+H columns scaled by c with the RNG stream unchanged; c calibrated generator-only on ranked masked score SD
+(S3 c = (0.1911, 1, 1), S3b (0.474, 1, 1)). Six PI points in its section 10 (P1 SD-ratio space, P2 Q5 one-sided,
+P3 Q3 drift = spec-level, P4 Q1 per fit, P5 review B1/B4, P6 compute ceiling).
+The fresh-context review `docs/plans/2026-10-05-estimator-redesign-claude-review.md` (another session, uncommitted,
+4 blocking) bears on the spec freeze alongside Codex.
+**NEXT:** Codex review (Oct 9), PI rules on the review(s) and P1-P6, freeze spec + prespec, then timing-only run.

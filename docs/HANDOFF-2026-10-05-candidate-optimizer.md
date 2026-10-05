@@ -85,7 +85,8 @@ S1-S5 all TRUE at all four end points:
   the stall, so the cause is not W-H-b coupling.
 - S4: the boundary (W = 0, negative gradient) share of ||R_W||^2 is 0.000, so the cause is not active-set
   identification. Support is essentially full (2,982 to 3,000 of 3,000 per column).
-- S5: no negative curvature, so the point is not a saddle.
+- S5: no substantial negative curvature on the W face (smallest Ritz value positive at all four points). This does
+  not exclude negative curvature in the H or b blocks or in coupled directions, which the diagnostic does not probe.
 
 Mechanism (per-term Rayleigh quotients at Ritz vectors): the stiff directions are entirely survival curvature
 (3 outliers, 13 to 75). The bulk is reconstruction curvature at about 2e-4, roughly isotropic, which is

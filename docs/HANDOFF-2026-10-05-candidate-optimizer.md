@@ -34,3 +34,35 @@ No real data or outcome has been seen, so (c) is not outcome-driven, but it reve
 
 PI decision on (a)/(b)/(c). Optional diagnostic before deciding: Hessian-vector Lanczos at a T7 end point to
 measure the W-block condition number. Do not push without the PI. Do not start the C++ port before the decision.
+
+## PI ruling 2026-10-05 (supersedes "Decision needed" and "Next" above)
+
+Option (c), gated on the diagnostic, as a one-time numerical-feasibility amendment. Not (a): 85k CPU-hours to
+confirm what T7 shows. Not (b): nonconvergence of one solver is not evidence the objective lacks a usable
+stationary solution. A better optimizer can land in different basins of a nonconvex problem, so this is not "the
+same fit, faster": it needs a documented amendment and full simulated requalification.
+
+1. **Diagnostic first** (simulated data): W-block condition number at a T7 end point (Hessian-vector Lanczos);
+   check whether the slow direction aligns with the stalled KKT residual r_W. Proceed only if it supports the
+   conditioning hypothesis.
+2. **Amendment 3, written before implementing.** Unchanged and frozen: objective, initialization, 30-start seed
+   schedule, KKT residuals, r < 1e-5 certificate, start-selection rule, BO design and tuning space, regularizer,
+   Gate A/B rules, biology endpoints. Changed: only the W-block solver. State that the amendment exists because
+   prespecified simulated qualification (T7) showed computational nonconvergence at p = 3000 before any real-data
+   gate run. Close the window again afterwards.
+3. **Solver choice:** a principled preconditioned or second-order / proximal block method with monotone line
+   search and the same feasibility constraints (S_+^k projection). Not "increase maxit". Extrapolation only behind
+   a preconditioned method, not as the fix.
+4. **Requalification:** rerun T1-T12 (gradients, zero material increases, same KKT oracle, recovery, mutation
+   tests) plus: (i) realistic-size convergence at p = 3000 with a criterion fixed in amendment 3 BEFORE running,
+   e.g. >= 90% of realistic-size final fits reach r < 1e-5 within a per-fit budget set from what the gate can
+   genuinely afford (not from what the new solver achieves); (ii) solver-equivalence test on the p = 150 settings
+   where the current solver converges: compare final F, KKT residuals, loadings and predictions, and selected
+   start, to see whether the new solver reaches the same stationary points or different basins.
+5. **Chronology wording** (for the spec and any write-up): "The statistical specification was frozen before
+   implementation. Prespecified simulated-data qualification subsequently showed that the reference W-block
+   optimizer failed to reach the frozen KKT tolerance at realistic dimensionality despite monotone objective
+   decrease. Before any real-data gate analysis, the specification was amended once to replace only the W-block
+   numerical solver; the objective, convergence certificate, tuning procedure, and gate rules were unchanged."
+
+Open for amendment 3: the affordable per-fit compute budget (PI to set from real capacity).

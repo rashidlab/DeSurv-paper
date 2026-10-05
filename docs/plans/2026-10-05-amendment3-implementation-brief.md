@@ -240,3 +240,31 @@ Test-contract rulings, prospective (they apply to the next qualification run, no
 
 Sequence: no amendment 4 yet. The next two diagnostics are no-refit: (1) block-by-block residuals and objective over
 the last 50-100 sweeps of Q1 starts 1, 5 and 16; (2) T9 invariant-output comparison. Amendment 4 is designed from them.
+
+## PI approval 2026-10-05: post-failure diagnostics (recorded before any diagnostic runs)
+
+None of these diagnostics change the amendment-3 FAIL recorded in 0c44cca. All are descriptive. No thresholds, no
+criterion changes, and no setting is altered after a result is seen.
+
+**D-Q1. Instrumented replay of Q1 starts 1, 5 and 16.** Same code (`palm_lib.R` at 0c44cca, unmodified), same warm
+starts, same hp, same budget. Instrumentation is by wrapper only. Gate: the replay must reproduce the committed
+`Q1_warm.rds` trace exactly (Fstart, FH, FW, Fb, rW_start and rW for every sweep, and the final status) before any
+added column is used. If it does not reproduce, stop and report. After each H, W and b block, record F, r_W, r_H,
+r_b, ||dW||_F, ||dH||_F, ||db||, and sigma and beta = b / sigma together with their changes. The tested pattern,
+stated in advance: r_W ~3e-3 -> (W) ~1e-4 -> (b) ~3e-3, with r_H negligible, i.e. a W-b zig-zag through
+sigma(W) and beta. Report the observed pattern over the last 100 sweeps, whatever it is.
+
+**D-T9a. Seeded replay of the T9 permutation pair.** Gate: it must reproduce the committed differences (W rel 7.3e-3,
+b 5.4e-5, F 5.3e-7, H permuted 5.2e-3, to the printed precision) before anything else is compared. Then compare the
+two 40-iteration fits on: F, KKT residuals (r, r_W, r_H, r_b), Hungarian-matched W-column cosines, risk-score
+Pearson correlation and relative scale, top-loading overlap per matched column, and recovery of the simulated truth.
+No D1 claim.
+
+**D-T9b. The same pair run to convergence (separate from T9, nonbinding).** Settings frozen now: the same D, Dp,
+W0, H init, b = 0 and hp as D-T9a; `w_solver = "ncg"`, tol 1e-5, and the amendment-3 per-start budget (1,000 sweeps,
+25,000 HVPs). Report status, sweeps and HVPs for each member, plus the D-T9a comparison set. Interpretation, fixed in
+advance: (i) the truncated fits differ but the converged fits agree, so the raw-W T9 criterion is probably
+inappropriate for an NCG path; (ii) the converged fits differ materially, so the instability is genuine and bears on
+amendment 4; (iii) parameters differ but objective, predictions and recovery agree, so the model is flat or
+nonidentifiable and future invariance tests should target model invariants. If either member fails to converge,
+report that as the outcome. No rerun with other settings.

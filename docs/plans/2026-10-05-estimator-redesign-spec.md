@@ -2,8 +2,7 @@
 
 **Status: FROZEN 2026-10-05 (revision 4, PI ruling 14): revision 3 with the H-ridge rescaling of ruling 12 and the Q3 refinement of ruling 14.** The independent Codex review runs in parallel as quality control, not as a gate (ruling 14). Written under PI ruling 8
 (`docs/HANDOFF-2026-10-05-candidate-optimizer.md`, "PI ruling 2026-10-05, eighth"). Revision 2 applied PI ruling 9
-revision 3 applies PI ruling 10, and revision 4 applies PI ruling 12 (all in section 10). Next: an independent Codex review, then the PI freezes
-this file. No implementation, no real data and no compute until then. Once frozen, every later output records this
+revision 3 applies PI ruling 10, and revision 4 applies PI ruling 12 (all in section 10). Frozen under ruling 14 (no implementation, real data or compute before the freeze except as rulings 13 and 14 record). Once frozen, every later output records this
 file's commit hash. Amendments then follow the rule in `2026-10-04-estimator-gate-spec.md`: dated, with a reason,
 and only before any Gate A output is read.
 

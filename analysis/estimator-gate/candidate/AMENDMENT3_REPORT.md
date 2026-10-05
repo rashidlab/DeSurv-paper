@@ -490,9 +490,9 @@ Block pattern, medians [range] over the last 100 sweeps, against the pre-stated 
 \* the upper end of the post-W range at starts 1 and 16 comes from a small number of sweeps with a face change
 (`n_enter`/`n_leave` != 0) in the last 100; the median is representative of the steady-state sweep.
 
-**The observed pattern matches the pre-stated hypothesis closely** at all three starts: r_W collapses by one to
-two orders of magnitude on the W block (median 2.4-3.0x to ~2.4e2-2.6e2 relative drop, i.e. to the 1e-4/1e-5
-range) and is restored to its pre-H-block value by the b block in the same sweep; r_H stays at or below 1e-3
+**The observed pattern matches the pre-stated hypothesis closely** at all three starts: r_W drops by a median
+factor of 24.3x (start 1), 26.0x (start 5) and 31.3x (start 16) on the W block, i.e. to the 1e-4/1e-5
+range, and is restored to its pre-H-block value by the b block in the same sweep; r_H stays at or below 1e-3
 throughout and is typically 1e-7 to 1e-14 (negligible by any reasonable reading). sigma(W) and beta = b/sigma are
 essentially static across the window (medians stable to 3-4 significant figures start to start, consistent with
 the 2026-10-04 Stage B diagnosis that the run sits in a stiff-sigma regime). The zig-zag is therefore a real,
@@ -523,8 +523,8 @@ of the simulated truth (T8_recovery.R's `match_cos` convention, cosine to `W_tru
 matching): a 0.3944, 0.4307, 0.4794; b 0.3945, 0.4308, 0.4795.
 
 So at the parameter level the permutation sensitivity reported in Stage B (W rel diff 7.3e-3) sits on top of a
-pair that is, by every descriptive measure above, the same fit: identical column correspondence, identical
-predictions, identical recovery. The KKT residuals differ by about 2x (both well above tol), consistent with two
+pair that is, by every descriptive measure above, the same fit: matched cosines 1.0000, risk scores
+r 1.000000 with SD ratio 1.0000, recovery equal to within 1e-4 per column (approximately equivalent, not identical). The KKT residuals differ by about 2x (both well above tol), consistent with two
 different not-yet-converged iterates on the same basin rather than two different basins.
 
 ### D-T9b: the same pair, run to convergence (nonbinding)

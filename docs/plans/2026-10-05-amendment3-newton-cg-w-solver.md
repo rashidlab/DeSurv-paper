@@ -152,7 +152,8 @@ budget:
 - reach the frozen criterion r < 1e-5;
 - satisfy F_final <= F_stalled_endpoint (no minimum improvement prespecified).
 Loading and prediction agreement with the stalled end point are reported descriptively only.
-Any cap, line-search failure or numerical failure in any of the four fails Q1.
+Reaching a per-start cap (1,000 outer iterations or 25,000 HVPs), a line-search failure or a numerical failure
+in any of the four fails Q1; a CG solve truncated at its 100-HVP ceiling does not.
 
 **Q2. Estimator equivalence and non-regression at p = 150.** On the converged p = 150 control settings, from the
 same initializations, the amended and frozen solvers must agree on: convergence status; F within tolerance;

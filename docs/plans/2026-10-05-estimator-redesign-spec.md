@@ -122,7 +122,7 @@ acceleration are excluded (ruling 8.1).
 
 1. **H:** one HALS sweep, rows j = 1..k in order.
 2. **W:** projected gradient step onto S_+^k (column-wise closed form, including the argmax rule when no entry is
-   positive), with step t = min(2 t_prev, t_max), t_max = 2, halved until the sufficient-decrease condition holds,
+   positive), with step t = min(2 t_prev, t_max), t_max = 2 and t_prev = 1 at the first iteration, halved until the sufficient-decrease condition holds,
    and t_min = 1e-20 counted as a numerical failure.
 3. **beta:** convex elastic-net Cox plus the rho quadratic, solved by FISTA warm-started from the current beta, with
    an independent KKT certificate ||KKT_beta||_inf <= 1e-10 and a 1e5-iteration cap (reaching the cap is a
@@ -186,7 +186,7 @@ nothing.
 
 ## 9. Qualification on simulated data (before any Gate A compute)
 
-Simulated data only, from the repo generator through `sim.R` (scenario R0, within-sample ranks, integer-rounded
+Simulated data only, from the repo generator through `analysis/estimator-gate/candidate/sim.R` (scenario R0, within-sample ranks, integer-rounded
 tied times), at p = 3,000. A qualification prespec fixes the replicate counts, grid and generator knobs below and is
 committed before any qualification run. Thresholds marked (P) are draft proposals for the PI to rule on. Nothing is
 tuned on qualification outcomes. A failure is reported and returned to the PI.
@@ -213,7 +213,7 @@ configuration for Q5.
 |---|---|---|
 | Q1 | Ordinary convergence | At every grid configuration, at least 90% of starts are converged (r < 1e-5 within 5,000 iterations), with no F increase and no numerical failure (P: the 90% mirrors the Gate A precondition) |
 | Q2 | No sigma -> 0 | For every carrying column of every converged start, log(sigma_j(end) / sigma_j(sweep 50)) >= -1, and over the last 25% of sweeps the absolute change in log sigma_j is at most 0.01 (P) |
-| Q3 | No preserved-score collapse | Reusing the D-Q4 decomposition (`tests/DQ4_step_decomposition.R`, adapted to beta), no carrying column has cumulative change in log g <= -1 while its net standardized-score angle is <= 0.01 rad, over the whole trajectory or over the last 25% of sweeps (P) |
+| Q3 | No preserved-score collapse | Reusing the D-Q4 decomposition (`analysis/estimator-gate/candidate/tests/DQ4_step_decomposition.R`; log sigma = log r + log g and the score angle depend on W only, so the adaptation changes only the objective-term accounting, b to beta), no carrying column has cumulative change in log g <= -1 while its net standardized-score angle is <= 0.01 rad, over the whole trajectory or over the last 25% of sweeps (P) |
 | Q4 | Bounded curvature | The largest eigenvalue of the W-block Hessian on the active face, by power iteration on HVPs at sweeps 1, 10, 100 and the end, is (a) always at most the section 2 bound L_W (a violation is an implementation defect, not a qualification outcome) and (b) within a factor of 100 between its smallest and largest recorded values per start (P). The slope of log lambda_max on log min_j sigma_j is reported |
 | Q5 | Multi-start stability | At the centre and tuned configurations, among converged starts, the median Hungarian-matched loading Pearson r of carrying columns with the best-F start is >= 0.90, and the range of test C across converged starts is <= 0.02 (P). The share of starts within 1e-4 relative F of the best is reported |
 | Q6 | Predictive recovery at convergence | At the tuned configuration: test C >= oracle C (true linear predictor) - 0.03 in S1 and S3; mean test C in [0.47, 0.53] in S2. The early-stopping check also applies: mean test C at convergence >= max over checkpoints (sweeps 10, 50, 100, 500) - 0.01 (P). Matched cosine of fitted vs true W is reported |

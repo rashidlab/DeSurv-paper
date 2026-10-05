@@ -331,3 +331,26 @@ Reading: sigma loss is predominantly g(v)-driven in every start and in both segm
 direction preserved (net angle <= 0.0023 rad). This is orientation into low-variance or null-space directions of X,
 a rescaling of the same score, not loading shrinkage. Nearly all of it comes from the 1-5% of steps with >= 10 CG
 iterations. Not pushed. NEXT: PI reads section 8; estimator redesign scoping is a PI call (no Amendment 4 yet).
+
+## PI ruling 2026-10-05, eighth (after D-Q4): reopen the estimator
+
+1. No Amendment 4 solver fix. Stop Newton-CG, Schur-complement and outer-acceleration work; a better optimizer moves
+   faster along the pathological direction. Amendment 3 stands as a legitimate failure record.
+2. Primary target: the sigma(W)-standardized parameterization. With z = C X' w, sigma proportional to ||z|| and
+   eta = z b / sigma, moving w toward small-g(v) directions shrinks z and sigma together, so z / sigma (the survival
+   predictor) barely changes; the rho term carries the same 1/sigma and produces the 1e6-level curvature. A
+   parameterization problem, not a numerical one.
+3. Preferred redesign: eta = Z_c beta with beta optimized and penalized directly (no beta = b / sigma(W) inside the
+   objective). Keep the column normalization of W. The rho penalty is written in terms of P W beta. No 1/sigma
+   singularity. sigma may still be used after fitting to report standardized Cox effects. No variance floor on sigma
+   or g(v) as primary; a denominator-floor formulation is a fallback candidate only, not co-primary.
+4. Treat this as a new estimator specification, not an optimizer amendment. Freeze before implementation: k = 3;
+   W/H normalization; objective in the beta parameterization; penalties and tuning ranges; form of the rho term;
+   initialization; convergence/KKT definition; nested tuning; Gate A (-0.02) unchanged; Gate B hidden until Gate A
+   is committed. The current implemented estimator remains the comparator. No real data.
+5. Qualification on simulated data before Gate A must test the pathology directly: ordinary convergence without
+   sigma -> 0; no preserved-score/null-space collapse; bounded curvature (no sigma^-4 growth); stable multi-start
+   behavior; predictive recovery under known simulation truth. Only then spend compute on the nested Gate A run.
+
+**NEXT (fresh session):** draft the estimator-redesign specification (docs/plans/), status DRAFT, open items listed
+for the PI. No implementation until it is frozen.

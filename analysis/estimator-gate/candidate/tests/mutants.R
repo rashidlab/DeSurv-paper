@@ -43,14 +43,10 @@ MUTANTS <- list(
     for (j in seq_len(ncol(V))) { c <- sqrt(sum(V[, j]^2)); if (c > 0) V[, j] <- V[, j] / c else V[which.max(V[, j]), j] <- 1 }
     V
   }, globalenv()),
-  B7 = function() assign("w_step", function(W, H, b, D, hp, t_prev, t_min = 1e-20, defs = PALM_DEFS) {
-    G <- palm_grad_W(W, H, b, D, hp); P0 <- palm_Psi(W, H, b, D, hp)   # pilot: accepts the step at the floor
-    t <- defs$step_init(t_prev); nbt <- 0L
-    repeat { Wn <- proj_S(W - t * G); Dl <- Wn - W
-      if (isTRUE(palm_Psi(Wn, H, b, D, hp) <= P0 + sum(G * Dl) + sum(Dl^2) / (4 * t)) || t < 1e-12) break
-      t <- t / 2; nbt <- nbt + 1L }
-    list(W = Wn, t = t, fail = FALSE, nbt = nbt)
-  }, globalenv()),
+  # amendment 3 (Q-T table): replaces B7 (pg step accepted at the floor). The retracted line search accepts its last
+  # trial (t = 2^-60) after 60 halvings instead of failing with "line_search_failed".
+  B7_ls60 = function() assign("ncg_line_search", sub_body(ncg_line_search,
+    'return(list(W = W, ok = FALSE, kind = "halvings"', 'return(list(W = if (is.null(Wt)) W else Wt, ok = TRUE, kind = "accepted"'), globalenv()),
   B8_k = function() assign("hals_sweep", sub_body(hals_sweep, "D$X2/(D$n * k)", "D$X2/D$n"), globalenv()),
   B8_unit = function() assign("hals_sweep", sub_body(hals_sweep, "(WtW[j, j] + den0)", "(1 + den0)"), globalenv()),
   B9 = function() assign("palm_fit_one", sub_body(palm_fit_one, "1e-13 * max(1, abs(Fo))", "1e-06 * max(1, abs(Fo))"), globalenv()),
@@ -77,7 +73,10 @@ MUTANTS <- list(
   B18_increase = function() assign("palm_fit_one", sub_body(palm_fit_one,
     "fail(paste(\"F increase in\", blk, \"block\"))", "invisible(NULL)"), globalenv()),
   B19_accept = function() PALM_DEFS$b_accept <<- function(F_new, F_old) TRUE,
-  B19_cap = function() PALM_DEFS$step_init <<- function(t_prev) 2 * t_prev,
+  # amendment 3 (Q-T table): replaces B19_cap (pg step uncapped). Armijo slope computed as t <G_W, d> instead of
+  # the actual retracted displacement <G_W, W(t) - W>.
+  B19_retraction = function() assign("ncg_line_search", sub_body(ncg_line_search,
+    "slope <- sum(GW * (Wt - W))", "slope <- t * sum(GW * d)"), globalenv()),
   B20 = function() assign("palm_fold_data", function(Xraw, y, d, train) {
     Xc <- Xraw - rowMeans(Xraw)                                    # gene centering with all samples, then rank
     palm_data(palm_rank(Xc[, train, drop = FALSE]), y[train], d[train])

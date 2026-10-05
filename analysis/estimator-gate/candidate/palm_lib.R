@@ -264,6 +264,81 @@ w_step <- function(W, H, b, D, hp, t_prev, t_min = 1e-20, defs = PALM_DEFS) {
   list(W = Wn, t = t, fail = FALSE, nbt = nbt)
 }
 
+# ---- W block (amendment 3, section 3): active-face Newton-CG with a retracted Armijo search -------
+# Retraction W(t) = N([W + t d]_+): negatives set to zero, columns renormalized. NULL when a column is
+# annihilated (N undefined). For d in the tangent face this cannot happen in exact arithmetic (<w_j, w_j + t d_j> = 1).
+w_retract <- function(W, d, t) {
+  V <- pmax(W + t * d, 0); nv <- sqrt(colSums(V^2))
+  if (any(nv == 0)) return(NULL)
+  sweep(V, 2, nv, "/")
+}
+# Monotone Armijo search on the retracted path at fixed (H, b). Trials t = 1, 1/2, ..., 2^-60 (the trial after the
+# 60th halving is the last). A column-annihilating trial is rejected and halved. Accept the first nonzero trial with
+# slope = <G_W, W(t) - W> < 0, F(W(t)) <= F(W) + 1e-4 slope and F(W(t)) < F(W) (projected-search Armijo on the actual
+# displacement). Fails with kind "no_change" when W(t) equals W in every entry, "halvings" after 60 halvings without
+# acceptance, "nonfinite" on a nonfinite trial point or F (a numerical failure, not a line-search failure).
+ncg_line_search <- function(W, d, GW, H, b, D, hp, F0, max_halv = 60L) {
+  t <- 1; nh <- 0L; nann <- 0L
+  repeat {
+    Wt <- w_retract(W, d, t)
+    if (is.null(Wt)) nann <- nann + 1L else {
+      if (any(!is.finite(Wt))) return(list(W = W, ok = FALSE, kind = "nonfinite", t = t, nbt = nh, n_annih = nann))
+      if (all(Wt == W)) return(list(W = W, ok = FALSE, kind = "no_change", t = t, nbt = nh, n_annih = nann))
+      slope <- sum(GW * (Wt - W))
+      if (slope < 0) {
+        Ft <- palm_F(Wt, H, b, D, hp)
+        if (!is.finite(Ft)) return(list(W = W, ok = FALSE, kind = "nonfinite", t = t, nbt = nh, n_annih = nann))
+        if (Ft <= F0 + 1e-4 * slope && Ft < F0) return(list(W = Wt, ok = TRUE, kind = "accepted", t = t, nbt = nh, n_annih = nann))
+      }
+    }
+    if (nh >= max_halv) return(list(W = W, ok = FALSE, kind = "halvings", t = t, nbt = nh, n_annih = nann))
+    t <- t / 2; nh <- nh + 1L
+  }
+}
+# One Newton-CG W step at fixed (H, b). r_W < tol at entry: no-op, exit "w_converged", 0 HVPs. Otherwise plain
+# truncated CG on Hess d = -g over the tangent face (g = projected gradient, ||g|| = r_W), d0 = 0, no
+# preconditioner, stopped by the forcing test on the recursively updated residual (PI ruling B3.1),
+# ||r|| <= min(0.5, sqrt(||g||)) ||g||; by max_hvp HVPs in this solve; by the per-start HVP total (hvp_left; PI
+# ruling B3.2: the accumulated direction is still searched and the sweep completes); or by nonpositive or flat
+# curvature q_j = p'Hess p / p'p <= 1e-12 max(1, |q_ref|), q_ref the first finite positive q (j = 1: d = -g,
+# nc_first_iter; j > 1: accumulated d, negative_curvature). Nonfinite q: numerical failure. exit: "w_converged",
+# "newton", "line_search_failed" or "numerical_failure". GW and d are returned for diagnostics only.
+w_step_ncg <- function(W, H, b, D, hp, hvp_left, tol = 1e-5, defs = PALM_DEFS, max_hvp = 100L) {
+  GW <- palm_grad_W(W, H, b, D, hp); rW <- defs$resid_W(W, GW, D, hp)
+  out <- list(W = W, exit = "w_converged", GW = GW, rW = rW, face = NA_integer_, cg_iter = 0L, hvp = 0L, cg_exit = "none",
+              negative_curvature = FALSE, nc_first_iter = FALSE, t = NA_real_, nbt = 0L, n_annih = 0L, n_enter = 0L,
+              n_leave = 0L, ls_kind = "", d = NULL, res_rec = NA_real_, forcing_thr = NA_real_)
+  if (!is.finite(rW)) { out$exit <- "numerical_failure"; return(out) }
+  if (rW < tol) return(out)                                    # convergence guard: W kept, no CG, no search
+  free <- w_face(W, GW); g <- face_tangent(GW, W, free); ng <- sqrt(sum(g^2))
+  thr <- min(0.5, sqrt(ng)) * ng
+  d <- 0 * g; r <- g; p <- -g; rr <- sum(r^2); qref <- NA_real_; j <- 0L; cg_exit <- ""
+  repeat {
+    if (j >= max_hvp) { cg_exit <- "hvp_ceiling"; break }
+    if (j >= hvp_left) { cg_exit <- "hvp_total_cap"; break }
+    Hp <- riem_hess_W(W, H, b, D, hp, p, free, GW); j <- j + 1L
+    pHp <- sum(p * Hp); q <- pHp / sum(p * p)
+    if (!is.finite(q)) { out[c("exit", "face", "cg_iter", "hvp")] <- list("numerical_failure", sum(free), j, j); return(out) }
+    if (is.na(qref) && q > 0) qref <- q
+    if (q <= 1e-12 * max(1, abs(if (is.na(qref)) q else qref))) {
+      if (j == 1L) { d <- -g; out$nc_first_iter <- TRUE } else out$negative_curvature <- TRUE
+      cg_exit <- "curvature"; break
+    }
+    a <- rr / pHp; d <- d + a * p; r <- r + a * Hp; rrn <- sum(r^2)
+    if (sqrt(rrn) <= thr) { rr <- rrn; cg_exit <- "forcing"; break }
+    p <- -r + (rrn / rr) * p; rr <- rrn
+  }
+  out[c("face", "cg_iter", "hvp", "cg_exit", "d", "res_rec", "forcing_thr")] <- list(sum(free), j, j, cg_exit, d, sqrt(rr), thr)
+  if (any(!is.finite(d))) { out$exit <- "numerical_failure"; return(out) }
+  ls <- ncg_line_search(W, d, GW, H, b, D, hp, palm_F(W, H, b, D, hp))
+  out[c("t", "nbt", "n_annih", "ls_kind")] <- list(if (ls$ok) ls$t else NA_real_, ls$nbt, ls$n_annih, ls$kind)
+  if (ls$kind == "nonfinite") { out$exit <- "numerical_failure"; return(out) }
+  if (!ls$ok) { out$exit <- "line_search_failed"; return(out) }
+  out$n_enter <- sum(W == 0 & ls$W > 0); out$n_leave <- sum(W > 0 & ls$W == 0)   # face changes
+  out$W <- ls$W; out$exit <- "newton"
+  out
+}
+
 # ---- b block: FISTA with adaptive restart, stop certified by the independent KKT evaluator -------
 # Internal check (kkt_b) proposes a stop; the stop happens only when kkt_oracle() <= tol. Cap = failure.
 solve_b <- function(b0, W, D, hp, L0 = 1, tol = 1e-10, maxit = 1e5) {
@@ -332,15 +407,27 @@ palm_eps <- function(Ws, D) {
   1e-6 * m
 }
 # ---- one start ----------------------------------------------------------------------------------
-# Status: converged (r < tol), nonconverged (maxit, finite, no failure) or failure (nonfinite value, W step
-# floor, FISTA cap, or any F increase F_new > F_old + 1e-13 max(1, |F_old|) after a block). The start ends at
-# the first of these. trace = TRUE records F after each block for an independent recount.
+# Status: converged (r < tol), nonconverged (work cap reached, or a line-search failure under "ncg"; finite, no
+# failure) or failure (nonfinite value, W step floor ("pg"), FISTA cap, or any F increase
+# F_new > F_old + 1e-13 max(1, |F_old|) after a block). The start ends at the first of these. trace = TRUE records
+# F after each block, and under "ncg" the amendment-3 section 5 per-sweep diagnostics, for an independent recount.
+# w_solver = "ncg" (amendment 3): Newton-CG W step (w_step_ncg); maxit is the amendment-3 per-start sweep budget
+# (default 1,000 sweeps), NOT the old PG iteration count (PI ruling B3.3), and hvp_cap the per-start W-block HVP
+# total (25,000). Reaching either cap -> nonconverged, reason "work_cap_reached"; the HVP cap is applied after the
+# sweep in which it is reached completes and the certificate is checked (PI ruling B3.2). Line-search failure ->
+# nonconverged, reason "line_search_failed", W kept. w_solver = "pg": the frozen projected-gradient step (w_step,
+# PALM_DEFS$step_init), maxit default 5,000 iterations, unchanged.
 # max_secs is a test-harness wall-clock budget (default Inf, not part of the spec); exceeding it ends the start
 # with status "incomplete", which tests report separately.
-palm_fit_one <- function(D, hp, W, H, b, maxit = 5000L, tol = 1e-5, trace = FALSE, defs = PALM_DEFS, max_secs = Inf) {
+palm_fit_one <- function(D, hp, W, H, b, maxit = NULL, tol = 1e-5, trace = FALSE, defs = PALM_DEFS, max_secs = Inf,
+                         w_solver = c("ncg", "pg"), hvp_cap = 25000L) {
+  w_solver <- match.arg(w_solver); ncg <- w_solver == "ncg"
+  if (is.null(maxit)) maxit <- if (ncg) 1000L else 5000L        # ncg: sweep budget; pg: frozen maxit
   inc_tol <- function(Fo) 1e-13 * max(1, abs(Fo))
   ninc <- c(H = 0L, W = 0L, b = 0L); maxinc <- c(H = 0, W = 0, b = 0)
   t_prev <- 1; Lb <- 1; nbt <- 0L; bits <- 0L; nrej <- 0L; norc <- 0L; nnull <- 0L
+  hvp_tot <- 0L; wex <- c(w_converged = 0L, newton = 0L, line_search_failed = 0L, numerical_failure = 0L)
+  cgx <- c(forcing = 0L, hvp_ceiling = 0L, hvp_total_cap = 0L, curvature = 0L); nneg <- 0L; nnc1 <- 0L
   status <- NA_character_; reason <- ""
   fail <- function(why) { status <<- "failure"; reason <<- why }
   Fcur <- palm_F(W, H, b, D, hp); F0 <- Fcur
@@ -356,10 +443,30 @@ palm_fit_one <- function(D, hp, W, H, b, maxit = 5000L, tol = 1e-5, trace = FALS
   while (is.na(status) && it < maxit) {
     if (proc.time()[["elapsed"]] - t0 > max_secs) { status <- "incomplete"; reason <- "test time budget"; break }
     it <- it + 1L; Fit <- Fcur; FW <- NA_real_; Fb <- NA_real_; ws <- list(nbt = 0L, fail = FALSE); sbit <- 0L; rej <- FALSE
+    wd <- if (ncg) c(rW_start = NA, w_exit = NA, face = NA, cg_iter = NA, hvp = NA, cg_exit = NA, negative_curvature = NA,
+                     nc_first_iter = NA, n_annih = NA, n_enter = NA, n_leave = NA, slope = NA, res_rec = NA, forcing_thr = NA,
+                     hvp_total = hvp_tot) else NULL                 # trace columns when the W block does not run
     H <- hals_sweep(W, H, D, hp); FH <- palm_F(W, H, b, D, hp)
     if (!is.finite(FH)) { fail("nonfinite F after H block"); break }
     inc(FH, Fcur, "H"); Fcur <- FH
-    if (is.na(status)) {
+    if (is.na(status) && ncg) {
+      ws <- w_step_ncg(W, H, b, D, hp, hvp_left = hvp_cap - hvp_tot, tol = tol, defs = defs)
+      hvp_tot <- hvp_tot + ws$hvp; nbt <- nbt + ws$nbt; wex[ws$exit] <- wex[ws$exit] + 1L
+      if (ws$cg_exit %in% names(cgx)) cgx[ws$cg_exit] <- cgx[ws$cg_exit] + 1L
+      nneg <- nneg + ws$negative_curvature; nnc1 <- nnc1 + ws$nc_first_iter
+      slope <- NA_real_
+      if (ws$exit == "numerical_failure") fail("nonfinite in W block (Newton-CG)") else
+      if (ws$exit == "line_search_failed") { status <- "nonconverged"; reason <- "line_search_failed" } else {
+        if (ws$exit == "newton") { slope <- sum(ws$GW * (ws$W - W)); t_prev <- ws$t }   # recorded for the Armijo recount
+        W <- ws$W; FW <- palm_F(W, H, b, D, hp)
+        if (!is.finite(FW)) fail("nonfinite F after W block") else { inc(FW, Fcur, "W"); Fcur <- FW }
+      }
+      wd <- c(rW_start = ws$rW, w_exit = match(ws$exit, names(wex)) - 1L, face = ws$face, cg_iter = ws$cg_iter, hvp = ws$hvp,
+              cg_exit = match(ws$cg_exit, names(cgx), nomatch = 0L), negative_curvature = ws$negative_curvature,
+              nc_first_iter = ws$nc_first_iter, n_annih = ws$n_annih, n_enter = ws$n_enter, n_leave = ws$n_leave,
+              slope = slope, res_rec = ws$res_rec, forcing_thr = ws$forcing_thr, hvp_total = hvp_tot)
+    }
+    if (is.na(status) && !ncg) {
       ws <- w_step(W, H, b, D, hp, t_prev, defs = defs); nbt <- nbt + ws$nbt
       if (ws$fail) fail("W step floor") else {
         if (identical(ws$W, W)) nnull <- nnull + 1L                      # accepted null step (recorded only)
@@ -380,21 +487,25 @@ palm_fit_one <- function(D, hp, W, H, b, maxit = 5000L, tol = 1e-5, trace = FALS
       r <- palm_resid(W, H, b, D, hp, defs)
       if (any(!is.finite(r[c("r", "rW", "rH", "rb")]))) fail("nonfinite residual") else if (r[["r"]] < tol) status <- "converged"
     }
-    if (trace) tr[[it]] <- c(iter = it, Fstart = Fit, FH = FH, FW = FW, Fb = Fb, r, t = t_prev, nbt = ws$nbt,
-                             bit = sbit, b_rejected = rej, failed = identical(status, "failure"))
+    if (is.na(status) && ncg && hvp_tot >= hvp_cap) { status <- "nonconverged"; reason <- "work_cap_reached" }
+    if (trace) tr[[it]] <- c(iter = it, Fstart = Fit, FH = FH, FW = FW, Fb = Fb, r, t = if (ncg) { if (is.null(ws$t)) NA else ws$t } else t_prev, nbt = ws$nbt,
+                             bit = sbit, b_rejected = rej, failed = identical(status, "failure"), wd)
   }
-  if (is.na(status)) status <- "nonconverged"
+  if (is.na(status)) { status <- "nonconverged"; if (ncg) reason <- "work_cap_reached" }
   secs <- proc.time()[["elapsed"]] - t0
   pr <- palm_parts(W, H, b, D, hp)
   list(W = W, H = H, b = b, beta = pr$beta, sigma = pr$sigma, F = Fcur, F0 = F0, iter = it, status = status,
        reason = reason, conv = identical(status, "converged"), r = r, ninc = ninc, maxinc = maxinc,
        b_rejected = nrej, b_iters = bits, n_oracle = norc, w_backtracks = nbt, w_null_steps = nnull, t_last = t_prev, secs = secs,
-       eps = hp$eps, trace = if (trace) do.call(rbind, tr[seq_len(it)]) else NULL)
+       eps = hp$eps, w_solver = w_solver, hvp_total = hvp_tot, w_exits = wex, cg_exits = cgx, n_negative_curvature = nneg,
+       n_nc_first_iter = nnc1, trace = if (trace) do.call(rbind, tr[seq_len(it)]) else NULL)
 }
 
 # ---- fit: 30 starts, status rule ---------------------------------------------------------------
 # Returns the lowest-F converged start; else the lowest-F nonconverged start (fit status "nonconverged");
 # else fit status "failed" with best = NULL. hp: alpha, lambda, nu, rho (lambdaH defaults to 1e-6).
+# w_solver (default "ncg") and hvp_cap pass through to palm_fit_one; maxit = NULL takes palm_fit_one's default for
+# the solver (ncg: the amendment-3 sweep budget of 1,000 sweeps, not the old PG iteration count; pg: 5,000).
 pick_start <- function(Fs, status) {
   for (st in c("converged", "nonconverged")) {
     ok <- which(status == st)
@@ -402,14 +513,17 @@ pick_start <- function(Fs, status) {
   }
   list(i = NA_integer_, status = "failed")
 }
-palm_fit <- function(D, hp, k = 3L, seed = 123L, nstarts = 30L, maxit = 5000L, tol = 1e-5,
-                     ncores = 1L, keep_starts = FALSE, defs = PALM_DEFS, trace = FALSE, max_secs = Inf) {
+palm_fit <- function(D, hp, k = 3L, seed = 123L, nstarts = 30L, maxit = NULL, tol = 1e-5,
+                     ncores = 1L, keep_starts = FALSE, defs = PALM_DEFS, trace = FALSE, max_secs = Inf,
+                     w_solver = c("ncg", "pg"), hvp_cap = 25000L) {
+  w_solver <- match.arg(w_solver)
   if (is.null(hp$lambdaH)) hp$lambdaH <- 1e-6
   Ws <- lapply(seq_len(nstarts), function(s) proj_S(palm_draw(D, k, seed, s)))
   hp$eps <- palm_eps(Ws, D)
   one <- function(s) {
     W <- Ws[[s]]; H <- palm_init_H(W, D, hp)
-    f <- tryCatch(palm_fit_one(D, hp, W, H, rep(0, k), maxit = maxit, tol = tol, defs = defs, trace = trace, max_secs = max_secs),
+    f <- tryCatch(palm_fit_one(D, hp, W, H, rep(0, k), maxit = maxit, tol = tol, defs = defs, trace = trace, max_secs = max_secs,
+                                       w_solver = w_solver, hvp_cap = hvp_cap),
                   error = function(e) list(status = "failure", reason = paste("error:", conditionMessage(e)), F = NA_real_,
                                            iter = NA_integer_, r = c(r = NA, rW = NA, rH = NA, rb = NA, r_original = NA),
                                            ninc = c(H = NA, W = NA, b = NA), b_rejected = NA, w_backtracks = NA, b_iters = NA,
@@ -420,14 +534,16 @@ palm_fit <- function(D, hp, k = 3L, seed = 123L, nstarts = 30L, maxit = 5000L, t
   if (!all(vapply(fits, is.list, TRUE))) stop("palm_fit: a worker returned no result", call. = FALSE)
   g <- function(nm, typ) vapply(fits, function(f) { v <- f[[nm]]; if (is.null(v)) typ[NA] else v }, typ)
   rr <- function(nm) vapply(fits, function(f) unname(f$r[nm]), 0)
+  wx <- function(nm) vapply(fits, function(f) if (is.null(f$w_exits)) NA_real_ else unname(f$w_exits[[nm]]) + 0, 0)
   summ <- data.frame(start = seq_len(nstarts), status = g("status", ""), reason = g("reason", ""), F = g("F", 0),
                      iter = g("iter", 0L), r = rr("r"), rW = rr("rW"), rH = rr("rH"), rb = rr("rb"),
                      r_original = rr("r_original"), ninc = vapply(fits, function(f) sum(f$ninc), 0),
                      b_rejected = g("b_rejected", 0), w_backtracks = g("w_backtracks", 0), w_null_steps = g("w_null_steps", 0), b_iters = g("b_iters", 0),
-                     eps = g("eps", 0), secs = g("secs", 0), stringsAsFactors = FALSE)
+                     hvp_total = g("hvp_total", 0L), w_newton = wx("newton"), w_noop = wx("w_converged"),
+                     w_ls_failed = wx("line_search_failed"), eps = g("eps", 0), secs = g("secs", 0), stringsAsFactors = FALSE)
   pk <- pick_start(summ$F, summ$status)
   list(status = pk$status, best = if (is.na(pk$i)) NULL else fits[[pk$i]], best_start = pk$i, starts = summ,
-       eps = hp$eps, hp = hp, seed = seed, fits = if (keep_starts) fits else NULL)
+       eps = hp$eps, hp = hp, seed = seed, w_solver = w_solver, fits = if (keep_starts) fits else NULL)
 }
 
 # ---- stored model and scoring (spec section 4, prediction vector) -------------------------------

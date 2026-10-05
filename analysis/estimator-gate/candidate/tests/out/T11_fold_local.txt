@@ -1,12 +1,12 @@
 [1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T11_fold_local.txt"
-T11 fold-local | 2026-10-05 01:27:45 
+T11 fold-local | 2026-10-05 09:22:59 
   [pass] training matrix after preprocessing identical
   [pass] sigma_bar^2, ||X||^2, max(X) identical
   [pass] eps identical (2.022690e-06)
   [pass] returned start: sigma, W, H, b identical
   [pass] all 4 starts' records identical
   [pass] stored model (gene universe, v~, G) identical
-  [pass] risk direction on simulated test samples: C = 0.858 (> 0.5), cor(score, true linear predictor) = 0.862; fit status nonconverged
+  [pass] risk direction on simulated test samples: C = 0.876 (> 0.5), cor(score, true linear predictor) = 0.952; fit status converged
 
 T11 TOTAL: 7 checks, 7 passed
 VERDICT: PASS

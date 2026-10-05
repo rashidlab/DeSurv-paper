@@ -1,5 +1,5 @@
 [1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T5_projection_draws.txt"
-T5 projection and draws | 2026-10-05 01:30:13 
+T5 projection and draws | 2026-10-05 09:22:59 
 closed form:
   [pass] ordinary               -> expected point
   [pass] all_negative           -> expected point

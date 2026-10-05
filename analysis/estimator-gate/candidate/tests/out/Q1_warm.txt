@@ -1,0 +1,40 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/Q1_warm.txt"
+Q1 warm-started p = 3000 qualification | 2026-10-05 09:25:27 | wall 1.438946 mins 
+source /home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/superseded/pre-amendment3/T7_fit.rds; hp alpha=0.0291276 lambda=1 nu=0.475 rho=3.16228 lambdaH=1e-06 eps=1.000768e-05; p=3000 n=218 events 129
+precondition (stalled end points: 5000 PG iterations, nonconverged, fit eps, stored F reproduced): TRUE,TRUE,TRUE,TRUE
+
+per start:
+        start       status           reason sweeps hvp_total           r          rW          rH          rb F_stalled  F_final   F_improve inc_counter inc_recount first_sweep_vs_stalled
+Fstart      1 nonconverged work_cap_reached   1000      3668 2.96802e-03 2.96802e-03 6.83078e-11 9.54201e-11  0.731083 0.730911 0.000171107           0           0                      0
+Fstart1     5 nonconverged work_cap_reached   1000      3241 1.96078e-03 1.96078e-03 7.70306e-11 9.76590e-11  0.731084 0.730909 0.000175378           0           0                      0
+Fstart2     9    converged                       9       119 5.70294e-06 5.70294e-06 1.19679e-07 2.73143e-11  0.737414 0.737263 0.000151120           0           0                      0
+Fstart3    16 nonconverged work_cap_reached   1000      3081 1.52632e-03 1.52632e-03 5.45705e-12 7.45908e-11  0.732985 0.732810 0.000174944           0           0                      0
+
+W-step and CG detail per start:
+        start w_newton w_noop w_ls_failed cg_forcing cg_ceiling cg_total_cap cg_curvature negative_curvature nc_first_iter max_t halvings enter leave   secs
+Fstart      1     1000      0           0        990          4            0            6                  6             0     1      130   240   265 86.254
+Fstart1     5     1000      0           0        993          2            0            5                  5             0     1       83    66    69 81.323
+Fstart2     9        9      0           0          9          0            0            0                  0             0     1        4    25     7  1.126
+Fstart3    16     1000      0           0        991          6            0            3                  3             0     1       92    75    76 75.997
+
+descriptive agreement with the stalled end point (not criteria): min column cosine, Pearson of fitted eta
+        start  cos_min eta_pearson
+Fstart      1 0.828259    1.000000
+Fstart1     5 0.820721    1.000000
+Fstart2     9 0.776963    0.999997
+Fstart3    16 0.812112    1.000000
+
+criteria per start (1 certificate, 2 monotone incl. F_final <= F_stalled, 3 budget): start 1: FALSE/TRUE/FALSE; start 5: FALSE/TRUE/FALSE; start 9: TRUE/TRUE/TRUE; start 16: FALSE/TRUE/FALSE
+
+residual drift, Q1 (every CG solve): 3009 CG exits instrumented; 0 nc_first_iter exits not compared (d = -g)
+               n      min      q25   median      q75      q90      q99      max
+all         3010 0.00e+00 2.68e-15 6.39e-15 1.40e-14 3.78e-14 6.17e-10 3.45e-07
+curvature     14 1.02e-12 5.19e-12 8.59e-12 1.75e-11 3.43e-11 1.32e-10 1.46e-10
+forcing     2980 0.00e+00 2.65e-15 6.30e-15 1.37e-14 3.26e-14 5.67e-10 3.45e-07
+hvp_ceiling   12 2.72e-12 1.38e-10 2.68e-10 5.32e-10 2.45e-09 1.02e-08 1.11e-08
+max relative disagreement 3.449e-07 at start16 sweep 1 (exit forcing, 36 CG iterations, recursive 3.643e-06, direct 3.643e-06, threshold 4.394e-06)
+forcing exits: 2983; smallest margin (threshold - direct) / threshold 1.588e-04
+TIER (c) EVENTS (forcing exit, recursive <= threshold < direct): 0
+
+Q1 TOTAL: 1 of 4 starts pass all three criteria (required 4 of 4); residual-drift tier (c) events 0 (binding, PI ruling)
+VERDICT: FAIL

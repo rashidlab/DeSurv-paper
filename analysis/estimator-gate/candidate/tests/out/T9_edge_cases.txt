@@ -1,5 +1,5 @@
 [1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T9_edge_cases.txt"
-T9 edge cases | 2026-10-05 01:27:43 
+T9 edge cases | 2026-10-05 09:20:38 
 
 1. W, H, b boundary cases
   [pass] uniform column: sigma_2 = 8.422e-07 vs eps 8.422e-07 (sigma at the floor)
@@ -42,7 +42,7 @@ T9 edge cases | 2026-10-05 01:27:43
   [pass] sigma_zero  -> "palm_eps: pooled median initial score sd is <= 0 or nonfinite"
 
 4. invariances and replay
-  [pass] sample permutation, 40 iterations: W rel diff 4.2e-14, b 6.1e-15, F 4.0e-16, H (permuted) 1.4e-14
+  [FAIL] sample permutation, 40 iterations: W rel diff 7.3e-03, b 5.4e-05, F 5.3e-07, H (permuted) 5.2e-03
   [pass] loglik invariant to a common offset of the centered scores
   [pass] seed replay: two serial runs identical
   [pass] seed replay: serial vs 3-core run identical
@@ -52,19 +52,22 @@ T9 edge cases | 2026-10-05 01:27:43
   [pass] negative gradient on a zero coordinate: r_W = |min(G, 0)| = 0.4
   [pass] tangential residual on the support matches G - (w^T G) w (positive G on a zero coordinate adds 0)
   [pass] r_H = ||min(H, G_H / a_H)|| / max(1, ||H||)
-  [pass] step trial min(2 t_prev, 2)
-  [pass] accepted W steps never exceed 2 (max 1 over 60 iterations)
+  [pass] w_solver = "pg" (frozen step, kept reachable): step trial min(2 t_prev, 2); accepted t <= 2 over 60 iterations (max 1)
+  [pass] column-annihilating trials rejected and halved: 2 rejected, accepted t = 0.25, unit nonnegative columns
   [pass] b+ that raises F is rejected: 5 of 5 rejected, b kept, status nonconverged, increases 0
   [pass] FISTA cap -> numerical failure at iteration 1 (FISTA cap or nonfinite in b block)
-  [pass] W step floor -> numerical failure at iteration 1, W unchanged (W step floor)
-  [obs ] ascent-direction W gradient on a dense start: status nonconverged after 5 iterations (no failure); accepted t 1.8e-15,1.4e-17,3.5e-18,3.5e-18,3.5e-18; W moved by 8.3e-17; F change over the W blocks 0.0e+00
+  [pass] line-search failure -> nonconverged at sweep 1, W unchanged (line_search_failed, 60 halvings)
+  [obs ] dense start, same mutation: status nonconverged (line_search_failed) at sweep 1 after 60 halvings (60 = halvings path, fewer = no-change guard); W unchanged TRUE
+  [obs ] ascent-direction W gradient on a dense start: status nonconverged after 1 iterations (line_search_failed); accepted t NA; W moved by 0.0e+00; F change over the W blocks -Inf
   [pass] F increase -> numerical failure, start ends at iteration 1 (F increase in H block)
-  [pass] maxit reached with finite values -> nonconverged
+  [pass] per-start cap -> nonconverged work_cap_reached: sweep cap (3 sweeps) and HVP cap (5 HVPs reached at sweep 3, sweep completed)
+  [pass] r_W = 0.0e+00 < 1e-5 at the start of the W block -> W no-op (exit w_converged, 0 HVPs)
+  [pass] nonpositive first curvature -> nc_first_iter, d = -g exactly, 1 HVP, step newton at t = 1
   [pass] r < tol -> converged, start ends at once
   [pass] fit rule: lowest-F converged start returned although a nonconverged start has lower F
   [pass] fit rule: no converged start -> lowest-F nonconverged, failure never returned
   [pass] fit rule: all failures -> fit failed
   [pass] fit with every start failed: status failed, no model can be built (never scored)
 
-T9 TOTAL: 54 checks, 54 passed
-VERDICT: PASS
+T9 TOTAL: 56 checks, 55 passed
+VERDICT: FAIL

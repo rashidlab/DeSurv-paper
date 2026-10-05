@@ -1,0 +1,71 @@
+MUTANT B7 
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/mutants/B7/T9_edge_cases.txt"
+T9 edge cases | 2026-10-05 00:58:40 
+
+1. W, H, b boundary cases
+  [pass] uniform column: sigma_2 = 8.422e-07 vs eps 8.422e-07 (sigma at the floor)
+  [pass] uniform column: F, grad_W and residuals finite
+  [pass] all-uniform starts on rank data: pooled median sd is rounding-level (4.17e-14), not 0, so palm_eps returns 1e-6 x it
+  [pass] nearly uniform column: 30 iterations, status nonconverged, 0 increases
+  [pass] duplicate columns: 30 iterations, status nonconverged, no increase
+  [pass] b = 0: Cox and rho-ridge W gradients exactly 0
+  [pass] b = 0: directional derivative matches finite difference
+  [pass] sparse W (80% zeros) and H with a zero row: residuals finite (r = 1.999e+00)
+  [pass] sparse start: 30 iterations, status nonconverged, no increase
+  [pass] r_H defined at H = 0 (denominator max(1, ||H||))
+
+2. Breslow: tie patterns, row order, one event, contrasts, offsets
+  [pass] event_event        ll vs coxph 0.0e+00, gradient vs reference 2.3e-16
+  [pass] event_censor       ll vs coxph 0.0e+00, gradient vs reference 3.4e-16
+  [pass] censor_only_group  ll vs coxph 0.0e+00, gradient vs reference 2.2e-16
+  [pass] unsorted_rows      ll vs coxph 3.6e-15, gradient vs reference 2.2e-16
+  [pass] one_event          ll vs coxph 4.4e-16, gradient vs reference 0.0e+00
+  [pass] all_tied           ll vs coxph 8.9e-16, gradient vs reference 1.2e-16
+  [pass] contrast range   100: ll -135.217 vs reference -135.217, max grad diff 1.3e-15
+  [pass] contrast range  1000: ll -1345.93 vs reference -1345.93, max grad diff 9.4e-16
+  [pass] contrast range  4000: ll -5381.65 vs reference -5381.65, max grad diff 9.7e-14
+  [pass] common offset +1000: ll change 6.8e-14, gradient change 5.3e-14
+  [pass] common offset -1000: ll change 6.8e-14, gradient change 5.3e-14
+  [pass] common offset +100000: ll change 8.0e-12, gradient change 4.4e-12
+  [pass] one-event dataset: 2 starts x 20 iterations, fit status nonconverged
+
+3. invalid input fails deterministically with a clear error
+  [pass] n_lt_2      -> "palm_data: need n >= 2 samples (columns of X)"
+  [pass] no_events   -> "palm_data: no events (n_e = 0)"
+  [pass] X_NA        -> "palm_data: X has non-finite entries (NA, NaN or Inf)"
+  [pass] X_NaN       -> "palm_data: X has non-finite entries (NA, NaN or Inf)"
+  [pass] X_Inf       -> "palm_data: X has non-finite entries (NA, NaN or Inf)"
+  [pass] X_zero      -> "palm_data: ||X|| = 0"
+  [pass] y_Inf       -> "palm_data: y has non-finite or non-numeric entries"
+  [pass] y_NA        -> "palm_data: y has non-finite or non-numeric entries"
+  [pass] d_NA        -> "palm_data: d has non-finite entries"
+  [pass] d_NaN       -> "palm_data: d has non-finite entries"
+  [pass] sigma_zero  -> "palm_eps: pooled median initial score sd is <= 0 or nonfinite"
+
+4. invariances and replay
+  [pass] sample permutation, 40 iterations: W rel diff 4.2e-14, b 6.1e-15, F 4.0e-16, H (permuted) 1.4e-14
+  [pass] loglik invariant to a common offset of the centered scores
+  [pass] seed replay: two serial runs identical
+  [pass] seed replay: serial vs 3-core run identical
+
+5. amendment 2: residuals, step cap, b acceptance, statuses
+  [pass] stationary point w = e_i with radial gradient (|G| > 1): r_W = 0, original W residual = 2.000
+  [pass] negative gradient on a zero coordinate: r_W = |min(G, 0)| = 0.4
+  [pass] tangential residual on the support matches G - (w^T G) w (positive G on a zero coordinate adds 0)
+  [pass] r_H = ||min(H, G_H / a_H)|| / max(1, ||H||)
+  [pass] step trial min(2 t_prev, 2)
+  [pass] accepted W steps never exceed 2 (max 1 over 60 iterations)
+  [pass] b+ that raises F is rejected: 5 of 5 rejected, b kept, status nonconverged, increases 0
+  [pass] FISTA cap -> numerical failure at iteration 1 (FISTA cap or nonfinite in b block)
+  [FAIL] W step floor -> numerical failure at iteration 5, W unchanged ()
+  [obs ] ascent-direction W gradient on a dense start: status nonconverged after 5 iterations (no failure); accepted t 9.1e-13,9.1e-13,9.1e-13,9.1e-13,9.1e-13; W moved by 5.5e-13; F change over the W blocks 1.7e-13
+  [pass] F increase -> numerical failure, start ends at iteration 1 (F increase in H block)
+  [pass] maxit reached with finite values -> nonconverged
+  [pass] r < tol -> converged, start ends at once
+  [pass] fit rule: lowest-F converged start returned although a nonconverged start has lower F
+  [pass] fit rule: no converged start -> lowest-F nonconverged, failure never returned
+  [pass] fit rule: all failures -> fit failed
+  [pass] fit with every start failed: status failed, no model can be built (never scored)
+
+T9 TOTAL: 54 checks, 53 passed
+VERDICT: FAIL

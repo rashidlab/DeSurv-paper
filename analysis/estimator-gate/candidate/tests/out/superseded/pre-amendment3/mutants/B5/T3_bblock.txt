@@ -1,0 +1,38 @@
+MUTANT B5 
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/mutants/B5/T3_bblock.txt"
+T3 b block | 2026-10-05 00:58:38 | glmnet 5.0 | survival 3.8.6 
+data: p=80 n=60 events=31 tied times=30
+(a) KKT: 120 solves, 25 certified ||KKT||_inf <= 1e-10 by the independent evaluator, worst 6.322e-02; FISTA iterations median 21.5, max 349; 98 exact zeros
+(b) enumeration solver: 120 solves, 34 agree (objective(enum) - objective(ours) >= -1e-12 and max |b diff| <= 1e-6); objective diff min -2.176e-06 max 0.000e+00; max |b diff| 1.155e-03; max |linear predictor diff| 2.288e-03
+(c) perturbation (rho > 0): 90 solves x 1000 = 90000 perturbations, 804 with lower objective, smallest increase -2.164e-06
+(c) glmnet (rho = 0): 30 solves, max |b_glmnet - b_ours| 1.537e-04, objective(glmnet) - objective(ours): min -7.361e-09, max 0.000e+00, 20 with glmnet lower by > 1e-12
+
+per setting (max over points):
+     rho lambda   nu kkt_oracle  it enum_maxabs_b glmnet_maxabs pert_min
+1  0e+00  1e-03 0.00   3.09e-05 152      1.53e-04      1.54e-04       NA
+2  1e-02  1e-03 0.00   2.23e-04 349      1.16e-03            NA 6.45e-11
+3  1e+00  1e-03 0.00   2.27e-05  51      1.56e-05            NA 6.42e-10
+4  1e+03  1e-03 0.00   2.72e-02  98      2.52e-05            NA 1.61e-07
+5  0e+00  1e+00 0.00   1.50e-05  69      1.09e-05      1.09e-05       NA
+6  1e-02  1e+00 0.00   6.74e-05  31      4.41e-05            NA 4.81e-10
+7  1e+00  1e+00 0.00   5.56e-05  56      1.60e-05            NA 4.40e-10
+8  1e+03  1e+00 0.00   6.32e-02  79      6.81e-05            NA 8.97e-07
+9  0e+00  1e+03 0.00   1.98e-04   7      1.98e-07      1.98e-07       NA
+10 1e-02  1e+03 0.00   1.97e-04   7      1.97e-07            NA 2.50e-07
+11 1e+00  1e+03 0.00   1.84e-04   7      1.83e-07            NA 2.05e-07
+12 1e+03  1e+03 0.00   2.46e-02  74      1.91e-05            NA 8.29e-07
+13 0e+00  1e-03 0.95   5.94e-05 129      1.38e-04      1.38e-04       NA
+14 1e-02  1e-03 0.95   4.32e-04 174      6.37e-04            NA 9.64e-11
+15 1e+00  1e-03 0.95   3.57e-05  77      2.01e-05            NA 2.52e-10
+16 1e+03  1e-03 0.95   2.31e-02 102      2.68e-05            NA 4.34e-07
+17 0e+00  1e+00 0.95   3.41e-05  72      2.32e-05      2.32e-05       NA
+18 1e-02  1e+00 0.95   4.97e-06  28      3.92e-06            NA 1.84e-05
+19 1e+00  1e+00 0.95   1.80e-04  38      4.92e-05            NA 1.34e-05
+20 1e+03  1e+00 0.95   4.27e-03  52      3.12e-06            NA 6.45e-06
+21 0e+00  1e+03 0.95   0.00e+00   2      0.00e+00      0.00e+00       NA
+22 1e-02  1e+03 0.95   0.00e+00   2      0.00e+00            NA 3.24e-02
+23 1e+00  1e+03 0.95   0.00e+00   2      0.00e+00            NA 1.65e-02
+24 1e+03  1e+03 0.95   0.00e+00   4      0.00e+00            NA 2.64e-02
+
+T3 TOTAL: 360 checks (120 KKT, 120 enumeration, 90 perturbation sets, 30 glmnet), 144 passed
+VERDICT: FAIL

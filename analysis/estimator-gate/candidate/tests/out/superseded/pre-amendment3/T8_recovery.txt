@@ -1,0 +1,8 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T8_recovery.txt"
+T8 recovery (descriptive) | 2026-10-05 00:58:28 
+returned start 1 (fit status nonconverged): matched cosines with true W columns 1..3: 0.3810, 0.3428, 0.3590
+generator beta (standardized scores of the masked W): 2, 1, 0; fitted b: -0.423, -0.423, 0.423; reported beta = b / sigma_j(W): -0.0213, -0.0214, 0.0213
+across the 30 starts with a W: median / min matched cosine per true column:
+         [,1]   [,2]   [,3]
+median 0.3841 0.3487 0.3629
+min    0.3402 0.3332 0.3576

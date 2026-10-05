@@ -1,0 +1,38 @@
+MUTANT B16 
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/mutants/B16/T4_monotone.txt"
+T4 monotone F | 2026-10-05 00:58:49 | wall 0.108115 secs | cores 2 | per-start budget 120 s
+datasets: p=150 n=60, events 39, tied times 29; starts per fit 2; maxit 150
+runs: 4; outer iterations 4; block steps checked 12 (H 4, W 4, b 4)
+F increases: counter 0, independent recount from trace 0; largest raw block change 0.000e+00
+status: converged 0, nonconverged 0, failure 4, incomplete (time budget) 0
+
+nonfinite residual 
+                 4 
+reached r < 1e-5: 0 of 4 (0.0%); r < 1e-4 at some iteration: 0; r < 1e-3: 0
+residuals recorded every iteration with r = max(r_W, r_H, r_b): 0 of 4 runs
+accepted W step max t: 2 (cap 2); b blocks that raised F: 0; rejected b steps: 0; accepted null W steps: 0
+eps shared within each fit: 2 fits, 2 with a single eps value
+iterations: median 1, max 1; secs per run median 0.0, max 0.0; FISTA iterations per b block max 78
+
+by corner (all datasets and starts): medians, and counts of statuses
+  corner alpha  rho lambda  nu iter      r     rW rH rb r_original b_iters
+1      1   0.9 1000  0.001 0.0    1 0.0307 0.0307 NA NA         NA    66.5
+2      2   0.3    1  1.000 0.5    1 0.9996 0.9996 NA NA         NA    41.0
+   secs converged failure incomplete
+1 0.025         0       2          0
+2 0.020         0       2          0
+
+per run:
+  ds corner start  status     F iter       r      rW rH rb r_original
+1  1      1     1 failure 6.222    1 0.02994 0.02994 NA NA         NA
+2  1      1     2 failure 6.222    1 0.03140 0.03140 NA NA         NA
+3  1      2     1 failure 2.151    1 1.23557 1.23557 NA NA         NA
+4  1      2     2 failure 2.151    1 0.76362 0.76362 NA NA         NA
+  inc_counter inc_recount b_rejected t_max max_bit  secs
+1           0           0          0     2      55 0.013
+2           0           0          0     2      78 0.037
+3           0           0          0     2      41 0.020
+4           0           0          0     2      41 0.020
+
+T4 TOTAL: 4 runs; checks per run: increases (counter, recount), status not failure, residuals recorded, W cap, b never raises F
+VERDICT: FAIL

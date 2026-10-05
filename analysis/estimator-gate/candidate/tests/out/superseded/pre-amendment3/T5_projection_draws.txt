@@ -1,0 +1,21 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/T5_projection_draws.txt"
+T5 projection and draws | 2026-10-05 01:30:13 
+closed form:
+  [pass] ordinary               -> expected point
+  [pass] all_negative           -> expected point
+  [pass] nonpositive_with_zero  -> expected point
+  [pass] negative_tie           -> expected point
+  [pass] positive_tie           -> expected point
+  [pass] single_positive        -> expected point
+nearest-point optimality vs 20,000 random points of S_+ and every e_i (6 cases + 200 random vectors):
+  [pass] 206 of 206 vectors: projection at least as near as every candidate (max excess 0.00e+00)
+B6 contrast (pilot projection):
+  pilot maps all_negative to e_1, candidate to e_2 (argmax of unclipped = 2)
+  the closed-form check above distinguishes the pilot defect: TRUE
+draws vs DeSurv 1.0.1 desurv_alpha_warmstart (seed 123, 30 starts) and the cv_warm seed rule:
+  DeSurv 1.0.1 
+[1] "desurv_fit"
+  [pass] W0 identical (bitwise) for 30 of 30 starts
+  [pass] H0 of start 1 is the next draw after W0 (stream order)
+T5 TOTAL: 9 checks, 9 passed
+VERDICT: PASS

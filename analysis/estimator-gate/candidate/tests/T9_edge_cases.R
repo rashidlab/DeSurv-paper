@@ -2,7 +2,12 @@
 # W/H/b boundary cases; Breslow tie patterns, row order, one event, large contrasts and offsets against
 # coxph and an independent log-sum-exp reference; invalid input fails deterministically with a clear error;
 # sample-permutation invariance, Cox offset invariance, seed replay; amendment-2 behaviour: sphere KKT
-# residual, curvature-scaled H residual, W step cap, rejected b step, start statuses and the fit status rule.
+# residual, curvature-scaled H residual, rejected b step, start statuses and the fit status rule.
+# Amendment 3 (Q-T table, one for one): W step floor -> 60 halvings / no-change guard -> nonconverged
+# "line_search_failed", W unchanged; W step cap test -> a column-annihilating trial is rejected and halved;
+# maxit -> per-start cap -> nonconverged "work_cap_reached" (maxit here is a harness shortcut: under w_solver "ncg"
+# it is the amendment-3 sweep budget); step_init assertion run under w_solver = "pg". Added: W no-op when
+# r_W < 1e-5 at the start of the block; the nc_first_iter path uses d = -g.
 source(file.path(dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])), "common.R"))
 suppressMessages(library(survival))
 open_out("T9_edge_cases.txt")
@@ -144,9 +149,16 @@ Hh <- matrix(c(2, 0, 0.5, 3), 2); GHh <- matrix(c(-1, 0.3, 4, 0), 2)
 aH <- (1 - hp$alpha) * (1 / D$X2 + hp$lambdaH / (D$n * 2))
 ok(abs(PALM_DEFS$resid_H(Hh, GHh, matrix(0, 3, 2), D, hp) - sqrt(sum(pmin(Hh, GHh / aH)^2)) / max(1, sqrt(sum(Hh^2)))) < 1e-15,
    "r_H = ||min(H, G_H / a_H)|| / max(1, ||H||)")
-ok(PALM_DEFS$step_init(1) == 2 && PALM_DEFS$step_init(1.7) == 2 && PALM_DEFS$step_init(0.25) == 0.5, "step trial min(2 t_prev, 2)")
-ft <- palm_fit_one(D, hp, W0, H0, rep(0, 3), maxit = 60L, trace = TRUE)
-ok(max(ft$trace[, "t"]) <= 2, sprintf("accepted W steps never exceed 2 (max %.3g over 60 iterations)", max(ft$trace[, "t"])))
+ftp <- palm_fit_one(D, hp, W0, H0, rep(0, 3), maxit = 60L, trace = TRUE, w_solver = "pg")
+ok(PALM_DEFS$step_init(1) == 2 && PALM_DEFS$step_init(1.7) == 2 && PALM_DEFS$step_init(0.25) == 0.5 && max(ftp$trace[, "t"]) <= 2,
+   sprintf("w_solver = \"pg\" (frozen step, kept reachable): step trial min(2 t_prev, 2); accepted t <= 2 over 60 iterations (max %.3g)", max(ftp$trace[, "t"])))
+# column annihilation (amendment 3): d1 = -2 w_1 (not tangent; tangent directions cannot annihilate a column) zeroes
+# column 1 at t = 1 and t = 1/2; column 2 moves along -g. Both trials must be rejected and halved.
+ba <- c(0.1, 0, -0.2); Ga <- palm_grad_W(W0, H0, ba, D, hp)
+da <- matrix(0, D$p, 3); da[, 1] <- -2 * W0[, 1]; da[, 2] <- -face_tangent(Ga, W0, w_face(W0, Ga))[, 2]
+la <- ncg_line_search(W0, da, Ga, H0, ba, D, hp, palm_F(W0, H0, ba, D, hp))
+ok(la$n_annih == 2 && la$ok && la$t <= 0.25 && all(abs(colSums(la$W^2) - 1) < 1e-12) && all(la$W >= 0),
+   sprintf("column-annihilating trials rejected and halved: %d rejected, accepted t = %.4g, unit nonnegative columns", la$n_annih, la$t))
 solve_b_good <- solve_b
 solve_b <- function(b0, W, D, hp, L0 = 1, tol = 1e-10, maxit = 1e5) { z <- solve_b_good(b0, W, D, hp, L0, tol, maxit); z$b <- z$b + 1; z }
 fr <- palm_fit_one(D, hp, W0, H0, rep(0, 3), maxit = 5L)
@@ -156,16 +168,20 @@ solve_b <- function(b0, W, D, hp, L0 = 1, tol = 1e-10, maxit = 1e5) solve_b_good
 fc <- palm_fit_one(D, hp, W0, H0, rep(0, 3), maxit = 5L)
 ok(fc$status == "failure" && grepl("FISTA", fc$reason) && fc$iter == 1, sprintf("FISTA cap -> numerical failure at iteration %d (%s)", fc$iter, fc$reason))
 solve_b <- solve_b_good
-# The floor needs a step that never becomes exactly null: as t shrinks, W - t G rounds to W on positive
-# coordinates and the null step satisfies the inequality with equality; only zero coordinates with negative
-# gradient keep W+ != W. Psi is mutated to rise by 1 for any W other than the start, on a sparse start.
+# Line-search failure (amendment 3): F is mutated to rise by 1 for any W other than the start, so every trial is
+# rejected. On a sparse start, free zero coordinates with d > 0 keep W(t) != W down to t = 2^-60, so the search
+# ends after 60 halvings (the path the B7_ls60 mutant changes); a dense start reaches the no-change guard instead
+# (observation below).
 Gs0 <- palm_grad_W(Ws, Hs, rep(0, 3), D, hp)
-psi_good <- palm_Psi
-palm_Psi <- function(W, H, b, D, hp) psi_good(W, H, b, D, hp) + if (identical(W, Ws)) 0 else 1
-fs <- palm_fit_one(D, hp, Ws, Hs, rep(0, 3), maxit = 5L)
-palm_Psi <- psi_good
-ok(min(Gs0[Ws == 0]) < 0 && fs$status == "failure" && grepl("floor", fs$reason) && identical(fs$W, Ws) && fs$iter == 1,
-   sprintf("W step floor -> numerical failure at iteration %d, W unchanged (%s)", fs$iter, fs$reason))
+F_good <- palm_F
+palm_F <- function(W, H, b, D, hp) F_good(W, H, b, D, hp) + if (identical(W, Ws) || identical(W, W0)) 0 else 1
+fs <- palm_fit_one(D, hp, Ws, Hs, rep(0, 3), maxit = 5L, trace = TRUE)
+fs2 <- palm_fit_one(D, hp, W0, H0, rep(0, 3), maxit = 5L, trace = TRUE)
+palm_F <- F_good
+ok(min(Gs0[Ws == 0]) < 0 && fs$status == "nonconverged" && fs$reason == "line_search_failed" && identical(fs$W, Ws) && fs$iter == 1,
+   sprintf("line-search failure -> nonconverged at sweep %d, W unchanged (%s, %d halvings)", fs$iter, fs$reason, fs$trace[1, "nbt"]))
+cat(sprintf("  [obs ] dense start, same mutation: status %s (%s) at sweep %d after %d halvings (60 = halvings path, fewer = no-change guard); W unchanged %s\n",
+            fs2$status, fs2$reason, fs2$iter, fs2$trace[1, "nbt"], identical(fs2$W, W0)))
 grad_good <- palm_grad_W                                         # observation (not counted): ascent direction
 palm_grad_W <- function(W, H, b, D, hp) -grad_good(W, H, b, D, hp)
 fasc <- palm_fit_one(D, hp, W0, H0, rep(0, 3), maxit = 5L, trace = TRUE)
@@ -180,7 +196,22 @@ fF <- palm_fit(D, hp0, nstarts = 2L, maxit = 5L)
 hals_sweep <- hals_good
 ok(fi$status == "failure" && grepl("increase", fi$reason) && fi$iter == 1, sprintf("F increase -> numerical failure, start ends at iteration %d (%s)", fi$iter, fi$reason))
 fn5 <- palm_fit_one(D, hp, W0, H0, rep(0, 3), maxit = 3L)
-ok(fn5$status == "nonconverged" && fn5$iter == 3, "maxit reached with finite values -> nonconverged")
+fh5 <- palm_fit_one(D, hp, W0, H0, rep(0, 3), hvp_cap = 5L, trace = TRUE)
+ok(fn5$status == "nonconverged" && fn5$iter == 3 && fn5$reason == "work_cap_reached" && fh5$status == "nonconverged" &&
+   fh5$reason == "work_cap_reached" && fh5$hvp_total == 5 && is.finite(fh5$trace[fh5$iter, "Fb"]),
+   sprintf("per-start cap -> nonconverged work_cap_reached: sweep cap (3 sweeps) and HVP cap (5 HVPs reached at sweep %d, sweep completed)", fh5$iter))
+# added (amendment 3): W no-op when r_W < 1e-5 at the start of the block (H = 0, b = 0 gives G_W = 0, r_W = 0)
+wz <- w_step_ncg(W0, matrix(0, 3, D$n), rep(0, 3), D, hp, hvp_left = 25000L)
+ok(wz$exit == "w_converged" && identical(wz$W, W0) && wz$hvp == 0L && wz$cg_iter == 0L && wz$rW < 1e-5,
+   sprintf("r_W = %.1e < 1e-5 at the start of the W block -> W no-op (exit %s, %d HVPs)", wz$rW, wz$exit, wz$hvp))
+# added (amendment 3): nonpositive curvature at the first CG iteration -> d = -g, nc_first_iter (Hess mutated to -I)
+rh_good <- riem_hess_W
+riem_hess_W <- function(W, H, b, D, hp, V, free, GW) -V
+wn <- w_step_ncg(W0, H0, ba, D, hp, hvp_left = 25000L)
+riem_hess_W <- rh_good
+gn <- face_tangent(Ga, W0, w_face(W0, Ga))
+ok(isTRUE(wn$nc_first_iter) && !wn$negative_curvature && wn$cg_exit == "curvature" && wn$hvp == 1L && identical(wn$d, -gn) && wn$exit == "newton",
+   sprintf("nonpositive first curvature -> nc_first_iter, d = -g exactly, %d HVP, step %s at t = %.3g", wn$hvp, wn$exit, wn$t))
 fcv <- palm_fit_one(D, hp, W0, H0, rep(0, 3), maxit = 5000L, tol = 1e3)
 ok(fcv$status == "converged" && fcv$iter == 1, "r < tol -> converged, start ends at once")
 ok(identical(pick_start(c(1, 0.5, 2), c("converged", "nonconverged", "converged")), list(i = 1L, status = "converged")),

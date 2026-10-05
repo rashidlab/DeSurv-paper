@@ -1,0 +1,19 @@
+MUTANT B17_uncentered 
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/mutants/B17_uncentered/T12_transport.txt"
+T12 transport | 2026-10-05 00:58:49 
+  [FAIL] stored v~ = v - mean(v) over the full training gene universe (independent recomputation)
+  [FAIL] v~ sums to 0 over the universe (|sum| 8.5e-01)
+  info: |G| = 75 of 200 genes; mean of v~ over G = 3.482e-03 (not recentered on G)
+  [pass] score = X_G^T v~_G
+  [pass] all genes reordered: score identical
+  [pass] half of the non-G genes removed and rows reordered: score identical
+  [pass] only G kept (reversed order): score identical
+  [pass] a scored gene missing: deterministic error, no silent rescoring
+
+descriptive: re-ranking within a reduced gene universe (rank construction, not centering)
+  universe  75% of non-G genes kept (169 genes): Pearson 0.9971, Spearman 0.9974 with full-universe scores, mean shift -2.65 (sd of full scores 0.76)
+  universe  50% of non-G genes kept (137 genes): Pearson 0.9931, Spearman 0.9909 with full-universe scores, mean shift -5.64 (sd of full scores 0.76)
+  universe  25% of non-G genes kept (106 genes): Pearson 0.9936, Spearman 0.9925 with full-universe scores, mean shift -9.03 (sd of full scores 0.76)
+
+T12 TOTAL: 7 checks, 5 passed
+VERDICT: FAIL

@@ -1,0 +1,26 @@
+[1] "/home/naimrashid/Downloads/DeSurv-paper-recompute/analysis/estimator-gate/candidate/tests/out/drift_QT.txt"
+Residual-drift diagnostic, seeded Q-T sample | 2026-10-05 09:26:22 
+sample: set.seed(20261005), 12 of 135 T4 runs: jobs 1,2,3,8,32,65,68,85,89,90,97,100
+   job ds corner start       status           reason sweeps hvp_total         r
+1    1  1      1     1 nonconverged work_cap_reached   1000      4284 2.229e-05
+2    2  1      1     2    converged                    1000      4927 9.934e-06
+3    3  1      1     3 nonconverged work_cap_reached   1000      4210 2.927e-05
+4    8  1      2     3 nonconverged work_cap_reached   1000      8658 1.318e-02
+5   32  1      7     2    converged                      19        17 9.647e-06
+6   65  2      4     5 nonconverged work_cap_reached   1000      3608 3.142e-04
+7   68  2      5     3    converged                      18        15 7.589e-06
+8   85  2      8     5    converged                     806      4400 9.976e-06
+9   89  2      9     4    converged                     101       761 9.165e-06
+10  90  2      9     5    converged                     111       820 9.954e-06
+11  97  3      2     2 nonconverged work_cap_reached   1000      4540 3.956e-02
+12 100  3      2     5 nonconverged work_cap_reached   1000      4916 3.361e-02
+
+residual drift, Q-T sample (T4 runs): 8032 CG exits instrumented; 0 nc_first_iter exits not compared (d = -g)
+               n      min      q25   median      q75      q90      q99      max
+all         8030 0.00e+00 1.27e-14 5.16e-14 1.57e-13 3.85e-13 2.12e-12 4.80e-09
+curvature     32 0.00e+00 2.35e-15 1.62e-14 4.69e-14 9.76e-14 1.02e-12 1.34e-12
+forcing     7960 0.00e+00 1.26e-14 5.12e-14 1.56e-13 3.74e-13 1.62e-12 4.80e-09
+hvp_ceiling   42 2.28e-14 7.16e-13 3.24e-12 8.50e-12 2.80e-11 4.34e-11 4.88e-11
+max relative disagreement 4.798e-09 at T4 job 32 (ds 1, corner 7, start 2) sweep 6 (exit forcing, 3 CG iterations, recursive 1.237e-13, direct 1.237e-13, threshold 4.632e-08)
+forcing exits: 7958; smallest margin (threshold - direct) / threshold 1.177e-05
+TIER (c) EVENTS (forcing exit, recursive <= threshold < direct): 0

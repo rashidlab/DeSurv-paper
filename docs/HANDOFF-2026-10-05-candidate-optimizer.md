@@ -420,3 +420,14 @@ PASS; coordinator verification independent (F 1.7e-16, FD gradients 8.8e-9, HALS
 Prespec: grid = 11 configurations + 1 reference fit (12 fits), S3 wrapper frozen by blob hashes; B3 OPEN.
 **NEXT:** PI rules B3; Codex review (Oct 9, prompt covers rev 4 + prespec; also re-review commits 3739798, 6f0c862);
 freeze; then the timing-only run.
+
+## Rulings 14-20: freeze, qualification Stage 1 FAIL, submission with the original estimator (2026-10-05, night)
+
+Spec rev 4 + prespec frozen (ruling 14, tag spec-redesign-rev4-frozen); rulings 15-18 (18k ceiling, reduced staged
+design, D_AB = 0 for constant predictor, Q3 positive control on D-Q3a starts 1 and 5); harness frozen (tag
+qual-harness-frozen). Longleaf Stage 1 (clone /work/users/n/u/nur2/desurv-rerun/qual-run, QUAL_LIB
+.../lib/r4.5-qual101): controls, Q4, Q5 PASS; **Q1 FAIL** (lambda = 1e-2 never converges; S1 parks at r ~5e-5) and
+**Q3 FAIL** (40 of 41 recurrences at lambda = 1e-2). Ruling 19: estimator does not qualify, no Stage 2. **Ruling 20**
+(`docs/plans/2026-10-05-ruling-20-submission-estimator.md`): submit with the original DeSurv estimator; redesign is
+post-submission methods development. S1 continuation job 3974018: archive only.
+**NEXT (fresh session, DeSurv-paper-clean):** submission audit of revision/desurv-step6 (rendered 999fe7e).

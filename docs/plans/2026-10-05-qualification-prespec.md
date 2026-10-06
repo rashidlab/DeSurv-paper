@@ -333,6 +333,25 @@ Written after the first three timing fits (wall times only: about 700 s per 30-s
   of starts 1, 5, 9, 16 is retained as a specificity record: its late drift is r-driven and is not flagged. Recorded
   fact, no criterion change: condition (ii) does not cover r-driven scale loss. Control result: PASS. Harness frozen.
 
+### 9.3 Stage 1 result and PI ruling 19 (2026-10-05)
+
+**Stage 1: FAIL** (Longleaf, evaluator job 3963197; `out/QUALIFICATION_RESULT_stage1.md`). Verifier controls, H1,
+Q4 and Q5 PASS. **Q1 FAIL:** 75 of 180 fits below 27 of 30 converged starts: every fit at lambda = 1e-2 (g1, g4, g7)
+in all scenarios (0 converged; residual about 3e-3 in S2 and S3, W block), and most S1 fits at every configuration
+(converged starts converge in a median of 42 sweeps; about 70% end nonconverged at 5,000 sweeps with r about 5e-5,
+W block). **Q3 FAIL:** 41 recurrences among 1,926 evaluated starts, 40 at lambda = 1e-2 and 1 at S3 g11.
+
+**Ruling 19 (disposition).** Stage 1 fails qualification because the frozen Q1 and Q3 criteria are not met. Under
+the fail-fast rule no Stage 2 tuning job is submitted, and no Stage 1 criterion or tuning-box boundary is modified to
+rescue this qualification. The current estimator does not qualify. Two post-failure findings guide the next
+prespecified estimator evaluation: (i) Q3 recurrence is concentrated almost entirely at the frozen lower penalty
+boundary lambda = 1e-2, so the estimator does not suppress the scale-collapse mechanism throughout the box; (ii) S1
+shows widespread nonconvergence near but above the 1e-5 threshold away from that boundary. A diagnostic continuation of
+three prespecified nonconverged S1 centre-configuration starts (S1 r1 g5, the first three nonconverged by index; rerun
+deterministically from their frozen seeds to 25,000 sweeps, gated on the Stage 1 F at sweep 5,000) is permitted only
+to distinguish slow convergence from a genuine stall (`post_failure/s1_continuation.R`). It cannot alter the Stage 1
+FAIL and is not used to modify or reinterpret any criterion of this qualification.
+
 ## 10. Readings and points for the PI
 
 - **P1. S3 SD-ratio space** (section 3.2). Reading: the ranked training X with unit-norm marker-masked loadings,

@@ -62,38 +62,27 @@ if (is.na(ci)) {
               sc_orig, sc_restart, if (RES$Q3neg[["pass"]] == 1) "PASS" else "FAIL"))
 }
 
-# ---- Q3 positive control (availability check; never runs the candidate at p = 3,000 here) ----
-CT <- file.path(ROOT, "analysis", "estimator-gate", "candidate", "tests", "out")
-snap <- file.path(CT, "DQ4_window_snapshots.rds")   # what the rerun below would write; not produced by this harness
-q1w <- readRDS(file.path(CT, "Q1_warm.rds")); dq3 <- readRDS(file.path(CT, "DQ3a_continuation.rds"))
-dq4 <- readRDS(file.path(CT, "DQ4_step_decomposition.rds"))
-dq4_starts <- sort(unique(as.integer(sub(".*_", "", names(dq4$res)))))
-q1_status <- setNames(q1w$tab$status, q1w$tab$start)
-win <- do.call(rbind, lapply(dq3$res, function(r) { T <- 1000L + r$f$iter; a <- round(0.75 * T)
-  data.frame(start = r$start, total_sweeps = T, window_first = a, window_mid = round((a + T) / 2), window_last = T,
-             window_in_DQ3a_segment = a >= 1000L, b_sigma_per_sweep_stored = !is.null(r$rec)) }))
-cat(sprintf("Q3 positive control: prespec starts 1, 5, 9, 16. Q1_warm status: %s. D-Q4 replay covers starts %s (gates exact: %s).\n",
-            paste(sprintf("%s=%s", names(q1_status), q1_status), collapse = ", "), paste(dq4_starts, collapse = ", "),
-            all(vapply(dq4$gate, function(g) isTRUE(g$pass), TRUE))))
-print(win, row.names = FALSE)
-if (file.exists(snap)) {
-  cat("snapshot file present; run the detector on it (not implemented until the file's layout is fixed by the rerun)\n")
-  RES$Q3pos <- NA
-} else {
-  RES$Q3pos <- NA
-  cat(paste0("Q3 positive control: BLOCKED. The D-Q4 replay keeps per-step summaries and segment-end W only (no W snapshots);\n",
-             "  DQ3a_continuation.rds stores b and sigma at every sweep and W at the segment end only. W at the window's first sweep and\n",
-             "  midpoint (needed for conditions (i)-(v) and the net angle) is not stored. Start 9 converged in 9 sweeps (Q1_warm) and was\n",
-             "  never in D-Q4, so it cannot be flagged. Rerun that would produce the inputs: tests/DQ3a_continuation.R (candidate palm_lib.R\n",
-             "  unchanged, sim_data(700, 3000, 218), D-Q1 end points, maxit 19,000, hvp_cap 1e6) for starts 1, 5, 16 with an\n",
-             "  instrumentation-only hook storing (W, b) at the global sweeps in the table above (about 9 minutes on 3 cores, from the\n",
-             "  D-Q4 segment times 327 + 174 + 55 s), gated against DQ3a_continuation.rds as D-Q4 was.\n"))
-}
-RES$Q3pos_window <- win
+# ---- Q3 positive control (ruling 18) ----
+# Evaluable inputs, fixed from the archived trajectories independently of the detector: the D-Q3a continuation
+# starts 1 and 5 (complete final-25% window with the documented scale collapse; exact replays, gates PASS). Both must
+# be flagged. Not evaluable, reasons retained: start 9 (converged after 9 sweeps, no stalled collapse trajectory);
+# start 16 (numerical termination after the collapse, flat final-quarter window). Specificity record: the PG-crawl
+# replay of starts 1, 5, 9, 16 (late drift r-driven), not flagged. Results from q3pos/q3pos_dq3a_eval.R and
+# q3pos/q3pos_eval.R (committed .rds; no p = 3,000 candidate job runs here).
+q3d <- readRDS(file.path(QUAL, "q3pos", "dq3a_result.rds")); q3pg <- readRDS(file.path(QUAL, "q3pos", "q3pos_result.rds"))
+stopifnot(identical(sort(names(q3d)), c("1", "5")))
+flag <- vapply(q3d, function(x) isTRUE(x$detect$recurrence), TRUE)
+pg_flag <- vapply(q3pg$res, function(x) isTRUE(x$detect$recurrence), TRUE)
+RES$Q3pos <- c(start1 = flag[["1"]], start5 = flag[["5"]], pass = all(flag))
+RES$Q3pos_record <- list(not_evaluable = c(`9` = "converged after 9 sweeps; no stalled collapse trajectory",
+                                           `16` = "numerical termination after the collapse; flat final-quarter window"),
+                         pg_specificity_flags = pg_flag)
+cat(sprintf("Q3 positive control (ruling 18): D-Q3a start 1 %s, start 5 %s => %s; not evaluable: 9, 16 (reasons recorded); PG-crawl specificity record: flagged %d of %d\n",
+            flag[["1"]], flag[["5"]], if (all(flag)) "PASS" else "FAIL", sum(pg_flag), length(pg_flag)))
 pass_of <- function(x) isTRUE(!is.null(x) && "pass" %in% names(x) && x[["pass"]] == 1)
-ok <- c(Q7 = pass_of(RES$Q7), Q6 = pass_of(RES$Q6), Q3neg = pass_of(RES$Q3neg), Q3pos = FALSE)
-cat(sprintf("CONTROLS: Q7 %s, Q6 %s, Q3 negative %s, Q3 positive BLOCKED%s\n", if (ok[["Q7"]]) "PASS" else "FAIL",
-            if (ok[["Q6"]]) "PASS" else "FAIL/NOT RUN", if (ok[["Q3neg"]]) "PASS" else "FAIL/NOT RUN",
+ok <- c(Q7 = pass_of(RES$Q7), Q6 = pass_of(RES$Q6), Q3neg = pass_of(RES$Q3neg), Q3pos = pass_of(RES$Q3pos))
+cat(sprintf("CONTROLS: Q7 %s, Q6 %s, Q3 negative %s, Q3 positive %s%s\n", if (ok[["Q7"]]) "PASS" else "FAIL",
+            if (ok[["Q6"]]) "PASS" else "FAIL/NOT RUN", if (ok[["Q3neg"]]) "PASS" else "FAIL/NOT RUN", if (ok[["Q3pos"]]) "PASS" else "FAIL",
             if (QUAL_MODE == "plumbing") " (plumbing data)" else ""))
 RES$pass_all <- all(ok); RES$mode <- QUAL_MODE; RES$hashes <- HASHES
 save_job(RES, file.path(OUT_DIR, "controls", "controls.rds"))

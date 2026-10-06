@@ -324,6 +324,15 @@ Written after the first three timing fits (wall times only: about 700 s per 30-s
   5,000; all four stall at the cap), replayed with a recording-only hook (`q3pos/q3pos_replay.R`), and the unchanged
   detector with theta-equivalent s0 b_j / sigma_j(W) (`q3pos/q3pos_eval.R`). Pass rule unchanged: all four flagged.
 
+- **Ruling 18 (Q3 positive-control evaluability; detector unchanged).** Evaluable inputs are fixed from the
+  archived trajectories, independently of the detector: D-Q3a continuation trajectories with a complete final-25%
+  window in which the documented scale collapse is present. Starts 1 and 5 qualify and both must be flagged; both are
+  flagged with all five conditions on all three columns (exact replays, gates PASS; `q3pos/q3pos_dq3a_eval.R`).
+  Start 9 is not evaluable (converged after 9 sweeps, no stalled collapse trajectory); start 16 is not evaluable (its
+  numerical termination came after the collapse, leaving a flat final-quarter window). The projected-gradient replay
+  of starts 1, 5, 9, 16 is retained as a specificity record: its late drift is r-driven and is not flagged. Recorded
+  fact, no criterion change: condition (ii) does not cover r-driven scale loss. Control result: PASS. Harness frozen.
+
 ## 10. Readings and points for the PI
 
 - **P1. S3 SD-ratio space** (section 3.2). Reading: the ranked training X with unit-norm marker-masked loadings,

@@ -1,4 +1,4 @@
-S8 corner fits | 2026-10-05 17:46:19 
+S8 corner fits | 2026-10-05 18:10:46 
 data: p=80 n=50 events=35 tied times=20 s0=3.389016 lambda_1=2.351167e+04
  cfg alpha lambda   rho   nu          fit conv noncv fail finc numfail th_rej iter_max    r_max reasons
    1 1e-04  1e-03 1e-02 0.00    converged    1     2    0    0       0      0     5000 3.37e-05        

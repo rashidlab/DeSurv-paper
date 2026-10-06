@@ -324,6 +324,7 @@ palm_colstats <- function(W, theta, D) {
     setNames(sig / r, paste0("g", seq_along(r))), setNames(theta, paste0("theta", seq_along(theta))))
 }
 PALM_CHECKPOINTS <- c(10L, 50L, 100L, 500L, 3750L, 4375L)   # 4375: Q3 window midpoint (ruling 14)
+PALM_Q4_SWEEPS <- c(1L, 10L, 100L)   # (W, H, theta) for the Q4 curvature check (prespec section 7); recording only
 
 # ---- one start ----------------------------------------------------------------------------------
 # Status: converged (r < tol), nonconverged (maxit sweeps reached; finite, no failure) or failure (nonfinite
@@ -344,7 +345,7 @@ palm_fit_one <- function(D, hp, W, H, theta, maxit = 5000L, tol = 1e-5, trace = 
   if (!is.finite(Fcur)) fail("nonfinite F at start")
   tr <- if (trace) vector("list", maxit) else NULL
   incs <- list()
-  rec_cols <- if (record) list() else NULL; rec_ck <- if (record) list() else NULL
+  rec_cols <- if (record) list() else NULL; rec_ck <- if (record) list() else NULL; rec_q4 <- if (record) list() else NULL
   inc <- function(Fn, Fo, blk) {
     di <- Fn - Fo
     if (is.finite(di) && di > maxinc[blk]) maxinc[blk] <<- di
@@ -385,6 +386,7 @@ palm_fit_one <- function(D, hp, W, H, theta, maxit = 5000L, tol = 1e-5, trace = 
     if (record) {
       if (it %% 10L == 0L) rec_cols[[length(rec_cols) + 1L]] <- c(sweep = it, palm_colstats(W, theta, D))
       if (it %in% PALM_CHECKPOINTS) rec_ck[[as.character(it)]] <- list(W = W, theta = theta, sweep = it)
+      if (it %in% PALM_Q4_SWEEPS) rec_q4[[as.character(it)]] <- list(W = W, H = H, theta = theta, sweep = it)
     }
     if (trace) tr[[it]] <- c(iter = it, Fstart = Fit, FH = FH, FW = FW, Ftheta = Ft, r, t = t_prev, nbt = ws$nbt,
                              theta_it = stit, theta_rejected = rej, failed = identical(status, "failure"))
@@ -393,6 +395,8 @@ palm_fit_one <- function(D, hp, W, H, theta, maxit = 5000L, tol = 1e-5, trace = 
   if (record) {
     for (ck in PALM_CHECKPOINTS) if (is.null(rec_ck[[as.character(ck)]])) rec_ck[[as.character(ck)]] <- list(W = W, theta = theta, sweep = it)
     rec_ck[["end"]] <- list(W = W, theta = theta, sweep = it)
+    for (q in PALM_Q4_SWEEPS) if (is.null(rec_q4[[as.character(q)]])) rec_q4[[as.character(q)]] <- list(W = W, H = H, theta = theta, sweep = it)
+    rec_q4[["end"]] <- list(W = W, H = H, theta = theta, sweep = it)
   }
   secs <- proc.time()[["elapsed"]] - t0
   pr <- palm_parts(W, H, theta, D, hp)
@@ -401,7 +405,7 @@ palm_fit_one <- function(D, hp, W, H, theta, maxit = 5000L, tol = 1e-5, trace = 
        f_increases = if (length(incs)) do.call(rbind, incs) else NULL,
        theta_rejected = nrej, theta_iters = tits, n_oracle = norc, w_backtracks = nbt, w_null_steps = nnull,
        t_last = t_prev, secs = secs,
-       record = if (record) list(colstats = if (length(rec_cols)) do.call(rbind, rec_cols) else NULL, checkpoints = rec_ck) else NULL,
+       record = if (record) list(colstats = if (length(rec_cols)) do.call(rbind, rec_cols) else NULL, checkpoints = rec_ck, q4 = rec_q4) else NULL,
        trace = if (trace) do.call(rbind, tr[seq_len(it)]) else NULL)
 }
 

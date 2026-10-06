@@ -240,7 +240,8 @@ Unit throughout: a *fit* is one 30-start fit, and a *cell* is (scenario, configu
 - **Q7.** Cell: S3 tuned final fits, R = 10 (ruling 15). On the 1,000 test columns, standardize eta_hat = X_G^T v~_G, true A
   and true B (section 1). Fit the joint least-squares regression eta_hat ~ A + B and set
   D_AB = |coef_A| - |coef_B|. Pass: mean D_AB - t_{0.95, 9} SD(D_AB) / sqrt(10) > 0. No top-up replicates (ruling 15). The marginal form and the
-  realized A-B correlation on both scales are reported.
+  realized A-B correlation on both scales are reported. A constant fitted predictor (theta = 0) gives D_AB = 0 for that replicate (PI
+  ruling 16, before any S3 output); a nonfinite predictor is a numerical failure (Q1).
 
 **Verifier controls (run after Q0, before any qualification fit; a failure stops the run, is reported, and is never
 answered by adjusting a criterion).**
@@ -306,6 +307,22 @@ Written after the first three timing fits (wall times only: about 700 s per 30-s
   Qualification passes only if every stage passes. Q6 needs both S1 and S3; it is evaluated per scenario at its stage.
 - **Longleaf:** parallelize across independent scenario x replicate jobs, not by adding cores per fit beyond useful
   scaling.
+
+### 9.2 PI rulings 16-17 (2026-10-05, before any qualification output)
+
+- **Ruling 16 (Q7, constant predictor).** If a tuned S3 fit has theta = 0, its predictor is constant and puts no
+  effect on A or B: D_AB = 0 for that replicate. Dropping it would preferentially remove an unfavourable result.
+- **Ruling 17 (execution).** The design phase is over. The harness is frozen after the Q3 positive control passes;
+  afterwards only execution-blocking defects are fixed. No refactors, diagnostics, power analyses, resource
+  optimizations, documentation passes or robustness checks; no inspection of timing-run convergence; no change to the
+  ceiling, replicate counts, Q7 top-up or S3b. Fold-level parallelism inside a tuning run is enabled by a scheduler
+  switch only (QUAL_FOLD_PAR = 5; results verified identical to sequential folds at p = 300).
+- **Q3 positive-control input (implementation correction, recorded here).** Section 7 named the D-Q4 replay as the
+  control's input. Those Newton-CG trajectories store no W inside the Q3 window, and on them start 9 converged, so the
+  control could not be applied as written. The control uses the failed candidate's original projected-gradient
+  trajectories for T7 starts 1, 5, 9 and 16 (sim_data(700, 3000, 218), T7 hyperparameters, fit seed 123, maxit
+  5,000; all four stall at the cap), replayed with a recording-only hook (`q3pos/q3pos_replay.R`), and the unchanged
+  detector with theta-equivalent s0 b_j / sigma_j(W) (`q3pos/q3pos_eval.R`). Pass rule unchanged: all four flagged.
 
 ## 10. Readings and points for the PI
 

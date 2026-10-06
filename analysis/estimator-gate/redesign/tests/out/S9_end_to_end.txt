@@ -1,4 +1,4 @@
-S9 end to end | 2026-10-05 18:01:24 
+S9 end to end | 2026-10-05 18:09:28 
 train: p=300 n=120 events=71 tied times=74 s0=6.090044 lambda_1(XCX^T)=5.700651e+05 | test n=200 events=122
  start    status reason         F iter            r           rW           rH       rtheta   r_original ninc theta_rejected w_backtracks w_null_steps theta_iters
      1 converged        0.3451401 3236 9.991308e-06 9.991308e-06 7.172512e-06 7.113410e-08 9.971456e-06    0             80         2694            0      158213
